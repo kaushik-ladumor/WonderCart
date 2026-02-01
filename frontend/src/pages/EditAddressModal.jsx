@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, MapPin, X, Home, Briefcase } from "lucide-react";
 
 const EditAddressModal = ({ onAddressUpdated, address }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
     city: "",
     state: "",
     zipCode: "",
+    addressType: "home",
     isDefault: false,
   });
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
         city: address.city || "",
         state: address.state || "",
         zipCode: address.zipCode || "",
+        addressType: address.addressType || "home",
         isDefault: address.isDefault || false,
       });
     }
@@ -101,66 +103,116 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
 
   return (
     <dialog id="edit_address_modal" className="modal">
-      <div className="modal-box max-w-md">
-        <form method="dialog">
-          <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-            ✕
+      <div className="modal-box max-w-md p-5 bg-white rounded-lg shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+              <MapPin className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-lg">Edit Address</h3>
+              <p className="text-gray-600 text-xs mt-0.5">
+                Update your shipping details
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() =>
+              document.getElementById("edit_address_modal").close()
+            }
+            className="btn btn-sm btn-ghost btn-circle hover:bg-gray-100"
+          >
+            <X className="w-4 h-4" />
           </button>
-        </form>
-
-        <h3 className="font-bold text-lg mb-6">Edit Address</h3>
+        </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label className="label">
-                <span className="label-text">Full Name</span>
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                placeholder="Enter your full name"
-                className="w-full input input-bordered"
-                required
-              />
+          <div className="space-y-3">
+            {/* Name & Phone Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Enter full name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="10-digit number"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
+                  required
+                />
+              </div>
             </div>
 
+            {/* Address Type */}
             <div>
-              <label className="label">
-                <span className="label-text">Phone Number</span>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Address Type
               </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter your phone number"
-                className="w-full input input-bordered"
-                required
-              />
+              <div className="flex gap-2">
+                {["home", "work"].map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, addressType: type })
+                    }
+                    className={`flex-1 px-3 py-2 rounded border text-sm font-medium flex items-center justify-center gap-2 ${
+                      formData.addressType === type
+                        ? "bg-black text-white border-black"
+                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                    }`}
+                  >
+                    {type === "home" ? (
+                      <Home className="w-3.5 h-3.5" />
+                    ) : (
+                      <Briefcase className="w-3.5 h-3.5" />
+                    )}
+                    {type === "home" ? "Home" : "Work"}
+                  </button>
+                ))}
+              </div>
             </div>
 
+            {/* Street Address */}
             <div>
-              <label className="label">
-                <span className="label-text">Street Address</span>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Street Address
               </label>
               <textarea
                 name="street"
                 value={formData.street}
                 onChange={handleChange}
                 placeholder="House no., Building, Street, Area"
-                rows="3"
-                className="w-full textarea textarea-bordered resize-none"
+                rows="2"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none text-sm text-gray-900 placeholder-gray-500 bg-white"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* City, State, ZIP Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="label">
-                  <span className="label-text">City</span>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  City
                 </label>
                 <input
                   type="text"
@@ -168,13 +220,13 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                   value={formData.city}
                   onChange={handleChange}
                   placeholder="City"
-                  className="w-full input input-bordered"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
                   required
                 />
               </div>
               <div>
-                <label className="label">
-                  <span className="label-text">State</span>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  State
                 </label>
                 <input
                   type="text"
@@ -182,57 +234,58 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                   value={formData.state}
                   onChange={handleChange}
                   placeholder="State"
-                  className="w-full input input-bordered"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  ZIP Code
+                </label>
+                <input
+                  type="text"
+                  name="zipCode"
+                  value={formData.zipCode}
+                  onChange={handleChange}
+                  placeholder="PIN Code"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
                   required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="label">
-                <span className="label-text">ZIP / Postal Code</span>
-              </label>
-              <input
-                type="text"
-                name="zipCode"
-                value={formData.zipCode}
-                onChange={handleChange}
-                placeholder="PIN Code"
-                className="w-full input input-bordered"
-                required
-              />
-            </div>
-
-            <div className="form-control">
-              <label className="label cursor-pointer justify-start gap-3">
+            {/* Default Checkbox */}
+            <div className="pt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   name="isDefault"
                   checked={formData.isDefault}
                   onChange={handleChange}
-                  className="checkbox checkbox-sm"
+                  className="w-4 h-4 text-black rounded border-gray-300 focus:ring-black"
                 />
-                <span className="label-text">
+                <span className="text-sm text-gray-700">
                   Set as default shipping address
                 </span>
               </label>
             </div>
           </div>
 
-          <div className="modal-action">
+          {/* Footer Buttons */}
+          <div className="flex gap-2 pt-4 mt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={() =>
                 document.getElementById("edit_address_modal").close()
               }
-              className="btn btn-outline"
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors text-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary"
+              className="flex-1 px-4 py-2.5 bg-black text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center text-sm"
             >
               {loading ? (
                 <>
@@ -249,6 +302,10 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
           </div>
         </form>
       </div>
+      {/* Modal backdrop */}
+      <form method="dialog" className="modal-backdrop">
+        <button>close</button>
+      </form>
     </dialog>
   );
 };

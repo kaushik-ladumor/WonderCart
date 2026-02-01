@@ -7,6 +7,7 @@ const {
   cancelOrder,
   updateOrderStatus,
   getAllOrders,
+  verifyPayment,
   getSellerOrderById,
   getSellerOrders,
 } = require("../Controllers/Order.Controller");
@@ -43,5 +44,7 @@ router.put(
 
 // -------------------- ADMIN ROUTES --------------------
 // router.get("/admin/all", authenticate, authorizeRoles("admin"), getAllOrders);
+
+router.post('/verify-payment', verifyPayment);
 
 module.exports = router;

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Clock, Send, ChevronRight } from "lucide-react";
 
 const ContactUs = () => {
@@ -121,41 +120,41 @@ const ContactUs = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-6xl mx-auto px-4 py-5">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Contact Us</h1>
-          <p className="text-gray-600 text-sm">
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-gray-900">Contact Us</h1>
+          <p className="text-gray-600 text-sm mt-1">
             We're here to help you every step of the way
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Contact Info Cards */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {contactInfo.map((item, i) => (
               <div
                 key={i}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all"
+                className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-black rounded">
-                    <item.icon className="w-4 h-4 text-white" />
+                <div className="flex items-start gap-2.5">
+                  <div className="p-1.5 bg-black rounded">
+                    <item.icon className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 text-sm mb-1">
+                    <h3 className="font-medium text-gray-900 text-xs mb-1">
                       {item.title}
                     </h3>
                     {item.href ? (
                       <a
                         href={item.href}
-                        className="text-gray-600 hover:text-black transition-colors text-sm"
+                        className="text-gray-600 hover:text-black transition-colors text-xs"
                       >
                         {item.content}
                       </a>
                     ) : (
-                      <p className="text-gray-600 text-sm">{item.content}</p>
+                      <p className="text-gray-600 text-xs">{item.content}</p>
                     )}
                     {item.sub && (
                       <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
@@ -168,13 +167,13 @@ const ContactUs = () => {
 
           {/* Contact Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-200 rounded-lg p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-5">
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">
                 Send us a Message
               </h2>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Name <span className="text-red-600">*</span>
@@ -188,7 +187,7 @@ const ContactUs = () => {
                       }}
                       disabled={isSubmitting}
                       placeholder="Your full name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
                     />
                     {errors.name && (
                       <p className="text-red-600 text-xs mt-1">{errors.name}</p>
@@ -208,7 +207,7 @@ const ContactUs = () => {
                       }}
                       disabled={isSubmitting}
                       placeholder="your@email.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
                     />
                     {errors.email && (
                       <p className="text-red-600 text-xs mt-1">
@@ -231,7 +230,7 @@ const ContactUs = () => {
                     }}
                     disabled={isSubmitting}
                     placeholder="What's this about?"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
                   />
                   {errors.subject && (
                     <p className="text-red-600 text-xs mt-1">
@@ -251,9 +250,9 @@ const ContactUs = () => {
                       clearError("message");
                     }}
                     disabled={isSubmitting}
-                    rows={4}
+                    rows="3"
                     placeholder="Tell us more..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition resize-none text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none text-sm text-gray-900 placeholder-gray-500 bg-white"
                   />
                   <div className="flex justify-between items-center mt-1">
                     {errors.message && (
@@ -268,7 +267,7 @@ const ContactUs = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="w-full bg-black text-white py-2.5 rounded font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 text-sm"
                 >
                   {isSubmitting ? (
                     <>
@@ -292,21 +291,21 @@ const ContactUs = () => {
         </div>
 
         {/* FAQ Section */}
-        <section className="mt-12">
-          <h2 className="text-lg font-semibold text-gray-900 text-center mb-6">
+        <section className="mt-8">
+          <h2 className="text-base font-semibold text-gray-900 text-center mb-4">
             Frequently Asked Questions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all"
+                className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all"
               >
-                <h3 className="font-medium text-gray-900 text-sm mb-2 flex items-center gap-2">
+                <h3 className="font-medium text-gray-900 text-sm mb-1.5 flex items-center gap-1.5">
                   <ChevronRight className="w-3 h-3 text-gray-400" />
                   {faq.q}
                 </h3>
-                <p className="text-gray-600 text-sm">{faq.a}</p>
+                <p className="text-gray-600 text-xs">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -317,3 +316,4 @@ const ContactUs = () => {
 };
 
 export default ContactUs;
+  

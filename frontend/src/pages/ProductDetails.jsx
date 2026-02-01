@@ -4,9 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Review from "./Review";
 import { useCart } from "../context/CartContext";
-import { motion, AnimatePresence } from "framer-motion";
 import Login from "../auth/Login";
-
 import {
   ShoppingCart,
   Star,
@@ -87,7 +85,7 @@ const ProductDetail = () => {
     fetchReviews();
   }, [id, refreshKey]);
 
-  // Format price with 2 decimal places - FIXED
+  // Format price with 2 decimal places
   const formatPrice = (price) => {
     if (price === undefined || price === null) return "0.00";
     return parseFloat(price).toFixed(2);
@@ -111,7 +109,6 @@ const ProductDetail = () => {
 
   const stock = currentSizeObj?.stock || 0;
 
-  // FIXED: Remove Math.round() - keep exact decimal calculation
   const price = currentSizeObj
     ? currentSizeObj.price * (1 - (currentSizeObj.discount || 0) / 100)
     : 0;
@@ -142,7 +139,7 @@ const ProductDetail = () => {
     }
   };
 
-  // Fixed addToCart function
+  // Add to cart function
   const addToCart = async () => {
     if (!token) {
       navigate("/login");
@@ -174,7 +171,7 @@ const ProductDetail = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data.success) {
@@ -213,7 +210,7 @@ const ProductDetail = () => {
       productImg: images[0],
       color: selectedColor,
       size: selectedSize,
-      price, // Use the calculated price (with decimals)
+      price,
       originalPrice,
       discount,
       quantity,
@@ -250,35 +247,30 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-8 pb-12">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="min-h-screen bg-white pt-6 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Image Gallery */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Main Image */}
-            <div className="relative bg-gray-50 rounded-lg overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={selectedImage}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  src={images[selectedImage] || "/placeholder.jpg"}
-                  alt={product.name}
-                  className="w-full h-auto object-cover"
-                />
-              </AnimatePresence>
+            <div className="relative bg-white rounded-lg overflow-hidden">
+              <img
+                src={images[selectedImage] || "/placeholder.jpg"}
+                alt={product.name}
+                className="w-full h-[400px] object-contain"
+              />
 
               {/* Share Button */}
-              <button className="absolute top-3 right-3 p-2 bg-white rounded shadow-sm">
+              <button className="absolute top-3 right-3 p-2 bg-white/90 rounded-full shadow-sm hover:bg-white">
                 <Share2 className="w-4 h-4 text-gray-700" />
               </button>
 
               {/* Stock Badge */}
               {stock === 0 && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                  <span className="text-white font-medium">SOLD OUT</span>
+                  <span className="text-white font-medium text-sm bg-black/70 px-3 py-1 rounded">
+                    SOLD OUT
+                  </span>
                 </div>
               )}
             </div>
@@ -290,16 +282,16 @@ const ProductDetail = () => {
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`rounded overflow-hidden border ${
+                    className={`rounded overflow-hidden border-2 ${
                       selectedImage === i
                         ? "border-black"
-                        : "border-transparent"
+                        : "border-transparent hover:border-gray-300"
                     }`}
                   >
                     <img
                       src={img}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="w-full h-16 object-cover"
                     />
                   </button>
                 ))}
@@ -308,15 +300,15 @@ const ProductDetail = () => {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Header */}
             <div>
-              <h1 className="text-xl font-bold text-gray-900 leading-tight mb-3">
+              <h1 className="text-xl font-bold text-gray-900 leading-snug mb-2">
                 {product.name}
               </h1>
 
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -329,7 +321,7 @@ const ProductDetail = () => {
                       />
                     ))}
                   </div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-gray-900 text-sm ml-1">
                     {product.averageRating?.toFixed(1) || "0.0"}
                   </span>
                 </div>
@@ -339,10 +331,10 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Price - FIXED: Now shows exact decimals */}
-            <div className="space-y-2">
-              <div className="flex items-baseline gap-3">
-                <span className="text-xl font-bold text-gray-900">
+            {/* Price */}
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-gray-900">
                   ₹{formatPriceDisplay(price)}
                 </span>
                 {discount > 0 && (
@@ -358,7 +350,7 @@ const ProductDetail = () => {
               </div>
 
               {/* Stock Status */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 {stock === 0 ? (
                   <span className="text-red-600 font-medium text-sm">
                     Out of Stock
@@ -368,8 +360,8 @@ const ProductDetail = () => {
                     Only {stock} left
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-green-600 font-medium text-sm">
-                    <Check className="w-4 h-4" />
+                  <span className="flex items-center gap-1 text-green-600 font-medium text-sm">
+                    <Check className="w-3.5 h-3.5" />
                     In Stock
                   </span>
                 )}
@@ -378,7 +370,9 @@ const ProductDetail = () => {
 
             {/* Description */}
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">Description</h3>
+              <h3 className="font-medium text-gray-900 mb-1.5 text-sm">
+                Description
+              </h3>
               <p className="text-gray-700 text-sm leading-relaxed">
                 {product.description ||
                   "Premium product with exceptional quality and craftsmanship."}
@@ -388,18 +382,18 @@ const ProductDetail = () => {
             {/* Color Selection */}
             {product.variants?.length > 1 && (
               <div>
-                <h3 className="font-medium text-gray-900 mb-2">
+                <h3 className="font-medium text-gray-900 mb-1.5 text-sm">
                   Color:{" "}
                   <span className="font-normal text-gray-600">
                     {selectedColor}
                   </span>
                 </h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {product.variants.map((v) => (
                     <button
                       key={v.color}
                       onClick={() => handleColorChange(v.color)}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition ${
+                      className={`px-2.5 py-1 rounded text-xs font-medium transition ${
                         v.color === selectedColor
                           ? "bg-black text-white"
                           : "bg-gray-100 text-gray-800 hover:bg-gray-200"
@@ -415,13 +409,13 @@ const ProductDetail = () => {
             {/* Size Selection */}
             {sizes.length > 0 && (
               <div>
-                <h3 className="font-medium text-gray-900 mb-2">
+                <h3 className="font-medium text-gray-900 mb-1.5 text-sm">
                   Size:{" "}
                   <span className="font-normal text-gray-600">
                     {selectedSize}
                   </span>
                 </h3>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                   {sizes.map((s) => {
                     const outOfStock = s.stock <= 0;
                     return (
@@ -429,12 +423,12 @@ const ProductDetail = () => {
                         key={s.size}
                         onClick={() => !outOfStock && setSelectedSize(s.size)}
                         disabled={outOfStock}
-                        className={`py-2 rounded text-sm font-medium transition ${
+                        className={`py-1.5 rounded text-xs font-medium transition ${
                           s.size === selectedSize && !outOfStock
                             ? "bg-black text-white"
                             : outOfStock
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                         }`}
                       >
                         {s.size}
@@ -446,28 +440,30 @@ const ProductDetail = () => {
             )}
 
             {/* Quantity & Actions */}
-            <div className="space-y-4 pt-2">
+            <div className="space-y-3 pt-2">
               {/* Quantity */}
               <div>
-                <h3 className="font-medium text-gray-900 mb-2">Quantity</h3>
-                <div className="flex items-center gap-3">
+                <h3 className="font-medium text-gray-900 mb-1.5 text-sm">
+                  Quantity
+                </h3>
+                <div className="flex items-center gap-2">
                   <div className="flex items-center bg-gray-100 rounded">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       disabled={quantity <= 1}
-                      className="px-3 py-1.5 text-gray-600 hover:text-black disabled:text-gray-400"
+                      className="px-2.5 py-1 text-gray-600 hover:text-black disabled:text-gray-400"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="px-4 font-medium text-black">
+                    <span className="px-3 font-medium text-black text-sm min-w-[40px] text-center">
                       {quantity}
                     </span>
                     <button
                       onClick={() => setQuantity(Math.min(stock, quantity + 1))}
                       disabled={quantity >= stock}
-                      className="px-3 py-1.5 text-gray-600 hover:text-black disabled:text-gray-400"
+                      className="px-2.5 py-1 text-gray-600 hover:text-black disabled:text-gray-400"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                   <span className="text-gray-500 text-xs">
@@ -477,7 +473,7 @@ const ProductDetail = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={addToCart}
                   disabled={!selectedSize || stock === 0}
@@ -496,7 +492,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Features */}
-            <div className="grid grid-cols-3 gap-3 pt-5 border-t">
+            <div className="grid grid-cols-3 gap-2 pt-4 border-t">
               {[
                 {
                   icon: Truck,
@@ -506,8 +502,11 @@ const ProductDetail = () => {
                 { icon: Shield, title: "Secure", desc: "Payment" },
                 { icon: RotateCcw, title: "Returns", desc: "15 Days" },
               ].map((item, i) => (
-                <div key={i} className="text-center p-3 bg-gray-50 rounded">
-                  <item.icon className="w-4 h-4 mx-auto mb-1.5 text-gray-700" />
+                <div
+                  key={i}
+                  className="text-center p-2 bg-gray-50 rounded border border-gray-100"
+                >
+                  <item.icon className="w-4 h-4 mx-auto mb-1 text-gray-700" />
                   <div className="font-medium text-gray-900 text-xs">
                     {item.title}
                   </div>
@@ -519,12 +518,15 @@ const ProductDetail = () => {
         </div>
 
         {/* Reviews Section */}
-        <section className="mt-12 pt-8 border-t">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <section className="mt-8 pt-6 border-t">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-2">
+              <h2 className="text-lg font-bold text-gray-900 mb-1">
                 Customer Reviews
               </h2>
+              <p className="text-gray-600 text-sm">
+                {reviews.length} review{reviews.length !== 1 ? "s" : ""}
+              </p>
             </div>
 
             {token ? (
@@ -544,53 +546,61 @@ const ProductDetail = () => {
                 className="px-4 py-2 bg-gray-100 text-gray-800 rounded font-medium hover:bg-gray-200 transition text-sm"
               >
                 Login to Review
-                <Login />
               </button>
             )}
           </div>
 
           {token && <Review id={id} onSuccess={refreshReviews} />}
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {reviews.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 text-sm">
+              <div className="text-center py-6 text-gray-500 text-sm bg-gray-50 rounded">
                 No reviews yet. Be the first to share your experience!
               </div>
             ) : (
               reviews.map((review) => (
-                <div key={review._id} className="pb-4 border-b last:border-0">
+                <div
+                  key={review._id}
+                  className="pb-3 border-b border-gray-100 last:border-0"
+                >
                   <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-2 mb-1.5">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                           <span className="font-medium text-xs text-black">
                             {(review.user?.username?.[0] || "U").toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <div className="font-medium text-sm text-black">
-                            {review.user?.username || "User"}
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-3 h-3 ${
-                                    i < review.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-gray-300"
-                                  }`}
-                                />
-                              ))}
+                        <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                            <div className="font-medium text-sm text-black">
+                              {review.user?.username || "User"}
                             </div>
-                            <span className="text-gray-400 text-xs">
-                              {new Date(review.createdAt).toLocaleDateString()}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3 h-3 ${
+                                      i < review.rating
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-gray-400 text-xs">
+                                {new Date(
+                                  review.createdAt,
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
+                          <p className="text-gray-700 text-sm mt-1.5">
+                            {review.comment}
+                          </p>
                         </div>
                       </div>
-                      <p className="text-gray-700 text-sm">{review.comment}</p>
                     </div>
 
                     {canDelete(review) && (
@@ -602,12 +612,12 @@ const ProductDetail = () => {
                                 `http://localhost:4000/review/${review._id}`,
                                 {
                                   headers: { Authorization: `Bearer ${token}` },
-                                }
+                                },
                               )
                               .then(() => refreshReviews());
                           }
                         }}
-                        className="text-red-500 hover:text-red-700 text-xs"
+                        className="text-red-500 hover:text-red-700 text-xs ml-2 flex-shrink-0"
                       >
                         Delete
                       </button>
@@ -619,6 +629,7 @@ const ProductDetail = () => {
           </div>
         </section>
       </div>
+      <Login />
     </div>
   );
 };

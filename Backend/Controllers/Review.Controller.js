@@ -2,7 +2,6 @@ const Review = require("../Models/Review.Model");
 const Product = require("../Models/Product.Model");
 const mongoose = require("mongoose");
 
-// Update product statistics
 const updateProductStats = async (productId) => {
   const reviews = await Review.find({ product: productId });
 
@@ -18,7 +17,7 @@ const updateProductStats = async (productId) => {
   });
 };
 
-// Add Review
+
 const addReview = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
@@ -29,7 +28,7 @@ const addReview = async (req, res) => {
     }
 
     const { productId, rating, comment } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     if (!productId || rating === undefined) {
       return res.status(400).json({
@@ -77,9 +76,9 @@ const addReview = async (req, res) => {
 
 const getReview = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
 
-    const product = await Product.findById(userId);
+    const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -88,10 +87,8 @@ const getReview = async (req, res) => {
     }
 
     const reviews = await Review.find({ product: id })
-      .populate("user", "username email isVerified") // Add all possible name fields
+      .populate("user", "username email isVerified")
       .sort({ createdAt: -1 });
-
-    console.log("Sample review user:", reviews[0]?.user); // Check what's returned
 
     return res.status(200).json({
       success: true,

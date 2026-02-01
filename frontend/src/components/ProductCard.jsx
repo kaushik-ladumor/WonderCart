@@ -1,7 +1,5 @@
-// ProductCard.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Heart, Star } from "lucide-react";
 
 const ProductCard = ({
@@ -16,7 +14,7 @@ const ProductCard = ({
       (total, variant) =>
         total +
         (variant.sizes?.reduce((sum, size) => sum + (size.stock || 0), 0) || 0),
-      0
+      0,
     );
   };
 
@@ -73,44 +71,47 @@ const ProductCard = ({
   const isWishlisted = wishlist.includes(product._id);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6 }}
-      className="group h-full"
-    >
-      <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 h-full flex flex-col">
+    <div className="group h-full">
+      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full flex flex-col">
         <Link to={`/product-detail/${product._id}`} className="flex-shrink-0">
-          {/* Image Section - Clean & Minimal */}
-          <div className="relative aspect-square overflow-hidden bg-white">
+          {/* Image Section */}
+          <div className="relative aspect-square overflow-hidden bg-gray-50">
             <img
               src={getProductImage(product.variants)}
               alt={product.name}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-1000 ease-out"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
 
-            {/* Wishlist Button - Clean top-right */}
+            {/* Wishlist Button */}
             <button
               onClick={(e) => toggleWishlist(e, product)}
               disabled={addingToWishlist[product._id]}
-              className="absolute top-3 right-3 w-9 h-9 sm:w-11 sm:h-11 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300"
+              className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow hover:scale-110 transition"
               aria-label="Add to wishlist"
             >
               <Heart
-                className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
+                className={`w-3.5 h-3.5 ${
                   isWishlisted
-                    ? "text-black fill-black"
-                    : "text-gray-700 hover:text-black"
+                    ? "text-red-500 fill-red-500"
+                    : "text-gray-400 hover:text-red-500"
                 }`}
               />
             </button>
 
             {/* Sold Out Overlay */}
             {stock === 0 && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <span className="text-white text-lg sm:text-2xl font-bold tracking-wider">
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="text-white text-xs font-bold tracking-wider px-2 py-1 bg-black/70 rounded">
                   SOLD OUT
+                </span>
+              </div>
+            )}
+
+            {/* Discount Badge */}
+            {discount > 0 && (
+              <div className="absolute top-2 left-2">
+                <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs font-bold rounded">
+                  {discount}% OFF
                 </span>
               </div>
             )}
@@ -120,77 +121,58 @@ const ProductCard = ({
         {/* Content Section */}
         <Link
           to={`/product-detail/${product._id}`}
-          className="p-4 sm:p-6 space-y-3 sm:space-y-4 flex-grow flex flex-col"
+          className="p-3 space-y-2 flex-grow flex flex-col"
         >
           {/* Category */}
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">
             {product.category || "Collection"}
           </p>
 
           {/* Product Name */}
-          <h3 className="text-base sm:text-xl font-semibold text-gray-900 line-clamp-2 leading-tight flex-grow">
+          <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight flex-grow">
             {product.name}
           </h3>
 
           {/* Rating */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-3 h-3 sm:w-4 sm:h-4 ${
+                  className={`w-3 h-3 ${
                     i < Math.round(product.averageRating || 4)
                       ? "text-yellow-400 fill-yellow-400"
-                      : "text-yellow-400"
+                      : "text-gray-300"
                   }`}
                 />
               ))}
             </div>
-            <span className="text-xs sm:text-sm text-gray-600">
-              {product.numReviews || 0} reviews
+            <span className="text-xs text-gray-500">
+              ({product.numReviews || 0})
             </span>
           </div>
 
-          {/* Price & Discount Section - Responsive Layout */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="text-xl sm:text-2xl font-semibold text-gray-900">
-                ₹{price.toLocaleString()}
-              </span>
-              {discount > 0 && (
-                <span className="text-sm sm:text-base text-gray-400 line-through">
-                  ₹{originalPrice.toLocaleString()}
-                </span>
-              )}
-            </div>
-
+          {/* Price */}
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base font-bold text-gray-900">
+              ₹{price.toLocaleString()}
+            </span>
             {discount > 0 && (
-              <div className="relative group">
-                <span className="px-2 py-0.5 sm:py-1 bg-black text-white text-xs font-bold rounded-lg transition-all group-hover:scale-105">
-                  {discount}% OFF
-                </span>
-                <div className="absolute inset-0 bg-black blur-sm opacity-30 group-hover:opacity-50 rounded-lg -z-10" />
-              </div>
+              <span className="text-xs text-gray-400 line-through">
+                ₹{originalPrice.toLocaleString()}
+              </span>
             )}
           </div>
 
           {/* Low Stock Alert */}
           {stock > 0 && stock <= 5 && (
-            <p className="text-xs sm:text-sm font-semibold text-red-600 animate-pulse">
-              Only {stock} left in stock!
-            </p>
-          )}
-
-          {/* Variant Info - Subtle */}
-          {product.variants?.length > 0 && (
-            <p className="text-xs text-gray-500">
-              Available in {product.variants.length} color
-              {product.variants.length > 1 ? "s" : ""}
+            <p className="text-xs font-medium text-red-600">
+              Only {stock} left!
             </p>
           )}
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
