@@ -229,11 +229,28 @@ function Login() {
             )}
           </div>
 
+          {/* Forgot Password Link */}
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => {
+                if (!disabled) {
+                  document.getElementById("login_modal")?.close();
+                  navigate("/forgot-password");
+                }
+              }}
+              className="text-black text-xs font-medium hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
+              disabled={disabled}
+            >
+              Forgot password?
+            </button>
+          </div>
+
           {/* Login Button */}
           <button
             type="submit"
             disabled={disabled}
-            className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm mt-2"
+            className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm mt-1"
           >
             {disabled ? (
               <div className="flex items-center justify-center gap-2">

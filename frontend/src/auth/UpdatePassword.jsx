@@ -9,6 +9,7 @@ function UpdatePassword() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { authUser } = useAuth();
 
   const {
@@ -20,166 +21,268 @@ function UpdatePassword() {
   } = useForm();
 
   const newPassword = watch("newPassword");
-  const isGoogleUser = !authUser?.password;
+
+  // IMPORTANT: Check if user is Google user
+  // Based on the database structure, Google users have googleId field
+  // We need to get the full user data from localStorage to check properly
+  const getStoredUser = () => {
+    try {
+      const storedUser = localStorage.getItem("Users");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const storedUser = getStoredUser();
+  const isGoogleUser = storedUser?.googleId || authUser?.googleId;
 
   const onSubmit = async (data) => {
-    // ✅ correct auth check
     if (!authUser?._id) {
       toast.error("User not authenticated. Please login again.");
       return;
     }
 
-    const passwordData = isGoogleUser
-      ? { newPassword: data.newPassword }
-      : {
-          currentPassword: data.currentPassword,
-          newPassword: data.newPassword,
-        };
-
-
     try {
-      
-      const token = localStorage.getItem("token");
+      setLoading(true);
 
-      await axios.put(
+      const token = localStorage.getItem("token");
+      const passwordData = {
+        newPassword: data.newPassword,
+      };
+
+      // For Google users, we don't send currentPassword
+      // For regular users, we send currentPassword
+      if (!isGoogleUser && data.currentPassword) {
+        passwordData.currentPassword = data.currentPassword;
+      }
+
+      console.log("User type:", isGoogleUser ? "Google User" : "Regular User");
+      console.log("Sending password data:", passwordData);
+
+      const response = await axios.put(
         "http://localhost:4000/user/update-password",
         passwordData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
-      toast.success("Password updated successfully");
-      reset();
-      document.getElementById("my_modal_7").close();
+      if (response.data.success) {
+        toast.success(response.data.message);
+        reset();
+        document.getElementById("update_password_modal").close();
+      } else {
+        toast.error(response.data.message || "Failed to update password");
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update password");
+      console.error("Password update error:", err.response?.data);
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to update password. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    if (!loading) {
+      document.getElementById("update_password_modal")?.close();
     }
   };
 
   return (
-    <div>
-      <dialog id="my_modal_7" className="modal">
-        <div className="modal-box bg-white max-w-md p-8">
-          {/* Close Button */}
-          <form method="dialog">
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-3 top-3 text-gray-400 hover:text-white">
-              <X className="h-5 w-5" />
-            </button>
-          </form>
-
-          {/* Header */}
-          <h2 className="text-2xl font-bold text-black mb-6">
-            Update Password
-          </h2>
-
-          <div className="space-y-5">
-            {/* Current Password */}
-            {!isGoogleUser && (
-              <div>
-                <label className="block text-sm font-medium text-black mb-2 text-left">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showCurrentPassword ? "text" : "password"}
-                    placeholder="Enter current password"
-                    className="w-full px-3 py-2 pl-9 pr-11 border border-gray-300 rounded-lg"
-                    {...register("currentPassword", { required: true })}
-                  />
-                  <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                </div>
-              </div>
-            )}
-
-            {/* New Password */}
-            <div>
-              <label className="block text-sm font-medium text-black mb-2 text-left">
-                New Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter new password"
-                  className="w-full px-3 py-2 pl-9 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-black placeholder-gray-400"
-                  {...register("newPassword", {
-                    required: true,
-                    minLength: 8,
-                  })}
-                />
-                <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-black"
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              {errors.newPassword && (
-                <span className="text-red-500 text-xs block text-left mt-1">
-                  {errors.newPassword.type === "minLength"
-                    ? "Password must be at least 8 characters"
-                    : "New password is required"}
-                </span>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-sm font-medium text-black mb-2 text-left">
-                Confirm New Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm new password"
-                  className="w-full px-3 py-2 pl-9 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-black placeholder-gray-400"
-                  {...register("confirmPassword", {
-                    required: true,
-                    validate: (value) =>
-                      value === newPassword || "Passwords don't match",
-                  })}
-                />
-                <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-black"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <span className="text-red-500 text-xs block text-left mt-1">
-                  {errors.confirmPassword.message ||
-                    "Please confirm your password"}
-                </span>
-              )}
-            </div>
-
-            {/* Update Button */}
-            <button
-              type="button"
-              onClick={handleSubmit(onSubmit)}
-              className="w-full bg-black text-white py-3.5 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 mt-2"
-            >
+    <dialog id="update_password_modal" className="modal">
+      <div className="modal-box max-w-md p-5 bg-white rounded-lg shadow-xl border border-gray-200">
+        {/* Header - Login modal style */}
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+          <div className="text-left">
+            <h3 className="font-bold text-gray-900 text-lg">
               {isGoogleUser ? "Set Password" : "Update Password"}
-            </button>
+            </h3>
+            <p className="text-gray-600 text-sm mt-1">
+              {isGoogleUser
+                ? "Set a password for your account"
+                : "Enter your current and new password"}
+            </p>
+          </div>
+          <button
+            onClick={closeModal}
+            disabled={loading}
+            className="p-1 hover:bg-gray-100 rounded disabled:opacity-50"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Current Password - Only for NON-Google users */}
+          {!isGoogleUser && (
+            <div className="text-left">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Current Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  placeholder="Enter current password"
+                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
+                    errors.currentPassword
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  disabled={loading}
+                  {...register("currentPassword", {
+                    required: !isGoogleUser && "Current password is required",
+                  })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {errors.currentPassword && (
+                <p className="text-red-600 text-xs mt-1 text-left">
+                  {errors.currentPassword.message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* New Password - For ALL users */}
+          <div className="text-left">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              New Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type={showNewPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
+                  errors.newPassword ? "border-red-500" : "border-gray-300"
+                } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                disabled={loading}
+                {...register("newPassword", {
+                  required: "New password is required",
+                  minLength: {
+                    value: 8,
+                    message: "Password must be at least 8 characters",
+                  },
+                })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {showNewPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+            {errors.newPassword && (
+              <p className="text-red-600 text-xs mt-1 text-left">
+                {errors.newPassword.message}
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-1 text-left">
+              Must be at least 8 characters long
+            </p>
+          </div>
+
+          {/* Confirm Password - For ALL users */}
+          <div className="text-left">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Confirm New Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm new password"
+                className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
+                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                disabled={loading}
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
+                  validate: (value) =>
+                    value === newPassword || "Passwords don't match",
+                })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-red-600 text-xs mt-1 text-left">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          {/* Update Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm mt-4"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                {isGoogleUser ? "Setting Password..." : "Updating Password..."}
+              </div>
+            ) : isGoogleUser ? (
+              "Set Password"
+            ) : (
+              "Update Password"
+            )}
+          </button>
+        </form>
+
+        {/* Security Note */}
+        <div className="mt-6 pt-5 border-t border-gray-200 text-left">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="w-4 h-4 flex items-center justify-center">
+              <Lock className="w-3 h-3 text-green-600" />
+            </div>
+            <span>Your password is encrypted and securely stored</span>
           </div>
         </div>
-      </dialog>
-    </div>
+      </div>
+
+      {/* Modal backdrop */}
+      <form method="dialog" className="modal-backdrop">
+        <button onClick={closeModal} disabled={loading}>
+          close
+        </button>
+      </form>
+    </dialog>
   );
 }
 

@@ -3,23 +3,17 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useCart } from "../context/CartContext";
-import {
-  Heart,
-  Star,
-  Palette,
-  Package,
-  Loader2,
-  ChevronLeft,
-  ShoppingBag,
-} from "lucide-react";
+import ProductCard from "../components/ProductCard";
+import { Heart, Star, Palette, Package, Loader2 } from "lucide-react";
 
 function Wishlist() {
   const navigate = useNavigate();
   const { setCartCount, refreshCart } = useCart();
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [removingItem, setRemovingItem] = useState(null);
-  const [addingToCart, setAddingToCart] = useState({});
+  const [wishlist, setWishlist] = useState([]);
+  const [addingToWishlist, setAddingToWishlist] = useState({});
+  const [addingAllToCart, setAddingAllToCart] = useState(false);
 
   // Fetch wishlist from backend
   useEffect(() => {
@@ -47,37 +41,51 @@ function Wishlist() {
         const items = response.data.wishlist.items || [];
         const products = items.map((item) => item.product).filter(Boolean);
         setWishlistItems(products);
+        // Set wishlist IDs for ProductCard
+        setWishlist(products.map((p) => p._id));
       } else {
         toast.error("Failed to load wishlist");
         setWishlistItems([]);
+        setWishlist([]);
       }
     } catch (err) {
       console.error("Wishlist fetch error:", err);
       toast.error("Failed to load wishlist");
       setWishlistItems([]);
+      setWishlist([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper: Get lowest price from all variants
-  const getLowestPrice = (product) => {
-    if (!product.variants || product.variants.length === 0) return 0;
+  // Toggle wishlist (remove from wishlist)
+  const toggleWishlist = async (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-    let lowest = Infinity;
-    product.variants.forEach((variant) => {
-      variant.sizes?.forEach((size) => {
-        const finalPrice =
-          size.discount > 0
-            ? Math.round(size.price * (1 - size.discount / 100))
-            : size.price;
-        if (finalPrice < lowest) {
-          lowest = finalPrice;
-        }
-      });
-    });
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to manage wishlist");
+      return;
+    }
 
-    return lowest === Infinity ? 0 : lowest;
+    setAddingToWishlist((p) => ({ ...p, [product._id]: true }));
+
+    try {
+      // Always remove from wishlist since we're on the wishlist page
+      await axios.delete(
+        `http://localhost:4000/wishlist/remove/${product._id}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      setWishlist((p) => p.filter((id) => id !== product._id));
+      setWishlistItems((p) => p.filter((item) => item._id !== product._id));
+      toast.success("Removed from wishlist");
+    } catch {
+      toast.error("Failed to update wishlist");
+    } finally {
+      setAddingToWishlist((p) => ({ ...p, [product._id]: false }));
+    }
   };
 
   // Helper: Get total stock across all variants
@@ -91,7 +99,12 @@ function Wishlist() {
     }, 0);
   };
 
-  // Helper: Get first available variant
+  // Helper: Get available colors count
+  const getColorsCount = (product) => {
+    return product.variants?.length || 0;
+  };
+
+  // Helper: Get first available variant for adding to cart
   const getFirstAvailableVariant = (product) => {
     if (!product.variants || product.variants.length === 0) return null;
 
@@ -110,130 +123,13 @@ function Wishlist() {
     return null;
   };
 
-  // Helper: Get product image (first variant's first image)
-  const getProductImage = (product) => {
-    if (
-      product.variants &&
-      product.variants.length > 0 &&
-      product.variants[0].images?.length > 0
-    ) {
-      return product.variants[0].images[0];
-    }
-    return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80";
-  };
-
-  // Helper: Get available colors count
-  const getColorsCount = (product) => {
-    return product.variants?.length || 0;
-  };
-
-  // Helper: Get discount for first available variant
-  const getDiscount = (product) => {
-    const variant = getFirstAvailableVariant(product);
-    return variant?.discount || 0;
-  };
-
-  // Remove from wishlist
-  const removeFromWishlist = async (productId) => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      toast.error("Please login to manage wishlist");
-      return;
-    }
-
-    setRemovingItem(productId);
-
-    try {
-      const response = await axios.delete(
-        `http://localhost:4000/wishlist/remove/${productId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.data.success) {
-        setWishlistItems((prev) =>
-          prev.filter((item) => item._id !== productId),
-        );
-        toast.success("Removed from wishlist");
-      } else {
-        toast.error(response.data.message || "Failed to remove from wishlist");
-      }
-    } catch (err) {
-      console.error("Remove from wishlist error:", err);
-      toast.error("Failed to remove from wishlist");
-    } finally {
-      setRemovingItem(null);
-    }
-  };
-
-  // Add to cart from wishlist
-  const addToCart = async (product) => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      toast.error("Please login to add items to cart");
-      return;
-    }
-
-    const totalStock = getTotalStock(product);
-    if (totalStock === 0) {
-      toast.error("Product is out of stock");
-      return;
-    }
-
-    // Get first available variant
-    const availableVariant = getFirstAvailableVariant(product);
-    if (!availableVariant) {
-      toast.error("No available variants");
-      return;
-    }
-
-    setAddingToCart((prev) => ({ ...prev, [product._id]: true }));
-
-    try {
-      const response = await axios.post(
-        "http://localhost:4000/cart/add",
-        {
-          productId: product._id,
-          quantity: 1,
-          color: availableVariant.color,
-          size: availableVariant.size,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.data.success) {
-        if (refreshCart) {
-          await refreshCart();
-        } else {
-          setCartCount((prev) => prev + 1);
-        }
-        toast.success("Added to cart!");
-      } else {
-        toast.error(response.data.message || "Failed to add to cart");
-      }
-    } catch (err) {
-      console.error("Add to cart error:", err.response?.data || err.message);
-      toast.error(err.response?.data?.message || "Failed to add to cart");
-    } finally {
-      setAddingToCart((prev) => ({ ...prev, [product._id]: false }));
-    }
-  };
-
   // Add all items to cart
   const addAllToCart = async () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
       toast.error("Please login to add items to cart");
+      navigate("/login");
       return;
     }
 
@@ -245,6 +141,8 @@ function Wishlist() {
       toast.error("No items in stock to add to cart");
       return;
     }
+
+    setAddingAllToCart(true);
 
     try {
       let addedCount = 0;
@@ -280,20 +178,19 @@ function Wishlist() {
         } else {
           setCartCount((prev) => prev + addedCount);
         }
-        toast.success(`Added ${addedCount} items to cart!`);
+        toast.success(
+          `Added ${addedCount} item${addedCount !== 1 ? "s" : ""} to cart!`,
+        );
       }
     } catch (err) {
       console.error("Add all to cart error:", err);
       toast.error("Failed to add items to cart");
+    } finally {
+      setAddingAllToCart(false);
     }
   };
 
   // Calculate stats
-  const totalValue = wishlistItems.reduce(
-    (sum, item) => sum + getLowestPrice(item),
-    0,
-  );
-
   const inStockCount = wishlistItems.filter(
     (item) => getTotalStock(item) > 0,
   ).length;
@@ -337,13 +234,6 @@ function Wishlist() {
                 {wishlistItems.length !== 1 ? "s" : ""}
               </p>
             </div>
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Continue Shopping
-            </button>
           </div>
 
           {/* Stats */}
@@ -421,158 +311,17 @@ function Wishlist() {
           </div>
         ) : (
           <>
-            {/* Products Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {wishlistItems.map((item) => {
-                const totalStock = getTotalStock(item);
-                const productImage = getProductImage(item);
-                const colorsCount = getColorsCount(item);
-                const lowestPrice = getLowestPrice(item);
-                const discount = getDiscount(item);
-                const variant = getFirstAvailableVariant(item);
-                const originalPrice = variant ? variant.price : 0;
-
-                return (
-                  <div
-                    key={item._id}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-sm transition-all"
-                  >
-                    {/* Image Section */}
-                    <div
-                      className="relative aspect-square overflow-hidden bg-gray-50 cursor-pointer"
-                      onClick={() => navigate(`/product-detail/${item._id}`)}
-                    >
-                      <img
-                        src={productImage}
-                        alt={item.name}
-                        className="w-full h-full object-cover hover:scale-105 transition duration-300"
-                      />
-
-                      {/* Remove Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFromWishlist(item._id);
-                        }}
-                        disabled={removingItem === item._id}
-                        className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow hover:bg-gray-50 transition"
-                      >
-                        {removingItem === item._id ? (
-                          <Loader2 className="w-3 h-3 text-gray-600 animate-spin" />
-                        ) : (
-                          <Heart className="w-3 h-3 text-red-500 fill-current" />
-                        )}
-                      </button>
-
-                      {/* Discount Badge */}
-                      {discount > 0 && (
-                        <div className="absolute top-2 left-2">
-                          <span className="px-1.5 py-0.5 bg-black text-white text-xs font-medium rounded">
-                            {discount}% OFF
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Stock Overlay */}
-                      {totalStock === 0 && (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                          <span className="text-white font-medium text-xs">
-                            SOLD OUT
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Colors Badge */}
-                      {colorsCount > 0 && (
-                        <div className="absolute bottom-2 left-2">
-                          <span className="px-1.5 py-0.5 bg-white/90 text-xs rounded flex items-center gap-1">
-                            <Palette className="w-3 h-3" />
-                            {colorsCount}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info Section */}
-                    <div className="p-3">
-                      {/* Category */}
-                      <p className="text-xs text-gray-500 mb-1">
-                        {item.category || "Product"}
-                      </p>
-
-                      {/* Title */}
-                      <h3
-                        className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 hover:text-black cursor-pointer"
-                        onClick={() => navigate(`/product-detail/${item._id}`)}
-                      >
-                        {item.name}
-                      </h3>
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-1 mb-2">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${
-                                i < Math.round(item.averageRating || 0)
-                                  ? "text-yellow-400 fill-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-gray-600">
-                          ({item.numReviews || 0})
-                        </span>
-                      </div>
-
-                      {/* Price */}
-                      <div className="flex items-baseline gap-1.5 mb-3">
-                        <span className="text-base font-bold text-gray-900">
-                          ₹{lowestPrice.toLocaleString()}
-                        </span>
-                        {variant && variant.discount > 0 && (
-                          <span className="text-sm text-gray-400 line-through">
-                            ₹{originalPrice.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-1.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/product-detail/${item._id}`);
-                          }}
-                          className="flex-1 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(item);
-                          }}
-                          disabled={totalStock === 0 || addingToCart[item._id]}
-                          className={`flex-1 py-1.5 text-xs font-medium rounded transition ${
-                            totalStock > 0
-                              ? "bg-black text-white hover:bg-gray-800 disabled:bg-gray-400"
-                              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          }`}
-                        >
-                          {addingToCart[item._id] ? (
-                            <Loader2 className="w-3 h-3 animate-spin mx-auto" />
-                          ) : (
-                            "Add to Cart"
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Products Grid using ProductCard */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {wishlistItems.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  wishlist={wishlist}
+                  addingToWishlist={addingToWishlist}
+                  toggleWishlist={toggleWishlist}
+                />
+              ))}
             </div>
 
             {/* Bottom Summary */}
@@ -580,10 +329,8 @@ function Wishlist() {
               <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    Total value:{" "}
-                    <span className="font-bold">
-                      ₹{totalValue.toLocaleString()}
-                    </span>
+                    {wishlistItems.length} item
+                    {wishlistItems.length !== 1 ? "s" : ""} saved
                   </p>
                   <p className="text-xs text-gray-600">
                     {inStockCount} item{inStockCount !== 1 ? "s" : ""} in stock
@@ -599,14 +346,21 @@ function Wishlist() {
                   </button>
                   <button
                     onClick={addAllToCart}
-                    disabled={inStockCount === 0}
-                    className={`px-4 py-2 text-sm font-medium rounded transition ${
-                      inStockCount > 0
+                    disabled={inStockCount === 0 || addingAllToCart}
+                    className={`px-4 py-2 text-sm font-medium rounded transition flex items-center gap-2 ${
+                      inStockCount > 0 && !addingAllToCart
                         ? "bg-black text-white hover:bg-gray-800"
                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    Add All ({inStockCount} items)
+                    {addingAllToCart ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      `Add All to Cart (${inStockCount})`
+                    )}
                   </button>
                 </div>
               </div>

@@ -443,7 +443,7 @@ const updatePassword = async (req, res) => {
       });
     }
 
-    // 🔹 CASE 1: GOOGLE USER → SET PASSWORD
+    // 🔹 CASE 1: GOOGLE USER → SET PASSWORD (NO CURRENT PASSWORD NEEDED)
     if (!user.password) {
       const hashed = await bcrypt.hash(newPassword, 10);
       user.password = hashed;
@@ -455,7 +455,7 @@ const updatePassword = async (req, res) => {
       });
     }
 
-    // 🔹 CASE 2: NORMAL USER → UPDATE PASSWORD
+    // 🔹 CASE 2: NORMAL USER → UPDATE PASSWORD (CURRENT PASSWORD REQUIRED)
     if (!currentPassword) {
       return res.status(400).json({
         success: false,
@@ -480,6 +480,7 @@ const updatePassword = async (req, res) => {
       message: "Password updated successfully",
     });
   } catch (error) {
+    console.error("Update password error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",

@@ -85,18 +85,10 @@ const ProductDetail = () => {
     fetchReviews();
   }, [id, refreshKey]);
 
-  // Format price with 2 decimal places
-  const formatPrice = (price) => {
-    if (price === undefined || price === null) return "0.00";
-    return parseFloat(price).toFixed(2);
-  };
-
-  // Format price with commas for display
+  // Format price with commas for display (no decimals)
   const formatPriceDisplay = (price) => {
-    const formatted = formatPrice(price);
-    const parts = formatted.split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return parts.join(".");
+    const rounded = Math.round(price);
+    return rounded.toLocaleString();
   };
 
   // Helper functions

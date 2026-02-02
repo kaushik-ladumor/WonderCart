@@ -20,7 +20,6 @@ import {
   CheckCircle,
   Home,
   Briefcase,
-  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -41,17 +40,23 @@ const Checkout = () => {
   const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
   const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
+  // Round price to nearest integer (no decimals)
   const formatPrice = (price) => {
-    if (price === undefined || price === null) return "0.00";
-    return parseFloat(price).toFixed(2);
+    if (price === undefined || price === null) return "0";
+    const rounded = Math.round(parseFloat(price));
+    return rounded.toString();
   };
 
+  // Format price with commas (Indian numbering system)
   const formatPriceDisplay = (price) => {
     const formatted = formatPrice(price);
-    const parts = formatted.split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return parts.join(".");
+    return formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
+
+  // Get FREE shipping threshold (₹999)
+  const FREE_SHIPPING_THRESHOLD = 999;
+  // Shipping cost if below threshold
+  const SHIPPING_COST = 50;
 
   const getToken = () => {
     return localStorage.getItem("token") || localStorage.getItem("authToken");
@@ -92,9 +97,12 @@ const Checkout = () => {
             item.originalPrice || item.product?.price || itemPrice;
           const discount = item.discount || item.product?.discount || 0;
 
+          // Calculate discounted price
           let finalPrice = itemPrice;
           if (discount > 0 && itemPrice === originalPrice) {
-            finalPrice = originalPrice * (1 - discount / 100);
+            finalPrice = Math.round(originalPrice * (1 - discount / 100));
+          } else {
+            finalPrice = Math.round(finalPrice);
           }
 
           return {
@@ -104,8 +112,8 @@ const Checkout = () => {
               item.productImg || item.product?.variants?.[0]?.images?.[0] || "",
             color: item.color || "",
             size: item.size || "",
-            price: finalPrice,
-            originalPrice: originalPrice,
+            price: finalPrice, // Already rounded
+            originalPrice: Math.round(originalPrice), // Round original price
             discount: discount,
             quantity: item.quantity || 1,
           };
@@ -266,10 +274,6 @@ const Checkout = () => {
   };
 
   const placeOrder = async () => {
-    console.log("Starting placeOrder...");
-    console.log("Selected payment:", selectedPayment);
-    console.log("Razorpay available:", !!window.Razorpay);
-
     if (!validateOrder()) {
       return;
     }
@@ -326,8 +330,6 @@ const Checkout = () => {
         };
       }
 
-      console.log("Sending order data:", orderData);
-
       const response = await axios.post(
         `${API_BASE_URL}/order/create`,
         orderData,
@@ -339,8 +341,6 @@ const Checkout = () => {
         },
       );
 
-      console.log("Order response:", response.data);
-
       if (response.data.success) {
         const wasDirectOrder = sessionStorage.getItem("directOrder") !== null;
 
@@ -350,7 +350,6 @@ const Checkout = () => {
         sessionStorage.removeItem("directOrderTotal");
 
         if (selectedPayment === "Razorpay") {
-          console.log("Opening Razorpay...");
           openRazorpay(response.data.razorpayOrder, response.data.order._id);
         } else {
           toast.success("Order placed successfully!");
@@ -360,12 +359,9 @@ const Checkout = () => {
         toast.error(response.data.message || "Failed to place order");
       }
     } catch (err) {
-      console.error("Order error:", err);
-
       let errorMessage = "Failed to place order";
 
       if (err.response) {
-        console.error("Error response:", err.response);
         if (err.response.status === 401) {
           localStorage.removeItem("token");
           localStorage.removeItem("authToken");
@@ -388,24 +384,19 @@ const Checkout = () => {
   };
 
   const openRazorpay = (razorpayOrder, orderId) => {
-    console.log("openRazorpay called with:", razorpayOrder, orderId);
-
     if (!window.Razorpay) {
-      console.error("Razorpay not found on window object");
       toast.error("Payment gateway not loaded. Please refresh the page.");
       setSubmitting(false);
       return;
     }
 
     if (!RAZORPAY_KEY) {
-      console.error("Razorpay key not found");
       toast.error("Payment gateway configuration error");
       setSubmitting(false);
       return;
     }
 
     if (!razorpayOrder || !razorpayOrder.id) {
-      console.error("Invalid razorpayOrder:", razorpayOrder);
       toast.error("Invalid payment order received");
       setSubmitting(false);
       return;
@@ -421,7 +412,6 @@ const Checkout = () => {
       description: "Order Payment",
       order_id: razorpayOrder.id,
       handler: function (response) {
-        console.log("Razorpay handler called:", response);
         verifyPayment(response, orderId);
       },
       prefill: {
@@ -434,21 +424,16 @@ const Checkout = () => {
       },
       modal: {
         ondismiss: function () {
-          console.log("Razorpay modal dismissed");
           toast.error("Payment cancelled");
           setSubmitting(false);
         },
       },
     };
 
-    console.log("Razorpay options:", options);
-
     try {
       const rzp = new window.Razorpay(options);
-      console.log("Razorpay instance created, opening modal...");
       rzp.open();
     } catch (error) {
-      console.error("Error creating Razorpay instance:", error);
       toast.error("Failed to initialize payment");
       setSubmitting(false);
     }
@@ -481,17 +466,18 @@ const Checkout = () => {
         setSubmitting(false);
       }
     } catch (error) {
-      console.error("Payment verification error:", error);
       toast.error("Payment verification error");
       setSubmitting(false);
     }
   };
 
+  // Calculate rounded prices
   const subtotal = orderItems.reduce(
-    (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+    (sum, item) => sum + Math.round(item.price || 0) * (item.quantity || 1),
     0,
   );
-  const shipping = subtotal > 0 ? (subtotal >= 500 ? 0 : 50) : 0;
+
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = subtotal + shipping;
 
   if (loading) {
@@ -874,10 +860,11 @@ const Checkout = () => {
                     )}
                   </span>
                 </div>
-                {subtotal > 0 && subtotal < 500 && (
+                {subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD && (
                   <div className="text-xs text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-200">
-                    Add ₹{formatPriceDisplay(500 - subtotal)} more for free
-                    shipping!
+                    Add ₹
+                    {formatPriceDisplay(FREE_SHIPPING_THRESHOLD - subtotal)}{" "}
+                    more for free shipping!
                   </div>
                 )}
               </div>

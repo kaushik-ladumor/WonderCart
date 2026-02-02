@@ -25,49 +25,29 @@ const ProductCard = ({
     );
   };
 
-  const getLowestPrice = (variants) => {
-    if (!variants?.length) return 0;
-
-    let lowest = Infinity;
-
-    variants.forEach((variant) => {
-      variant.sizes?.forEach((size) => {
-        const discountAmount = size.price * (size.discount / 100);
-        const finalPrice = size.price - discountAmount;
-
-        if (finalPrice < lowest) {
-          lowest = finalPrice;
-        }
-      });
-    });
-
-    return lowest === Infinity ? 0 : Math.round(lowest);
-  };
-
   const getOriginalPrice = (variants) => {
     if (!variants?.length) return 0;
+    return variants[0]?.sizes?.[0]?.price || 0;
+  };
 
-    let lowest = Infinity;
+  const getDiscount = (variants) => {
+    if (!variants?.length) return 0;
 
-    variants.forEach((variant) => {
-      variant.sizes?.forEach((size) => {
-        if (size.price < lowest) {
-          lowest = size.price;
-        }
-      });
-    });
+    const firstVariant = variants[0];
+    if (!firstVariant?.sizes?.length) return 0;
 
-    return lowest === Infinity ? 0 : lowest;
+    return firstVariant.sizes[0]?.discount || 0;
+  };
+
+  const calculateFinalPrice = (price, discount) => {
+    const discountAmount = price * (discount / 100);
+    return Math.round(price - discountAmount);
   };
 
   const stock = getTotalStock(product.variants);
-  const price = getLowestPrice(product.variants);
   const originalPrice = getOriginalPrice(product.variants);
-  const discount =
-    originalPrice > price
-      ? Math.round(((originalPrice - price) / originalPrice) * 100)
-      : 0;
-
+  const discount = getDiscount(product.variants);
+  const finalPrice = calculateFinalPrice(originalPrice, discount);
   const isWishlisted = wishlist.includes(product._id);
 
   return (
@@ -75,7 +55,7 @@ const ProductCard = ({
       <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full flex flex-col">
         <Link to={`/product-detail/${product._id}`} className="flex-shrink-0">
           {/* Image Section */}
-          <div className="relative aspect-square overflow-hidden bg-gray-50">
+          <div className="relative aspect-square overflow-hidden bg-white">
             <img
               src={getProductImage(product.variants)}
               alt={product.name}
@@ -86,7 +66,7 @@ const ProductCard = ({
             <button
               onClick={(e) => toggleWishlist(e, product)}
               disabled={addingToWishlist[product._id]}
-              className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow hover:scale-110 transition"
+              className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow hover:scale-110 transition z-10"
               aria-label="Add to wishlist"
             >
               <Heart
@@ -119,19 +99,18 @@ const ProductCard = ({
         </Link>
 
         {/* Content Section */}
-        <Link
-          to={`/product-detail/${product._id}`}
-          className="p-3 space-y-2 flex-grow flex flex-col"
-        >
+        <div className="p-3 space-y-2 flex-grow flex flex-col">
           {/* Category */}
           <p className="text-xs text-gray-500 uppercase tracking-wide">
             {product.category || "Collection"}
           </p>
 
           {/* Product Name */}
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight flex-grow">
-            {product.name}
-          </h3>
+          <Link to={`/product-detail/${product._id}`}>
+            <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight hover:text-gray-600 transition">
+              {product.name}
+            </h3>
+          </Link>
 
           {/* Rating */}
           <div className="flex items-center gap-1">
@@ -152,11 +131,39 @@ const ProductCard = ({
             </span>
           </div>
 
+          {/* Color Variants Preview */}
+          {product.variants && product.variants.length > 1 && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-500">Colors:</span>
+              <div className="flex gap-1">
+                {product.variants.slice(0, 4).map((variant, index) => (
+                  <div
+                    key={index}
+                    className="w-4 h-4 rounded-full border-2 border-gray-300"
+                    style={{
+                      backgroundColor:
+                        variant.color === "natural" || variant.color === "white"
+                          ? "#f5f5f5"
+                          : variant.color || "#e5e5e5",
+                    }}
+                    title={variant.color}
+                  />
+                ))}
+                {product.variants.length > 4 && (
+                  <span className="text-xs text-gray-400">
+                    +{product.variants.length - 4}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Price */}
           <div className="flex items-baseline gap-1.5">
             <span className="text-base font-bold text-gray-900">
-              ₹{price.toLocaleString()}
+              ₹{finalPrice.toLocaleString()}
             </span>
+
             {discount > 0 && (
               <span className="text-xs text-gray-400 line-through">
                 ₹{originalPrice.toLocaleString()}
@@ -170,7 +177,7 @@ const ProductCard = ({
               Only {stock} left!
             </p>
           )}
-        </Link>
+        </div>
       </div>
     </div>
   );

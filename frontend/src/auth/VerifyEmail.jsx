@@ -3,13 +3,13 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Mail, Shield, Clock, CheckCircle } from "lucide-react";
-import { useAuth } from "../context/AuthProvider"; // Import your auth context
+import { Mail, Shield, Clock, CheckCircle, X } from "lucide-react";
+import { useAuth } from "../context/AuthProvider";
 
 function VerifyEmail({ modalId = "verify_email_modal" }) {
   const navigate = useNavigate();
-  const { authUser } = useAuth(); // Get auth user from context
-  const [timer, setTimer] = useState(600);
+  const { authUser } = useAuth();
+  const [timer, setTimer] = useState(600); // 10 minutes
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -24,34 +24,36 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
   // Get user email from various sources
   useEffect(() => {
     const getEmail = () => {
-      // Try to get email from auth context first
       if (authUser?.email) {
         setUserEmail(authUser.email);
         return;
       }
 
-      // Try to get email from localStorage
       const storedUser = JSON.parse(localStorage.getItem("Users"));
       if (storedUser?.email) {
         setUserEmail(storedUser.email);
         return;
       }
 
-      // Try to get email from signup response
       const signupData = JSON.parse(localStorage.getItem("signupData"));
       if (signupData?.email) {
         setUserEmail(signupData.email);
         return;
       }
 
-      // Default fallback
+      const tempEmail = localStorage.getItem("tempUserEmail");
+      if (tempEmail) {
+        setUserEmail(tempEmail);
+        return;
+      }
+
       setUserEmail("your registered email");
     };
 
     getEmail();
   }, [authUser]);
 
-  // Timer countdown
+  // Timer countdown - 10 minutes
   useEffect(() => {
     if (timer > 0 && !canResend) {
       const countdown = setInterval(() => {
@@ -68,11 +70,14 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
     }
   }, [timer, canResend]);
 
-  // Auto-focus first input when modal opens
+  // Reset timer when modal opens
   useEffect(() => {
     const modal = document.getElementById(modalId);
     if (modal) {
       const handleOpen = () => {
+        setTimer(600); // Reset to 10 minutes
+        setCanResend(false);
+        reset();
         setTimeout(() => {
           const firstInput = document.getElementById("digit1");
           if (firstInput) firstInput.focus();
@@ -82,9 +87,8 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
       modal.addEventListener("shown", handleOpen);
       return () => modal.removeEventListener("shown", handleOpen);
     }
-  }, [modalId]);
+  }, [modalId, reset]);
 
-  // Handle OTP input navigation
   const handleInputChange = (e, index) => {
     const value = e.target.value;
     if (value.length === 1 && index < 4) {
@@ -104,25 +108,20 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
       const res = await axios.post("http://localhost:4000/user/verify", {
         verificationCode: otp,
       });
-      console.log(res);
 
       if (res.data) {
         toast.success("Email verified successfully!");
 
-        // Store user data if returned
         if (res.data.user) {
           localStorage.setItem("Users", JSON.stringify(res.data.user));
           localStorage.setItem("token", res.data.token);
         }
 
-        // Close modal
         const modal = document.getElementById(modalId);
         if (modal) modal.close();
 
-        // Reset form
         reset();
 
-        // Redirect based on role
         setTimeout(() => {
           const storedUser = JSON.parse(localStorage.getItem("Users"));
           if (!storedUser) {
@@ -176,131 +175,140 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const closeModal = () => {
+    if (!loading) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.close();
+    }
+  };
+
   return (
     <dialog id={modalId} className="modal">
-      <div className="modal-box bg-white border border-black max-w-md p-0 overflow-hidden rounded-none">
-        {/* Modal Header */}
-        <div className="p-6 pb-4">
-          <form method="dialog">
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-3 top-3 text-gray-500 hover:text-black hover:bg-gray-100 border-none">
-              ✕
-            </button>
-          </form>
+      <div className="modal-box max-w-md p-5 bg-white rounded-lg shadow-xl border border-gray-200">
+        {/* Header - Login modal style */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+          <div>
+            <h3 className="font-bold text-gray-900 text-lg">Verify Email</h3>
+            <p className="text-gray-600 text-xs mt-0.5">
+              Enter the 4-digit code sent to your email
+            </p>
+          </div>
+          <button
+            onClick={closeModal}
+            disabled={loading}
+            className="p-1 hover:bg-gray-100 rounded"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
 
-          {/* Icon */}
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-black to-gray-800 flex items-center justify-center">
-              <Shield className="w-8 h-8 text-white" />
-            </div>
+        {/* Icon and Email Display */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center mb-3">
+            <Shield className="w-6 h-6 text-white" />
           </div>
 
-          {/* Title */}
-          <h3 className="text-2xl font-black text-black mb-2 text-center tracking-tight">
-            VERIFY EMAIL
-          </h3>
-
-          {/* Divider */}
-          <div className="h-1 w-12 bg-black mx-auto mb-4"></div>
-
-          {/* Description */}
-          <p className="text-gray-600 text-sm mb-1 text-center">
-            We've sent a 4-digit verification code to
-          </p>
-          <p className="text-black font-bold text-sm mb-4 text-center flex items-center justify-center gap-1">
-            <Mail className="w-3 h-3" />
-            {userEmail}
-          </p>
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-1">
+              Verification code sent to
+            </p>
+            <div className="flex items-center justify-center gap-1.5">
+              <Mail className="w-4 h-4 text-gray-500" />
+              <p className="text-sm font-medium text-gray-900">{userEmail}</p>
+            </div>
+          </div>
         </div>
 
-        {/* Modal Body */}
-        <div className="px-6 pb-6">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            {/* OTP Inputs */}
-            <div className="mb-6">
-              <div className="flex justify-center gap-3 mb-2">
-                {[1, 2, 3, 4].map((digit) => (
-                  <input
-                    key={digit}
-                    id={`digit${digit}`}
-                    type="text"
-                    maxLength="1"
-                    className="w-14 h-14 text-center text-3xl font-black border-2 border-gray-300 rounded-lg focus:outline-none focus:border-black focus:ring-0 text-black bg-transparent"
-                    {...register(`digit${digit}`, {
-                      required: true,
-                      pattern: /^[0-9]$/,
-                      onChange: (e) => handleInputChange(e, digit),
-                    })}
-                    onKeyDown={(e) => {
-                      if (
-                        e.key === "Backspace" &&
-                        !e.target.value &&
-                        digit > 1
-                      ) {
-                        const prevInput = document.getElementById(
-                          `digit${digit - 1}`,
-                        );
-                        if (prevInput) prevInput.focus();
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-
-              {(errors.digit1 ||
-                errors.digit2 ||
-                errors.digit3 ||
-                errors.digit4) && (
-                <p className="text-red-600 text-xs text-center font-medium">
-                  Please enter all 4 digits correctly
-                </p>
-              )}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* OTP Inputs - Updated styling */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-900 mb-3 text-center">
+              Enter 4-digit code
+            </label>
+            <div className="flex justify-center gap-3">
+              {[1, 2, 3, 4].map((digit) => (
+                <input
+                  key={digit}
+                  id={`digit${digit}`}
+                  type="text"
+                  maxLength="1"
+                  className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white text-gray-900 ${
+                    errors[`digit${digit}`]
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } ${loading ? "bg-gray-100" : ""}`}
+                  disabled={loading}
+                  {...register(`digit${digit}`, {
+                    required: true,
+                    pattern: /^[0-9]$/,
+                    onChange: (e) => handleInputChange(e, digit),
+                  })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Backspace" && !e.target.value && digit > 1) {
+                      const prevInput = document.getElementById(
+                        `digit${digit - 1}`,
+                      );
+                      if (prevInput) prevInput.focus();
+                    }
+                  }}
+                />
+              ))}
             </div>
+            {(errors.digit1 ||
+              errors.digit2 ||
+              errors.digit3 ||
+              errors.digit4) && (
+              <p className="text-red-600 text-xs mt-2 text-center">
+                Please enter all 4 digits correctly
+              </p>
+            )}
+          </div>
 
-            {/* Verify Button */}
+          {/* Timer */}
+          <div className="flex items-center justify-center gap-2 mb-4 text-sm">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-600">Code expires in</span>
+            <span className="font-medium text-gray-900">
+              {formatTime(timer)}
+            </span>
+          </div>
+
+          {/* Verify Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm mb-4"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Verifying...
+              </div>
+            ) : (
+              "Verify Email"
+            )}
+          </button>
+
+          {/* Resend Code */}
+          <div className="text-center pt-4 border-t border-gray-200">
+            <p className="text-gray-600 text-sm mb-2">
+              Didn't receive the code?
+            </p>
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-black text-white py-3 font-bold text-sm tracking-wider hover:bg-gray-900 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed border border-black mb-4 uppercase"
+              type="button"
+              onClick={handleResend}
+              disabled={!canResend || loading}
+              className={`text-sm font-medium ${canResend ? "text-black hover:underline" : "text-gray-400 cursor-not-allowed"} disabled:text-gray-400 disabled:cursor-not-allowed`}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Verifying...
-                </span>
-              ) : (
-                "Verify Code"
-              )}
+              {canResend
+                ? "Resend Code"
+                : `Resend available in ${formatTime(timer)}`}
             </button>
+          </div>
+        </form>
 
-            {/* Timer and Resend */}
-            <div className="text-center space-y-3">
-              <div className="flex items-center justify-center gap-2 text-sm">
-                <Clock className="w-4 h-4 text-gray-500" />
-                <span className="text-gray-600">Code expires in</span>
-                <span className="font-bold text-black">
-                  {formatTime(timer)}
-                </span>
-              </div>
-
-              <div className="pt-3 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">
-                  Didn't receive the code?
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={!canResend || loading}
-                  className={`font-bold text-sm ${canResend ? "text-black hover:underline" : "text-gray-400 cursor-not-allowed"} disabled:text-gray-400 disabled:cursor-not-allowed`}
-                >
-                  {canResend ? "Resend Code" : "Wait to resend"}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        {/* Success Note */}
-        <div className="bg-gray-50 border-t border-gray-200 px-6 py-4">
+        {/* Security Note */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <CheckCircle className="w-4 h-4 text-green-600" />
             <span>Verification ensures secure access to your account</span>
@@ -308,8 +316,11 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
         </div>
       </div>
 
+      {/* Modal backdrop */}
       <form method="dialog" className="modal-backdrop">
-        <button>close</button>
+        <button onClick={closeModal} disabled={loading}>
+          close
+        </button>
       </form>
     </dialog>
   );
