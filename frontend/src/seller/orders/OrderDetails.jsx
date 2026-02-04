@@ -1,8 +1,8 @@
-// src/seller/orders/OrderDetails.jsx - Simplified with better image handling
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import socket from "../../socket";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -40,10 +40,6 @@ const OrderDetails = () => {
     },
   ];
 
-  useEffect(() => {
-    if (id) fetchOrder();
-  }, [id]);
-
   const fetchOrder = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -54,10 +50,12 @@ const OrderDetails = () => {
 
     try {
       setLoading(true);
-      const { data } = await axios.get(
-        `http://localhost:4000/order/seller/id/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+     const { data } = await axios.get(
+       `http://localhost:4000/order/seller/id/${id}`,
+       {
+         headers: { Authorization: `Bearer ${token}` },
+       },
+     );
 
       if (data.success && data.order) {
         setOrder(data.order);
@@ -74,6 +72,26 @@ const OrderDetails = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!id) return;
+
+    fetchOrder();
+
+    socket.emit("join-order", id);
+
+    const handleOrderUpdate = (data) => {
+      if (data.orderId === id) {
+        fetchOrder();
+      }
+    };
+
+    socket.on("order-updated", handleOrderUpdate);
+
+    return () => {
+      socket.off("order-updated", handleOrderUpdate);
+    };
+  }, [id]); // ⚠️ FIX: Added missing dependency
 
   const handleStatusUpdate = async () => {
     if (newStatus === order.status) {
@@ -210,7 +228,6 @@ const OrderDetails = () => {
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => navigate("/seller/orders")}
@@ -247,9 +264,7 @@ const OrderDetails = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Status Update */}
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Update Order Status
@@ -297,7 +312,6 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* Order Items */}
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Order Items</h2>
@@ -306,7 +320,6 @@ const OrderDetails = () => {
               <div className="space-y-4">
                 {order.items.map((item, idx) => {
                   const itemTotal = (item.price || 0) * (item.quantity || 1);
-                  // Use the image from backend or fallback to first variant image
                   const image =
                     item.image || item.product?.variants?.[0]?.images?.[0];
 
@@ -373,9 +386,7 @@ const OrderDetails = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Customer Info */}
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="text-lg">👤</span>
@@ -401,7 +412,6 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* Shipping Address */}
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="text-lg">📍</span>
@@ -422,7 +432,6 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* Order Summary */}
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
                 Order Summary
@@ -451,7 +460,6 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* Timeline */}
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
                 Order Timeline
@@ -484,14 +492,11 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* Bottom Actions */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex justify-end">
-            <div className="flex gap-4">
-              <button className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition">
-                Contact Customer
-              </button>
-            </div>
+            <button className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition">
+              Contact Customer
+            </button>
           </div>
         </div>
       </div>

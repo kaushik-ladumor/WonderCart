@@ -35,9 +35,8 @@ const io = new Server(server, {
     credentials: true,
   },
 });
-
+global.io = io;
 initSocket(io);
-
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

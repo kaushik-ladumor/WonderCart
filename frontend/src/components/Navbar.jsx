@@ -8,11 +8,14 @@ import {
   LogOut,
   Package,
   Settings,
+  Bell, // Added Bell import
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Login from "../auth/Login";
 import { useAuth } from "../context/AuthProvider";
 import { useCart } from "../context/CartContext";
+import socket from "../socket";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,6 +24,9 @@ export default function Navbar() {
   const { cartCount } = useCart();
   const menuRef = useRef(null);
   const searchRef = useRef(null);
+  const [notifications, setNotifications] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     localStorage.removeItem("Users");
@@ -29,7 +35,6 @@ export default function Navbar() {
     window.location.href = "/";
   };
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -38,10 +43,33 @@ export default function Navbar() {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearchOpen(false);
       }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    socket.on("notification", (data) => {
+      const newNotification = {
+        id: Date.now(),
+        message: data.message,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        read: false,
+        orderId: data.orderId,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+      toast.success(data.message);
+    });
+
+    return () => socket.off("notification");
   }, []);
 
   return (
@@ -93,13 +121,120 @@ export default function Navbar() {
               <Search className="w-5 h-5" />
             </button>
 
+            {/* Notifications - Only show when logged in */}
+            {authUser && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="p-2 hover:bg-gray-900 rounded-lg transition relative"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-5 h-5 text-gray-300 hover:text-white transition" />
+                  {notifications.filter((n) => !n.read).length > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 
+                      bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center"
+                    >
+                      {notifications.filter((n) => !n.read).length > 9
+                        ? "9+"
+                        : notifications.filter((n) => !n.read).length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Dropdown */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-black border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        Notifications
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        {notifications.filter((n) => !n.read).length > 0 && (
+                          <button
+                            onClick={() =>
+                              setNotifications((prev) =>
+                                prev.map((n) => ({ ...n, read: true })),
+                              )
+                            }
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={() => setNotifications([])}
+                            className="text-xs text-gray-500 hover:text-gray-700"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center px-4 py-8">
+                          <Bell className="w-10 h-10 text-gray-300 mb-2" />
+                          <p className="text-sm text-gray-500 text-center">
+                            No notifications yet
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            New updates will appear here
+                          </p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors ${
+                              n.read ? "bg-white" : "bg-blue-50/50"
+                            }`}
+                            onClick={() =>
+                              setNotifications((prev) =>
+                                prev.map((x) =>
+                                  x.id === n.id ? { ...x, read: true } : x,
+                                ),
+                              )
+                            }
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`mt-0.5 w-2 h-2 rounded-full ${
+                                  n.read ? "bg-gray-300" : "bg-blue-500"
+                                }`}
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-800">
+                                  {n.message}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                  <span>{n.time}</span>
+                                  {!n.read && (
+                                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 rounded">
+                                      New
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Wishlist */}
             <a
               href="/wishlist"
               className="hidden sm:block p-2 hover:bg-gray-900 rounded-lg transition"
               aria-label="Wishlist"
             >
-              <Heart className="w-5 h-5" />
+              <Heart className="w-5 h-5 text-gray-300 hover:text-white transition" />
             </a>
 
             {/* Cart */}
@@ -108,7 +243,7 @@ export default function Navbar() {
               className="relative p-2 hover:bg-gray-900 rounded-lg transition"
               aria-label="Shopping cart"
             >
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="w-5 h-5 text-gray-300 hover:text-white transition" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-white text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {cartCount > 99 ? "99+" : cartCount}

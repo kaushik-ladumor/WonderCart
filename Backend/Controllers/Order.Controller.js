@@ -183,6 +183,25 @@ const createOrder = async (req, res) => {
         await sendOrderConfirmation(userEmail, order);
       } catch { }
     }
+    global.io.emit("seller-dashboard-update");
+    // 🔥 FIND SELLERS FROM ORDER ITEMS
+    const sellerIds = new Set();
+
+    for (const item of order.items) {
+      const product = await Product.findById(item.product).select("owner");
+      if (product?.owner) {
+        sellerIds.add(product.owner.toString());
+      }
+    }
+    sellerIds.forEach((sellerId) => {
+      console.log("🔔 Notifying seller:", sellerId);
+
+      global.io.to(`seller-${sellerId}`).emit("notification", {
+        type: "new-order",
+        message: "🆕 New order received",
+        orderId: order._id,
+      });
+    });
 
     res.status(201).json({
       success: true,
@@ -216,6 +235,11 @@ const verifyPayment = async (req, res) => {
       await Order.findByIdAndUpdate(orderId, {
         paymentStatus: "paid",
         razorpayPaymentId: razorpay_payment_id,
+        status: "processing"
+      });
+
+      global.io.to(orderId).emit("order-updated", {
+        orderId,
         status: "processing"
       });
 
@@ -440,6 +464,13 @@ const cancelOrder = async (req, res) => {
     order.cancelledAt = new Date();
     await order.save();
 
+    global.io.to(orderId).emit("order-updated", {
+      orderId,
+      status: "cancelled"
+    });
+
+    global.io.emit("seller-dashboard-update");
+
     res.status(200).json({
       success: true,
       message: "Order cancelled successfully",
@@ -522,6 +553,26 @@ const updateOrderStatus = async (req, res) => {
     if (status === "cancelled") order.cancelledAt = new Date();
 
     await order.save();
+    global.io.to(orderId).emit("order-updated", {
+      orderId,
+      status
+    });
+    global.io.emit("seller-dashboard-update");
+   
+    // Notify seller dashboard
+    global.io.to(`seller-${req.user.userId}`).emit("notification", {
+      type: "order-update",
+      message: `Order ${order._id.toString().slice(-6)} → ${status}`,
+    });
+
+    // 🔔 Notify buyer
+    global.io.to(`buyer-${order.user.toString()}`).emit("notification", {
+      type: "order-update",
+      message: `📦 Your order ${order._id.toString()} is now ${status}`,
+      orderId: order._id,
+      status,
+    });
+
 
     res.status(200).json({
       success: true,
@@ -599,6 +650,42 @@ const getSellerOrders = async (req, res) => {
   }
 };
 
+
+const trackOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // ✅ SAFETY CHECK
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Order ID format",
+      });
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.error("Track order error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to track order",
+    });
+  }
+};
+
+
 module.exports = {
   createOrder,
   getOrders,
@@ -608,5 +695,6 @@ module.exports = {
   updateOrderStatus,
   getAllOrders,
   getSellerOrders,
-  verifyPayment
+  verifyPayment,
+  trackOrder
 };

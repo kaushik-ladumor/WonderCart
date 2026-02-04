@@ -43,6 +43,7 @@ import SellerEarnings from "./seller/SellerEarnings";
 import Loader from "./components/Loader";
 import Category from "./pages/Category";
 import Shop from "./pages/Shop";
+import TrackOrder from "./pages/TrackOrder";
 
 function App() {
   const { authUser } = useAuth();
@@ -108,6 +109,7 @@ function App() {
           <Route path="/address" element={<AddressPage />} />
           <Route path="/categories" element={<Category />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/track-order" element={<TrackOrder />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>

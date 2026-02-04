@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react"; 
 import { Link, useLocation } from "react-router-dom";
 import {
   BarChart3,
@@ -8,14 +8,21 @@ import {
   User,
   Bell,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
-import { motion } from "framer-motion";
+import socket from "../socket";
+import toast from "react-hot-toast";
 
 const SellerNavbar = () => {
   const { setAuthUser } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const navItems = [
     { path: "/seller/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -32,77 +39,247 @@ const SellerNavbar = () => {
     window.location.href = "/";
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    socket.on("notification", (data) => {
+      const newNotification = {
+        id: Date.now(),
+        message: data.message,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        read: false,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+      toast.success(data.message);
+    });
+
+    return () => socket.off("notification");
+  }, []);
+
   return (
     <>
-      {/* Desktop & Tablet Navbar - Top with Underline */}
-      <nav className="hidden md:block fixed top-0 inset-x-0 z-50">
-        <div className="backdrop-blur-md bg-white/80 border-b border-gray-200/50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo */}
-              <Link to="/seller/dashboard" className="flex items-center gap-4">
-                <div className="p-2.5 bg-black rounded-xl">
-                  <ShoppingCart className="h-6 w-6 text-white" />
+      <nav className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Mobile Menu Button & Logo */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 hover:bg-gray-50 rounded-lg transition"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5 text-gray-700" />
+                ) : (
+                  <Menu className="w-5 h-5 text-gray-700" />
+                )}
+              </button>
+
+              <Link to="/seller/dashboard" className="flex items-center gap-2">
+                <div className="p-2 bg-black rounded-lg">
+                  <ShoppingCart className="w-4 h-4 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-black">SellerHub</h1>
-                  <p className="text-xs text-gray-500">Dashboard</p>
-                </div>
+                <h1 className="text-base sm:text-lg font-semibold text-black">
+                  Seller Hub
+                </h1>
               </Link>
+            </div>
 
-              {/* Navigation with Underline Indicator */}
-              <div className="relative flex items-center gap-8">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentPath === item.path;
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPath === item.path;
 
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className="relative flex items-center gap-2.5 px-3 py-2 text-sm font-medium transition-colors"
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`px-3 py-2 text-sm font-medium transition-colors relative ${
+                      isActive ? "text-black" : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </div>
+                    {isActive && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black"></div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-2 relative" ref={dropdownRef}>
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="p-2 hover:bg-gray-50 rounded-lg transition relative"
+                >
+                  <Bell className="w-5 h-5 text-gray-600" />
+
+                  {notifications.filter((n) => !n.read).length > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 
+                      bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center"
                     >
-                      <Icon
-                        className={`w-4.5 h-4.5 ${
-                          isActive ? "text-black" : "text-gray-600"
-                        }`}
-                      />
-                      <span
-                        className={isActive ? "text-black" : "text-gray-600"}
-                      >
-                        {item.label}
-                      </span>
-
-                      {/* Underline Indicator */}
-                      {isActive && (
-                        <motion.div
-                          layoutId="desktop-underline"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-full"
-                          initial={false}
-                          transition={{
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 30,
-                          }}
-                        />
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Right Actions */}
-              <div className="flex items-center gap-4">
-                <button className="relative p-2.5 hover:bg-gray-100 rounded-xl transition">
-                  <Bell className="w-5 h-5 text-gray-700" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                    3
-                  </span>
+                      {notifications.filter((n) => !n.read).length > 9
+                        ? "9+"
+                        : notifications.filter((n) => !n.read).length}
+                    </span>
+                  )}
                 </button>
 
+                {/* Notifications Dropdown */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        Notifications
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        {notifications.filter((n) => !n.read).length > 0 && (
+                          <button
+                            onClick={() =>
+                              setNotifications((prev) =>
+                                prev.map((n) => ({ ...n, read: true })),
+                              )
+                            }
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={() => setNotifications([])}
+                            className="text-xs text-gray-500 hover:text-gray-700"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center px-4 py-8">
+                          <Bell className="w-10 h-10 text-gray-300 mb-2" />
+                          <p className="text-sm text-gray-500 text-center">
+                            No notifications yet
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            New updates will appear here
+                          </p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors ${
+                              n.read ? "bg-white" : "bg-blue-50/50"
+                            }`}
+                            onClick={() =>
+                              setNotifications((prev) =>
+                                prev.map((x) =>
+                                  x.id === n.id ? { ...x, read: true } : x,
+                                ),
+                              )
+                            }
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`mt-0.5 w-2 h-2 rounded-full ${n.read ? "bg-gray-300" : "bg-blue-500"}`}
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-800">
+                                  {n.message}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                  <span>{n.time}</span>
+                                  {!n.read && (
+                                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 rounded">
+                                      New
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm font-medium transition"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:inline">Logout</span>
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="sm:hidden p-2 hover:bg-gray-50 rounded-lg transition"
+                aria-label="Logout"
+              >
+                <LogOut className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-100 bg-white">
+            <div className="py-2 px-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPath === item.path;
+
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-1 transition ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+
+              <div className="border-t border-gray-100 mt-2 pt-2">
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-5 py-2.5 text-red-600 hover:bg-red-50 rounded-xl font-medium transition"
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Logout</span>
@@ -110,81 +287,9 @@ const SellerNavbar = () => {
               </div>
             </div>
           </div>
-        </div>
+        )}
       </nav>
-      {/* Mobile Bottom Navigation with Underline Glow */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-50">
-        <div className="backdrop-blur-xl bg-white/95 border-t border-gray-200 shadow-2xl">
-          <div className="flex items-center justify-around py-4 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentPath === item.path;
-
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="relative flex flex-col items-center gap-1.5 py-2 px-4"
-                >
-                  <Icon
-                    className={`w-6 h-6 transition-colors ${
-                      isActive ? "text-black" : "text-gray-500"
-                    }`}
-                  />
-                  <span
-                    className={`text-xs font-medium transition-colors ${
-                      isActive ? "text-black" : "text-gray-500"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-
-                  {/* Active Underline with Glow */}
-                  {isActive && (
-                    <>
-                      <motion.div
-                        layoutId="mobile-underline"
-                        className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-black rounded-full"
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                        }}
-                      />
-                      <motion.div
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-2 bg-black/10 rounded-full blur-lg"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.4 }}
-                      />
-                    </>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Floating Actions on Mobile */}
-        <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex gap-4">
-          <button className="relative p-3.5 bg-white rounded-2xl shadow-2xl ring-4 ring-white/50">
-            <Bell className="w-5 h-5 text-gray-700" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-              3
-            </span>
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="p-3.5 bg-gradient-to-br from-red-500 to-pink-600 text-white rounded-2xl shadow-2xl ring-4 ring-white/50"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-      {/* Safe Padding for Content */}
-      <div className="pt-20 md:pt-20" /> {/* Top padding */}
-      <div className="pb-28 md:pb-0" /> {/* Bottom padding only mobile */}
+      <div className="h-16" />
     </>
   );
 };
