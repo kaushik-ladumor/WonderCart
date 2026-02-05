@@ -75,8 +75,8 @@ const deleteProduct = async (req, res) => {
         .json({ success: false, message: "Product not found" });
     }
     console.log("=>", product.owner);
-    console.log(req.user.id);
-    if (String(product.owner) !== String(req.user.id)) {
+    console.log(req.user.userId);
+    if (String(product.owner) !== String(req.user.userId)) {
       return res.status(403).json({ success: false, message: "Not allowed" });
     }
     const deletedReviews = await Review.deleteMany({ product: id });
@@ -181,8 +181,6 @@ const createProduct = async (req, res) => {
   }
 };
 
-
-
 const getSellerProducts = async (req, res) => {
   try {
     if (req.user.role !== "seller") {
@@ -208,8 +206,6 @@ const getSellerProducts = async (req, res) => {
   }
 };
 
-
-
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -220,7 +216,7 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    if (String(product.owner) !== String(req.user.id)) {
+    if (String(product.owner) !== String(req.user.userId)) {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
@@ -316,7 +312,6 @@ const searchQuery = async(req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 }
-
 
 module.exports = {
   createProduct,

@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useCart } from "../context/CartContext";
 import ProductCard from "../components/ProductCard";
 import { Heart, Star, Palette, Package, Loader2 } from "lucide-react";
+import Loader from "../components/Loader";
 
 function Wishlist() {
   const navigate = useNavigate();
@@ -212,12 +213,7 @@ function Wishlist() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-black mx-auto mb-2" />
-          <p className="text-gray-600 text-sm">Loading your wishlist...</p>
-        </div>
-      </div>
+      <Loader/>
     );
   }
 

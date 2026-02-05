@@ -41,7 +41,7 @@ productRouter.post(
 productRouter.put(
   "/update/:id",
   Authorization,
-  authorizeRoles("seller"),
+  authorizeRoles("seller", "admin"),
   upload.any(),
   updateProduct
 );

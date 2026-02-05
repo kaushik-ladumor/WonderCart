@@ -22,6 +22,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import Loader from "../components/Loader";
 
 import AddAddressModal from "./AddAddressModal";
 import EditAddressModal from "./EditAddressModal";
@@ -482,12 +483,7 @@ const Checkout = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="w-10 h-10 border-3 border-t-black border-gray-200 rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-gray-600 text-sm">Loading checkout...</p>
-        </div>
-      </div>
+      <Loader/>
     );
   }
 

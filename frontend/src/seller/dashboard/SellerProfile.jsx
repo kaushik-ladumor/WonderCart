@@ -3,10 +3,10 @@ import {
   User,
   Mail,
   Shield,
-  CheckCircle2,
   Settings,
   LogOut,
-  Loader2,
+  Calendar,
+  Tag,
   ChevronLeft,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -14,15 +14,20 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthProvider";
 import UpdatePassword from "../../auth/UpdatePassword";
 import { useNavigate } from "react-router-dom";
+import Loader from "../../components/Loader";
 
 const SellerProfile = () => {
   const navigate = useNavigate();
   const { authUser, setAuthUser } = useAuth();
   const [loading, setLoading] = useState(true);
-
-  const [username, setUsername] = useState(authUser?.username || "");
-  const [profile, setProfile] = useState(authUser?.profile || "");
-  const [role, setRole] = useState(authUser?.role || "");
+  const [profileData, setProfileData] = useState({
+    username: "",
+    email: "",
+    profile: "",
+    role: "",
+    createdAt: "",
+    isVerified: false,
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -30,29 +35,30 @@ const SellerProfile = () => {
         const token = localStorage.getItem("token");
         if (!token) {
           toast.error("No authentication token found");
-          setLoading(false);
+          navigate("/login");
           return;
         }
 
         const response = await axios.get(`http://localhost:4000/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(response.data?.user);
 
         if (response.data?.user) {
           const user = response.data.user;
-          setUsername(user.username);
-          setProfile(
-            user.profile ||
+          setProfileData({
+            username: user.username || "",
+            email: user.email || "",
+            profile:
+              user.profile ||
               "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-          );
-          setRole(user.role);
+            role: user.role || "",
+            createdAt: user.createdAt || "",
+            isVerified: user.isVerified || false,
+          });
           setAuthUser(user);
         }
       } catch (error) {
         console.error("Profile fetch error:", error);
-        toast.error(error.response?.data?.message || "Failed to load profile");
-
         if (error.response?.status === 401) {
           localStorage.removeItem("token");
           navigate("/login");
@@ -72,215 +78,221 @@ const SellerProfile = () => {
     navigate("/");
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-black mx-auto mb-3" />
-          <p className="text-gray-600 text-sm">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
-  if (!authUser) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">User not found</p>
-          <button
-            onClick={() => navigate("/login")}
-            className="px-4 py-2 bg-black text-white rounded font-medium hover:bg-gray-800 transition"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-5xl mx-auto px-2">
+    <div className="min-h-screen bg-gray-50 px-4 sm:p-6">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <div className="mb-2">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Profile Settings
-            </h1>
-            <p className="text-gray-600 text-sm mt-1">
-              View your account information
-            </p>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Manage your profile and account
+          </p>
         </div>
 
-        {/* Profile Header */}
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
-          <div className="flex items-start gap-4">
-            {/* Profile Picture */}
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-gray-100">
-                {profile ? (
-                  <img
-                    src={
-                      "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                    }
-                    alt={username}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-8 h-8 text-gray-400" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 space-y-5">
+            {/* Profile Card */}
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <User className="w-5 h-5 text-gray-700" />
+                Profile Overview
+              </h2>
+
+              <div className="flex items-start gap-5">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full border-2 border-white overflow-hidden bg-gray-100">
+                    <img
+                      src={profileData.profile}
+                      alt={profileData.username}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                )}
+                  {profileData.isVerified && (
+                    <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
+                      <User className="w-3 h-3" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {profileData.username || "Seller"}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      @{profileData.username?.toLowerCase()}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded p-3">
+                      <p className="text-xs text-gray-500 mb-1">Role</p>
+                      <p className="text-sm font-medium text-gray-900 capitalize">
+                        {profileData.role || "seller"}
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 rounded p-3">
+                      <p className="text-xs text-gray-500 mb-1">Status</p>
+                      <p
+                        className={`text-sm font-medium ${profileData.isVerified ? "text-green-600" : "text-amber-600"}`}
+                      >
+                        {profileData.isVerified ? "Verified" : "Pending"}
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 rounded p-3">
+                      <p className="text-xs text-gray-500 mb-1">Joined</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {formatDate(profileData.createdAt)}
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 rounded p-3">
+                      <p className="text-xs text-gray-500 mb-1">Email</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {profileData.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* User Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-lg font-bold text-gray-900">
-                  {username || "Seller"}
-                </h1>
-                {authUser?.isVerified && (
-                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                )}
-              </div>
-              <p className="text-sm text-gray-600 mb-3">
-                @{username?.toLowerCase()}
-              </p>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <p className="text-xs text-gray-500">Role</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {role?.charAt(0)?.toUpperCase() + role?.slice(1) ||
-                      "Seller"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Status</p>
-                  <p
-                    className={`text-sm font-medium ${
-                      authUser?.isVerified
-                        ? "text-green-600"
-                        : "text-orange-600"
-                    }`}
-                  >
-                    {authUser?.isVerified ? "Verified" : "Active"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Joined</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {authUser?.createdAt
-                      ? new Date(authUser.createdAt).toLocaleDateString()
-                      : "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Personal Information */}
-          <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-200 rounded-lg p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Personal Information
+            {/* Account Info */}
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <Mail className="w-5 h-5 text-gray-700" />
+                Account Information
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Username
                   </label>
-                  <input
-                    type="text"
-                    value={username}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-600 text-sm cursor-not-allowed"
-                    placeholder="Your username"
-                  />
+                  <div className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-gray-700">
+                    {profileData.username}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <Mail className="w-4 h-4" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email Address
                   </label>
-                  <input
-                    type="email"
-                    value={authUser?.email || ""}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-600 text-sm cursor-not-allowed"
-                  />
-                  {authUser?.isVerified && (
-                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
+                  <div className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-gray-700">
+                    {profileData.email}
+                  </div>
+                  {profileData.isVerified && (
+                    <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                      <User className="w-3 h-3" />
                       Email verified
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Profile Picture URL
-                  </label>
-                  <input
-                    type="url"
-                    value={profile}
-                    disabled
-                    placeholder="https://example.com/avatar.jpg"
-                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-600 text-sm cursor-not-allowed"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Profile picture URL
-                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Account Settings */}
-          <div className="space-y-6">
-            {/* Settings */}
-            <div className="bg-white border border-gray-200 rounded-lg p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Account Settings
+          {/* Right Column */}
+          <div className="space-y-5">
+            {/* Security */}
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-gray-700" />
+                Security
               </h2>
 
               <div className="space-y-3">
                 <button
                   onClick={() =>
-                    document.getElementById("my_modal_7")?.showModal()
+                    document
+                      .getElementById("update_password_modal")
+                      ?.showModal()
                   }
-                  className="w-full flex items-center justify-between p-3 rounded hover:bg-gray-50 transition text-sm"
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded transition group"
                 >
                   <div className="flex items-center gap-3">
-                    <Shield className="w-4 h-4 text-gray-600" />
-                    <span className="font-medium text-gray-900">
-                      Update Password
-                    </span>
+                    <div className="p-2 bg-blue-50 rounded">
+                      <Settings className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-900">
+                        Update Password
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Change your password
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-gray-400">›</span>
+                  <span className="text-gray-400 group-hover:text-gray-600">
+                    ›
+                  </span>
+                </button>
+
+                <button
+                  disabled
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 rounded cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gray-100 rounded">
+                      <Tag className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-400">
+                        Two-Factor Auth
+                      </p>
+                      <p className="text-xs text-gray-400">Coming soon</p>
+                    </div>
+                  </div>
+                  <span className="text-gray-300">›</span>
                 </button>
               </div>
             </div>
 
-            {/* Danger Zone */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-5">
-              <h2 className="text-sm font-semibold text-red-900 mb-3">
-                Danger Zone
+            {/* Actions */}
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-gray-700" />
+                Account Actions
               </h2>
 
               <div className="space-y-3">
                 <button
+                  onClick={() => navigate("/seller/dashboard")}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-50 rounded">
+                      <Calendar className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-900">
+                        Back to Dashboard
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        View store analytics
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-gray-400 group-hover:text-gray-600">
+                    ›
+                  </span>
+                </button>
+
+                <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-white text-red-600 border border-red-300 rounded font-medium hover:bg-red-50 transition text-sm"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded font-medium hover:bg-red-100 transition group"
                 >
                   <LogOut className="w-4 h-4" />
                   Log Out
@@ -288,7 +300,7 @@ const SellerProfile = () => {
 
                 <button
                   disabled
-                  className="w-full py-2 bg-red-600 text-white rounded font-medium opacity-50 cursor-not-allowed text-sm"
+                  className="w-full py-2.5 bg-gray-50 text-gray-400 border border-gray-200 rounded font-medium cursor-not-allowed"
                 >
                   Delete Account
                 </button>
@@ -298,7 +310,6 @@ const SellerProfile = () => {
         </div>
       </div>
 
-      {/* Password Update Modal */}
       <UpdatePassword />
     </div>
   );

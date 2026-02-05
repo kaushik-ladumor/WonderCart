@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const { sendOrderConfirmation } = require('../Middlewares/email');
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const Notification = require("../Models/Notification.Model");
 
 
 const createOrder = async (req, res) => {
@@ -183,7 +184,9 @@ const createOrder = async (req, res) => {
         await sendOrderConfirmation(userEmail, order);
       } catch { }
     }
+
     global.io.emit("seller-dashboard-update");
+
     // 🔥 FIND SELLERS FROM ORDER ITEMS
     const sellerIds = new Set();
 
@@ -193,15 +196,29 @@ const createOrder = async (req, res) => {
         sellerIds.add(product.owner.toString());
       }
     }
-    sellerIds.forEach((sellerId) => {
-      console.log("🔔 Notifying seller:", sellerId);
 
+    // ✅ HAR SELLER KE LIYE
+    for (const sellerId of sellerIds) {
+
+      // 1️⃣ SAVE notification in DB (offline support)
+      await Notification.create({
+        user: sellerId,           // ✅ SELLER ID
+        role: "seller",
+        type: "new-order",
+        message: "🆕 New order received",
+        orderId: order._id,
+      });
+
+      // 2️⃣ REALTIME socket emit (online support)
       global.io.to(`seller-${sellerId}`).emit("notification", {
         type: "new-order",
         message: "🆕 New order received",
         orderId: order._id,
       });
-    });
+
+      console.log("🔔 Seller notified:", sellerId);
+    }
+
 
     res.status(201).json({
       success: true,
@@ -489,28 +506,14 @@ const updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = [
-      "pending",
-      "processing",
-      "shipped",
-      "delivered",
-      "cancelled",
-    ];
-
+    const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status",
-      });
+      return res.status(400).json({ success: false, message: "Invalid status" });
     }
 
     const order = await Order.findById(orderId).populate("items.product");
-
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
+      return res.status(404).json({ success: false, message: "Order not found" });
     }
 
     if (["delivered", "cancelled"].includes(order.status)) {
@@ -533,59 +536,88 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    // 🔐 Seller ownership check
     if (req.user.role === "seller") {
       const ownsProduct = order.items.some(
-        item =>
-          item.product.owner.toString() === req.user.userId.toString()
+        item => item.product.owner.toString() === req.user.userId.toString()
       );
-
       if (!ownsProduct) {
-        return res.status(403).json({
-          success: false,
-          message: "Not authorized",
-        });
+        return res.status(403).json({ success: false, message: "Not authorized" });
       }
     }
 
+    // ✅ Update status
     order.status = status;
-
     if (status === "delivered") order.deliveredAt = new Date();
     if (status === "cancelled") order.cancelledAt = new Date();
-
     await order.save();
-    global.io.to(orderId).emit("order-updated", {
-      orderId,
-      status
-    });
+
+    // 🔔 ORDER ROOM UPDATE
+    global.io.to(orderId).emit("order-updated", { orderId, status });
     global.io.emit("seller-dashboard-update");
-   
-    // Notify seller dashboard
-    global.io.to(`seller-${req.user.userId}`).emit("notification", {
+
+    // ===============================
+    // 🔔 SELLER NOTIFICATIONS
+    // ===============================
+    const sellerIds = new Set();
+    for (const item of order.items) {
+      if (item.product?.owner) {
+        sellerIds.add(item.product.owner.toString());
+      }
+    }
+
+    for (const sellerId of sellerIds) {
+      // DB
+      await Notification.create({
+        user: sellerId,
+        role: "seller",
+        type: "order-update",
+        message: `Order ${order._id.toString()} → ${status}`,
+        orderId: order._id,
+      });
+
+      // REALTIME
+      global.io.to(`seller-${sellerId}`).emit("notification", {
+        type: "order-update",
+        message: `Order ${order._id.toString()} → ${status}`,
+        orderId: order._id,
+        status,
+      });
+    }
+
+    // ===============================
+    // 🔔 BUYER NOTIFICATION
+    // ===============================
+    await Notification.create({
+      user: order.user,
+      role: "buyer",
       type: "order-update",
-      message: `Order ${order._id.toString().slice(-6)} → ${status}`,
+      message: `📦 Your order is now ${status}`,
+      orderId: order._id,
     });
 
-    // 🔔 Notify buyer
     global.io.to(`buyer-${order.user.toString()}`).emit("notification", {
       type: "order-update",
-      message: `📦 Your order ${order._id.toString()} is now ${status}`,
+      message: `📦 Your order is now ${status}`,
       orderId: order._id,
       status,
     });
-
 
     res.status(200).json({
       success: true,
       message: "Order status updated",
       order,
     });
+
   } catch (error) {
+    console.error("updateOrderStatus error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update order status",
     });
   }
 };
+
 
 const getAllOrders = async (req, res) => {
   try {

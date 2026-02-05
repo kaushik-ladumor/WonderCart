@@ -10,15 +10,14 @@ import {
   Minus,
   Package,
   Tag,
-  Loader2,
   ArrowLeft,
+  Image as ImageIcon,
+  Save,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 const AddProduct = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -51,8 +50,8 @@ const AddProduct = () => {
       field === "stock" || field === "discount"
         ? parseInt(value) || 0
         : field === "price"
-        ? parseFloat(value) || ""
-        : value;
+          ? parseFloat(value) || ""
+          : value;
     setVariants(updated);
   };
 
@@ -205,39 +204,37 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="min-h-screen sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
-        >
-          <h1 className="text-2xl font-semibold text- text-center">
-            Add New Product
-          </h1>
-        </motion.div>
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Add New Product
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Fill in the details below to add a new product
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl border border-gray-200 shadow-md p-8"
-          >
-            <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-200">
-              <div className="p-3 bg-gray-100 rounded-xl">
-                <Package className="w-4 h-4 text-black" />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Package className="w-5 h-5 text-gray-700" />
               </div>
-              <h2 className="text-2xl font-semibold text-black">
+              <h2 className="text-lg font-semibold text-gray-900">
                 Basic Information
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                   Product Name *
                 </label>
                 <input
@@ -247,12 +244,12 @@ const AddProduct = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="e.g., Premium Wireless Headphones"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all text-gray-900 placeholder-gray-400"
+                  className="w-full text-sm px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                   Category *
                 </label>
                 <input
@@ -262,12 +259,12 @@ const AddProduct = () => {
                   value={formData.category}
                   onChange={handleChange}
                   placeholder="e.g., Electronics, Fashion"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all text-gray-900 placeholder-gray-400"
+                  className="w-full text-sm px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                   Description *
                 </label>
                 <textarea
@@ -277,63 +274,56 @@ const AddProduct = () => {
                   value={formData.description}
                   onChange={handleChange}
                   placeholder="Describe features, materials, benefits..."
-                  className="w-full px-3 py-2  border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all resize-none text-gray-900 placeholder-gray-400"
+                  className="w-full text-sm px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
                 />
               </div>
             </div>
-          </motion.section>
+          </div>
 
-          {/* Variants */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-3xl border border-gray-200 shadow-lg p-8"
-          >
-            <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gray-100 rounded-xl">
-                  <Tag className="w-4 h-4 text-black" />
+          {/* Variants Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Tag className="w-5 h-5 text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-semibold text-black">
+                <h2 className="text-lg font-semibold text-gray-900">
                   Product Variants
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={addVariant}
-                className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all"
+                className="text-sm px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition flex items-center justify-center gap-2 w-full sm:w-auto"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 Add Variant
               </button>
             </div>
 
             {variants.map((variant, vIdx) => (
-              <motion.div
+              <div
                 key={vIdx}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-200"
+                className="mb-6 p-5 bg-gray-50 rounded-lg border border-gray-200 last:mb-0"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-black">
-                    Variant {vIdx + 1}
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-base font-medium text-gray-900">
+                    Variant {vIdx + 1} {variant.color && `- ${variant.color}`}
                   </h3>
                   {variants.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeVariant(vIdx)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-1.5 hover:bg-gray-200 rounded transition"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4 text-red-500" />
                     </button>
                   )}
                 </div>
 
-                {/* Color */}
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {/* Color Input */}
+                <div className="mb-5">
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
                     Color Name *
                   </label>
                   <input
@@ -342,36 +332,37 @@ const AddProduct = () => {
                     value={variant.color}
                     onChange={(e) => handleVariantChange(vIdx, e.target.value)}
                     placeholder="e.g., Space Gray, Midnight Blue"
-                    className="w-full px-3 py-2  border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all"
+                    className="w-full text-sm px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                 </div>
 
-                {/* Images */}
-                <div className="mb-8">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                {/* Images Section */}
+                <div className="mb-6">
+                  <label className="block text-xs font-medium text-gray-700 mb-3 flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5" />
                     Images (Max 5) *
                   </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                  <div className="flex flex-wrap gap-3">
                     {variant.imagePreviews.map((src, iIdx) => (
-                      <div key={iIdx} className="relative group">
+                      <div key={iIdx} className="relative">
                         <img
                           src={src}
                           alt={`Preview ${iIdx + 1}`}
-                          className="w-full h-32 object-cover rounded-2xl border-2 border-gray-200 group-hover:border-black transition-all"
+                          className="w-20 h-20 object-cover rounded-lg border border-gray-300"
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(vIdx, iIdx)}
-                          className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
                         >
-                          <X className="w-4 h-4 text-red-600" />
+                          <X className="w-2.5 h-2.5" />
                         </button>
                       </div>
                     ))}
                     {variant.imagePreviews.length < 5 && (
-                      <label className="w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-black hover:bg-gray-50 transition-all">
-                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Upload</span>
+                      <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition">
+                        <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                        <span className="text-xs text-gray-500">Upload</span>
                         <input
                           type="file"
                           multiple
@@ -384,34 +375,32 @@ const AddProduct = () => {
                       </label>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 mt-3">
+                  <p className="text-xs text-gray-500 mt-3">
                     {variant.imagePreviews.length}/5 images
                   </p>
                 </div>
 
-                {/* Sizes Table */}
+                {/* Sizes Section */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="text-sm font-semibold text-gray-700">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <label className="text-xs font-medium text-gray-700">
                       Sizes & Pricing *
                     </label>
                     <button
                       type="button"
                       onClick={() => addSize(vIdx)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors"
+                      className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center gap-1 w-full sm:w-auto"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                       Add Size
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {variant.sizes.map((size, sIdx) => (
-                      <motion.div
+                      <div
                         key={sIdx}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end"
+                        className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center"
                       >
                         <input
                           type="text"
@@ -421,7 +410,7 @@ const AddProduct = () => {
                             handleSizeChange(vIdx, sIdx, "size", e.target.value)
                           }
                           placeholder="Size"
-                          className="px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                          className="text-sm px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
                         />
                         <input
                           min="0"
@@ -432,14 +421,14 @@ const AddProduct = () => {
                               vIdx,
                               sIdx,
                               "stock",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           placeholder="Stock"
-                          className="px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                          className="text-sm px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
                         />
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
                             ₹
                           </span>
                           <input
@@ -452,81 +441,81 @@ const AddProduct = () => {
                                 vIdx,
                                 sIdx,
                                 "price",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             placeholder="Price"
-                            className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                            className="w-full text-sm pl-8 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
                           />
                         </div>
-                        <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                            %
-                          </span>
-                          <input
-                            min="0"
-                            max="100"
-                            required
-                            value={size.discount}
-                            onChange={(e) =>
-                              handleSizeChange(
-                                vIdx,
-                                sIdx,
-                                "discount",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Discount"
-                            className="w-full pl-10 px-3 py-2  border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                          />
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                              %
+                            </span>
+                            <input
+                              min="0"
+                              max="100"
+                              required
+                              value={size.discount}
+                              onChange={(e) =>
+                                handleSizeChange(
+                                  vIdx,
+                                  sIdx,
+                                  "discount",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Discount"
+                              className="w-full text-sm pl-8 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
+                            />
+                          </div>
+                          {variant.sizes.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeSize(vIdx, sIdx)}
+                              className="p-1.5 hover:bg-red-50 rounded transition"
+                            >
+                              <Minus className="w-4 h-4 text-red-500" />
+                            </button>
+                          )}
                         </div>
-                        {variant.sizes.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeSize(vIdx, sIdx)}
-                            className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                          >
-                            <Minus className="w-5 h-5" />
-                          </button>
-                        )}
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.section>
+          </div>
 
-          {/* Submit */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="flex justify-end gap-4"
-          >
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/seller/products")}
               disabled={loading}
-              className="px-3 py-2 border border-gray-300 rounded-2xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 order-2 sm:order-1"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-3 py-2 bg-black text-white rounded-2xl font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-3 shadow-lg hover:shadow-xl"
+              className="px-5 py-2.5 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Adding Product...
                 </>
               ) : (
-                "Publish Product"
+                <>
+                  <Save className="w-4 h-4" />
+                  Publish Product
+                </>
               )}
             </button>
-          </motion.div>
+          </div>
         </form>
       </div>
     </div>

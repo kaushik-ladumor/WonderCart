@@ -8,7 +8,7 @@ import {
   LogOut,
   Package,
   Settings,
-  Bell, // Added Bell import
+  Bell,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Login from "../auth/Login";
@@ -53,31 +53,117 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    socket.on("notification", (data) => {
+    fetchNotifications();
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!authUser || !socket.connected) return;
+
+    socket.on("orderStatusUpdate", (notification) => {
       const newNotification = {
-        id: Date.now(),
-        message: data.message,
+        id: Date.now().toString(),
+        message: notification.message,
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
         read: false,
-        orderId: data.orderId,
       };
 
       setNotifications((prev) => [newNotification, ...prev]);
-      toast.success(data.message);
     });
 
-    return () => socket.off("notification");
-  }, []);
+    socket.on("orderPlaced", (data) => {
+      if (data.userId === authUser?._id) {
+        const newNotification = {
+          id: Date.now().toString(),
+          message: `Order #${data.orderId} has been placed successfully!`,
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          read: false,
+        };
+
+        setNotifications((prev) => [newNotification, ...prev]);
+      }
+    });
+
+    return () => {
+      socket.off("orderStatusUpdate");
+      socket.off("orderPlaced");
+    };
+  }, [authUser]);
+
+  const fetchNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("http://localhost:4000/order/notifications", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const formatted = data.notifications.map((n) => ({
+          id: n._id,
+          message: n.message,
+          time: new Date(n.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          read: n.isRead,
+        }));
+        setNotifications(formatted);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  const markAllRead = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch("http://localhost:4000/order/notifications/read-all", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
+  };
+
+  const clearAll = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch("http://localhost:4000/order/notifications/clear", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setNotifications([]);
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+    }
+  };
 
   return (
     <nav className="bg-black text-white sticky top-0 z-50 border-b border-gray-800">
-      {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Logo */}
           <div className="flex items-center flex-shrink-0">
             <a
               href="/"
@@ -87,7 +173,6 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Desktop Navigation - Hidden on mobile */}
           <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             {["Shop", "Categories", "Deals", "Contact"].map((item) => (
               <a
@@ -100,9 +185,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Right Section */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            {/* Desktop Search - Hidden on mobile/tablet */}
             <div className="hidden lg:block relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -112,7 +195,6 @@ export default function Navbar() {
               />
             </div>
 
-            {/* Mobile/Tablet Search Button */}
             <button
               onClick={() => setIsSearchOpen(true)}
               className="lg:hidden p-2 hover:bg-gray-900 rounded-lg transition"
@@ -121,7 +203,6 @@ export default function Navbar() {
               <Search className="w-5 h-5" />
             </button>
 
-            {/* Notifications - Only show when logged in */}
             {authUser && (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -131,10 +212,7 @@ export default function Navbar() {
                 >
                   <Bell className="w-5 h-5 text-gray-300 hover:text-white transition" />
                   {notifications.filter((n) => !n.read).length > 0 && (
-                    <span
-                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 
-                      bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center"
-                    >
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                       {notifications.filter((n) => !n.read).length > 9
                         ? "9+"
                         : notifications.filter((n) => !n.read).length}
@@ -142,7 +220,6 @@ export default function Navbar() {
                   )}
                 </button>
 
-                {/* Notifications Dropdown */}
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-black border border-gray-200 rounded-lg shadow-lg z-50">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -152,11 +229,7 @@ export default function Navbar() {
                       <div className="flex items-center gap-2">
                         {notifications.filter((n) => !n.read).length > 0 && (
                           <button
-                            onClick={() =>
-                              setNotifications((prev) =>
-                                prev.map((n) => ({ ...n, read: true })),
-                              )
-                            }
+                            onClick={markAllRead}
                             className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                           >
                             Mark all read
@@ -164,7 +237,7 @@ export default function Navbar() {
                         )}
                         {notifications.length > 0 && (
                           <button
-                            onClick={() => setNotifications([])}
+                            onClick={clearAll}
                             className="text-xs text-gray-500 hover:text-gray-700"
                           >
                             Clear all
@@ -188,8 +261,8 @@ export default function Navbar() {
                         notifications.map((n) => (
                           <div
                             key={n.id}
-                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors ${
-                              n.read ? "bg-white" : "bg-blue-50/50"
+                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer ${
+                              n.read ? "bg-white" : "bg-blue-50"
                             }`}
                             onClick={() =>
                               setNotifications((prev) =>
@@ -228,7 +301,6 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Wishlist */}
             <a
               href="/wishlist"
               className="hidden sm:block p-2 hover:bg-gray-900 rounded-lg transition"
@@ -237,7 +309,6 @@ export default function Navbar() {
               <Heart className="w-5 h-5 text-gray-300 hover:text-white transition" />
             </a>
 
-            {/* Cart */}
             <a
               href="/cart"
               className="relative p-2 hover:bg-gray-900 rounded-lg transition"
@@ -251,7 +322,6 @@ export default function Navbar() {
               )}
             </a>
 
-            {/* Auth - Desktop */}
             {authUser ? (
               <div className="hidden lg:flex items-center gap-3">
                 <a
@@ -287,7 +357,6 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-2 hover:bg-gray-900 rounded-lg transition"
@@ -302,7 +371,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile/Tablet Search Overlay */}
         {isSearchOpen && (
           <div
             ref={searchRef}
@@ -327,11 +395,9 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Mobile/Tablet Menu */}
         {isMenuOpen && (
           <div ref={menuRef} className="lg:hidden border-t border-gray-800">
             <div className="py-3 space-y-1">
-              {/* Navigation Links */}
               {["Shop", "Categories", "Deals", "Contact"].map((item) => (
                 <a
                   key={item}
@@ -343,7 +409,6 @@ export default function Navbar() {
                 </a>
               ))}
 
-              {/* Wishlist in Mobile Menu (only on very small screens) */}
               <a
                 href="/wishlist"
                 className="sm:hidden flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-900 rounded-lg transition"
@@ -353,7 +418,6 @@ export default function Navbar() {
                 Wishlist
               </a>
 
-              {/* Auth Links */}
               {authUser ? (
                 <>
                   <div className="border-t border-gray-800 my-2"></div>

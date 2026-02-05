@@ -15,19 +15,27 @@ const initSocket = (io) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("🟢 Socket connected:", socket.user.userId, socket.user.role);
-    // ✅ BUYER ROOM JOIN (CRITICAL)
-    socket.join(`buyer-${socket.user.userId}`);
+    console.log(
+      "🟢 Socket connected:",
+      socket.user.userId,
+      socket.user.role
+    );
 
-    // ✅ SELLER ROOM JOIN (CRITICAL)
-    if (socket.user.role === "seller") {
+    // ✅ BUYER ROOM
+    socket.join(`buyer-${socket.user.userId}`);
+    console.log("📦 Buyer joined room:", `buyer-${socket.user.userId}`);
+
+    // ✅ SELLER / ADMIN ROOM
+    if (socket.user.role === "seller" || socket.user.role === "admin") {
       const room = `seller-${socket.user.userId}`;
       socket.join(room);
-      console.log("📦 Seller joined room:", room);
+      console.log("📦 Seller/Admin joined room:", room);
     }
 
+    // ✅ ORDER ROOM
     socket.on("join-order", (orderId) => {
       socket.join(orderId);
+      console.log("📦 Joined order room:", orderId);
     });
 
     socket.on("disconnect", () => {

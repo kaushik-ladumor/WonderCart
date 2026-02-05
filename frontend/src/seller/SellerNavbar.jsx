@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"; 
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   BarChart3,
@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import socket from "../socket";
-import toast from "react-hot-toast";
 
 const SellerNavbar = () => {
   const { setAuthUser } = useAuth();
@@ -39,7 +38,6 @@ const SellerNavbar = () => {
     window.location.href = "/";
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,11 +50,17 @@ const SellerNavbar = () => {
   }, []);
 
   useEffect(() => {
-    socket.on("notification", (data) => {
+    fetchNotifications();
+  }, []);
+
+  useEffect(() => {
+    if (!socket.connected) return;
+
+    socket.on("newOrderNotification", (notification) => {
       const newNotification = {
-        id: Date.now(),
-        message: data.message,
-        time: new Date().toLocaleTimeString([], {
+        id: notification._id,
+        message: notification.message,
+        time: new Date(notification.createdAt).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -64,18 +68,103 @@ const SellerNavbar = () => {
       };
 
       setNotifications((prev) => [newNotification, ...prev]);
-      toast.success(data.message);
     });
 
-    return () => socket.off("notification");
+    return () => {
+      socket.off("newOrderNotification");
+    };
   }, []);
+
+  const fetchNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("http://localhost:4000/order/notifications", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const formatted = data.notifications.map((n) => ({
+          id: n._id,
+          message: n.message,
+          time: new Date(n.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          read: n.isRead,
+        }));
+        setNotifications(formatted);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  const markAllRead = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch("http://localhost:4000/order/notifications/read-all", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
+  };
+
+  const markOneRead = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch(`http://localhost:4000/order/notifications/${id}/read`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const clearAll = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch("http://localhost:4000/order/notifications/clear", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setNotifications([]);
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+    }
+  };
 
   return (
     <>
       <nav className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Mobile Menu Button & Logo */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -99,7 +188,6 @@ const SellerNavbar = () => {
               </Link>
             </div>
 
-            {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -125,7 +213,6 @@ const SellerNavbar = () => {
               })}
             </div>
 
-            {/* Right Actions */}
             <div className="flex items-center gap-2 relative" ref={dropdownRef}>
               <div className="relative">
                 <button
@@ -146,7 +233,6 @@ const SellerNavbar = () => {
                   )}
                 </button>
 
-                {/* Notifications Dropdown */}
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -156,11 +242,7 @@ const SellerNavbar = () => {
                       <div className="flex items-center gap-2">
                         {notifications.filter((n) => !n.read).length > 0 && (
                           <button
-                            onClick={() =>
-                              setNotifications((prev) =>
-                                prev.map((n) => ({ ...n, read: true })),
-                              )
-                            }
+                            onClick={markAllRead}
                             className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                           >
                             Mark all read
@@ -168,7 +250,7 @@ const SellerNavbar = () => {
                         )}
                         {notifications.length > 0 && (
                           <button
-                            onClick={() => setNotifications([])}
+                            onClick={clearAll}
                             className="text-xs text-gray-500 hover:text-gray-700"
                           >
                             Clear all
@@ -192,20 +274,16 @@ const SellerNavbar = () => {
                         notifications.map((n) => (
                           <div
                             key={n.id}
-                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors ${
-                              n.read ? "bg-white" : "bg-blue-50/50"
+                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer ${
+                              n.read ? "bg-white" : "bg-blue-50"
                             }`}
-                            onClick={() =>
-                              setNotifications((prev) =>
-                                prev.map((x) =>
-                                  x.id === n.id ? { ...x, read: true } : x,
-                                ),
-                              )
-                            }
+                            onClick={() => markOneRead(n.id)}
                           >
                             <div className="flex items-start gap-3">
                               <div
-                                className={`mt-0.5 w-2 h-2 rounded-full ${n.read ? "bg-gray-300" : "bg-blue-500"}`}
+                                className={`mt-0.5 w-2 h-2 rounded-full ${
+                                  n.read ? "bg-gray-300" : "bg-blue-500"
+                                }`}
                               />
                               <div className="flex-1">
                                 <p className="text-sm text-gray-800">
@@ -248,7 +326,6 @@ const SellerNavbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-100 bg-white">
             <div className="py-2 px-4 max-h-[calc(100vh-4rem)] overflow-y-auto">

@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
 import { handleTokenExpiration, isTokenExpired } from "../utils/auth";
 import { useCart } from "../context/CartContext";
+import Loader from '../components/Loader';
 
 const Cart = () => {
   const [cart, setCart] = useState(null);
@@ -223,14 +224,7 @@ const Cart = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-3 border-gray-200 border-t-black rounded-full mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600 text-sm font-medium">
-            Loading your cart...
-          </p>
-        </div>
-      </div>
+      <Loader/>
     );
   }
 

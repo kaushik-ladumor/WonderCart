@@ -1,8 +1,8 @@
-// src/seller/dashboard/SellerOrders.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Loader from "../../components/Loader";
 import {
   Search,
   Download,
@@ -11,7 +11,6 @@ import {
   Clock,
   Package,
   XCircle,
-  Loader2,
   ShoppingBag,
   DollarSign,
   RefreshCw,
@@ -60,15 +59,12 @@ const SellerOrders = () => {
       const response = await axios.get(
         "http://localhost:4000/order/seller/orders",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 
       if (response.data?.success) {
         let ordersData = response.data.orders || [];
-
         ordersData = ordersData
           .filter((order) => order && (order._id || order.orderId))
           .map((order) => ({
@@ -79,18 +75,11 @@ const SellerOrders = () => {
             totalAmount: parseFloat(order.totalAmount || 0),
             createdAt: order.createdAt || new Date().toISOString(),
             buyer: order.buyer || { email: "Unknown Customer" },
-          }));
+          }))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        ordersData.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        );
         setOrders(ordersData);
-
-        if (ordersData.length === 0) {
-          toast.info("No orders found for your products");
-        } else {
-          toast.success(`Loaded ${ordersData.length} orders`);
-        }
+        if (ordersData.length === 0) toast.info("No orders found");
       } else {
         toast.error(response.data?.message || "Failed to fetch orders");
       }
@@ -109,8 +98,7 @@ const SellerOrders = () => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       (order.buyer?.email || "").toLowerCase().includes(searchLower) ||
-      order._id.toLowerCase().includes(searchLower) ||
-      (order.totalAmount || "").toString().includes(searchTerm);
+      order._id.toLowerCase().includes(searchLower);
 
     const matchesStatus =
       selectedStatus === "All" || order.status === selectedStatus;
@@ -147,40 +135,40 @@ const SellerOrders = () => {
   const getStatusInfo = (status) => {
     const configs = {
       pending: {
-        bg: "bg-yellow-100",
-        text: "text-yellow-800",
+        bg: "bg-yellow-50",
+        text: "text-yellow-700",
         icon: Clock,
         label: "Pending",
       },
       processing: {
-        bg: "bg-blue-100",
-        text: "text-blue-800",
+        bg: "bg-blue-50",
+        text: "text-blue-700",
         icon: Package,
         label: "Processing",
       },
       shipped: {
-        bg: "bg-purple-100",
-        text: "text-purple-800",
+        bg: "bg-purple-50",
+        text: "text-purple-700",
         icon: Truck,
         label: "Shipped",
       },
       delivered: {
-        bg: "bg-green-100",
-        text: "text-green-800",
+        bg: "bg-green-50",
+        text: "text-green-700",
         icon: CheckCircle,
         label: "Delivered",
       },
       cancelled: {
-        bg: "bg-red-100",
-        text: "text-red-800",
+        bg: "bg-red-50",
+        text: "text-red-700",
         icon: XCircle,
         label: "Cancelled",
       },
     };
     return (
       configs[status] || {
-        bg: "bg-gray-100",
-        text: "text-gray-800",
+        bg: "bg-gray-50",
+        text: "text-gray-700",
         icon: Clock,
         label: "Unknown",
       }
@@ -189,7 +177,7 @@ const SellerOrders = () => {
 
   const formatDateTime = (dateString) => {
     try {
-      if (!dateString) return "Date not available";
+      if (!dateString) return "N/A";
       return new Date(dateString).toLocaleString("en-US", {
         month: "short",
         day: "numeric",
@@ -200,44 +188,6 @@ const SellerOrders = () => {
       return "Invalid Date";
     }
   };
-
-  const handleViewOrder = (orderId) => {
-    if (!orderId) return toast.error("Invalid order");
-    navigate(`/seller/orders/${orderId}`);
-  };
-
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const pendingOrders = orders.filter((o) => o.status === "pending").length;
-  const processingOrders = orders.filter(
-    (o) => o.status === "processing",
-  ).length;
-
-  const stats = [
-    {
-      label: "Total Orders",
-      value: orders.length,
-      icon: ShoppingBag,
-      color: "text-blue-600",
-    },
-    {
-      label: "Pending",
-      value: pendingOrders,
-      icon: Clock,
-      color: "text-yellow-600",
-    },
-    {
-      label: "Processing",
-      value: processingOrders,
-      icon: Package,
-      color: "text-purple-600",
-    },
-    {
-      label: "Revenue",
-      value: `₹${totalRevenue.toLocaleString()}`,
-      icon: DollarSign,
-      color: "text-green-600",
-    },
-  ];
 
   const handleExport = () => {
     if (orders.length === 0) return toast.error("No orders to export");
@@ -261,104 +211,93 @@ const SellerOrders = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `seller-orders-${new Date().toISOString().split("T")[0]}.csv`;
+      a.download = `orders-${new Date().toISOString().split("T")[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Orders exported successfully");
+      toast.success("Orders exported");
     } catch {
       toast.error("Export failed");
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-3 text-gray-600" />
-          <p className="text-gray-500">Loading orders...</p>
-        </div>
-      </div>
-    );
-  }
+  const stats = [
+    {
+      label: "Total",
+      value: orders.length,
+      icon: ShoppingBag,
+      color: "text-blue-600",
+    },
+    {
+      label: "Pending",
+      value: orders.filter((o) => o.status === "pending").length,
+      icon: Clock,
+      color: "text-yellow-600",
+    },
+    {
+      label: "Processing",
+      value: orders.filter((o) => o.status === "processing").length,
+      icon: Package,
+      color: "text-purple-600",
+    },
+    {
+      label: "Revenue",
+      value: `₹${orders.reduce((s, o) => s + (o.totalAmount || 0), 0).toLocaleString()}`,
+      icon: DollarSign,
+      color: "text-green-600",
+    },
+  ];
+
+  if (loading) return <Loader />;
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Orders
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Manage and track all customer orders
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={fetchOrders}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </button>
-            </div>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-gray-900 mb-1">Orders</h1>
+          <p className="text-sm text-gray-600">Manage customer orders</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {stats.map((stat, i) => (
             <div
               key={i}
-              className="bg-white p-4 rounded-lg border border-gray-200"
+              className="bg-white border border-gray-200 rounded-lg p-3"
             >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${stat.color} bg-opacity-10`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {stat.value}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 mb-2">
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <span className="text-xs text-gray-600">{stat.label}</span>
+              </div>
+              <div className="text-lg font-bold text-gray-900">
+                {stat.value}
               </div>
             </div>
           ))}
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm"
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-2">
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
+                className="px-3 py-2 border border-gray-300 rounded text-sm bg-white"
               >
                 {statusOptions.map((opt) => (
                   <option key={opt} value={opt}>
                     {opt === "All"
-                      ? "All Statuses"
+                      ? "All Status"
                       : opt.charAt(0).toUpperCase() + opt.slice(1)}
                   </option>
                 ))}
@@ -366,7 +305,7 @@ const SellerOrders = () => {
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
+                className="px-3 py-2 border border-gray-300 rounded text-sm bg-white"
               >
                 {dateOptions.map((opt) => (
                   <option key={opt} value={opt}>
@@ -374,27 +313,35 @@ const SellerOrders = () => {
                   </option>
                 ))}
               </select>
+              <button
+                onClick={fetchOrders}
+                className="px-3 py-2 bg-gray-100 border border-gray-300 rounded text-sm hover:bg-gray-200"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleExport}
+                className="px-3 py-2 bg-black text-white rounded text-sm hover:bg-gray-800"
+              >
+                <Download className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
 
         {/* Orders List */}
         {filteredOrders.length === 0 ? (
-          <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
+          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
             <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchTerm || selectedStatus !== "All" || dateRange !== "All"
-                ? "No orders match your filters"
-                : "No orders yet"}
+              No orders found
             </h3>
-            <p className="text-gray-600">
-              {searchTerm || selectedStatus !== "All" || dateRange !== "All"
-                ? "Try adjusting your search"
-                : "Orders will appear when customers buy your products"}
+            <p className="text-gray-600 text-sm">
+              Orders will appear here when customers purchase your products
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredOrders.map((order) => {
               const statusInfo = getStatusInfo(order.status);
               const Icon = statusInfo.icon;
@@ -404,75 +351,68 @@ const SellerOrders = () => {
               return (
                 <div
                   key={order._id}
-                  className="bg-white rounded-lg border border-gray-200 hover:shadow-sm"
+                  className="bg-white border border-gray-200 rounded-lg hover:shadow-sm transition"
                 >
                   <div className="p-4">
-                    {/* Order Header */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center font-bold">
-                          {order.buyer?.email?.[0]?.toUpperCase() || "C"}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {order.buyer?.email || "Customer"}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Calendar className="w-4 h-4" />
-                            {formatDateTime(order.createdAt)}
-                          </div>
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {order.buyer?.email || "Customer"}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDateTime(order.createdAt)}
+                          <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">
+                            Order #{order._id.slice(-6)}
+                          </span>
                         </div>
                       </div>
                       <div
-                        className={`px-3 py-1 rounded-lg ${statusInfo.bg} ${statusInfo.text} flex items-center gap-2`}
+                        className={`px-2 py-1 rounded text-xs ${statusInfo.bg} ${statusInfo.text} flex items-center gap-1`}
                       >
-                        <Icon className="w-4 h-4" />
-                        <span className="font-medium">{statusInfo.label}</span>
+                        <Icon className="w-3 h-3" />
+                        {statusInfo.label}
                       </div>
                     </div>
 
-                    {/* Order Items */}
-                    <div className="border-t border-gray-100 py-4 space-y-3">
+                    <div className="border-t border-gray-100 pt-3 space-y-2 mb-3">
                       {order.items?.slice(0, 2).map((item, i) => (
-                        <div key={i} className="flex justify-between">
+                        <div key={i} className="flex justify-between text-sm">
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <span className="font-medium">
                               {item.name || "Product"}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {item.color && `${item.color} • `}Qty:{" "}
-                              {item.quantity || 1}
-                            </p>
+                            </span>
+                            <span className="text-gray-500 ml-2">
+                              ×{item.quantity || 1}
+                            </span>
                           </div>
-                          <p className="font-semibold">
+                          <span>
                             ₹{(item.price || 0) * (item.quantity || 1)}
-                          </p>
+                          </span>
                         </div>
                       ))}
                       {order.items?.length > 2 && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs text-gray-500">
                           +{order.items.length - 2} more items
                         </p>
                       )}
                     </div>
 
-                    {/* Order Footer */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Package className="w-4 h-4" />
-                          <span>{totalItems} items</span>
-                        </div>
-                        <span className="text-lg font-bold text-gray-900">
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600">
+                          {totalItems} items
+                        </span>
+                        <span className="font-bold">
                           ₹{order.totalAmount?.toLocaleString()}
                         </span>
                       </div>
                       <button
-                        onClick={() => handleViewOrder(order._id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                        onClick={() => navigate(`/seller/orders/${order._id}`)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 text-white text-sm rounded hover:bg-gray-800"
                       >
-                        View Details
-                        <ChevronRight className="w-4 h-4" />
+                        View
+                        <ChevronRight className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
@@ -482,21 +422,21 @@ const SellerOrders = () => {
           </div>
         )}
 
-        {/* Footer Summary */}
+        {/* Summary */}
         {filteredOrders.length > 0 && (
-          <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="text-gray-600">
+          <div className="mt-4 bg-white border border-gray-200 rounded-lg p-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">
                 Showing{" "}
                 <span className="font-semibold">{filteredOrders.length}</span>{" "}
                 of <span className="font-semibold">{orders.length}</span> orders
-              </p>
-              <p className="text-lg font-bold text-gray-900">
+              </span>
+              <span className="font-bold">
                 Total: ₹
                 {filteredOrders
                   .reduce((s, o) => s + (o.totalAmount || 0), 0)
                   .toLocaleString()}
-              </p>
+              </span>
             </div>
           </div>
         )}
