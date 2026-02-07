@@ -363,7 +363,7 @@ const SellerOrders = () => {
                           <Calendar className="w-3 h-3" />
                           {formatDateTime(order.createdAt)}
                           <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">
-                            Order #{order._id.slice(-6)}
+                            Order #{order._id}
                           </span>
                         </div>
                       </div>

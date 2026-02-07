@@ -207,7 +207,7 @@ const OrderDetails = () => {
               <h1 className="text-xl font-bold text-gray-900">Order Details</h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-sm text-gray-600">
-                  Order #{order._id?.slice(-8)}
+                  Order #{order._id}
                 </span>
                 <span
                   className={`px-2 py-0.5 rounded text-xs ${statusInfo.color} border`}

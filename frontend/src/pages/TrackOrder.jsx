@@ -250,7 +250,7 @@ const TrackOrder = () => {
                   <div>
                     <div className="text-xs text-gray-600 mb-1">Order ID</div>
                     <div className="font-medium text-gray-900 text-sm">
-                      {order._id?.slice(-12)}
+                      {order._id}
                     </div>
                   </div>
                   <div>

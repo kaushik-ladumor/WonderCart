@@ -7,12 +7,16 @@ import {
   LogOut,
   Calendar,
   Tag,
-  ChevronLeft,
+  CheckCircle,
+  Store,
+  Key,
+  Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useAuth } from "../../context/AuthProvider";
 import UpdatePassword from "../../auth/UpdatePassword";
+import DeleteModal from '../../auth/DeletedModel'
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 
@@ -20,6 +24,7 @@ const SellerProfile = () => {
   const navigate = useNavigate();
   const { authUser, setAuthUser } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileData, setProfileData] = useState({
     username: "",
     email: "",
@@ -61,6 +66,8 @@ const SellerProfile = () => {
         console.error("Profile fetch error:", error);
         if (error.response?.status === 401) {
           localStorage.removeItem("token");
+          localStorage.removeItem("Users");
+          setAuthUser(null);
           navigate("/login");
         }
       } finally {
@@ -73,6 +80,7 @@ const SellerProfile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("Users");
     setAuthUser(null);
     toast.success("Logged out successfully");
     navigate("/");
@@ -90,27 +98,38 @@ const SellerProfile = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage your profile and account
-          </p>
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Seller Profile
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">
+                Manage your seller account and settings
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/seller/dashboard")}
+              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+            >
+              <Store className="w-4 h-4" />
+              Dashboard
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 space-y-5">
-            {/* Profile Card */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-                <User className="w-5 h-5 text-gray-700" />
-                Profile Overview
-              </h2>
-
-              <div className="flex items-start gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Profile Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Profile Overview Card */}
+            <div className="bg-white border border-gray-300 rounded-lg p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-6">
+                {/* Profile Image */}
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-full border-2 border-white overflow-hidden bg-gray-100">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100">
                     <img
                       src={profileData.profile}
                       alt={profileData.username}
@@ -118,71 +137,85 @@ const SellerProfile = () => {
                     />
                   </div>
                   {profileData.isVerified && (
-                    <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
-                      <User className="w-3 h-3" />
+                    <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1.5 rounded-full shadow-md">
+                      <CheckCircle className="w-4 h-4" />
                     </div>
                   )}
                 </div>
 
+                {/* User Info */}
                 <div className="flex-1">
-                  <div className="mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">
-                      {profileData.username || "Seller"}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      @{profileData.username?.toLowerCase()}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                      @{profileData.username || "Seller"}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                        {profileData.role || "seller"}
+                      </span>
+                      {profileData.isVerified && (
+                        <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Verified
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 rounded p-3">
-                      <p className="text-xs text-gray-500 mb-1">Role</p>
-                      <p className="text-sm font-medium text-gray-900 capitalize">
-                        {profileData.role || "seller"}
-                      </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Mail className="w-4 h-4 flex-shrink-0" />
+                      <span>{profileData.email}</span>
                     </div>
-
-                    <div className="bg-gray-50 rounded p-3">
-                      <p className="text-xs text-gray-500 mb-1">Status</p>
-                      <p
-                        className={`text-sm font-medium ${profileData.isVerified ? "text-green-600" : "text-amber-600"}`}
-                      >
-                        {profileData.isVerified ? "Verified" : "Pending"}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded p-3">
-                      <p className="text-xs text-gray-500 mb-1">Joined</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {formatDate(profileData.createdAt)}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded p-3">
-                      <p className="text-xs text-gray-500 mb-1">Email</p>
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {profileData.email}
-                      </p>
+                    <div className="flex items-center gap-2 text-gray-600 text-sm">
+                      <Calendar className="w-4 h-4 flex-shrink-0" />
+                      <span>Joined {formatDate(profileData.createdAt)}</span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gray-50 p-4 border border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Account Type</p>
+                  <p className="text-sm font-semibold text-gray-900 capitalize">
+                    {profileData.role || "seller"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 border border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Status</p>
+                  <p className="text-sm font-semibold text-green-600">
+                    {profileData.isVerified ? "Verified" : "Pending"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 border border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Member Since</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {formatDate(profileData.createdAt)}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 border border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Store Status</p>
+                  <p className="text-sm font-semibold text-gray-900">Active</p>
+                </div>
+              </div>
             </div>
 
-            {/* Account Info */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-                <Mail className="w-5 h-5 text-gray-700" />
+            {/* Account Information Card */}
+            <div className="bg-white border border-gray-300 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <User className="w-5 h-5" />
                 Account Information
-              </h2>
+              </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Username
                   </label>
-                  <div className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-gray-700">
-                    {profileData.username}
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 font-medium">
+                    @{profileData.username}
                   </div>
                 </div>
 
@@ -190,12 +223,12 @@ const SellerProfile = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email Address
                   </label>
-                  <div className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-gray-700">
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 font-medium">
                     {profileData.email}
                   </div>
                   {profileData.isVerified && (
-                    <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                      <User className="w-3 h-3" />
+                    <p className="text-sm text-green-600 mt-2 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
                       Email verified
                     </p>
                   )}
@@ -204,53 +237,53 @@ const SellerProfile = () => {
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-5">
-            {/* Security */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-gray-700" />
-                Security
-              </h2>
+          {/* Right Column - Settings */}
+          <div className="space-y-6">
+            {/* Security Settings */}
+            <div className="bg-white border border-gray-300 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Security Settings
+              </h3>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button
                   onClick={() =>
                     document
                       .getElementById("update_password_modal")
                       ?.showModal()
                   }
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded transition group"
+                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded">
-                      <Settings className="w-4 h-4 text-blue-600" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
+                      <Key className="w-5 h-5 text-white" />
                     </div>
                     <div className="text-left">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-semibold text-gray-900">
                         Update Password
                       </p>
                       <p className="text-xs text-gray-500">
-                        Change your password
+                        Change your account password
                       </p>
                     </div>
                   </div>
-                  <span className="text-gray-400 group-hover:text-gray-600">
+                  <span className="text-gray-400 group-hover:text-gray-600 text-xl">
                     ›
                   </span>
                 </button>
 
                 <button
                   disabled
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 rounded cursor-not-allowed"
+                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded">
-                      <Tag className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <Tag className="w-5 h-5 text-gray-500" />
                     </div>
                     <div className="text-left">
-                      <p className="text-sm font-medium text-gray-400">
-                        Two-Factor Auth
+                      <p className="text-sm font-semibold text-gray-400">
+                        Two-Factor Authentication
                       </p>
                       <p className="text-xs text-gray-400">Coming soon</p>
                     </div>
@@ -260,48 +293,27 @@ const SellerProfile = () => {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-gray-700" />
+            {/* Account Actions */}
+            <div className="bg-white border border-red-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-red-900 mb-6 flex items-center gap-2">
+                <Settings className="w-5 h-5" />
                 Account Actions
-              </h2>
+              </h3>
 
-              <div className="space-y-3">
-                <button
-                  onClick={() => navigate("/seller/dashboard")}
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded transition group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-50 rounded">
-                      <Calendar className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-gray-900">
-                        Back to Dashboard
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        View store analytics
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-gray-400 group-hover:text-gray-600">
-                    ›
-                  </span>
-                </button>
-
+              <div className="space-y-4">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded font-medium hover:bg-red-100 transition group"
+                  className="w-full flex items-center justify-center gap-3 py-3.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-5 h-5" />
                   Log Out
                 </button>
 
                 <button
-                  disabled
-                  className="w-full py-2.5 bg-gray-50 text-gray-400 border border-gray-200 rounded font-medium cursor-not-allowed"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="w-full flex items-center justify-center gap-3 py-3.5 bg-white text-red-600 border-2 border-red-300 rounded-lg font-medium hover:bg-red-50 hover:border-red-400 transition-colors"
                 >
+                  <Trash2 className="w-5 h-5" />
                   Delete Account
                 </button>
               </div>
@@ -310,7 +322,14 @@ const SellerProfile = () => {
         </div>
       </div>
 
+      {/* Update Password Modal */}
       <UpdatePassword />
+
+      {/* Delete Account Modal */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 };
