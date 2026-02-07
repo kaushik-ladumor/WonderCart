@@ -1,6 +1,13 @@
 const User = require("../Models/User.Model");
+const Order = require("../Models/Order.Model");
+const Product = require("../Models/Product.Model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Cart = require("../Models/Cart.Model");
+const Wishlist = require("../Models/Wishlist.Model");
+const Notification = require("../Models/Notification.Model");
+const Review = require("../Models/Review.Model");
+const cloudinary = require("../Utils/cloudinary");
 const {
   sendVerificationCode,
   sendWelcomeEmail,
@@ -128,6 +135,9 @@ const login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    sendWelcomeEmail(user.email, user.username).catch((err) =>
+      console.error("Welcome Email Error:", err)
+    );
 
     return res.status(200).json({
       success: true,
@@ -222,7 +232,6 @@ const googleAuth = async (req, res) => {
     });
   }
 };
-
 
 const verify = async (req, res) => {
   try {
@@ -421,7 +430,6 @@ const resetPassword = async (req, res) => {
   }
 };
 
-
 const updatePassword = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -487,7 +495,6 @@ const updatePassword = async (req, res) => {
     });
   }
 };
-
 
 
 const profile = async (req, res) => {
@@ -663,6 +670,146 @@ const deleteAddress = async (req, res) => {
   }
 };
 
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const ACTIVE_ORDER_STATUS = [
+      /^pending$/i,
+      /^processing$/i,
+      /^shipped$/i,
+    ];
+
+    const user = await User.findById(userId);
+    console.log("User:", userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const activeUserOrder = await Order.findOne({
+      user: userId,
+      status: { $in: ACTIVE_ORDER_STATUS },
+    });
+
+    console.log("Active User Order:", activeUserOrder);
+
+    if (activeUserOrder) {
+      return res.status(400).json({
+        success: false,
+        message: `You cannot delete account. Order is currently ${activeUserOrder.status}.`,
+      });
+    }
+
+    if (user.role === "seller") {
+      const orders = await Order.find({
+        status: { $in: ACTIVE_ORDER_STATUS },
+      }).populate({
+        path: "items.product",
+        select: "owner",
+      });
+
+      let sellerHasActiveOrder = false;
+
+      for (const order of orders) {
+        const hasSellerProduct = order.items.some(
+          (item) =>
+            item.product &&
+            item.product.owner.toString() === userId.toString()
+        );
+
+        if (hasSellerProduct) {
+          sellerHasActiveOrder = true;
+          break;
+        }
+      }
+
+      console.log("Seller Has Active Order:", sellerHasActiveOrder);
+
+      if (sellerHasActiveOrder) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "You have active orders as a seller. Complete or cancel them first.",
+        });
+      }
+
+      const products = await Product.find({ owner: userId });
+      console.log("Seller Products Count:", products.length);
+
+      for (const product of products) {
+        if (product.images?.length) {
+          for (const image of product.images) {
+            if (image) {
+              try {
+                await cloudinary.uploader.destroy(image);
+                console.log("Deleted Cloudinary Image:", image);
+              } catch (err) {
+                console.log("Cloudinary Error:", err);
+              }
+            }
+          }
+        }
+      }
+
+      await Product.deleteMany({ owner: userId });
+      console.log("Seller Products Deleted");
+    }
+
+    const userReviews = await Review.find({ user: userId });
+    console.log("User Reviews:", userReviews.length);
+
+    const productIds = [
+      ...new Set(userReviews.map((r) => r.product.toString())),
+    ];
+
+    await Review.deleteMany({ user: userId });
+    console.log("User Reviews Deleted");
+
+    for (const productId of productIds) {
+      const reviews = await Review.find({ product: productId });
+
+      let avgRating = 0;
+      let numReviews = reviews.length;
+
+      if (numReviews > 0) {
+        avgRating =
+          reviews.reduce((acc, item) => acc + item.rating, 0) /
+          numReviews;
+      }
+
+      await Product.findByIdAndUpdate(productId, {
+        averageRating: parseFloat(avgRating.toFixed(1)),
+        numReviews,
+      });
+
+      console.log("Updated Product Rating:", productId);
+    }
+
+    await Cart.deleteMany({ user: userId });
+    await Wishlist.deleteMany({ user: userId });
+    await Notification.deleteMany({ user: userId });
+
+    console.log("Cart, Wishlist, Notifications Deleted");
+
+    await User.findByIdAndDelete(userId);
+    console.log("User Deleted Successfully");
+
+    res.json({
+      success: true,
+      message: "Account and all related data deleted permanently",
+    });
+  } catch (error) {
+    console.log("Delete Account Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 module.exports = {
   signup,
@@ -680,4 +827,5 @@ module.exports = {
   setDefaultAddress,
   deleteAddress,
   googleAuth,
+  deleteAccount,
 };

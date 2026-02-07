@@ -1,45 +1,67 @@
+const mongoose = require("mongoose");
 const Product = require("../Models/Product.Model");
 const Order = require("../Models/Order.Model");
-const mongoose = require("mongoose");
 
 const sellerDashboard = async (req, res) => {
-    const sellerId = new mongoose.Types.ObjectId(req.user.userId);
+    try {
+        const sellerId = new mongoose.Types.ObjectId(req.user.userId);
 
-    const productIds = await Product.find({ owner: sellerId }).distinct("_id");
+        // Get seller's products
+        const productIds = await Product.find({ owner: sellerId }).distinct("_id");
+        const productCount = productIds.length;
 
-    const productCount = productIds.length;
+        // Get all orders containing seller's products
+        const orders = await Order.find({
+            "items.product": { $in: productIds }
+        }).sort({ createdAt: -1 });
 
-    const orderCount = await Order.countDocuments({
-        "items.product": { $in: productIds }
-    });
+        // Initialize order status counts and earnings
+        const orderStatus = {
+            pending: { orderCount: 0, totalEarnings: 0 },
+            processing: { orderCount: 0, totalEarnings: 0 },
+            shipped: { orderCount: 0, totalEarnings: 0 },
+            delivered: { orderCount: 0, totalEarnings: 0 },
+            cancelled: { orderCount: 0, totalEarnings: 0 }
+        };
 
-    const stats = await Order.aggregate([
-        { $unwind: "$items" },
-        { $match: { "items.product": { $in: productIds } } },
-        {
-            $group: {
-                _id: "$status",
-                orderCount: { $sum: 1 },
-                totalEarnings: {
-                    $sum: { $multiply: ["$items.price", "$items.quantity"] }
-                }
+        let totalEarnings = 0;
+
+        // Calculate earnings per status
+        orders.forEach(order => {
+            const sellerItems = order.items.filter(item =>
+                productIds.some(id => id.equals(item.product))
+            );
+
+            const earning = sellerItems.reduce(
+                (sum, item) => sum + (item.price * item.quantity),
+                0
+            );
+
+            if (orderStatus[order.status]) {
+                orderStatus[order.status].orderCount += 1;
+                orderStatus[order.status].totalEarnings += earning;
+                totalEarnings += earning;
             }
-        }
-    ]);
+        });
 
-    const orderStatus = {
-        pending: { orderCount: 0, totalEarnings: 0 },
-        processing: { orderCount: 0, totalEarnings: 0 },
-        shipped: { orderCount: 0, totalEarnings: 0 },
-        delivered: { orderCount: 0, totalEarnings: 0 },
-        cancelled: { orderCount: 0, totalEarnings: 0 }
-    };
+        const orderCount = orders.length;
+        const deliveredCount = orderStatus.delivered.orderCount;
+        const successRate = orderCount > 0 ? Math.round((deliveredCount / orderCount) * 100) : 0;
+        const avgOrderValue = orderCount > 0 ? (totalEarnings / orderCount) : 0;
 
-    stats.forEach(s => {
-        orderStatus[s._id] = s;
-    });
+        res.json({
+            productCount,
+            orderCount,
+            totalEarnings,
+            avgOrderValue,
+            successRate,
+            orderStatus
+        });
 
-    res.json({ productCount, orderCount, orderStatus });
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        res.status(500).json({ message: "Server error loading dashboard" });
+    }
 };
 
 module.exports = { sellerDashboard };

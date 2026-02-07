@@ -175,6 +175,8 @@ const createOrder = async (req, res) => {
       },
     });
 
+    console.log("Order Created:", order._id);
+
     if (items && items.length > 0) {
       await Cart.findOneAndUpdate({ user: userId }, { $set: { items: [] } });
     }

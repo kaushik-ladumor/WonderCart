@@ -13,6 +13,7 @@ userRouter.post("/forget-password", userController.forgatPassword);
 userRouter.post("/reset-password", userController.resetPassword);
 userRouter.put("/update-password", Authenticate, userController.updatePassword);
 userRouter.get("/profile", Authenticate, userController.profile);
+userRouter.delete("/delete-account", Authenticate, userController.deleteAccount);
 userRouter.post("/contact", userController.contact);
 
 userRouter.post('/google-auth', userController.googleAuth);
