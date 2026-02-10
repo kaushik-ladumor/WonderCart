@@ -6,9 +6,15 @@ const variantSizeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    price: {
+    originalPrice: {
       type: Number,
       required: true,
+      min: 0,
+    },
+    sellingPrice: {
+      type: Number,
+      required: true,
+      min: 0,
     },
     discount: {
       type: Number,
@@ -67,6 +73,11 @@ const productSchema = new mongoose.Schema(
     numReviews: {
       type: Number,
       default: 0,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
     },
   },
   { timestamps: true }

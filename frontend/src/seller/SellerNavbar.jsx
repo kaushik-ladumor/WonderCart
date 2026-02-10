@@ -12,10 +12,11 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
-import socket from "../socket";
+import { useSocket } from "../context/SocketProvider";
 
 const SellerNavbar = () => {
   const { setAuthUser } = useAuth();
+  const socket = useSocket();
   const location = useLocation();
   const currentPath = location.pathname;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,31 +50,41 @@ const SellerNavbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+useEffect(() => {
+  fetchNotifications();
+}, [socket]);
 
-  useEffect(() => {
-    if (!socket.connected) return;
 
-    socket.on("newOrderNotification", (notification) => {
-      const newNotification = {
-        id: notification._id,
-        message: notification.message,
-        time: new Date(notification.createdAt).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        read: false,
-      };
+useEffect(() => {
+  if (!socket) return;
 
-      setNotifications((prev) => [newNotification, ...prev]);
-    });
-
-    return () => {
-      socket.off("newOrderNotification");
+  const handleNewNotification = (notification) => {
+    const newNotification = {
+      id: notification.orderId || Date.now(),
+      message: notification.message,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      read: false,
     };
-  }, []);
+
+    setNotifications((prev) => {
+      // prevent duplicate notification
+      if (prev.some((n) => n.id === newNotification.id)) {
+        return prev;
+      }
+      return [newNotification, ...prev];
+    });
+  };
+
+  socket.on("notification", handleNewNotification);
+
+  return () => {
+    socket.off("notification", handleNewNotification);
+  };
+}, [socket]);
+
 
   const fetchNotifications = async () => {
     const token = localStorage.getItem("token");

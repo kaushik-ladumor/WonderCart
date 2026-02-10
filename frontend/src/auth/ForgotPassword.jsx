@@ -80,9 +80,8 @@ function ForgotPassword() {
                   <input
                     type="email"
                     placeholder="Enter your email address"
-                    className={`w-full pl-10 pr-4 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                      errors.email ? "border-red-500" : "border-gray-300"
-                    } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.email ? "border-red-500" : "border-gray-300"
+                      } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
                     disabled={loading}
                     {...register("email", {
                       required: "Email is required",
@@ -125,12 +124,13 @@ function ForgotPassword() {
             <div className="text-center mt-6 pt-5 border-t border-gray-200">
               <p className="text-gray-600 text-sm">
                 Remember your password?{" "}
-                <a
-                  href="/login"
-                  className="text-black font-medium hover:underline"
+                <button
+                  type="button"
+                  onClick={() => document.getElementById("login_modal")?.showModal()}
+                  className="text-black font-medium hover:underline bg-transparent border-none cursor-pointer"
                 >
                   Login here
-                </a>
+                </button>
               </p>
             </div>
 

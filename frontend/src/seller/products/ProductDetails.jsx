@@ -238,11 +238,10 @@ const ProductDetail = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`rounded-lg overflow-hidden border transition ${
-                      selectedImage === index
+                    className={`rounded-lg overflow-hidden border transition ${selectedImage === index
                         ? "border-gray-900 shadow-sm"
                         : "border-gray-200"
-                    }`}
+                      }`}
                   >
                     <img
                       src={img}
@@ -274,11 +273,10 @@ const ProductDetail = () => {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.floor(product.averageRating || 0)
+                      className={`w-4 h-4 ${i < Math.floor(product.averageRating || 0)
                           ? "fill-amber-400 text-amber-400"
                           : "text-gray-300"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -318,18 +316,17 @@ const ProductDetail = () => {
                     <button
                       key={variant.color}
                       onClick={() => setSelectedColor(variant.color)}
-                      className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-2 ${
-                        selectedColor === variant.color
+                      className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-2 ${selectedColor === variant.color
                           ? "border-gray-900 bg-gray-900 text-white"
                           : "border-gray-300 text-gray-700 hover:border-gray-900"
-                      }`}
+                        }`}
                     >
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{
                           backgroundColor:
                             variant.color === "natural" ||
-                            variant.color === "white"
+                              variant.color === "white"
                               ? "#f5f5f5"
                               : variant.color || "#e5e5e5",
                         }}
@@ -360,22 +357,26 @@ const ProductDetail = () => {
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-600">Price:</span>
                           <span className="text-sm font-medium">
-                            ₹{sizeObj.price?.toLocaleString()}
+                            ₹{sizeObj.sellingPrice?.toLocaleString()}
                           </span>
                           {sizeObj.discount > 0 && (
-                            <span className="text-xs text-red-600">
-                              ({sizeObj.discount}% off)
-                            </span>
+                            <>
+                              <span className="text-xs text-gray-400 line-through">
+                                ₹{sizeObj.originalPrice?.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded">
+                                {sizeObj.discount}% off
+                              </span>
+                            </>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`flex items-center gap-1.5 text-sm ${
-                            sizeObj.stock > 0
+                          className={`flex items-center gap-1.5 text-sm ${sizeObj.stock > 0
                               ? "text-green-600"
                               : "text-red-600"
-                          }`}
+                            }`}
                         >
                           {sizeObj.stock > 0 ? (
                             <CheckCircle className="w-3.5 h-3.5" />
@@ -440,11 +441,10 @@ const ProductDetail = () => {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
-                                i < review.rating
+                              className={`w-3 h-3 ${i < review.rating
                                   ? "fill-amber-400 text-amber-400"
                                   : "text-gray-300"
-                              }`}
+                                }`}
                             />
                           ))}
                         </div>

@@ -23,12 +23,14 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "../components/Loader";
+import { useCart } from "../context/CartContext";
 
 import AddAddressModal from "./AddAddressModal";
 import EditAddressModal from "./EditAddressModal";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const { refreshCart } = useCart();
   const [selectedPayment, setSelectedPayment] = useState("COD");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -67,7 +69,7 @@ const Checkout = () => {
     const token = getToken();
     if (!token) {
       toast.error("Please login first");
-      navigate("/login");
+      document.getElementById("login_modal")?.showModal();
       return;
     }
 
@@ -93,18 +95,9 @@ const Checkout = () => {
 
       if (cartData?.items && cartData.items.length > 0) {
         const items = cartData.items.map((item) => {
-          const itemPrice = item.price || 0;
-          const originalPrice =
-            item.originalPrice || item.product?.price || itemPrice;
-          const discount = item.discount || item.product?.discount || 0;
-
-          // Calculate discounted price
-          let finalPrice = itemPrice;
-          if (discount > 0 && itemPrice === originalPrice) {
-            finalPrice = Math.round(originalPrice * (1 - discount / 100));
-          } else {
-            finalPrice = Math.round(finalPrice);
-          }
+          const sellingPrice = item.sellingPrice || item.price || 0;
+          const originalPrice = item.originalPrice || sellingPrice;
+          const discount = item.discount || 0;
 
           return {
             productId: item.product?._id || item.productId || item.product,
@@ -113,8 +106,8 @@ const Checkout = () => {
               item.productImg || item.product?.variants?.[0]?.images?.[0] || "",
             color: item.color || "",
             size: item.size || "",
-            price: finalPrice, // Already rounded
-            originalPrice: Math.round(originalPrice), // Round original price
+            price: Math.round(sellingPrice),
+            originalPrice: Math.round(originalPrice),
             discount: discount,
             quantity: item.quantity || 1,
           };
@@ -266,12 +259,15 @@ const Checkout = () => {
 
   const clearCartForOrder = async (token, isDirectOrder) => {
     try {
-      if (!isDirectOrder && orderItems.length > 1) {
+      // Only clear the cart if this was a cart-based checkout (not Buy Now)
+      if (!isDirectOrder) {
         await axios.delete(`${API_BASE_URL}/cart`, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
-    } catch (error) {}
+      // Refresh cart count in real-time (handles both cases)
+      if (refreshCart) await refreshCart();
+    } catch (error) { }
   };
 
   const placeOrder = async () => {
@@ -343,9 +339,9 @@ const Checkout = () => {
       );
 
       if (response.data.success) {
-        const wasDirectOrder = sessionStorage.getItem("directOrder") !== null;
+        const isDirectOrder = sessionStorage.getItem("directOrder") !== null;
 
-        await clearCartForOrder(token, wasDirectOrder);
+        await clearCartForOrder(token, isDirectOrder);
 
         sessionStorage.removeItem("directOrder");
         sessionStorage.removeItem("directOrderTotal");
@@ -367,7 +363,7 @@ const Checkout = () => {
           localStorage.removeItem("token");
           localStorage.removeItem("authToken");
           toast.error("Session expired. Please login again.");
-          navigate("/login");
+          document.getElementById("login_modal")?.showModal();
           return;
         } else if (err.response.status === 400) {
           errorMessage = err.response.data.message || "Invalid order data";
@@ -483,7 +479,7 @@ const Checkout = () => {
 
   if (loading) {
     return (
-      <Loader/>
+      <Loader />
     );
   }
 
@@ -567,20 +563,18 @@ const Checkout = () => {
                       {addresses.map((addr) => (
                         <div
                           key={addr._id}
-                          className={`p-3 rounded-lg transition-all cursor-pointer ${
-                            selectedAddressId === addr._id
-                              ? "border-2 border-black bg-gray-50"
-                              : "border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                          }`}
+                          className={`p-3 rounded-lg transition-all cursor-pointer ${selectedAddressId === addr._id
+                            ? "border-2 border-black bg-gray-50"
+                            : "border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                            }`}
                           onClick={() => handleAddressSelect(addr._id)}
                         >
                           <div className="flex items-start gap-3">
                             <div
-                              className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                                selectedAddressId === addr._id
-                                  ? "border-black bg-black"
-                                  : "border-gray-400"
-                              }`}
+                              className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedAddressId === addr._id
+                                ? "border-black bg-black"
+                                : "border-gray-400"
+                                }`}
                             >
                               {selectedAddressId === addr._id && (
                                 <Check className="w-2.5 h-2.5 text-white" />
@@ -689,19 +683,17 @@ const Checkout = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <button
                     onClick={() => setSelectedPayment("Razorpay")}
-                    className={`p-3 rounded-lg border transition-all text-left ${
-                      selectedPayment === "Razorpay"
-                        ? "border-black bg-gray-50"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    }`}
+                    className={`p-3 rounded-lg border transition-all text-left ${selectedPayment === "Razorpay"
+                      ? "border-black bg-gray-50"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                          selectedPayment === "Razorpay"
-                            ? "border-black bg-black"
-                            : "border-gray-400"
-                        }`}
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === "Razorpay"
+                          ? "border-black bg-black"
+                          : "border-gray-400"
+                          }`}
                       >
                         {selectedPayment === "Razorpay" && (
                           <Check className="w-2.5 h-2.5 text-white" />
@@ -723,19 +715,17 @@ const Checkout = () => {
 
                   <button
                     onClick={() => setSelectedPayment("COD")}
-                    className={`p-3 rounded-lg border transition-all text-left ${
-                      selectedPayment === "COD"
-                        ? "border-black bg-gray-50"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    }`}
+                    className={`p-3 rounded-lg border transition-all text-left ${selectedPayment === "COD"
+                      ? "border-black bg-gray-50"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                          selectedPayment === "COD"
-                            ? "border-black bg-black"
-                            : "border-gray-400"
-                        }`}
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === "COD"
+                          ? "border-black bg-black"
+                          : "border-gray-400"
+                          }`}
                       >
                         {selectedPayment === "COD" && (
                           <Check className="w-2.5 h-2.5 text-white" />

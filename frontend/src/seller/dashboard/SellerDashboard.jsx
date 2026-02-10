@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { io } from "socket.io-client";
 import {
   Package,
   ShoppingCart,
@@ -37,14 +36,16 @@ import {
   Line,
 } from "recharts";
 import { useAuth } from "../../context/AuthProvider";
+import { useSocket } from "../../context/SocketProvider";
 
 function SellerDashboard() {
   const navigate = useNavigate();
   const { setAuthUser } = useAuth();
+  const socket = useSocket();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [socketConnected, setSocketConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  
 
   const fetchDashboard = async () => {
     try {
@@ -63,81 +64,40 @@ function SellerDashboard() {
 
   useEffect(() => {
     fetchDashboard();
+  }, []);
 
-    const token = localStorage.getItem("token");
-    const socket = io("http://localhost:4000", {
-      auth: { token },
-      transports: ["websocket", "polling"],
-    });
+  useEffect(() => {
+    if (!socket) return;
 
-    socket.on("connect", () => {
-      console.log("✅ Socket connected for dashboard");
-      setSocketConnected(true);
+    console.log("✅ Seller dashboard listening to socket events");
 
-      // Join seller-specific room
-      const userData = JSON.parse(localStorage.getItem("Users") || "{}");
-      if (userData?._id) {
-        socket.emit("join-seller-room", userData._id);
-        console.log("✅ Joined seller room:", userData._id);
-      }
-    });
-
-    socket.on("disconnect", () => {
-      console.log("❌ Socket disconnected");
-      setSocketConnected(false);
-    });
-
-    socket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-      setSocketConnected(false);
-    });
-
-    // Listen to ALL socket events for debugging
-    socket.onAny((eventName, ...args) => {
-      console.log(`📡 Received event: ${eventName}`, args);
-    });
-
-    // Specific event listeners
-    socket.on("seller-dashboard-update", () => {
-      console.log("🔄 Received seller-dashboard-update event");
+    const refreshDashboard = () => {
       fetchDashboard();
-    });
+    };
 
-    socket.on("order-updated", (data) => {
-      console.log("🔄 Received order-updated event:", data);
-      fetchDashboard();
-    });
-
-    socket.on("new-order", (orderData) => {
-      console.log("🔄 New order received:", orderData);
-      fetchDashboard();
-    });
-
-    socket.on("orderStatusUpdate", (updateData) => {
-      console.log("🔄 Order status update:", updateData);
-      fetchDashboard();
-    });
+    socket.on("seller-dashboard-update", refreshDashboard);
+    socket.on("order-updated", refreshDashboard);
+    socket.on("new-order", refreshDashboard);
+    socket.on("orderStatusUpdate", refreshDashboard);
 
     socket.on("notification", (notification) => {
-      console.log("🔔 Notification:", notification);
       if (
-        notification.type === "order-update" ||
-        notification.type === "new-order"
+        notification?.type === "order-update" ||
+        notification?.type === "new-order"
       ) {
-        fetchDashboard();
+        refreshDashboard();
       }
     });
 
-    // Auto-refresh every 10 seconds as fallback
-    const refreshInterval = setInterval(fetchDashboard, 10000);
-
     return () => {
-      console.log("🧹 Cleaning up socket connection");
-      socket.disconnect();
-      clearInterval(refreshInterval);
-      // DO NOT remove token or user data here - that would log out the user
+      socket.off("seller-dashboard-update", refreshDashboard);
+      socket.off("order-updated", refreshDashboard);
+      socket.off("new-order", refreshDashboard);
+      socket.off("orderStatusUpdate", refreshDashboard);
+      socket.off("notification");
     };
-  }, []);
+  }, [socket]);
+
 
   if (loading) return <Loader />;
 
@@ -288,21 +248,9 @@ function SellerDashboard() {
             <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-sm text-gray-600">Store overview & analytics</p>
           </div>
-          <div
-            className={`px-3 py-1.5 rounded-full text-sm font-medium ${socketConnected ? "bg-green-100 text-green-800 border border-green-200" : "bg-gray-100 text-gray-600 border border-gray-200"}`}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-2 h-2 rounded-full ${socketConnected ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
-              ></div>
-              {socketConnected ? "Live updates active" : "Updates paused"}
-              {socketConnected && (
-                <span className="text-xs opacity-75">
-                  (Auto-refresh every 10s)
-                </span>
-              )}
-            </div>
-          </div>
+          <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+            Live updates enabled
+          </div>  
         </div>
 
         {/* Top Stats Cards */}

@@ -2,13 +2,33 @@ const WishList = require("../Models/Wishlist.Model");
 const Product = require("../Models/Product.Model");
 const mongoose = require("mongoose");
 
+// Helper: Emit wishlist update via socket
+const emitWishlistUpdate = (userId, wishlist, message = "wishlist-updated") => {
+  if (global.io) {
+    global.io.to(`wishlist-${userId}`).emit("wishlist-update", {
+      type: message,
+      wishlist,
+      itemCount: wishlist?.items?.length || 0,
+    });
+  }
+};
+
+// Helper: Check if a product has any stock
+const hasAnyStock = (product) => {
+  if (!product?.variants) return false;
+  return product.variants.some((variant) =>
+    variant.sizes?.some((size) => (size.stock || 0) > 0)
+  );
+};
+
 const getItem = async (req, res) => {
   try {
     const userId = req.user.userId || req.user.id;
 
-    const wishlist = await WishList.findOne({ user: userId }).populate({
+    let wishlist = await WishList.findOne({ user: userId }).populate({
       path: "items.product",
-      select: "name price originalPrice discount category variants averageRating numReviews description",
+      select:
+        "name originalPrice sellingPrice discount category variants averageRating numReviews description",
     });
 
     if (!wishlist) {
@@ -23,10 +43,39 @@ const getItem = async (req, res) => {
       });
     }
 
+    // Filter out deleted products and add stock info
+    const validItems = [];
+    let modified = false;
+    const removedItems = [];
+
+    for (const item of wishlist.items) {
+      if (!item.product || !item.product._id) {
+        modified = true;
+        removedItems.push("Deleted product");
+        continue;
+      }
+
+      // Add stock status to each item
+      item.isOutOfStock = !hasAnyStock(item.product);
+      validItems.push(item);
+    }
+
+    if (modified) {
+      wishlist.items = validItems;
+      await wishlist.save();
+
+      await wishlist.populate({
+        path: "items.product",
+        select:
+          "name originalPrice sellingPrice discount category variants averageRating numReviews description",
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Wishlist retrieved successfully",
       wishlist,
+      removedItems,
     });
   } catch (error) {
     console.error("Get wishlist error:", error);
@@ -83,8 +132,11 @@ const addItem = async (req, res) => {
 
     await wishlist.populate({
       path: "items.product",
-      select: "name price originalPrice discount category variants averageRating numReviews description",
+      select:
+        "name originalPrice sellingPrice discount category variants averageRating numReviews description",
     });
+
+    emitWishlistUpdate(userId, wishlist, "item-added");
 
     return res.status(200).json({
       success: true,
@@ -130,8 +182,11 @@ const removeItem = async (req, res) => {
 
     await wishlist.populate({
       path: "items.product",
-      select: "name price originalPrice discount category variants averageRating numReviews description",
+      select:
+        "name originalPrice sellingPrice discount category variants averageRating numReviews description",
     });
+
+    emitWishlistUpdate(userId, wishlist, "item-removed");
 
     return res.status(200).json({
       success: true,

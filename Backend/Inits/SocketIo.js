@@ -25,6 +25,14 @@ const initSocket = (io) => {
     socket.join(`buyer-${socket.user.userId}`);
     console.log("📦 Buyer joined room:", `buyer-${socket.user.userId}`);
 
+    // ✅ CART ROOM (for real-time cart updates)
+    socket.join(`cart-${socket.user.userId}`);
+    console.log("🛒 Joined cart room:", `cart-${socket.user.userId}`);
+
+    // ✅ WISHLIST ROOM (for real-time wishlist updates)
+    socket.join(`wishlist-${socket.user.userId}`);
+    console.log("❤️ Joined wishlist room:", `wishlist-${socket.user.userId}`);
+
     // ✅ SELLER / ADMIN ROOM
     if (socket.user.role === "seller" || socket.user.role === "admin") {
       const room = `seller-${socket.user.userId}`;

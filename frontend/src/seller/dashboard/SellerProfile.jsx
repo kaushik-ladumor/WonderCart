@@ -40,7 +40,7 @@ const SellerProfile = () => {
         const token = localStorage.getItem("token");
         if (!token) {
           toast.error("No authentication token found");
-          navigate("/login");
+          document.getElementById("login_modal")?.showModal();
           return;
         }
 
@@ -68,7 +68,7 @@ const SellerProfile = () => {
           localStorage.removeItem("token");
           localStorage.removeItem("Users");
           setAuthUser(null);
-          navigate("/login");
+          document.getElementById("login_modal")?.showModal();
         }
       } finally {
         setLoading(false);

@@ -29,9 +29,18 @@ const AddProduct = () => {
       color: "",
       imageFiles: [],
       imagePreviews: [],
-      sizes: [{ size: "", stock: 0, price: "", discount: 0 }],
+      sizes: [{ size: "", stock: 0, originalPrice: "", sellingPrice: "" }],
     },
   ]);
+
+  // Calculate discount percentage
+  const calculateDiscount = (originalPrice, sellingPrice) => {
+    const op = parseFloat(originalPrice);
+    const sp = parseFloat(sellingPrice);
+    if (!op || op === 0 || !sp) return 0;
+    if (sp > op) return 0;
+    return Math.round(((op - sp) / op) * 100);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,9 +56,9 @@ const AddProduct = () => {
   const handleSizeChange = (vIdx, sIdx, field, value) => {
     const updated = [...variants];
     updated[vIdx].sizes[sIdx][field] =
-      field === "stock" || field === "discount"
+      field === "stock"
         ? parseInt(value) || 0
-        : field === "price"
+        : field === "originalPrice" || field === "sellingPrice"
           ? parseFloat(value) || ""
           : value;
     setVariants(updated);
@@ -62,7 +71,7 @@ const AddProduct = () => {
         color: "",
         imageFiles: [],
         imagePreviews: [],
-        sizes: [{ size: "", stock: 0, price: "", discount: 0 }],
+        sizes: [{ size: "", stock: 0, originalPrice: "", sellingPrice: "" }],
       },
     ]);
   };
@@ -77,7 +86,7 @@ const AddProduct = () => {
 
   const addSize = (vIdx) => {
     const updated = [...variants];
-    updated[vIdx].sizes.push({ size: "", stock: 0, price: "", discount: 0 });
+    updated[vIdx].sizes.push({ size: "", stock: 0, originalPrice: "", sellingPrice: "" });
     setVariants(updated);
   };
 
@@ -144,12 +153,16 @@ const AddProduct = () => {
         if (
           !s.size.trim() ||
           s.stock < 0 ||
-          !s.price ||
-          parseFloat(s.price) <= 0 ||
-          s.discount < 0 ||
-          s.discount > 100
+          !s.originalPrice ||
+          parseFloat(s.originalPrice) <= 0 ||
+          !s.sellingPrice ||
+          parseFloat(s.sellingPrice) <= 0
         ) {
-          toast.error(`Invalid size/price/stock/discount in ${v.color}`);
+          toast.error(`Invalid size/price/stock in ${v.color}`);
+          return false;
+        }
+        if (parseFloat(s.sellingPrice) > parseFloat(s.originalPrice)) {
+          toast.error(`Selling price cannot be greater than original price in ${v.color}`);
           return false;
         }
       }
@@ -175,8 +188,8 @@ const AddProduct = () => {
         sizes: v.sizes.map((s) => ({
           size: s.size.trim(),
           stock: parseInt(s.stock),
-          price: parseFloat(s.price),
-          discount: parseInt(s.discount) || 0,
+          originalPrice: parseFloat(s.originalPrice),
+          sellingPrice: parseFloat(s.sellingPrice),
         })),
       }));
       formDataToSend.append("variants", JSON.stringify(variantsData));
@@ -397,91 +410,106 @@ const AddProduct = () => {
                   </div>
 
                   <div className="space-y-3">
-                    {variant.sizes.map((size, sIdx) => (
-                      <div
-                        key={sIdx}
-                        className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center"
-                      >
-                        <input
-                          type="text"
-                          required
-                          value={size.size}
-                          onChange={(e) =>
-                            handleSizeChange(vIdx, sIdx, "size", e.target.value)
-                          }
-                          placeholder="Size"
-                          className="text-sm px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
-                        />
-                        <input
-                          min="0"
-                          required
-                          value={size.stock}
-                          onChange={(e) =>
-                            handleSizeChange(
-                              vIdx,
-                              sIdx,
-                              "stock",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Stock"
-                          className="text-sm px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
-                        />
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                            ₹
-                          </span>
+                    {variant.sizes.map((size, sIdx) => {
+                      const disc = calculateDiscount(size.originalPrice, size.sellingPrice);
+                      return (
+                        <div
+                          key={sIdx}
+                          className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-center"
+                        >
                           <input
-                            min="1"
-                            step="0.01"
+                            type="text"
                             required
-                            value={size.price}
+                            value={size.size}
+                            onChange={(e) =>
+                              handleSizeChange(vIdx, sIdx, "size", e.target.value)
+                            }
+                            placeholder="Size"
+                            className="text-sm px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
+                          />
+                          <input
+                            min="0"
+                            required
+                            value={size.stock}
                             onChange={(e) =>
                               handleSizeChange(
                                 vIdx,
                                 sIdx,
-                                "price",
+                                "stock",
                                 e.target.value,
                               )
                             }
-                            placeholder="Price"
-                            className="w-full text-sm pl-8 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
+                            placeholder="Stock"
+                            className="text-sm px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
                           />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="relative flex-1">
+                          <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                              %
+                              ₹
                             </span>
                             <input
-                              min="0"
-                              max="100"
+                              min="1"
+                              step="0.01"
                               required
-                              value={size.discount}
+                              value={size.originalPrice}
                               onChange={(e) =>
                                 handleSizeChange(
                                   vIdx,
                                   sIdx,
-                                  "discount",
+                                  "originalPrice",
                                   e.target.value,
                                 )
                               }
-                              placeholder="Discount"
+                              placeholder="Original Price"
                               className="w-full text-sm pl-8 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-900"
                             />
                           </div>
-                          {variant.sizes.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeSize(vIdx, sIdx)}
-                              className="p-1.5 hover:bg-red-50 rounded transition"
-                            >
-                              <Minus className="w-4 h-4 text-red-500" />
-                            </button>
-                          )}
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                              ₹
+                            </span>
+                            <input
+                              min="1"
+                              step="0.01"
+                              required
+                              value={size.sellingPrice}
+                              onChange={(e) =>
+                                handleSizeChange(
+                                  vIdx,
+                                  sIdx,
+                                  "sellingPrice",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Selling Price"
+                              className={`w-full text-sm pl-8 pr-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-gray-900 ${size.sellingPrice && size.originalPrice && parseFloat(size.sellingPrice) > parseFloat(size.originalPrice)
+                                  ? "border-red-400 bg-red-50"
+                                  : "border-gray-300"
+                                }`}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {disc > 0 ? (
+                              <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded whitespace-nowrap">
+                                {disc}% OFF
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400 px-2 py-1">
+                                No discount
+                              </span>
+                            )}
+                            {variant.sizes.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeSize(vIdx, sIdx)}
+                                className="p-1.5 hover:bg-red-50 rounded transition"
+                              >
+                                <Minus className="w-4 h-4 text-red-500" />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>

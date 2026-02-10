@@ -27,7 +27,12 @@ const ProductCard = ({
 
   const getOriginalPrice = (variants) => {
     if (!variants?.length) return 0;
-    return variants[0]?.sizes?.[0]?.price || 0;
+    return variants[0]?.sizes?.[0]?.originalPrice || 0;
+  };
+
+  const getSellingPrice = (variants) => {
+    if (!variants?.length) return 0;
+    return variants[0]?.sizes?.[0]?.sellingPrice || 0;
   };
 
   const getDiscount = (variants) => {
@@ -39,15 +44,10 @@ const ProductCard = ({
     return firstVariant.sizes[0]?.discount || 0;
   };
 
-  const calculateFinalPrice = (price, discount) => {
-    const discountAmount = price * (discount / 100);
-    return Math.round(price - discountAmount);
-  };
-
   const stock = getTotalStock(product.variants);
   const originalPrice = getOriginalPrice(product.variants);
+  const sellingPrice = getSellingPrice(product.variants);
   const discount = getDiscount(product.variants);
-  const finalPrice = calculateFinalPrice(originalPrice, discount);
   const isWishlisted = wishlist.includes(product._id);
 
   return (
@@ -70,11 +70,10 @@ const ProductCard = ({
               aria-label="Add to wishlist"
             >
               <Heart
-                className={`w-3.5 h-3.5 ${
-                  isWishlisted
-                    ? "text-red-500 fill-red-500"
-                    : "text-gray-400 hover:text-red-500"
-                }`}
+                className={`w-3.5 h-3.5 ${isWishlisted
+                  ? "text-red-500 fill-red-500"
+                  : "text-gray-400 hover:text-red-500"
+                  }`}
               />
             </button>
 
@@ -118,11 +117,10 @@ const ProductCard = ({
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-3 h-3 ${
-                    i < Math.round(product.averageRating || 4)
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-gray-300"
-                  }`}
+                  className={`w-3 h-3 ${i < Math.round(product.averageRating || 4)
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-gray-300"
+                    }`}
                 />
               ))}
             </div>
@@ -161,7 +159,7 @@ const ProductCard = ({
           {/* Price */}
           <div className="flex items-baseline gap-1.5">
             <span className="text-base font-bold text-gray-900">
-              ₹{finalPrice.toLocaleString()}
+              ₹{sellingPrice.toLocaleString()}
             </span>
 
             {discount > 0 && (

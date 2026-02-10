@@ -18,6 +18,10 @@ function Loader() {
             className="w-2 h-2 bg-black rounded-full animate-bounce"
             style={{ animationDelay: "300ms" }}
           ></div>
+          <div
+            className="w-2 h-2 bg-black rounded-full animate-bounce"
+            style={{ animationDelay: "300ms" }}
+          ></div>
         </div>
       </div>
     </div>

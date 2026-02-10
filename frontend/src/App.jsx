@@ -5,6 +5,9 @@ import {
   Outlet,
   Navigate,
 } from "react-router-dom";
+
+import Login from "./auth/Login";
+
 import Home from "./pages/Home";
 import Signup from "./auth/Signup";
 import ForgotPassword from "./auth/ForgotPassword";
@@ -29,7 +32,6 @@ import PrivacyPolicy from "./Compony/PrivacyPolicy";
 import ShippingPolicy from "./Compony/ShippingPolicy";
 import { useAuth } from "./context/AuthProvider";
 
-// Seller Components
 import SellerLayout from "./seller/SellerLayout";
 import SellerDashboard from "./seller/dashboard/SellerDashboard";
 import SellerProducts from "./seller/products/SellerProducts";
@@ -40,25 +42,33 @@ import SellerOrders from "./seller/orders/SellerOrders";
 import OrderDetails from "./seller/orders/OrderDetails";
 import SellerProfile from "./seller/dashboard/SellerProfile";
 import SellerEarnings from "./seller/SellerEarnings";
+
 import Loader from "./components/Loader";
 import Category from "./pages/Category";
 import Shop from "./pages/Shop";
 import TrackOrder from "./pages/TrackOrder";
+
+import AdminLayout from "./Admin/components/AdminLayout";
+import AdminDashboard from "./Admin/AdminDashboard";
+import AdminProducts from "./Admin/AdminProducts";
+import AdminUsers from "./Admin/AdminUsers"
+import AdminProfile from "./Admin/AdminProfile"
 
 function App() {
   const { authUser } = useAuth();
 
   return (
     <BrowserRouter>
+      {/* Toast Notification */}
       <Toaster position="top-right" reverseOrder={false} />
 
       <Routes>
-        {/* Auth Routes */}
+        {/* ================= AUTH ROUTES ================= */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* 🔐 SELLER ROUTES (ROLE PROTECTED INLINE) */}
+        {/* ================= SELLER ROUTES (ROLE PROTECTED) ================= */}
         <Route
           path="/seller"
           element={
@@ -81,7 +91,26 @@ function App() {
           <Route path="profile" element={<SellerProfile />} />
         </Route>
 
-        {/* Main Routes with Navbar & Footer */}
+        {/* ================= ADMIN ROUTES (ROLE PROTECTED) ================= */}
+        <Route
+          path="/admin"
+          element={
+            authUser && authUser.role === "admin" ? (
+              <AdminLayout />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="profile" element={<AdminProfile />} />
+        </Route>
+
+        {/* ================= MAIN USER ROUTES ================= */}
+        {/* Navbar and Footer shared layout */}
         <Route
           element={
             <>
@@ -110,9 +139,14 @@ function App() {
           <Route path="/categories" element={<Category />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/track-order" element={<TrackOrder />} />
+
+          {/* Page Not Found */}
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>
+
+      {/* Global Login Modal - accessible from any page */}
+      <Login />
     </BrowserRouter>
   );
 }

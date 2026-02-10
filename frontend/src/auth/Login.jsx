@@ -54,16 +54,12 @@ function Login() {
       toast.success("Login successful!");
 
       setTimeout(() => {
-        const redirectPath = localStorage.getItem("redirectAfterLogin");
-        if (redirectPath) {
-          localStorage.removeItem("redirectAfterLogin");
-          navigate(redirectPath);
-        } else if (loggedUser.role === "seller") {
+        if (loggedUser.role === "seller") {
           navigate("/seller/dashboard");
         } else if (loggedUser.role === "admin") {
           navigate("/admin");
         } else {
-          navigate("/");
+          window.location.reload();
         }
       }, 300);
     } catch (error) {
@@ -106,18 +102,15 @@ function Login() {
 
         document.getElementById("login_modal")?.close();
         reset();
+        toast.success("Login successful!");
 
         setTimeout(() => {
-          const redirectPath = localStorage.getItem("redirectAfterLogin");
-          if (redirectPath) {
-            localStorage.removeItem("redirectAfterLogin");
-            navigate(redirectPath);
-          } else if (user.role === "seller") {
+          if (user.role === "seller") {
             navigate("/seller/dashboard");
           } else if (user.role === "admin") {
             navigate("/admin");
           } else {
-            navigate("/");
+            window.location.reload();
           }
         }, 300);
       }
@@ -167,9 +160,8 @@ function Login() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className={`w-full pl-10 pr-4 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                  errors.email ? "border-red-600" : "border-gray-300"
-                } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full pl-10 pr-4 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.email ? "border-red-600" : "border-gray-300"
+                  } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 disabled={disabled}
                 {...register("email", {
                   required: "Email is required",
@@ -197,9 +189,8 @@ function Login() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-                className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                  errors.password ? "border-red-600" : "border-gray-300"
-                } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.password ? "border-red-600" : "border-gray-300"
+                  } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 disabled={disabled}
                 {...register("password", {
                   required: "Password is required",

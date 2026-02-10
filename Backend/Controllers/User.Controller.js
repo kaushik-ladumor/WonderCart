@@ -18,7 +18,7 @@ const {
 
 const signup = async (req, res) => {
   try {
-    const { username, email, password, role} = req.body;
+    const { username, email, password, role } = req.body;
 
     if (!username || !email || !password, !role) {
       return res.status(400).json({
@@ -72,6 +72,7 @@ const signup = async (req, res) => {
         email: newUser.email,
         role: newUser.role,
         isVerified: newUser.isVerified,
+        hasPassword: true,
       },
     });
   } catch (error) {
@@ -101,7 +102,9 @@ const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email })
+      .select("+password");
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -116,7 +119,18 @@ const login = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    if (!user.password) {
+      return res.status(500).json({
+        success: false,
+        message: "Password not found",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -129,15 +143,16 @@ const login = async (req, res) => {
         userId: user._id,
         user: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    sendWelcomeEmail(user.email, user.username).catch((err) =>
-      console.error("Welcome Email Error:", err)
-    );
+    sendWelcomeEmail(user.email, user.username)
+      .catch(err =>
+        console.error("Welcome Email Error:", err)
+      );
 
     return res.status(200).json({
       success: true,
@@ -150,10 +165,13 @@ const login = async (req, res) => {
         role: user.role,
         profile: user.profile,
         isVerified: user.isVerified,
+        googleId: user.googleId || null,
+        hasPassword: !!user.password,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
     });
+
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({
@@ -162,6 +180,7 @@ const login = async (req, res) => {
     });
   }
 };
+
 
 const googleAuth = async (req, res) => {
   try {
@@ -222,7 +241,18 @@ const googleAuth = async (req, res) => {
       success: true,
       token,
       isNewUser,
-      user,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profile: user.profile,
+        isVerified: user.isVerified,
+        googleId: user.googleId || null,
+        hasPassword: !!user.password,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (error) {
     console.error("Google Auth Error:", error);
@@ -460,6 +490,7 @@ const updatePassword = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "Password set successfully",
+        hasPassword: true,
       });
     }
 
@@ -486,6 +517,7 @@ const updatePassword = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Password updated successfully",
+      hasPassword: true,
     });
   } catch (error) {
     console.error("Update password error:", error);
@@ -501,7 +533,7 @@ const profile = async (req, res) => {
   try {
     const id = req.user.userId; // 👈 JWT payload
 
-    const user = await User.findById(id).select("-password");
+    const user = await User.findById(id);
 
     if (!user) {
       return res.status(404).json({
@@ -510,9 +542,15 @@ const profile = async (req, res) => {
       });
     }
 
+    const userObj = user.toObject();
+    delete userObj.password;
+
     res.status(200).json({
       success: true,
-      user,
+      user: {
+        ...userObj,
+        hasPassword: !!user.password,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -531,7 +569,7 @@ const contact = async (req, res) => {
         success: false,
         message: "All fields (name, email, subject, message) are required",
       });
-    } 
+    }
     await contactSupport(name, email, subject, message);
     res.status(200).json({
       success: true,
@@ -542,7 +580,7 @@ const contact = async (req, res) => {
       success: false,
       message: "Internal server error",
     });
-  } 
+  }
 };
 
 //Address function to be added here

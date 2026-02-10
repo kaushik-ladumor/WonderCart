@@ -46,7 +46,7 @@ function HomePage() {
         const ids = res.data.wishlist?.items?.map((i) => i.product) || [];
         setWishlist(ids);
       }
-    } catch {}
+    } catch { }
   };
 
   const toggleWishlist = async (e, product) => {

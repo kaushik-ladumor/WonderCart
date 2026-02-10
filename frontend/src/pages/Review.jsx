@@ -33,7 +33,7 @@ const Review = ({ id, onSuccess }) => {
       localStorage.getItem("token") || localStorage.getItem("authToken");
     if (!token) {
       toast.error("Please login to submit a review");
-      navigate("/login");
+      document.getElementById("login_modal")?.showModal();
       closeModal();
       setIsSubmitting(false);
       return;
@@ -115,11 +115,10 @@ const Review = ({ id, onSuccess }) => {
                     className="transition-transform hover:scale-110"
                   >
                     <Star
-                      className={`w-5 h-5 transition-colors ${
-                        star <= (hoverRating || rating)
+                      className={`w-5 h-5 transition-colors ${star <= (hoverRating || rating)
                           ? "text-amber-400 fill-amber-400"
                           : "text-gray-300"
-                      }`}
+                        }`}
                     />
                   </button>
                 ))}

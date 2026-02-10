@@ -3,9 +3,19 @@ const cloudinary = require("../Utils/Cloudinary");
 const Review = require("../Models/Review.Model");
 const mongoose = require('mongoose')
 
+// Helper function to calculate discount percentage
+const calculateDiscount = (originalPrice, sellingPrice) => {
+  if (!originalPrice || originalPrice === 0) return 0;
+  if (sellingPrice > originalPrice) {
+    throw new Error("Selling price cannot be greater than original price");
+  }
+  const discount = ((originalPrice - sellingPrice) / originalPrice) * 100;
+  return Math.round(discount);
+};
+
 const getProduct = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find({ status: "approved" });
 
     res.status(200).json({
       success: true,
@@ -94,7 +104,7 @@ const deleteProduct = async (req, res) => {
     // Remove product from all carts before deleting
     const Cart = require("../Models/Cart.Model");
     const carts = await Cart.find({ "items.product": id });
-    
+
     for (const cart of carts) {
       cart.items = cart.items.filter(
         (item) => item.product.toString() !== id.toString()
@@ -153,17 +163,29 @@ const createProduct = async (req, res) => {
       }
 
       for (const s of v.sizes) {
+        // Validate required fields
         if (
           !s.size ||
-          s.price == null ||
-          s.stock == null ||
-          s.discount == null
+          s.originalPrice == null ||
+          s.sellingPrice == null ||
+          s.stock == null
         ) {
           return res.status(400).json({
             success: false,
             message: `Invalid size data for ${v.color}`,
           });
         }
+
+        // Validate pricing
+        if (s.sellingPrice > s.originalPrice) {
+          return res.status(400).json({
+            success: false,
+            message: `Selling price cannot be greater than original price for ${v.color}`,
+          });
+        }
+
+        // Calculate and set discount
+        s.discount = calculateDiscount(s.originalPrice, s.sellingPrice);
       }
     }
 
@@ -173,6 +195,7 @@ const createProduct = async (req, res) => {
       category,
       variants: parsedVariants,
       owner: req.user.userId,
+      status: "pending",
     });
 
     return res.status(201).json({ success: true, data: product });
@@ -249,12 +272,20 @@ const updateProduct = async (req, res) => {
         v.sizes.forEach((s) => {
           if (
             !s.size ||
-            s.price == null ||
-            s.stock == null ||
-            s.discount == null
+            s.originalPrice == null ||
+            s.sellingPrice == null ||
+            s.stock == null
           ) {
             throw new Error(`Invalid size data for ${v.color}`);
           }
+
+          // Validate pricing
+          if (s.sellingPrice > s.originalPrice) {
+            throw new Error(`Selling price cannot be greater than original price for ${v.color}`);
+          }
+
+          // Calculate and set discount
+          s.discount = calculateDiscount(s.originalPrice, s.sellingPrice);
         });
       });
 
@@ -276,7 +307,7 @@ const updateProduct = async (req, res) => {
   }
 };
 
-const searchQuery = async(req, res) => {
+const searchQuery = async (req, res) => {
   try {
     const query = req.query.query;
     if (!query) {
@@ -306,7 +337,7 @@ const searchQuery = async(req, res) => {
       },
       { $limit: 10 }
     ]);
-    res.status(200).json({ success: true, data });  
+    res.status(200).json({ success: true, data });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server Error" });

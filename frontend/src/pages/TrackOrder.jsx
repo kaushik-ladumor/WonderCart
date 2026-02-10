@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import socket from "../socket";
+import { useSocket } from "../context/SocketProvider";
 import toast from "react-hot-toast";
 import {
   Search,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 const TrackOrder = () => {
+  const socket = useSocket();
   const [orderId, setOrderId] = useState("");
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -84,20 +85,24 @@ const TrackOrder = () => {
     }
   };
 
-  useEffect(() => {
-    if (!orderId || !order) return;
+useEffect(() => {
+  if (!socket || !orderId) return;
 
-    socket.emit("join-order", orderId);
-    const handleOrderUpdate = (data) => {
-      if (data.orderId === orderId) {
-        fetchOrder();
-        toast.success("Order status updated!");
-      }
-    };
+  const handleOrderUpdate = (data) => {
+    if (data.orderId === orderId) {
+      fetchOrder();
+      toast.success("Order status updated!");
+    }
+  };
 
-    socket.on("order-updated", handleOrderUpdate);
-    return () => socket.off("order-updated", handleOrderUpdate);
-  }, [orderId, order]);
+  socket.emit("join-order", orderId);
+  socket.on("order-updated", handleOrderUpdate);
+
+  return () => {
+    socket.off("order-updated", handleOrderUpdate);
+  };
+}, [socket, orderId]);
+
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";

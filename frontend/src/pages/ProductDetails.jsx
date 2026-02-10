@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Review from "./Review";
 import { useCart } from "../context/CartContext";
-import Login from "../auth/Login";
+
 import {
   ShoppingCart,
   Star,
@@ -101,11 +101,8 @@ const ProductDetail = () => {
 
   const stock = currentSizeObj?.stock || 0;
 
-  const price = currentSizeObj
-    ? currentSizeObj.price * (1 - (currentSizeObj.discount || 0) / 100)
-    : 0;
-
-  const originalPrice = currentSizeObj?.price || 0;
+  const price = currentSizeObj?.sellingPrice || 0;
+  const originalPrice = currentSizeObj?.originalPrice || 0;
   const discount = currentSizeObj?.discount || 0;
 
   const handleColorChange = (color) => {
@@ -134,8 +131,8 @@ const ProductDetail = () => {
   // Add to cart function
   const addToCart = async () => {
     if (!token) {
-      navigate("/login");
       toast.error("Please login to add items to cart");
+      document.getElementById("login_modal")?.showModal();
       return;
     }
 
@@ -182,7 +179,7 @@ const ProductDetail = () => {
       if (err.response?.status === 401) {
         toast.error("Session expired. Please login again.");
         localStorage.removeItem("token");
-        navigate("/login");
+        document.getElementById("login_modal")?.showModal();
       } else if (err.response?.data?.message) {
         toast.error(err.response.data.message);
       } else {
@@ -192,7 +189,10 @@ const ProductDetail = () => {
   };
 
   const buyNow = () => {
-    if (!token) return navigate("/login");
+    if (!token) {
+      document.getElementById("login_modal")?.showModal();
+      return;
+    }
     if (!selectedSize || stock <= 0)
       return toast.error("Please select a valid size");
 
@@ -202,9 +202,9 @@ const ProductDetail = () => {
       productImg: images[0],
       color: selectedColor,
       size: selectedSize,
-      price,
-      originalPrice,
-      discount,
+      price: currentSizeObj?.sellingPrice || 0,
+      originalPrice: currentSizeObj?.originalPrice || 0,
+      discount: currentSizeObj?.discount || 0,
       quantity,
     };
     sessionStorage.setItem("directOrder", JSON.stringify([orderItem]));
@@ -274,11 +274,10 @@ const ProductDetail = () => {
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`rounded overflow-hidden border-2 ${
-                      selectedImage === i
-                        ? "border-black"
-                        : "border-transparent hover:border-gray-300"
-                    }`}
+                    className={`rounded overflow-hidden border-2 ${selectedImage === i
+                      ? "border-black"
+                      : "border-transparent hover:border-gray-300"
+                      }`}
                   >
                     <img
                       src={img}
@@ -305,11 +304,10 @@ const ProductDetail = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.round(product.averageRating || 0)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
+                        className={`w-4 h-4 ${i < Math.round(product.averageRating || 0)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                          }`}
                       />
                     ))}
                   </div>
@@ -385,11 +383,10 @@ const ProductDetail = () => {
                     <button
                       key={v.color}
                       onClick={() => handleColorChange(v.color)}
-                      className={`px-2.5 py-1 rounded text-xs font-medium transition ${
-                        v.color === selectedColor
-                          ? "bg-black text-white"
-                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                      }`}
+                      className={`px-2.5 py-1 rounded text-xs font-medium transition ${v.color === selectedColor
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                        }`}
                     >
                       {v.color}
                     </button>
@@ -415,13 +412,12 @@ const ProductDetail = () => {
                         key={s.size}
                         onClick={() => !outOfStock && setSelectedSize(s.size)}
                         disabled={outOfStock}
-                        className={`py-1.5 rounded text-xs font-medium transition ${
-                          s.size === selectedSize && !outOfStock
-                            ? "bg-black text-white"
-                            : outOfStock
-                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                        }`}
+                        className={`py-1.5 rounded text-xs font-medium transition ${s.size === selectedSize && !outOfStock
+                          ? "bg-black text-white"
+                          : outOfStock
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                          }`}
                       >
                         {s.size}
                       </button>
@@ -533,7 +529,7 @@ const ProductDetail = () => {
             ) : (
               <button
                 onClick={() =>
-                  document.getElementById("my_modal_3")?.showModal()
+                  document.getElementById("login_modal")?.showModal()
                 }
                 className="px-4 py-2 bg-gray-100 text-gray-800 rounded font-medium hover:bg-gray-200 transition text-sm"
               >
@@ -573,11 +569,10 @@ const ProductDetail = () => {
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`w-3 h-3 ${
-                                      i < review.rating
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "text-gray-300"
-                                    }`}
+                                    className={`w-3 h-3 ${i < review.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-gray-300"
+                                      }`}
                                   />
                                 ))}
                               </div>
@@ -621,7 +616,6 @@ const ProductDetail = () => {
           </div>
         </section>
       </div>
-      <Login />
     </div>
   );
 };

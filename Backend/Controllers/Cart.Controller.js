@@ -1,60 +1,67 @@
 const Cart = require("../Models/Cart.Model");
 const Product = require("../Models/Product.Model");
 
-// ✅ ADD TO CART - FIXED VERSION
+// Helper: Emit cart update to user via socket
+const emitCartUpdate = (userId, cart, message = "cart-updated") => {
+  if (global.io) {
+    global.io.to(`cart-${userId}`).emit("cart-update", {
+      type: message,
+      cart,
+      itemCount: cart?.items?.length || 0,
+    });
+  }
+};
+
+// ✅ ADD TO CART
 const addCart = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { productId, quantity = 1, color, size } = req.body;
 
-    // Validate required fields
     if (!productId) {
       return res.status(400).json({ message: "productId is required" });
     }
-
     if (!color) {
       return res.status(400).json({ message: "color is required" });
     }
-
     if (!size) {
       return res.status(400).json({ message: "size is required" });
     }
 
-    // Find product
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Validate that the color and size variant exists
-    const variant = product.variants?.find(v => v.color === color);
+    const variant = product.variants?.find((v) => v.color === color);
     if (!variant) {
       return res.status(400).json({
-        message: `Color '${color}' not available for this product`
+        message: `Color '${color}' not available for this product`,
       });
     }
 
-    const sizeObj = variant.sizes?.find(s => s.size === size);
+    const sizeObj = variant.sizes?.find((s) => s.size === size);
     if (!sizeObj) {
       return res.status(400).json({
-        message: `Size '${size}' not available in ${color}`
+        message: `Size '${size}' not available in ${color}`,
       });
     }
 
-    // Check stock availability
+    // Stock check
     if (sizeObj.stock < quantity) {
       return res.status(400).json({
-        message: `Only ${sizeObj.stock} items available in ${color} - ${size}`
+        message:
+          sizeObj.stock === 0
+            ? `${product.name} (${color}, ${size}) is out of stock`
+            : `Only ${sizeObj.stock} items available in ${color} - ${size}`,
       });
     }
 
-    // Find or create cart
     let cart = await Cart.findOne({ user: userId });
     if (!cart) {
       cart = new Cart({ user: userId, items: [] });
     }
 
-    // Check if this exact variant (product + color + size) already exists in cart
     const existingItem = cart.items.find(
       (i) =>
         i.product.toString() === productId &&
@@ -63,40 +70,40 @@ const addCart = async (req, res) => {
     );
 
     if (existingItem) {
-      // Check if adding quantity would exceed stock
       const newQuantity = existingItem.quantity + quantity;
       if (newQuantity > sizeObj.stock) {
         return res.status(400).json({
-          message: `Cannot add ${quantity} more. Only ${sizeObj.stock - existingItem.quantity} items available`
+          message: `Cannot add ${quantity} more. Only ${sizeObj.stock - existingItem.quantity} items available`,
         });
       }
 
-      // Update quantity and ensure price is always the original price (not discounted)
       existingItem.quantity += quantity;
-      existingItem.price = sizeObj.price; // Always use original price
+      existingItem.price = sizeObj.sellingPrice;
+      existingItem.originalPrice = sizeObj.originalPrice;
+      existingItem.sellingPrice = sizeObj.sellingPrice;
+      existingItem.discount = sizeObj.discount || 0;
     } else {
-      // Add new item with the specific variant
       const variantImage = variant.images?.[0] || "";
 
-      // Store ORIGINAL price (before discount) - always use sizeObj.price which is the original price
-      // NEVER apply discount here - sizeObj.price is already the original price
-      const originalPrice = sizeObj.price; // This is the original price, NOT discounted
-      
       cart.items.push({
         product: productId,
         quantity,
         color,
         size,
-        price: originalPrice, // Original price (NOT discounted - never apply discount here)
+        price: sizeObj.sellingPrice,
+        originalPrice: sizeObj.originalPrice,
+        sellingPrice: sizeObj.sellingPrice,
+        discount: sizeObj.discount || 0,
         productImg: variantImage,
         productName: product.name,
       });
     }
 
     await cart.save();
-
-    // Populate product details before sending response
     await cart.populate("items.product");
+
+    // Emit real-time update
+    emitCartUpdate(userId, cart, "item-added");
 
     res.status(200).json({
       success: true,
@@ -109,80 +116,95 @@ const addCart = async (req, res) => {
   }
 };
 
-// ✅ GET CART
+// ✅ GET CART (with stock validation — keeps OOS items marked, only removes deleted)
 const getCart = async (req, res) => {
   try {
     const userId = req.user.userId;
 
     let cart = await Cart.findOne({ user: userId }).populate("items.product");
 
-    // Return empty cart if not found
     if (!cart) {
       cart = { user: userId, items: [] };
-    } else {
-      // Filter out deleted products and check stock availability
-      const validItems = [];
-      let cartModified = false;
+      return res.status(200).json({ success: true, cart });
+    }
 
-      for (const item of cart.items) {
-        // Check if product exists
-        if (!item.product || !item.product._id) {
-          cartModified = true;
-          continue; // Skip deleted products
-        }
+    const validItems = [];
+    let cartModified = false;
+    const removedItems = [];
+    const adjustedItems = [];
+    const outOfStockItems = [];
 
-        const product = item.product;
-        const variant = product.variants?.find(v => v.color === item.color);
-        const sizeObj = variant?.sizes?.find(s => s.size === item.size);
+    for (const item of cart.items) {
+      // Skip deleted products
+      if (!item.product || !item.product._id) {
+        cartModified = true;
+        removedItems.push(item.productName || "Unknown product");
+        continue;
+      }
 
-        // If variant or size doesn't exist, remove item
-        if (!variant || !sizeObj) {
-          cartModified = true;
-          continue;
-        }
+      const product = item.product;
+      const variant = product.variants?.find((v) => v.color === item.color);
+      const sizeObj = variant?.sizes?.find((s) => s.size === item.size);
 
-        // Check stock availability
-        const availableStock = sizeObj.stock || 0;
-        const isOutOfStock = availableStock === 0;
-        const isLowStock = availableStock < item.quantity;
+      // Remove if variant/size no longer exists
+      if (!variant || !sizeObj) {
+        cartModified = true;
+        removedItems.push(`${product.name} (${item.color}, ${item.size})`);
+        continue;
+      }
+
+      const availableStock = sizeObj.stock || 0;
+
+      // Mark out-of-stock items but KEEP them in cart (shown as disabled)
+      if (availableStock === 0) {
+        item.isOutOfStock = true;
+        item.availableStock = 0;
+        outOfStockItems.push(`${product.name} (${item.color}, ${item.size})`);
+      } else {
+        item.isOutOfStock = false;
+        item.availableStock = availableStock;
 
         // Adjust quantity if exceeds stock
-        if (isLowStock && !isOutOfStock) {
+        if (availableStock < item.quantity) {
           item.quantity = availableStock;
           cartModified = true;
+          adjustedItems.push({
+            name: `${product.name} (${item.color}, ${item.size})`,
+            newQty: availableStock,
+          });
         }
-
-        // Add stock info to item
-        item.isOutOfStock = isOutOfStock;
-        item.availableStock = availableStock;
-        // Always use original price (sizeObj.price), not discounted price
-        // Force update price to ensure it's always the original price from the product
-        const originalPrice = sizeObj.price; // This is the original price before discount
-        if (item.price !== originalPrice) {
-          item.price = originalPrice; // Update to original price if different
-          cartModified = true;
-        } else {
-          item.price = originalPrice; // Ensure it's always set to original price
-        }
-
-        validItems.push(item);
       }
 
-      // Update cart if items were removed or modified
-      if (cartModified) {
-        cart.items = validItems;
-        await cart.save();
-      }
+      // Always sync prices from product
+      item.price = sizeObj.sellingPrice;
+      item.originalPrice = sizeObj.originalPrice;
+      item.sellingPrice = sizeObj.sellingPrice;
+      item.discount = sizeObj.discount || 0;
 
-      // Populate again after modifications
-      if (cart.items.length > 0) {
-        await cart.populate("items.product");
-      }
+      validItems.push(item);
+    }
+
+    // Save if modified
+    if (cartModified) {
+      cart.items = validItems;
+      await cart.save();
+
+      // Emit socket event for real-time update
+      emitCartUpdate(userId, cart, "stock-sync");
+    }
+
+    // Populate again after modifications
+    if (cart.items.length > 0) {
+      await cart.populate("items.product");
     }
 
     res.status(200).json({
       success: true,
       cart,
+      stockChanges: {
+        removed: removedItems,
+        adjusted: adjustedItems,
+      },
     });
   } catch (err) {
     console.error("Get cart error:", err);
@@ -196,7 +218,6 @@ const updateCartItem = async (req, res) => {
     const userId = req.user.userId;
     const { productId, color, size, quantity } = req.body;
 
-    // Validate required fields
     if (!productId || !color || !size || !quantity) {
       return res.status(400).json({
         message: "productId, color, size, and quantity are required",
@@ -209,13 +230,11 @@ const updateCartItem = async (req, res) => {
       });
     }
 
-    // Find cart
     const cart = await Cart.findOne({ user: userId });
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-    // Find the specific item (product + color + size)
     const item = cart.items.find(
       (i) =>
         i.product.toString() === productId.toString() &&
@@ -229,37 +248,58 @@ const updateCartItem = async (req, res) => {
       });
     }
 
-    // Validate stock availability and update price
+    // Validate stock
     const product = await Product.findById(productId);
     if (product) {
-      const variant = product.variants?.find(v => v.color === color);
-      const sizeObj = variant?.sizes?.find(s => s.size === size);
+      const variant = product.variants?.find((v) => v.color === color);
+      const sizeObj = variant?.sizes?.find((s) => s.size === size);
 
       if (!variant || !sizeObj) {
         return res.status(404).json({
-          message: `Product variant (${color}, ${size}) not found`
+          message: `Product variant (${color}, ${size}) not found`,
+        });
+      }
+
+      if (sizeObj.stock === 0) {
+        // Auto-remove out-of-stock item
+        cart.items = cart.items.filter(
+          (i) =>
+            !(
+              i.product.toString() === productId.toString() &&
+              i.color === color &&
+              i.size === size
+            )
+        );
+        await cart.save();
+        await cart.populate("items.product");
+
+        emitCartUpdate(userId, cart, "item-removed-oos");
+
+        return res.status(400).json({
+          message: `${product.name} (${color}, ${size}) is now out of stock and has been removed from your cart`,
+          cart,
         });
       }
 
       if (quantity > sizeObj.stock) {
         return res.status(400).json({
-          message: `Only ${sizeObj.stock} items available in ${color} - ${size}`
+          message: `Only ${sizeObj.stock} items available in ${color} - ${size}`,
         });
       }
 
-      // Update price from size variant - always use original price (NOT discounted)
-      // sizeObj.price is the original price before any discount
-      const originalPrice = sizeObj.price; // Original price, NOT discounted
-      item.price = originalPrice; // Always use original price (before discount)
+      // Sync prices
+      item.price = sizeObj.sellingPrice;
+      item.originalPrice = sizeObj.originalPrice;
+      item.sellingPrice = sizeObj.sellingPrice;
+      item.discount = sizeObj.discount || 0;
     }
 
-    // Update quantity
     item.quantity = quantity;
 
     await cart.save();
-
-    // Populate before sending response
     await cart.populate("items.product");
+
+    emitCartUpdate(userId, cart, "quantity-updated");
 
     res.status(200).json({
       success: true,
@@ -282,10 +322,9 @@ const removeCartItem = async (req, res) => {
     if (!productId) {
       return res.status(400).json({ message: "productId is required" });
     }
-
     if (!color || !size) {
       return res.status(400).json({
-        message: "color and size are required to identify the item"
+        message: "color and size are required to identify the item",
       });
     }
 
@@ -296,18 +335,15 @@ const removeCartItem = async (req, res) => {
 
     const beforeLength = cart.items.length;
 
-    // Filter out the specific item (product + color + size)
     cart.items = cart.items.filter((item) => {
       const productIdMatch =
-        (item.product?._id?.toString() || item.product.toString()) === productId.toString();
+        (item.product?._id?.toString() || item.product.toString()) ===
+        productId.toString();
       const colorMatch = item.color === color;
       const sizeMatch = item.size === size;
-
-      // Keep item if it doesn't match all three criteria
       return !(productIdMatch && colorMatch && sizeMatch);
     });
 
-    // Check if item was actually removed
     if (cart.items.length === beforeLength) {
       return res.status(404).json({
         message: `Item (${color}, ${size}) not found in cart`,
@@ -316,10 +352,11 @@ const removeCartItem = async (req, res) => {
 
     await cart.save();
 
-    // Populate only if items still exist
     if (cart.items.length > 0) {
       await cart.populate("items.product");
     }
+
+    emitCartUpdate(userId, cart, "item-removed");
 
     res.status(200).json({
       success: true,
@@ -342,10 +379,10 @@ const clearCart = async (req, res) => {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-    // Clear all items
     cart.items = [];
-
     await cart.save();
+
+    emitCartUpdate(userId, cart, "cart-cleared");
 
     res.status(200).json({
       success: true,
@@ -358,7 +395,7 @@ const clearCart = async (req, res) => {
   }
 };
 
-// ✅ GET CART SUMMARY (useful for displaying cart count, total, etc.)
+// ✅ GET CART SUMMARY
 const getCartSummary = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -377,9 +414,12 @@ const getCartSummary = async (req, res) => {
     }
 
     const itemCount = cart.items.length;
-    const totalQuantity = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const totalQuantity = cart.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    );
     const subtotal = cart.items.reduce(
-      (sum, item) => sum + (item.price * item.quantity),
+      (sum, item) => sum + item.price * item.quantity,
       0
     );
 

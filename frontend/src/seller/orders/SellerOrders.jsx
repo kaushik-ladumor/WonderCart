@@ -50,7 +50,7 @@ const SellerOrders = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Please log in again");
-      navigate("/login");
+      document.getElementById("login_modal")?.showModal();
       return;
     }
 
@@ -79,7 +79,7 @@ const SellerOrders = () => {
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         setOrders(ordersData);
-        if (ordersData.length === 0) toast.info("No orders found");
+        if (ordersData.length === 0) toast.error("No orders found");
       } else {
         toast.error(response.data?.message || "Failed to fetch orders");
       }

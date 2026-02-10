@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import socket from "../../socket";
+import { useSocket } from "../../context/SocketProvider";
 import Loader from "../../components/Loader";
 
 const OrderDetails = () => {
   const { id } = useParams();
+  const socket = useSocket();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,52 +42,54 @@ const OrderDetails = () => {
     },
   ];
 
-  useEffect(() => {
-    if (!id) return;
 
-    const fetchOrder = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("Please log in");
-        navigate("/login");
-        return;
-      }
+const fetchOrder = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-      try {
-        setLoading(true);
-        const { data } = await axios.get(
-          `http://localhost:4000/order/seller/id/${id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+  try {
+    setLoading(true);
 
-        if (data.success && data.order) {
-          setOrder(data.order);
-          setNewStatus(data.order.status);
-        } else {
-          toast.error(data.message || "Failed to load order");
-          navigate("/seller/orders");
-        }
-      } catch (error) {
-        console.error("Error fetching order:", error);
-        toast.error(error.response?.data?.message || "Failed to load order");
-        navigate("/seller/orders");
-      } finally {
-        setLoading(false);
-      }
-    };
+    const { data } = await axios.get(
+      `http://localhost:4000/order/seller/id/${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
 
-    fetchOrder();
-    socket.emit("join-order", id);
+    if (data.success) {
+      setOrder(data.order);
+      setNewStatus(data.order.status);
+    }
+  } catch (err) {
+    toast.error("Failed to load order");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    const handleOrderUpdate = (data) => {
-      if (data.orderId === id) fetchOrder();
-    };
+useEffect(() => {
+  if (!id) return;
+  fetchOrder();
+}, [id]);
 
-    socket.on("order-updated", handleOrderUpdate);
-    return () => socket.off("order-updated", handleOrderUpdate);
-  }, [id, navigate]);
+useEffect(() => {
+  if (!socket || !id) return;
+
+  const handleOrderUpdate = (data) => {
+    if (data.orderId === id) {
+      fetchOrder();
+    }
+  };
+
+  socket.emit("join-order", id);
+  socket.on("order-updated", handleOrderUpdate);
+
+  return () => {
+    socket.off("order-updated", handleOrderUpdate);
+  };
+}, [socket, id]);
+
 
   const handleStatusUpdate = async () => {
     if (newStatus === order.status) {

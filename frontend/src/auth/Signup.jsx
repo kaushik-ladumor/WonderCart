@@ -88,7 +88,7 @@ function Signup() {
           // User already exists - ask to login instead
           toast.error("User already exists. Please login instead.");
           setTimeout(() => {
-            navigate("/login");
+            document.getElementById("login_modal")?.showModal();
           }, 1000);
         } else {
           toast.error(
@@ -113,7 +113,7 @@ function Signup() {
           // User already exists - ask to login instead
           toast.error("User already exists. Please login instead.");
           setTimeout(() => {
-            navigate("/login");
+            document.getElementById("login_modal")?.showModal();
           }, 1000);
         } else {
           toast.error(errorMessage || "Signup failed. Please try again.");
@@ -187,7 +187,7 @@ function Signup() {
           // User already exists - show login prompt
           toast.error("User already exists. Please login instead.");
           setTimeout(() => {
-            navigate("/login");
+            document.getElementById("login_modal")?.showModal();
           }, 1000);
         } else {
           // Other errors
@@ -231,13 +231,12 @@ function Signup() {
                   ].map(({ value, label }) => (
                     <label
                       key={value}
-                      className={`flex items-center justify-center p-2.5 border rounded cursor-pointer transition-all ${
-                        errors.role
-                          ? "border-red-600"
-                          : selectedRole === value
-                            ? "border-black bg-black text-white"
-                            : "border-gray-300 hover:border-gray-400"
-                      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className={`flex items-center justify-center p-2.5 border rounded cursor-pointer transition-all ${errors.role
+                        ? "border-red-600"
+                        : selectedRole === value
+                          ? "border-black bg-black text-white"
+                          : "border-gray-300 hover:border-gray-400"
+                        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <input
                         type="radio"
@@ -272,9 +271,8 @@ function Signup() {
                   <input
                     type="text"
                     placeholder="Enter username"
-                    className={`w-full px-3 py-2 pl-9 border rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                      errors.username ? "border-red-600" : "border-gray-300"
-                    } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                    className={`w-full px-3 py-2 pl-9 border rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.username ? "border-red-600" : "border-gray-300"
+                      } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                     disabled={disabled}
                     {...register("username", {
                       required: "Username is required",
@@ -302,9 +300,8 @@ function Signup() {
                   <input
                     type="email"
                     placeholder="Enter email"
-                    className={`w-full px-3 py-2 pl-9 border rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                      errors.email ? "border-red-600" : "border-gray-300"
-                    } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                    className={`w-full px-3 py-2 pl-9 border rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.email ? "border-red-600" : "border-gray-300"
+                      } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                     disabled={disabled}
                     {...register("email", {
                       required: "Email is required",
@@ -333,9 +330,8 @@ function Signup() {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter password"
-                    className={`w-full px-3 py-2 pl-9 pr-9 border rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                      errors.password ? "border-red-600" : "border-gray-300"
-                    } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                    className={`w-full px-3 py-2 pl-9 pr-9 border rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.password ? "border-red-600" : "border-gray-300"
+                      } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                     disabled={disabled}
                     {...register("password", {
                       required: "Password is required",
@@ -424,7 +420,7 @@ function Signup() {
                 Already have an account?{" "}
                 <button
                   type="button"
-                  onClick={() => navigate("/login")}
+                  onClick={() => document.getElementById("login_modal")?.showModal()}
                   className="text-black font-medium hover:underline bg-transparent border-none cursor-pointer disabled:text-gray-400"
                   disabled={disabled}
                 >

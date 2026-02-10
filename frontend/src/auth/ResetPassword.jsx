@@ -184,15 +184,13 @@ function ResetPassword({ email }) {
                   <div
                     key={index}
                     onClick={focusHiddenInput}
-                    className={`w-12 h-12 flex items-center justify-center border rounded-md text-xl font-bold cursor-text transition-all ${
-                      otp.length === index
+                    className={`w-12 h-12 flex items-center justify-center border rounded-md text-xl font-bold cursor-text transition-all ${otp.length === index
                         ? "border-black ring-2 ring-black ring-opacity-20 bg-gray-50"
                         : otpDigits[index]
                           ? "border-gray-300 bg-white"
                           : "border-gray-300 bg-white"
-                    } ${
-                      errors.otp ? "border-red-500" : ""
-                    } ${loading ? "bg-gray-100" : ""}`}
+                      } ${errors.otp ? "border-red-500" : ""
+                      } ${loading ? "bg-gray-100" : ""}`}
                   >
                     {otpDigits[index] || ""}
                     {/* Cursor indicator */}
@@ -223,9 +221,8 @@ function ResetPassword({ email }) {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                    errors.newPassword ? "border-red-500" : "border-gray-300"
-                  } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.newPassword ? "border-red-500" : "border-gray-300"
+                    } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   disabled={loading}
                   {...register("newPassword", {
                     required: "Password is required",
@@ -268,13 +265,12 @@ function ResetPassword({ email }) {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${
-                    errors.confirmPassword
+                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.confirmPassword
                       ? "border-red-500"
                       : newPassword === confirmPassword && confirmPassword
                         ? "border-green-500"
                         : "border-gray-300"
-                  } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                    } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   disabled={loading}
                   {...register("confirmPassword", {
                     required: "Please confirm your password",
@@ -369,7 +365,7 @@ function ResetPassword({ email }) {
               <button
                 onClick={() => {
                   document.getElementById("success_modal")?.close();
-                  navigate("/login");
+                  document.getElementById("login_modal")?.showModal();
                 }}
                 className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition text-sm"
               >

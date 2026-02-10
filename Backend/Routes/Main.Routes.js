@@ -8,6 +8,7 @@ const ReviewRouter = require('./Review.Route.Js');
 const cartRouter = require('./Cart.Route');
 const orderRouter = require('./Order.Route');
 const sellerRouter = require('./Seller.Route');
+const adminRouter = require('./Admin.Route');
 
 mainRouter.get("/", () => {
     console.log("Api Calling Successful");
@@ -20,5 +21,6 @@ mainRouter.use("/review", ReviewRouter);
 mainRouter.use("/cart", cartRouter);
 mainRouter.use("/order", orderRouter);
 mainRouter.use("/seller", sellerRouter);
+mainRouter.use("/admin", adminRouter);
 
 module.exports = mainRouter;

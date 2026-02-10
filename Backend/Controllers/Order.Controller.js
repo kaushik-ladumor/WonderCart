@@ -100,8 +100,7 @@ const createOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: `Only ${sizeObj.stock} available` });
       }
 
-      const discount = sizeObj.discount || 0;
-      const finalPrice = sizeObj.price * (1 - discount / 100);
+      const finalPrice = sizeObj.sellingPrice;
 
       sizeObj.stock -= quantity;
       await product.save();
@@ -139,7 +138,7 @@ const createOrder = async (req, res) => {
         }
 
         const itemPrice =
-          item.price || sizeObj.price * (1 - (sizeObj.discount || 0) / 100);
+          item.price || sizeObj.sellingPrice;
 
         sizeObj.stock -= item.quantity;
         await product.save();
@@ -177,8 +176,26 @@ const createOrder = async (req, res) => {
 
     console.log("Order Created:", order._id);
 
+    // Only clear cart when order is placed FROM the cart (not Buy Now)
     if (items && items.length > 0) {
       await Cart.findOneAndUpdate({ user: userId }, { $set: { items: [] } });
+
+      // Emit cart cleared event
+      if (global.io) {
+        global.io.to(`cart-${userId}`).emit("cart-update", {
+          type: "cart-cleared-after-order",
+          cart: { items: [] },
+          itemCount: 0,
+        });
+      }
+    } else {
+      // Buy Now: Don't clear cart, but notify frontend to refresh cart
+      // (stock may have changed, making cart items out of stock)
+      if (global.io) {
+        global.io.to(`cart-${userId}`).emit("cart-update", {
+          type: "stock-changed",
+        });
+      }
     }
 
     if (userEmail) {
@@ -199,12 +216,9 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // ✅ HAR SELLER KE LIYE
     for (const sellerId of sellerIds) {
-
-      // 1️⃣ SAVE notification in DB (offline support)
       await Notification.create({
-        user: sellerId,           // ✅ SELLER ID
+        user: sellerId,
         role: "seller",
         type: "new-order",
         message: "🆕 New order received",
@@ -244,7 +258,7 @@ const verifyPayment = async (req, res) => {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId } = req.body;
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
-    
+
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body.toString())
@@ -262,21 +276,21 @@ const verifyPayment = async (req, res) => {
         status: "processing"
       });
 
-      res.status(200).json({ 
-        success: true, 
-        message: "Payment verified successfully" 
+      res.status(200).json({
+        success: true,
+        message: "Payment verified successfully"
       });
     } else {
-      res.status(400).json({ 
-        success: false, 
-        message: "Invalid payment signature" 
+      res.status(400).json({
+        success: false,
+        message: "Invalid payment signature"
       });
     }
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Payment verification failed",
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -319,7 +333,7 @@ const getOrderById = async (req, res) => {
     const order = await Order.findById(orderId).populate({
       path: "items.product",
       select: "name price variants",
-      
+
     });
 
     if (!order) {
@@ -356,7 +370,7 @@ const getOrderById = async (req, res) => {
       message: "Failed to fetch order",
     });
   }
-};  
+};
 
 const getSellerOrderById = async (req, res) => {
   try {

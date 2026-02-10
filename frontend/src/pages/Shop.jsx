@@ -184,7 +184,7 @@ function Shop() {
     let lowest = Infinity;
     variants.forEach((variant) => {
       variant.sizes?.forEach((size) => {
-        const finalPrice = size.price * (1 - (size.discount || 0) / 100);
+        const finalPrice = size.sellingPrice || size.originalPrice || 0;
         if (finalPrice < lowest) lowest = finalPrice;
       });
     });
@@ -354,11 +354,10 @@ function Shop() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleClearFilters}
-                className={`px-3 py-1.5 text-xs rounded border ${
-                  selectedCategory === "all"
+                className={`px-3 py-1.5 text-xs rounded border ${selectedCategory === "all"
                     ? "bg-black text-white border-black"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 All
               </button>
@@ -366,11 +365,10 @@ function Shop() {
                 <button
                   key={cat}
                   onClick={() => filterByCategory(cat)}
-                  className={`px-3 py-1.5 text-xs rounded border ${
-                    selectedCategory === cat
+                  className={`px-3 py-1.5 text-xs rounded border ${selectedCategory === cat
                       ? "bg-black text-white border-black"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   {cat}
                 </button>
