@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const User = require("../Models/User.Model");
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -25,9 +26,16 @@ const authMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("Decoded JWT:", decoded);
 
+    let email = decoded.email;
+    if (!email) {
+      // If email missing in token, fetch from DB
+      const user = await User.findById(decoded.userId).select("email");
+      if (user) email = user.email;
+    }
+
     req.user = {
       userId: decoded.userId,
-      email: decoded.email,
+      email: email,
       role: decoded.role,
     };
     console.log("Authenticated User:", req.user);

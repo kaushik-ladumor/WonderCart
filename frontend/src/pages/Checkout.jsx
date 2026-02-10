@@ -257,18 +257,7 @@ const Checkout = () => {
     return true;
   };
 
-  const clearCartForOrder = async (token, isDirectOrder) => {
-    try {
-      // Only clear the cart if this was a cart-based checkout (not Buy Now)
-      if (!isDirectOrder) {
-        await axios.delete(`${API_BASE_URL}/cart`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-      // Refresh cart count in real-time (handles both cases)
-      if (refreshCart) await refreshCart();
-    } catch (error) { }
-  };
+  /* Frontend cart clearing not needed - handled by backend */
 
   const placeOrder = async () => {
     if (!validateOrder()) {
@@ -339,16 +328,12 @@ const Checkout = () => {
       );
 
       if (response.data.success) {
-        const isDirectOrder = sessionStorage.getItem("directOrder") !== null;
-
-        await clearCartForOrder(token, isDirectOrder);
-
-        sessionStorage.removeItem("directOrder");
-        sessionStorage.removeItem("directOrderTotal");
-
         if (selectedPayment === "Razorpay") {
-          openRazorpay(response.data.razorpayOrder, response.data.order._id);
+          openRazorpay(response.data.razorpayOrder, orderData);
         } else {
+          sessionStorage.removeItem("directOrder");
+          sessionStorage.removeItem("directOrderTotal");
+          if (refreshCart) await refreshCart();
           toast.success("Order placed successfully!");
           navigate(`/orderConfirm/${response.data.order._id}`);
         }
@@ -375,12 +360,13 @@ const Checkout = () => {
       }
 
       toast.error(errorMessage);
-    } finally {
       setSubmitting(false);
+    } finally {
+      if (selectedPayment !== "Razorpay") setSubmitting(false);
     }
   };
 
-  const openRazorpay = (razorpayOrder, orderId) => {
+  const openRazorpay = (razorpayOrder, orderData) => {
     if (!window.Razorpay) {
       toast.error("Payment gateway not loaded. Please refresh the page.");
       setSubmitting(false);
@@ -409,7 +395,7 @@ const Checkout = () => {
       description: "Order Payment",
       order_id: razorpayOrder.id,
       handler: function (response) {
-        verifyPayment(response, orderId);
+        verifyPayment(response, orderData); // Pass orderData to verification
       },
       prefill: {
         name: selectedAddress?.fullName || "",
@@ -436,7 +422,7 @@ const Checkout = () => {
     }
   };
 
-  const verifyPayment = async (paymentResponse, orderId) => {
+  const verifyPayment = async (paymentResponse, orderData) => {
     try {
       const token = getToken();
 
@@ -446,7 +432,7 @@ const Checkout = () => {
           razorpay_payment_id: paymentResponse.razorpay_payment_id,
           razorpay_order_id: paymentResponse.razorpay_order_id,
           razorpay_signature: paymentResponse.razorpay_signature,
-          orderId: orderId,
+          orderData: orderData, // Send order details for creation
         },
         {
           headers: {
@@ -456,8 +442,13 @@ const Checkout = () => {
       );
 
       if (response.data.success) {
-        toast.success("Payment successful!");
-        navigate(`/orderConfirm/${orderId}`);
+        sessionStorage.removeItem("directOrder");
+        sessionStorage.removeItem("directOrderTotal");
+
+        if (refreshCart) await refreshCart();
+
+        toast.success("Payment successful! Order placed.");
+        navigate(`/orderConfirm/${response.data.order._id}`);
       } else {
         toast.error("Payment verification failed");
         setSubmitting(false);
@@ -474,8 +465,9 @@ const Checkout = () => {
     0,
   );
 
+  const gst = Math.round(subtotal * 0.18);
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const total = subtotal + shipping;
+  const total = subtotal + gst + shipping;
 
   if (loading) {
     return (
@@ -834,6 +826,12 @@ const Checkout = () => {
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium text-gray-900">
                     ₹{formatPriceDisplay(subtotal)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">GST (18%)</span>
+                  <span className="font-medium text-gray-900">
+                    ₹{formatPriceDisplay(gst)}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs">

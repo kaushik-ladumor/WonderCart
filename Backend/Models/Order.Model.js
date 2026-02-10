@@ -94,6 +94,15 @@ const orderSchema = new mongoose.Schema(
     trackingNumber: {
       type: String,
     },
+    razorpayOrderId: {
+      type: String,
+    },
+    razorpayPaymentId: {
+      type: String,
+    },
+    razorpaySignature: {
+      type: String,
+    },
     deliveredAt: {
       type: Date,
     },

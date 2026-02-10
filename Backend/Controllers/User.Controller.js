@@ -7,7 +7,7 @@ const Cart = require("../Models/Cart.Model");
 const Wishlist = require("../Models/Wishlist.Model");
 const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
-const cloudinary = require("../Utils/cloudinary");
+
 const {
   sendVerificationCode,
   sendWelcomeEmail,
@@ -232,6 +232,7 @@ const googleAuth = async (req, res) => {
       {
         userId: user._id,
         role: user.role,
+        email: user.email,
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }

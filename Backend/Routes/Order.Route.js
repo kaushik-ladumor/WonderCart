@@ -71,6 +71,6 @@ router.delete("/notifications/clear", authenticate, async (req, res) => {
 // -------------------- ADMIN ROUTES --------------------
 // router.get("/admin/all", authenticate, authorizeRoles("admin"), getAllOrders);
 
-router.post('/verify-payment', verifyPayment);
+router.post('/verify-payment', authenticate, verifyPayment);
 
 module.exports = router;

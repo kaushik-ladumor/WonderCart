@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
+import Loader from "../components/Loader";
 import {
   Package,
   Truck,
@@ -35,140 +38,57 @@ const ViewAllOrdersPage = () => {
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  const orders = [
-    {
-      id: "ORD-2024-78945",
-      date: "Dec 15, 2024",
-      status: "delivered",
-      total: 1347.0,
-      itemCount: 3,
-      customer: "John Doe",
-      paymentMethod: "Razorpay",
-      paymentId: "pay_Lk7z8u9v0x1y2z",
-      shippingAddress: "New York, NY",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-      orderItems: [
-        {
-          id: 1,
-          name: "Wireless Headphones Pro",
-          quantity: 2,
-          price: 299,
-          image: "🎧",
-          color: "Matte Black",
-        },
-        {
-          id: 2,
-          name: "Smart Watch Pro",
-          quantity: 1,
-          price: 449,
-          image: "⌚",
-          color: "Midnight Black",
-        },
-        {
-          id: 3,
-          name: "Laptop Stand",
-          quantity: 1,
-          price: 89,
-          image: "💻",
-          color: "Space Gray",
-        },
-      ],
-    },
-    {
-      id: "ORD-2024-78944",
-      date: "Dec 14, 2024",
-      status: "shipped",
-      total: 249.99,
-      itemCount: 2,
-      customer: "Sarah Johnson",
-      paymentMethod: "COD",
-      paymentId: "COD-2024-78944",
-      shippingAddress: "Los Angeles, CA",
-      email: "sarah.j@example.com",
-      phone: "+1 (555) 987-6543",
-      orderItems: [
-        {
-          id: 1,
-          name: "Bluetooth Speaker",
-          quantity: 1,
-          price: 129,
-          image: "🔊",
-          color: "Black",
-        },
-        {
-          id: 2,
-          name: "Phone Case",
-          quantity: 1,
-          price: 49,
-          image: "📱",
-          color: "Blue",
-        },
-      ],
-    },
-    {
-      id: "ORD-2024-78943",
-      date: "Dec 13, 2024",
-      status: "processing",
-      total: 899.5,
-      itemCount: 1,
-      customer: "Mike Smith",
-      paymentMethod: "Razorpay",
-      paymentId: "pay_Mn8a9b0c1d2e3",
-      shippingAddress: "Chicago, IL",
-      email: "mike.smith@example.com",
-      phone: "+1 (555) 456-7890",
-      orderItems: [
-        {
-          id: 1,
-          name: "Gaming Laptop",
-          quantity: 1,
-          price: 899.5,
-          image: "💻",
-          color: "Black",
-        },
-      ],
-    },
-    {
-      id: "ORD-2024-78942",
-      date: "Dec 12, 2024",
-      status: "delivered",
-      total: 156.75,
-      itemCount: 4,
-      customer: "Emma Wilson",
-      paymentMethod: "COD",
-      paymentId: "COD-2024-78942",
-      shippingAddress: "Miami, FL",
-      email: "emma.w@example.com",
-      phone: "+1 (555) 234-5678",
-      orderItems: [
-        {
-          id: 1,
-          name: "T-shirt",
-          quantity: 2,
-          price: 25,
-          image: "👕",
-          color: "White",
-        },
-        {
-          id: 2,
-          name: "Jeans",
-          quantity: 1,
-          price: 79,
-          image: "👖",
-          color: "Blue",
-        },
-        {
-          id: 3,
-          name: "Sneakers",
-          quantity: 1,
-          price: 89,
-          image: "👟",
-          color: "Black",
-        },
-      ],
-    },
-  ];
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // toast.error("Please login"); // Optional: prevent spamming toast on load
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.get(`${API_BASE_URL}/order`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        const mappedOrders = response.data.orders.map(order => ({
+          id: order._id,
+          date: new Date(order.createdAt).toLocaleDateString(),
+          status: order.status,
+          paymentStatus: order.paymentStatus || (order.paymentMethod === "COD" ? "pending" : "paid"),
+          total: order.totalAmount || 0,
+          itemCount: order.items.reduce((acc, item) => acc + (item.quantity || 1), 0),
+          customer: order.address?.fullName || "User",
+          email: order.user?.email || "",
+          phone: order.address?.phone || "",
+          shippingAddress: `${order.address?.city || ''}, ${order.address?.state || ''}`,
+          paymentMethod: order.paymentMethod,
+          paymentId: order.razorpayPaymentId || "N/A",
+          orderItems: order.items.map(item => ({
+            id: item._id,
+            name: item.product?.name || item.name || "Product",
+            quantity: item.quantity || 1,
+            price: item.price || 0,
+            image: item.product?.variants?.[0]?.images?.[0] || item.product?.images?.[0] || "",
+            color: item.color
+          }))
+        }));
+        setOrders(mappedOrders);
+      }
+    } catch (error) {
+      console.error("Fetch orders error:", error);
+      toast.error("Failed to load orders");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -249,6 +169,8 @@ const ViewAllOrdersPage = () => {
       alert("Order ID copied to clipboard!");
     }
   };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader /></div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -501,6 +423,9 @@ const ViewAllOrdersPage = () => {
                           <p className="text-xs text-gray-600">
                             {order.paymentId}
                           </p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                            {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                          </span>
                         </div>
                       </div>
                     </td>
@@ -620,9 +545,8 @@ const ViewAllOrdersPage = () => {
                       <div>
                         <div className="flex items-center gap-3 mb-3">
                           <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              getStatusColor(selectedOrder.status).split(" ")[0]
-                            }`}
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${getStatusColor(selectedOrder.status).split(" ")[0]
+                              }`}
                           >
                             {getStatusIcon(selectedOrder.status)}
                           </div>
@@ -671,8 +595,12 @@ const ViewAllOrdersPage = () => {
                           className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-white rounded-lg border flex items-center justify-center">
-                              <span className="text-2xl">{item.image}</span>
+                            <div className="w-16 h-16 bg-white rounded-lg border flex items-center justify-center overflow-hidden">
+                              {item.image && item.image.startsWith("http") ? (
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-2xl">{item.image || "📦"}</span>
+                              )}
                             </div>
                             <div>
                               <h4 className="font-medium text-gray-900 mb-1">
