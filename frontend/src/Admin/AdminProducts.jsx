@@ -71,8 +71,10 @@ const AdminProducts = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (token) {
+      fetchProducts();
+    }
+  }, [token]);
 
   useEffect(() => {
     if (!socket) return;
@@ -163,91 +165,75 @@ const AdminProducts = () => {
   const ProductCard = ({ product }) => (
     <div
       onClick={() => openProductModal(product)}
-      className="group cursor-pointer bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:border-gray-200 active:scale-[0.99]"
+      className="group cursor-pointer bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] transition-all duration-500 hover:border-gray-200 active:scale-[0.98] animate-in fade-in slide-in-from-bottom-4"
     >
-      {/* Image Container */}
-      <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+      {/* Visual Identity */}
+      <div className="relative aspect-square bg-[#F8FAFB] overflow-hidden">
         <img
           src={
             product.variants?.[0]?.images?.[0] ||
-            "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=800&h=800&fit=crop&q=80"
+            "/placeholder.png"
           }
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out p-4"
         />
 
-        {/* Status Badge Overlay */}
-        <div className="absolute top-3 left-3">
+        {/* Floating Status */}
+        <div className="absolute top-4 left-4 drop-shadow-sm">
           <StatusBadge status={product.status} />
         </div>
 
-        {/* View Indicator */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2 text-xs font-medium">
-            <Eye className="w-3 h-3" />
-            View Details
+        {/* Hover Action Overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.02] transition-colors duration-500 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 bg-white shadow-xl px-5 py-2.5 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-900 border border-gray-50">
+            <Eye className="w-4 h-4" />
+            View
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-3">
-        <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-1 tracking-tight">
-          {product.name}
-        </h3>
-        <p className="text-xs text-gray-600 line-clamp-2 mb-3 leading-relaxed tracking-wide">
-          {product.description || "No description provided"}
-        </p>
-
-        {/* Meta Information */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Tag className="w-3 h-3" />
-              <span className="font-medium text-gray-700">
-                {product.category || "Uncategorized"}
-              </span>
-            </div>
-            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              <span>
-                {new Date(product.createdAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-          </div>
-
-          {product.variants?.[0]?.sizes?.[0]?.price && (
-            <span className="font-bold text-gray-900 text-sm bg-gray-100 px-2 py-1 rounded">
-              ₹{product.variants[0].sizes[0].price.toLocaleString()}
-            </span>
-          )}
+      {/* Product Content Details */}
+      <div className="p-4 md:p-5 space-y-3">
+        <div className="space-y-1">
+          <h3 className="font-black text-gray-900 text-sm line-clamp-1 tracking-tight group-hover:text-blue-600 transition-colors">
+            {product.name}
+          </h3>
+          <p className="text-[11px] font-bold text-gray-400 capitalize tracking-wider flex items-center gap-1.5">
+            <Tag className="w-3 h-3" />
+            {product.category || "General"}
+          </p>
         </div>
 
-        {/* Quick Actions - Only for pending */}
+        {/* Financials & Action */}
+        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Starting at</span>
+            <span className="font-black text-gray-900 text-base leading-none">
+              ₹{product.variants?.[0]?.sizes?.[0]?.sellingPrice?.toLocaleString() || "0"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Active</span>
+          </div>
+        </div>
+
+        {/* Pending Approval Controls */}
         {product.status === "pending" && (
           <div
-            className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2"
+            className="pt-2 flex items-center gap-2"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                approveProduct(product._id);
-              }}
-              className="flex-1 py-2 text-xs font-medium bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+              onClick={(e) => { e.stopPropagation(); approveProduct(product._id); }}
+              className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
             >
               Approve
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                rejectProduct(product._id);
-              }}
-              className="flex-1 py-2 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              onClick={(e) => { e.stopPropagation(); rejectProduct(product._id); }}
+              className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest bg-red-500 text-white rounded-xl hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all active:scale-95"
             >
               Reject
             </button>
@@ -292,27 +278,46 @@ const AdminProducts = () => {
       <td className="py-3 px-4">
         <StatusBadge status={product.status} />
       </td>
-      <td className="py-3 px-4 text-xs text-gray-600">
+      <td className="py-3 px-4">
+        <div className="flex flex-col">
+          <span className="text-sm font-black text-gray-900 leading-none">
+            ₹{product.variants?.[0]?.sizes?.[0]?.sellingPrice?.toLocaleString() || "0"}
+          </span>
+          {product.variants?.[0]?.sizes?.[0]?.discount > 0 && (
+            <span className="text-[10px] font-bold text-emerald-600">
+              {product.variants[0].sizes[0].discount}% OFF
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="py-3 px-4 text-xs font-bold text-gray-400">
         {new Date(product.createdAt).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
         })}
       </td>
       <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-        {product.status === "pending" && (
+        {product.status === "pending" ? (
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => approveProduct(product._id)}
-              className="px-2.5 py-1.5 text-xs font-medium bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+              className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors shadow-sm border border-emerald-100"
+              title="Approve"
             >
-              Approve
+              <CheckCircle className="w-4 h-4" />
             </button>
             <button
               onClick={() => rejectProduct(product._id)}
-              className="px-2.5 py-1.5 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-red-100"
+              title="Reject"
             >
-              Reject
+              <XCircle className="w-4 h-4" />
             </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+            Completed
           </div>
         )}
       </td>
@@ -413,7 +418,7 @@ const AdminProducts = () => {
 
       {/* Grid View */}
       {viewMode === "grid" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
           {filteredProducts.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
@@ -437,18 +442,23 @@ const AdminProducts = () => {
                   </div>
                 </th>
                 <th className="text-left p-0">
-                  <div className="py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <div className="py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                     Status
                   </div>
                 </th>
                 <th className="text-left p-0">
-                  <div className="py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <div className="py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Price
+                  </div>
+                </th>
+                <th className="text-left p-0">
+                  <div className="py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                     Date
                   </div>
                 </th>
                 <th className="text-left p-0">
-                  <div className="pr-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
+                  <div className="pr-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Review
                   </div>
                 </th>
               </tr>

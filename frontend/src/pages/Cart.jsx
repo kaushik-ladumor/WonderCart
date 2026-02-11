@@ -319,14 +319,6 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Continue Shopping
-        </button>
-
         {/* Stock Notice Banner */}
         {stockNotice && (
           <div

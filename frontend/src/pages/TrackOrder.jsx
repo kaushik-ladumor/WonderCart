@@ -137,8 +137,8 @@ const TrackOrder = () => {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Track Order</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Track Order</h1>
+          <p className="text-gray-600 mb-4">
             Enter your Order ID to track real-time updates
           </p>
         </div>

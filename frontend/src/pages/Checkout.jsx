@@ -836,7 +836,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">
+                  <span className="font-medium text-black">
                     {shipping === 0 ? (
                       <span className="text-green-600">FREE</span>
                     ) : (

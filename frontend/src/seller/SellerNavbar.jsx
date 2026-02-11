@@ -172,71 +172,69 @@ const SellerNavbar = () => {
     }
   };
 
+  const deleteNotification = async (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch(`${API_URL}/order/notifications/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
   return (
     <>
-      <nav className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-100">
+      <nav className="bg-black text-white sticky top-0 z-50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 hover:bg-gray-50 rounded-lg transition"
-                aria-label="Toggle menu"
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center flex-shrink-0">
+              <Link
+                to="/seller/dashboard"
+                className="text-lg sm:text-xl md:text-2xl font-bold tracking-wide hover:text-gray-300 transition flex items-center gap-2"
               >
-                {mobileMenuOpen ? (
-                  <X className="w-5 h-5 text-gray-700" />
-                ) : (
-                  <Menu className="w-5 h-5 text-gray-700" />
-                )}
-              </button>
-
-              <Link to="/seller/dashboard" className="flex items-center gap-2">
-                <div className="p-2 bg-black rounded-lg">
-                  <ShoppingCart className="w-4 h-4 text-white" />
+                <div className="p-1.5 bg-white rounded-lg">
+                  <ShoppingCart className="w-4 h-4 text-black" />
                 </div>
-                <h1 className="text-base sm:text-lg font-semibold text-black">
-                  Seller Hub
-                </h1>
+                <span>Seller Hub</span>
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-6 xl:gap-8">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPath === item.path;
-
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`px-3 py-2 text-sm font-medium transition-colors relative ${isActive ? "text-black" : "text-gray-500 hover:text-black"
+                    className={`text-sm flex items-center gap-2 transition-colors ${isActive ? "text-white font-bold underline underline-offset-8 decoration-2" : "text-gray-300 hover:text-white"
                       }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </div>
-                    {isActive && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black"></div>
-                    )}
+                    <Icon className="w-4 h-4" />
+                    {item.label}
                   </Link>
                 );
               })}
             </div>
 
-            <div className="flex items-center gap-2 relative" ref={dropdownRef}>
-              <div className="relative">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="p-2 hover:bg-gray-50 rounded-lg transition relative"
+                  className="p-2 hover:bg-gray-900 rounded-lg transition-all duration-300 relative group"
+                  aria-label="Notifications"
                 >
-                  <Bell className="w-5 h-5 text-gray-600" />
-
+                  <Bell className={`w-5 h-5 text-gray-400 group-hover:text-white transition-all duration-300 ${notifications.some(n => !n.read) ? 'animate-[pulse_2s_infinite]' : ''}`} />
                   {notifications.filter((n) => !n.read).length > 0 && (
-                    <span
-                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 
-                      bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center"
-                    >
+                    <span className="absolute top-1.5 right-1.5 min-w-[17px] h-[17px] px-1 bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-black">
                       {notifications.filter((n) => !n.read).length > 9
                         ? "9+"
                         : notifications.filter((n) => !n.read).length}
@@ -245,11 +243,24 @@ const SellerNavbar = () => {
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        Notifications
-                      </h3>
+                  <div className="fixed sm:absolute top-16 sm:top-auto left-4 right-4 sm:left-auto sm:right-0 mt-2 sm:mt-4 w-auto sm:w-[380px] bg-white/95 backdrop-blur-xl text-black border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                    {/* Arrow Pointer - Hidden on Mobile */}
+                    <div className="hidden sm:block absolute -top-1.5 right-4 w-3 h-3 bg-white border-t border-l border-gray-100 transform rotate-45" />
+
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100/60 relative z-10">
+                      <div>
+                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                          Notifications
+                        </h3>
+                        {notifications.some(n => !n.read) && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="flex h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">
+                              {notifications.filter(n => !n.read).length} New
+                            </span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         {notifications.filter((n) => !n.read).length > 0 && (
                           <button
@@ -270,43 +281,63 @@ const SellerNavbar = () => {
                       </div>
                     </div>
 
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-80 overflow-y-auto custom-scrollbar">
                       {notifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center px-4 py-8">
-                          <Bell className="w-10 h-10 text-gray-300 mb-2" />
-                          <p className="text-sm text-gray-500 text-center">
-                            No notifications yet
+                        <div className="flex flex-col items-center justify-center px-4 py-12">
+                          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <Bell className="w-8 h-8 text-gray-300" />
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            Clear skies!
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            New updates will appear here
+                          <p className="text-xs text-gray-500 mt-1">
+                            You're all up to date with your orders.
                           </p>
                         </div>
                       ) : (
                         notifications.map((n) => (
                           <div
                             key={n.id}
-                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer ${n.read ? "bg-white" : "bg-blue-50"
+                            className={`group relative px-5 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50 transition-all duration-200 ${n.read ? "bg-white" : "bg-blue-50/30"
                               }`}
-                            onClick={() => markOneRead(n.id)}
                           >
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-4">
                               <div
-                                className={`mt-0.5 w-2 h-2 rounded-full ${n.read ? "bg-gray-300" : "bg-blue-500"
+                                className={`mt-2 w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-transparent" : "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
                                   }`}
                               />
-                              <div className="flex-1">
-                                <p className="text-sm text-gray-800">
+                              <div
+                                className="flex-1 cursor-pointer"
+                                onClick={() => markOneRead(n.id)}
+                              >
+                                <p className={`text-sm leading-relaxed ${n.read ? "text-gray-600" : "text-gray-900 font-medium"}`}>
                                   {n.message}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                                  <span>{n.time}</span>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-[11px] text-gray-400 font-medium tracking-wide">
+                                    {n.time}
+                                  </span>
                                   {!n.read && (
-                                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 rounded">
+                                    <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                                  )}
+                                  {!n.read && (
+                                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">
                                       New
                                     </span>
                                   )}
-                                </p>
+                                </div>
                               </div>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(n.id);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-gray-200 rounded-md transition-all duration-200 text-gray-400 hover:text-gray-600"
+                                aria-label="Dismiss"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         ))
@@ -316,63 +347,84 @@ const SellerNavbar = () => {
                 )}
               </div>
 
-              <button
-                onClick={handleLogout}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm font-medium transition"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden lg:inline">Logout</span>
-              </button>
+              <div className="hidden lg:flex items-center gap-3 border-l border-gray-800 pl-4">
+                <button
+                  onClick={handleLogout}
+                  className="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition"
+                >
+                  Logout
+                </button>
+              </div>
 
               <button
-                onClick={handleLogout}
-                className="sm:hidden p-2 hover:bg-gray-50 rounded-lg transition"
-                aria-label="Logout"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 hover:bg-gray-900 rounded-lg transition"
+                aria-label="Menu"
               >
-                <LogOut className="w-5 h-5 text-gray-600" />
+                <Menu className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
 
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-100 bg-white">
-            <div className="py-2 px-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPath === item.path;
+        {/* Mobile Sidebar Overlay */}
+        <div
+          className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 lg:hidden ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+            }`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
 
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-1 transition ${isActive
-                        ? "bg-black text-white"
-                        : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+        {/* Mobile Sidebar Content */}
+        <div
+          className={`fixed top-0 left-0 w-[280px] h-full bg-white z-[60] transform transition-transform duration-300 ease-in-out lg:hidden ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+        >
+          <div className="flex flex-col h-full text-black">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-black text-white">
+              <span className="text-xl font-bold tracking-tight">Seller Hub</span>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:bg-gray-900 rounded-lg">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
-              <div className="border-t border-gray-100 mt-2 pt-2">
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
-                </button>
+            <div className="flex-1 overflow-y-auto py-4 bg-white">
+              <div className="px-4 mb-4">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Management</p>
+                <div className="space-y-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentPath === item.path;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition ${isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon className="w-5 h-5" />
+                        {item.label}
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
             </div>
+
+            <div className="p-4 border-t border-gray-100 bg-gray-50">
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
           </div>
-        )}
+        </div>
       </nav>
       <div className="h-16" />
     </>

@@ -1,14 +1,13 @@
 import {
   ShoppingCart,
-  Search,
   Menu,
   X,
   Heart,
   User,
   LogOut,
-  Package,
   Settings,
   Bell,
+  Truck,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -21,12 +20,10 @@ import { API_URL } from "../utils/constants";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { authUser, setAuthUser } = useAuth();
   const socket = useSocket();
   const { cartCount } = useCart();
   const menuRef = useRef(null);
-  const searchRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
@@ -42,9 +39,6 @@ export default function Navbar() {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsMenuOpen(false);
-      }
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchOpen(false);
       }
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -150,6 +144,25 @@ export default function Navbar() {
     }
   };
 
+  const deleteNotification = async (id) => {
+    // Optimistic UI update
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch(`${API_URL}/order/notifications/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
   return (
     <nav className="bg-black text-white sticky top-0 z-50 border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -176,33 +189,17 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            <div className="hidden lg:block relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products"
-                className="w-48 xl:w-64 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 pl-10 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white transition"
-              />
-            </div>
-
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-900 rounded-lg transition"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
 
             {authUser && (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="p-2 hover:bg-gray-900 rounded-lg transition relative"
+                  className="p-2 hover:bg-gray-900 rounded-lg transition-all duration-300 relative group"
                   aria-label="Notifications"
                 >
-                  <Bell className="w-5 h-5 text-gray-300 hover:text-white transition" />
+                  <Bell className={`w-5 h-5 text-gray-400 group-hover:text-white transition-all duration-300 ${notifications.some(n => !n.read) ? 'animate-[pulse_2s_infinite]' : ''}`} />
                   {notifications.filter((n) => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute top-1.5 right-1.5 min-w-[17px] h-[17px] px-1 bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-black">
                       {notifications.filter((n) => !n.read).length > 9
                         ? "9+"
                         : notifications.filter((n) => !n.read).length}
@@ -211,11 +208,24 @@ export default function Navbar() {
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-black border border-gray-200 rounded-lg shadow-lg z-50">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        Notifications
-                      </h3>
+                  <div className="fixed sm:absolute top-16 sm:top-auto left-4 right-4 sm:left-auto sm:right-0 mt-2 sm:mt-4 w-auto sm:w-[380px] bg-white/95 backdrop-blur-xl text-black border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                    {/* Arrow Pointer - Hidden on Mobile */}
+                    <div className="hidden sm:block absolute -top-1.5 right-4 w-3 h-3 bg-white border-t border-l border-gray-100 transform rotate-45" />
+
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100/60 relative z-10">
+                      <div>
+                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                          Notifications
+                        </h3>
+                        {notifications.some(n => !n.read) && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="flex h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">
+                              {notifications.filter(n => !n.read).length} New
+                            </span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         {notifications.filter((n) => !n.read).length > 0 && (
                           <button
@@ -236,49 +246,69 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-80 overflow-y-auto custom-scrollbar">
                       {notifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center px-4 py-8">
-                          <Bell className="w-10 h-10 text-gray-300 mb-2" />
-                          <p className="text-sm text-gray-500 text-center">
-                            No notifications yet
+                        <div className="flex flex-col items-center justify-center px-4 py-12">
+                          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <Bell className="w-8 h-8 text-gray-300" />
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            All caught up!
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            New updates will appear here
+                          <p className="text-xs text-gray-500 mt-1">
+                            No new notifications at the moment.
                           </p>
                         </div>
                       ) : (
                         notifications.map((n) => (
                           <div
                             key={n.id}
-                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer ${n.read ? "bg-white" : "bg-blue-50"
+                            className={`group relative px-5 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50 transition-all duration-200 ${n.read ? "bg-white" : "bg-blue-50/30"
                               }`}
-                            onClick={() =>
-                              setNotifications((prev) =>
-                                prev.map((x) =>
-                                  x.id === n.id ? { ...x, read: true } : x,
-                                ),
-                              )
-                            }
                           >
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-4">
                               <div
-                                className={`mt-0.5 w-2 h-2 rounded-full ${n.read ? "bg-gray-300" : "bg-blue-500"
+                                className={`mt-2 w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-transparent" : "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
                                   }`}
                               />
-                              <div className="flex-1">
-                                <p className="text-sm text-gray-800">
+                              <div
+                                className="flex-1 cursor-pointer"
+                                onClick={() =>
+                                  setNotifications((prev) =>
+                                    prev.map((x) =>
+                                      x.id === n.id ? { ...x, read: true } : x,
+                                    ),
+                                  )
+                                }
+                              >
+                                <p className={`text-sm leading-relaxed ${n.read ? "text-gray-600" : "text-gray-900 font-medium"}`}>
                                   {n.message}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                                  <span>{n.time}</span>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-[11px] text-gray-400 font-medium tracking-wide">
+                                    {n.time}
+                                  </span>
                                   {!n.read && (
-                                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 rounded">
+                                    <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                                  )}
+                                  {!n.read && (
+                                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">
                                       New
                                     </span>
                                   )}
-                                </p>
+                                </div>
                               </div>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(n.id);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-gray-200 rounded-md transition-all duration-200 text-gray-400 hover:text-gray-600"
+                                aria-label="Dismiss"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         ))
@@ -359,115 +389,121 @@ export default function Navbar() {
           </div>
         </div>
 
-        {isSearchOpen && (
-          <div
-            ref={searchRef}
-            className="lg:hidden py-3 border-t border-gray-800"
-          >
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 pl-10 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
-                autoFocus
-              />
+
+
+        {/* Mobile Sidebar Overlay */}
+        <div
+          className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 lg:hidden ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+            }`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+
+        {/* Mobile Sidebar Content */}
+        <div
+          ref={menuRef}
+          className={`fixed top-0 left-0 w-[280px] h-full bg-white z-[60] transform transition-transform duration-300 ease-in-out lg:hidden ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+        >
+          <div className="flex flex-col h-full">
+            {/* Sidebar Header */}
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-black text-white">
+              <span className="text-xl font-bold tracking-tight">WonderCart</span>
               <button
-                onClick={() => setIsSearchOpen(false)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                aria-label="Close search"
+                onClick={() => setIsMenuOpen(false)}
+                className="p-1 hover:bg-gray-900 rounded-lg transition"
               >
-                <X className="w-4 h-4" />
+                <X className="w-6 h-6" />
               </button>
             </div>
-          </div>
-        )}
 
-        {isMenuOpen && (
-          <div ref={menuRef} className="lg:hidden border-t border-gray-800">
-            <div className="py-3 space-y-1">
-              {["Shop", "Categories", "Deals", "Contact"].map((item) => (
-                <a
-                  key={item}
-                  href={`/${item.toLowerCase()}`}
-                  className="block px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-900 rounded-lg transition"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item}
-                </a>
-              ))}
+            {/* Sidebar Links */}
+            <div className="flex-1 overflow-y-auto py-4 bg-white">
+              <div className="px-4 mb-4">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Shop</p>
+                <div className="space-y-1">
+                  {["Shop", "Categories", "Deals", "Contact"].map((item) => (
+                    <a
+                      key={item}
+                      href={`/${item.toLowerCase()}`}
+                      className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg font-medium transition"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item === "Shop" && <ShoppingCart className="w-5 h-5 text-gray-400" />}
+                      {item === "Categories" && <Menu className="w-5 h-5 text-gray-400" />}
+                      {item === "Deals" && <Bell className="w-5 h-5 text-gray-400" />}
+                      {item === "Contact" && <Settings className="w-5 h-5 text-gray-400" />}
+                      {item}
+                    </a>
+                  ))}
+                </div>
+              </div>
 
-              <a
-                href="/wishlist"
-                className="sm:hidden flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-900 rounded-lg transition"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Heart className="w-4 h-4" />
-                Wishlist
-              </a>
-
-              {authUser ? (
-                <>
-                  <div className="border-t border-gray-800 my-2"></div>
+              <div className="px-4 mb-4">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Support</p>
+                <div className="space-y-1">
                   <a
-                    href="/profile"
-                    className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-900 rounded-lg transition"
+                    href="/wishlist"
+                    className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg font-medium transition"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <User className="w-4 h-4" />
-                    Profile
+                    <Heart className="w-5 h-5 text-gray-400" />
+                    Wishlist
                   </a>
-                  <a
-                    href="/orders"
-                    className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-900 rounded-lg transition"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Package className="w-4 h-4" />
-                    My Orders
-                  </a>
-                  <a
-                    href="/settings"
-                    className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-900 rounded-lg transition"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    Settings
-                  </a>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-gray-900 rounded-lg transition"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="border-t border-gray-800 my-2"></div>
+                </div>
+              </div>
+
+              {authUser && (
+                <div className="px-4">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Account</p>
+                  <div className="space-y-1">
+                    <a
+                      href="/profile"
+                      className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg font-medium transition"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="w-5 h-5 text-gray-400" />
+                      Profile
+                    </a>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-lg font-medium transition text-left"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar Footer */}
+            {!authUser && (
+              <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
                       document.getElementById("login_modal")?.showModal();
                     }}
-                    className="w-full text-left px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-900 rounded-lg transition"
+                    className="py-2.5 text-sm font-bold text-black border border-black rounded-lg hover:bg-black hover:text-white transition"
                   >
                     Login
                   </button>
                   <a
                     href="/signup"
                     onClick={() => setIsMenuOpen(false)}
-                    className="block text-center bg-white text-black px-4 py-2.5 mx-4 rounded-lg font-semibold hover:bg-gray-200 transition"
+                    className="py-2.5 text-sm font-bold text-center bg-black text-white rounded-lg hover:bg-gray-800 transition"
                   >
-                    Sign Up
+                    Join
                   </a>
-                </>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
     </nav>

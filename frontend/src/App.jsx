@@ -60,7 +60,48 @@ function App() {
   return (
     <BrowserRouter>
       {/* Toast Notification */}
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: 'bg-white text-gray-900 border border-gray-100 shadow-xl rounded-2xl px-6 py-4 min-w-[320px]',
+          duration: 4000,
+          style: {
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(0, 0, 0, 0.05)',
+            padding: '16px 24px',
+            color: '#1a1a1a',
+            fontSize: '14px',
+            fontWeight: '500',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#000',
+              secondary: '#fff',
+            },
+            style: {
+              borderLeft: '4px solid #10b981',
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+            style: {
+              borderLeft: '4px solid #ef4444',
+            }
+          },
+          loading: {
+            style: {
+              borderLeft: '4px solid #3b82f6',
+            }
+          },
+        }}
+      />
 
       <Routes>
         {/* ================= AUTH ROUTES ================= */}

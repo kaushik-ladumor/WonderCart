@@ -208,22 +208,6 @@ const OrderConfirmationPage = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 py-5">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-5">
-          <button onClick={() => navigate("/")} className="hover:text-black">
-            Home
-          </button>
-          <ChevronRight className="w-4 h-4" />
-          <button
-            onClick={() => navigate("/orders")}
-            className="hover:text-black"
-          >
-            Orders
-          </button>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-black font-medium">Order #{id?.slice(-6)}</span>
-        </div>
-
         {/* Success Banner */}
         <div className="bg-gradient-to-r from-black to-gray-900 rounded-lg p-4 text-white mb-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
@@ -435,7 +419,7 @@ const OrderConfirmationPage = () => {
                 <div>
                   <p className="text-xs text-gray-600 mb-0.5">Order Number</p>
                   <p className="font-medium text-gray-900 text-xs">
-                    {order._id?.slice(-8)}
+                    {order._id}
                   </p>
                 </div>
                 <div>
