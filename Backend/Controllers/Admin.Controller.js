@@ -22,14 +22,27 @@ const getUser = async (req, res) => {
 
 const getProduct = async (req, res) => {
     try {
-        const products = await Product.find();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 8;
+        const skip = (page - 1) * limit;
+
         const productCount = await Product.countDocuments();
+        const products = await Product.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
         res.status(200).json({
             message: "Products retrieved successfully",
             data: {
                 products,
                 productCount,
+                pagination: {
+                    total: productCount,
+                    page,
+                    limit,
+                    pages: Math.ceil(productCount / limit),
+                },
             },
         });
     } catch (error) {
@@ -130,7 +143,7 @@ const rejectProduct = async (req, res) => {
             type: "product-rejected",
             message: `❌ Your product "${product.name}" was rejected`,
         });
-        
+
         res.status(200).json({
             message: "Product rejected successfully",
         });

@@ -14,6 +14,7 @@ import {
   Image as ImageIcon,
   Save,
 } from "lucide-react";
+import { API_URL } from "../../utils/constants";
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -200,7 +201,7 @@ const AddProduct = () => {
         });
       });
 
-      await axios.post("http://localhost:4000/product/create", formDataToSend, {
+      await axios.post(`${API_URL}/product/create`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -482,8 +483,8 @@ const AddProduct = () => {
                               }
                               placeholder="Selling Price"
                               className={`w-full text-sm pl-8 pr-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-gray-900 ${size.sellingPrice && size.originalPrice && parseFloat(size.sellingPrice) > parseFloat(size.originalPrice)
-                                  ? "border-red-400 bg-red-50"
-                                  : "border-gray-300"
+                                ? "border-red-400 bg-red-50"
+                                : "border-gray-300"
                                 }`}
                             />
                           </div>

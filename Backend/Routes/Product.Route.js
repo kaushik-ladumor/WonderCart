@@ -7,7 +7,8 @@ const {
   updateProduct,
   getSingleProduct,
   getSellerProducts,
-  searchQuery
+  searchQuery,
+  getCategories
 } = require("../Controllers/Product.Controller");
 const Authorization = require("../Middlewares/Auth");
 const authorizeRoles = require("../Middlewares/authorizeRoles");
@@ -17,6 +18,7 @@ const productRouter = express.Router();
 // ✅ PUBLIC ROUTES
 productRouter.get("/get", getProduct);
 productRouter.get("/query/search", searchQuery);
+productRouter.get("/categories", getCategories);
 
 // ✅ SELLER / ADMIN ROUTES
 productRouter.get(

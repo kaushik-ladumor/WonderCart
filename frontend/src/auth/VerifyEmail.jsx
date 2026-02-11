@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Mail, Shield, Clock, CheckCircle, X } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
+import { API_URL } from "../utils/constants";
 
 function VerifyEmail({ modalId = "verify_email_modal" }) {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
       setLoading(true);
       const otp = `${data.digit1}${data.digit2}${data.digit3}${data.digit4}`;
 
-      const res = await axios.post("http://localhost:4000/user/verify", {
+      const res = await axios.post(`${API_URL}/user/verify`, {
         verificationCode: otp,
       });
 
@@ -138,7 +139,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
     } catch (err) {
       toast.error(
         err.response?.data?.message ||
-          "Verification failed. Please check the code.",
+        "Verification failed. Please check the code.",
       );
       reset();
       const firstInput = document.getElementById("digit1");
@@ -153,7 +154,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
 
     try {
       setLoading(true);
-      await axios.post("http://localhost:4000/user/resend-otp");
+      await axios.post(`${API_URL}/user/resend-otp`);
 
       toast.success("New OTP sent to your email!");
       setTimer(600); // Reset to 10 minutes
@@ -232,11 +233,10 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
                   id={`digit${digit}`}
                   type="text"
                   maxLength="1"
-                  className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white text-gray-900 ${
-                    errors[`digit${digit}`]
+                  className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white text-gray-900 ${errors[`digit${digit}`]
                       ? "border-red-500"
                       : "border-gray-300"
-                  } ${loading ? "bg-gray-100" : ""}`}
+                    } ${loading ? "bg-gray-100" : ""}`}
                   disabled={loading}
                   {...register(`digit${digit}`, {
                     required: true,
@@ -258,10 +258,10 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
               errors.digit2 ||
               errors.digit3 ||
               errors.digit4) && (
-              <p className="text-red-600 text-xs mt-2 text-center">
-                Please enter all 4 digits correctly
-              </p>
-            )}
+                <p className="text-red-600 text-xs mt-2 text-center">
+                  Please enter all 4 digits correctly
+                </p>
+              )}
           </div>
 
           {/* Timer */}

@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../utils/constants";
 
 function ResetPassword({ email }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -90,7 +91,7 @@ function ResetPassword({ email }) {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:4000/user/reset-password",
+        `${API_URL}/user/reset-password`,
         {
           email: email,
           verificationCode: data.otp,
@@ -185,10 +186,10 @@ function ResetPassword({ email }) {
                     key={index}
                     onClick={focusHiddenInput}
                     className={`w-12 h-12 flex items-center justify-center border rounded-md text-xl font-bold cursor-text transition-all ${otp.length === index
-                        ? "border-black ring-2 ring-black ring-opacity-20 bg-gray-50"
-                        : otpDigits[index]
-                          ? "border-gray-300 bg-white"
-                          : "border-gray-300 bg-white"
+                      ? "border-black ring-2 ring-black ring-opacity-20 bg-gray-50"
+                      : otpDigits[index]
+                        ? "border-gray-300 bg-white"
+                        : "border-gray-300 bg-white"
                       } ${errors.otp ? "border-red-500" : ""
                       } ${loading ? "bg-gray-100" : ""}`}
                   >
@@ -266,10 +267,10 @@ function ResetPassword({ email }) {
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm new password"
                   className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.confirmPassword
-                      ? "border-red-500"
-                      : newPassword === confirmPassword && confirmPassword
-                        ? "border-green-500"
-                        : "border-gray-300"
+                    ? "border-red-500"
+                    : newPassword === confirmPassword && confirmPassword
+                      ? "border-green-500"
+                      : "border-gray-300"
                     } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   disabled={loading}
                   {...register("confirmPassword", {

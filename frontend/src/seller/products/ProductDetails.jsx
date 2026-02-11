@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Loader from "../../components/Loader";
+import { API_URL } from "../../utils/constants";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -34,7 +35,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`http://localhost:4000/product/${id}`, {
+        const res = await axios.get(`${API_URL}/product/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const productData = res.data.data;
@@ -57,7 +58,7 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await axios.get(`http://localhost:4000/review/${id}`);
+        const res = await axios.get(`${API_URL}/review/${id}`);
         setReviews(res.data.data?.reviews || res.data.reviews || []);
       } catch (err) {
         console.error("Error fetching reviews:", err);
@@ -239,8 +240,8 @@ const ProductDetail = () => {
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={`rounded-lg overflow-hidden border transition ${selectedImage === index
-                        ? "border-gray-900 shadow-sm"
-                        : "border-gray-200"
+                      ? "border-gray-900 shadow-sm"
+                      : "border-gray-200"
                       }`}
                   >
                     <img
@@ -274,8 +275,8 @@ const ProductDetail = () => {
                     <Star
                       key={i}
                       className={`w-4 h-4 ${i < Math.floor(product.averageRating || 0)
-                          ? "fill-amber-400 text-amber-400"
-                          : "text-gray-300"
+                        ? "fill-amber-400 text-amber-400"
+                        : "text-gray-300"
                         }`}
                     />
                   ))}
@@ -317,8 +318,8 @@ const ProductDetail = () => {
                       key={variant.color}
                       onClick={() => setSelectedColor(variant.color)}
                       className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-2 ${selectedColor === variant.color
-                          ? "border-gray-900 bg-gray-900 text-white"
-                          : "border-gray-300 text-gray-700 hover:border-gray-900"
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 text-gray-700 hover:border-gray-900"
                         }`}
                     >
                       <div
@@ -374,8 +375,8 @@ const ProductDetail = () => {
                       <div className="flex items-center gap-2">
                         <span
                           className={`flex items-center gap-1.5 text-sm ${sizeObj.stock > 0
-                              ? "text-green-600"
-                              : "text-red-600"
+                            ? "text-green-600"
+                            : "text-red-600"
                             }`}
                         >
                           {sizeObj.stock > 0 ? (
@@ -442,8 +443,8 @@ const ProductDetail = () => {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${i < review.rating
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "text-gray-300"
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-gray-300"
                                 }`}
                             />
                           ))}

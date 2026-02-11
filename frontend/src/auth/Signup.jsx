@@ -8,6 +8,7 @@ import VerifyEmail from "./VerifyEmail";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "../Firebase";
 import { useAuth } from "../context/AuthProvider";
+import { API_URL } from "../utils/constants";
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({
@@ -48,7 +49,7 @@ function Signup() {
       const selectedRole = watch("role");
 
       const response = await axios.post(
-        "http://localhost:4000/user/google-auth",
+        `${API_URL}/user/google-auth`,
         {
           username: user.displayName || user.email.split("@")[0],
           email: user.email,
@@ -139,7 +140,7 @@ function Signup() {
       const loadingToast = toast.loading("Creating your account...");
 
       const response = await axios.post(
-        "http://localhost:4000/user/signup",
+        `${API_URL}/user/signup`,
         userInfo,
       );
 

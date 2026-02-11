@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { Mail, Phone, MapPin, Clock, Send, ChevronRight } from "lucide-react";
+import { API_URL } from "../utils/constants";
 
 const ContactUs = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,7 +49,7 @@ const ContactUs = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:4000/user/contact", {
+      const response = await fetch(`${API_URL}/user/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, subject, message }),
@@ -316,4 +317,3 @@ const ContactUs = () => {
 };
 
 export default ContactUs;
-  

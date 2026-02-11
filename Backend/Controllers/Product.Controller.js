@@ -15,12 +15,32 @@ const calculateDiscount = (originalPrice, sellingPrice) => {
 
 const getProduct = async (req, res) => {
   try {
-    const products = await Product.find({ status: "approved" });
+    const { page, limit: qLimit, category } = req.query;
+    const p = parseInt(page) || 1;
+    const l = parseInt(qLimit) || 8;
+    const skip = (p - 1) * l;
+
+    const filter = { status: "approved" };
+    if (category && category !== "all") {
+      filter.category = { $regex: new RegExp(`^${category.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}$`, "i") };
+    }
+
+    const total = await Product.countDocuments(filter);
+    const products = await Product.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(l);
 
     res.status(200).json({
       success: true,
       message: "Products fetched successfully",
       data: products,
+      pagination: {
+        total,
+        page: p,
+        limit: l,
+        pages: Math.ceil(total / l),
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -28,6 +48,30 @@ const getProduct = async (req, res) => {
       message: " Internal server error",
       error: error.message,
     });
+  }
+};
+
+const getCategories = async (req, res) => {
+  try {
+    const rawCategories = await Product.distinct("category", { status: "approved" });
+    const categoryMap = new Map();
+
+    rawCategories.forEach(cat => {
+      if (cat) {
+        const trimmed = cat.trim();
+        const lower = trimmed.toLowerCase();
+        if (!categoryMap.has(lower)) {
+          categoryMap.set(lower, trimmed);
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      categories: Array.from(categoryMap.values()).sort()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch categories" });
   }
 };
 
@@ -213,13 +257,27 @@ const getSellerProducts = async (req, res) => {
       });
     }
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+    const skip = (page - 1) * limit;
+
+    const total = await Product.countDocuments({ owner: req.user.userId });
     const products = await Product.find({
       owner: req.user.userId,
-    });
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).json({
       success: true,
       products,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -313,6 +371,11 @@ const searchQuery = async (req, res) => {
     if (!query) {
       return res.status(400).json({ success: false, message: "Query parameter is required" });
     }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+    const skip = (page - 1) * limit;
+
     const data = await Product.aggregate([
       {
         $search: {
@@ -322,27 +385,28 @@ const searchQuery = async (req, res) => {
               {
                 autocomplete: {
                   query: query,
-                  path: "name"
-                }
+                  path: "name",
+                },
               },
               {
                 autocomplete: {
                   query: query,
-                  path: "category"
-                }
-              }
-            ]
-          }
-        }
+                  path: "category",
+                },
+              },
+            ],
+          },
+        },
       },
-      { $limit: 10 }
+      { $skip: skip },
+      { $limit: limit },
     ]);
     res.status(200).json({ success: true, data });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
-}
+};
 
 module.exports = {
   createProduct,
@@ -351,5 +415,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getSellerProducts,
-  searchQuery
+  searchQuery,
+  getCategories
 };

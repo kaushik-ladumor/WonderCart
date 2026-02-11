@@ -15,6 +15,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import Loader from "../components/Loader";
+import { API_URL } from "../utils/constants";
 
 function Wishlist() {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ function Wishlist() {
 
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:4000/wishlist", {
+      const response = await axios.get(`${API_URL}/wishlist`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -110,7 +111,7 @@ function Wishlist() {
 
     try {
       await axios.delete(
-        `http://localhost:4000/wishlist/remove/${product._id}`,
+        `${API_URL}/wishlist/remove/${product._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -187,7 +188,7 @@ function Wishlist() {
 
     try {
       await axios.post(
-        "http://localhost:4000/cart/add",
+        `${API_URL}/cart/add`,
         {
           productId: product._id,
           quantity: 1,
@@ -246,7 +247,7 @@ function Wishlist() {
 
         try {
           await axios.post(
-            "http://localhost:4000/cart/add",
+            `${API_URL}/cart/add`,
             {
               productId: item._id,
               quantity: 1,

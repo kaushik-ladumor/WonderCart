@@ -17,6 +17,7 @@ import {
   Calendar,
   ChevronRight,
 } from "lucide-react";
+import { API_URL } from "../../utils/constants";
 
 const SellerOrders = () => {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ const SellerOrders = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:4000/order/seller/orders",
+        `${API_URL}/order/seller/orders`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },

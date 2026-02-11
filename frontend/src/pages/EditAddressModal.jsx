@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Save, Loader2, MapPin, X, Home, Briefcase } from "lucide-react";
+import { API_URL } from "../utils/constants";
 
 const EditAddressModal = ({ onAddressUpdated, address }) => {
   const [formData, setFormData] = useState({
@@ -81,7 +82,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
     setLoading(true);
     try {
       const response = await axios.put(
-        `http://localhost:4000/user/address/${address._id}`,
+        `${API_URL}/user/address/${address._id}`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -175,11 +176,10 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                     onClick={() =>
                       setFormData({ ...formData, addressType: type })
                     }
-                    className={`flex-1 px-3 py-2 rounded border text-sm font-medium flex items-center justify-center gap-2 ${
-                      formData.addressType === type
+                    className={`flex-1 px-3 py-2 rounded border text-sm font-medium flex items-center justify-center gap-2 ${formData.addressType === type
                         ? "bg-black text-white border-black"
                         : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     {type === "home" ? (
                       <Home className="w-3.5 h-3.5" />

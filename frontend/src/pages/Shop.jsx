@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Package, Search, Filter, X } from "lucide-react";
 import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
+import { API_URL } from "../utils/constants";
 
 function Shop() {
   const [products, setProducts] = useState([]);
@@ -17,6 +18,9 @@ function Shop() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("default");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fetch all products and categories on initial load
   useEffect(() => {
@@ -55,33 +59,57 @@ function Shop() {
     if (products.length > 0) {
       sortProducts(sortBy);
     }
-  }, [sortBy]);
+  }, [sortBy, products.length]);
 
-  const fetchAllProducts = () => {
-    setLoading(true);
+  const fetchAllProducts = (pageNum = 1, append = false, category = selectedCategory) => {
+    if (pageNum === 1) setLoading(true);
+    else setLoadingMore(true);
+
     const token =
       localStorage.getItem("token") || localStorage.getItem("authToken");
     const config = token
       ? { headers: { Authorization: `Bearer ${token}` } }
       : {};
 
+    const categoryParam = category !== "all" ? `&category=${encodeURIComponent(category)}` : "";
     axios
-      .get("http://localhost:4000/product/get", config)
+      .get(`${API_URL}/product/get?page=${pageNum}&limit=8${categoryParam}`, config)
       .then((res) => {
-        const productList = res.data.data || res.data;
-        setProducts(productList);
+        const productList = res.data.data || [];
+        const pagination = res.data.pagination;
+
+        if (append) {
+          setProducts((prev) => [...prev, ...productList]);
+        } else {
+          setProducts(productList);
+        }
+
+        if (pagination) {
+          setHasMore(pagination.page < pagination.pages);
+        } else {
+          setHasMore(productList.length === 8);
+        }
+
         setLoading(false);
+        setLoadingMore(false);
       })
       .catch((err) => {
         console.error(err);
         toast.error("Failed to load products");
         setLoading(false);
+        setLoadingMore(false);
       });
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchAllProducts(nextPage, true, selectedCategory);
   };
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/product/categories");
+      const res = await axios.get(`${API_URL}/product/categories`);
       setCategories(res.data.categories || []);
     } catch (error) {
       console.error("Failed to fetch categories:", error);
@@ -101,7 +129,7 @@ function Shop() {
     try {
       const encodedQuery = encodeURIComponent(query);
       const res = await axios.get(
-        `http://localhost:4000/product/query/search?query=${encodedQuery}`,
+        `${API_URL}/product/query/search?query=${encodedQuery}`,
         config,
       );
 
@@ -122,31 +150,8 @@ function Shop() {
 
   const filterByCategory = async (category) => {
     setSelectedCategory(category);
-    setLoading(true);
-
-    if (category === "all") {
-      fetchAllProducts();
-      return;
-    }
-
-    const token =
-      localStorage.getItem("token") || localStorage.getItem("authToken");
-    const config = token
-      ? { headers: { Authorization: `Bearer ${token}` } }
-      : {};
-
-    try {
-      const res = await axios.get(
-        `http://localhost:4000/product/query/category?category=${category}`,
-        config,
-      );
-      setProducts(res.data.data || res.data.products || []);
-    } catch (error) {
-      console.error("Filter error:", error);
-      toast.error("Failed to filter products");
-    } finally {
-      setLoading(false);
-    }
+    setPage(1);
+    fetchAllProducts(1, false, category);
   };
 
   const sortProducts = (sortType) => {
@@ -193,7 +198,7 @@ function Shop() {
 
   const fetchWishlist = async (token) => {
     try {
-      const res = await axios.get("http://localhost:4000/wishlist", {
+      const res = await axios.get(`${API_URL}/wishlist`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -220,7 +225,7 @@ function Shop() {
     try {
       if (wishlist.includes(product._id)) {
         await axios.delete(
-          `http://localhost:4000/wishlist/remove/${product._id}`,
+          `${API_URL}/wishlist/remove/${product._id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -229,7 +234,7 @@ function Shop() {
         toast.success("Removed from wishlist");
       } else {
         await axios.post(
-          "http://localhost:4000/wishlist/add",
+          `${API_URL}/wishlist/add`,
           { productId: product._id },
           { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -246,14 +251,16 @@ function Shop() {
   const handleClearSearch = () => {
     setSearchQuery("");
     setSelectedCategory("all");
-    fetchAllProducts();
+    setPage(1);
+    fetchAllProducts(1, false);
   };
 
   const handleClearFilters = () => {
     setSelectedCategory("all");
     setSortBy("default");
     setSearchQuery("");
-    fetchAllProducts();
+    setPage(1);
+    fetchAllProducts(1, false);
   };
 
   if (loading) {
@@ -355,19 +362,19 @@ function Shop() {
               <button
                 onClick={handleClearFilters}
                 className={`px-3 py-1.5 text-xs rounded border ${selectedCategory === "all"
-                    ? "bg-black text-white border-black"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  ? "bg-black text-white border-black"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
               >
                 All
               </button>
-              {categories.slice(0, 5).map((cat) => (
+              {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => filterByCategory(cat)}
                   className={`px-3 py-1.5 text-xs rounded border ${selectedCategory === cat
-                      ? "bg-black text-white border-black"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    ? "bg-black text-white border-black"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   {cat}
@@ -446,6 +453,26 @@ function Shop() {
                   toggleWishlist={toggleWishlist}
                 />
               ))}
+            </div>
+          )}
+
+          {/* Load More Button */}
+          {products.length > 0 && hasMore && !searchQuery && (
+            <div className="mt-10 text-center">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="px-8 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Loading...
+                  </>
+                ) : (
+                  "Load More Products"
+                )}
+              </button>
             </div>
           )}
         </section>

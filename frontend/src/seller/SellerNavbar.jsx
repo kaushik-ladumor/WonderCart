@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useSocket } from "../context/SocketProvider";
+import { API_URL } from "../utils/constants";
 
 const SellerNavbar = () => {
   const { setAuthUser } = useAuth();
@@ -50,40 +51,40 @@ const SellerNavbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-useEffect(() => {
-  fetchNotifications();
-}, [socket]);
+  useEffect(() => {
+    fetchNotifications();
+  }, [socket]);
 
 
-useEffect(() => {
-  if (!socket) return;
+  useEffect(() => {
+    if (!socket) return;
 
-  const handleNewNotification = (notification) => {
-    const newNotification = {
-      id: notification.orderId || Date.now(),
-      message: notification.message,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      read: false,
+    const handleNewNotification = (notification) => {
+      const newNotification = {
+        id: notification.orderId || Date.now(),
+        message: notification.message,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        read: false,
+      };
+
+      setNotifications((prev) => {
+        // prevent duplicate notification
+        if (prev.some((n) => n.id === newNotification.id)) {
+          return prev;
+        }
+        return [newNotification, ...prev];
+      });
     };
 
-    setNotifications((prev) => {
-      // prevent duplicate notification
-      if (prev.some((n) => n.id === newNotification.id)) {
-        return prev;
-      }
-      return [newNotification, ...prev];
-    });
-  };
+    socket.on("notification", handleNewNotification);
 
-  socket.on("notification", handleNewNotification);
-
-  return () => {
-    socket.off("notification", handleNewNotification);
-  };
-}, [socket]);
+    return () => {
+      socket.off("notification", handleNewNotification);
+    };
+  }, [socket]);
 
 
   const fetchNotifications = async () => {
@@ -91,7 +92,7 @@ useEffect(() => {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:4000/order/notifications", {
+      const res = await fetch(`${API_URL}/order/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -120,7 +121,7 @@ useEffect(() => {
     if (!token) return;
 
     try {
-      await fetch("http://localhost:4000/order/notifications/read-all", {
+      await fetch(`${API_URL}/order/notifications/read-all`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -138,7 +139,7 @@ useEffect(() => {
     if (!token) return;
 
     try {
-      await fetch(`http://localhost:4000/order/notifications/${id}/read`, {
+      await fetch(`${API_URL}/order/notifications/${id}/read`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -158,7 +159,7 @@ useEffect(() => {
     if (!token) return;
 
     try {
-      await fetch("http://localhost:4000/order/notifications/clear", {
+      await fetch(`${API_URL}/order/notifications/clear`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -208,9 +209,8 @@ useEffect(() => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`px-3 py-2 text-sm font-medium transition-colors relative ${
-                      isActive ? "text-black" : "text-gray-500 hover:text-black"
-                    }`}
+                    className={`px-3 py-2 text-sm font-medium transition-colors relative ${isActive ? "text-black" : "text-gray-500 hover:text-black"
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4" />
@@ -285,16 +285,14 @@ useEffect(() => {
                         notifications.map((n) => (
                           <div
                             key={n.id}
-                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer ${
-                              n.read ? "bg-white" : "bg-blue-50"
-                            }`}
+                            className={`px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer ${n.read ? "bg-white" : "bg-blue-50"
+                              }`}
                             onClick={() => markOneRead(n.id)}
                           >
                             <div className="flex items-start gap-3">
                               <div
-                                className={`mt-0.5 w-2 h-2 rounded-full ${
-                                  n.read ? "bg-gray-300" : "bg-blue-500"
-                                }`}
+                                className={`mt-0.5 w-2 h-2 rounded-full ${n.read ? "bg-gray-300" : "bg-blue-500"
+                                  }`}
                               />
                               <div className="flex-1">
                                 <p className="text-sm text-gray-800">
@@ -349,11 +347,10 @@ useEffect(() => {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-1 transition ${
-                      isActive
+                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-1 transition ${isActive
                         ? "bg-black text-white"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>

@@ -21,6 +21,7 @@ import { handleTokenExpiration, isTokenExpired } from "../utils/auth";
 import { useCart } from "../context/CartContext";
 import { useSocket } from "../context/SocketProvider";
 import Loader from "../components/Loader";
+import { API_URL } from "../utils/constants";
 
 const Cart = () => {
   const [cart, setCart] = useState(null);
@@ -44,7 +45,7 @@ const Cart = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/cart", {
+      const res = await fetch(`${API_URL}/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -106,7 +107,7 @@ const Cart = () => {
     setUpdatingItems((prev) => ({ ...prev, [updateKey]: true }));
 
     try {
-      const res = await fetch("http://localhost:4000/cart", {
+      const res = await fetch(`${API_URL}/cart`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -157,7 +158,7 @@ const Cart = () => {
     setUpdatingItems((prev) => ({ ...prev, [updateKey]: true }));
 
     try {
-      const res = await fetch(`http://localhost:4000/cart/${productId}`, {
+      const res = await fetch(`${API_URL}/cart/${productId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

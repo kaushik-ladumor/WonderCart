@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useCart } from "../context/CartContext";
+import { API_URL } from "../utils/constants";
 
 function FackPage() {
   const [cart, setCart] = useState(null);
@@ -12,7 +13,7 @@ function FackPage() {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:4000/cart", {
+      const res = await axios.get(`${API_URL}/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -36,7 +37,7 @@ function FackPage() {
 
     try {
       const res = await axios.put(
-        "http://localhost:4000/cart",
+        `${API_URL}/cart`,
         { productId, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -54,7 +55,7 @@ function FackPage() {
   const removeItem = async (productId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:4000/cart/${productId}`,
+        `${API_URL}/cart/${productId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -74,7 +75,7 @@ function FackPage() {
 
   const clearCart = async () => {
     try {
-      const res = await axios.delete("http://localhost:4000/cart/clear", {
+      const res = await axios.delete(`${API_URL}/cart/clear`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

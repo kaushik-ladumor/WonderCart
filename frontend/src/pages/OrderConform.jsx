@@ -16,6 +16,7 @@ import {
   Home,
   ChevronRight,
 } from "lucide-react";
+import { API_URL } from "../utils/constants";
 
 const OrderConfirmationPage = () => {
   const [order, setOrder] = useState(null);
@@ -91,7 +92,7 @@ const OrderConfirmationPage = () => {
       }
 
       try {
-        const response = await fetch(`http://localhost:4000/order/id/${id}`, {
+        const response = await fetch(`${API_URL}/order/id/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -460,8 +461,8 @@ const OrderConfirmationPage = () => {
                   <p className="text-xs text-gray-600 mb-0.5">Payment Status</p>
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${order.paymentStatus === "paid"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
                       }`}
                   >
                     {order.paymentStatus?.toUpperCase() || "PENDING"}
@@ -471,10 +472,10 @@ const OrderConfirmationPage = () => {
                   <p className="text-xs text-gray-600 mb-0.5">Order Status</p>
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${order.status === "delivered"
-                        ? "bg-green-100 text-green-800"
-                        : order.status === "cancelled"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-blue-100 text-blue-800"
+                      ? "bg-green-100 text-green-800"
+                      : order.status === "cancelled"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-blue-100 text-blue-800"
                       }`}
                   >
                     {order.status?.toUpperCase() || "PROCESSING"}

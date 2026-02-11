@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Loader from "../../components/Loader";
 import axios from "axios";
+import { API_URL } from "../../utils/constants";
 
 const EditProduct = () => {
   const { id } = useParams();
@@ -58,7 +59,7 @@ const EditProduct = () => {
       }
 
       const response = await axios.get(
-        `http://localhost:4000/product/${id}`,
+        `${API_URL}/product/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -322,7 +323,7 @@ const EditProduct = () => {
       });
 
       const response = await axios.put(
-        `http://localhost:4000/product/update/${id}`,
+        `${API_URL}/product/update/${id}`,
         formDataToSend,
         {
           headers: {

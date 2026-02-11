@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../utils/constants";
 
 const Review = ({ id, onSuccess }) => {
   const [rating, setRating] = useState(0);
@@ -53,7 +54,7 @@ const Review = ({ id, onSuccess }) => {
 
     try {
       const result = await axios.post(
-        "http://localhost:4000/review/add",
+        `${API_URL}/review/add`,
         reviewData,
         {
           headers: {
@@ -116,8 +117,8 @@ const Review = ({ id, onSuccess }) => {
                   >
                     <Star
                       className={`w-5 h-5 transition-colors ${star <= (hoverRating || rating)
-                          ? "text-amber-400 fill-amber-400"
-                          : "text-gray-300"
+                        ? "text-amber-400 fill-amber-400"
+                        : "text-gray-300"
                         }`}
                     />
                   </button>

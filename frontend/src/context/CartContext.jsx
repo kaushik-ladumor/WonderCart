@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import { useAuth } from "./AuthProvider";
 import { isTokenExpired, handleTokenExpiration } from "../utils/auth";
 import socket from "../socket";
+import { API_URL } from "../utils/constants";
 
 const CartContext = createContext();
 
@@ -21,7 +22,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/cart", {
+      const res = await fetch(`${API_URL}/cart`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

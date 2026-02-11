@@ -16,6 +16,7 @@ import { useAuth } from "../context/AuthProvider";
 import { useCart } from "../context/CartContext";
 import toast from "react-hot-toast";
 import { useSocket } from "../context/SocketProvider";
+import { API_URL } from "../utils/constants";
 
 
 export default function Navbar() {
@@ -89,7 +90,7 @@ export default function Navbar() {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:4000/order/notifications", {
+      const res = await fetch(`${API_URL}/order/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -118,7 +119,7 @@ export default function Navbar() {
     if (!token) return;
 
     try {
-      await fetch("http://localhost:4000/order/notifications/read-all", {
+      await fetch(`${API_URL}/order/notifications/read-all`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -136,7 +137,7 @@ export default function Navbar() {
     if (!token) return;
 
     try {
-      await fetch("http://localhost:4000/order/notifications/clear", {
+      await fetch(`${API_URL}/order/notifications/clear`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

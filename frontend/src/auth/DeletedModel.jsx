@@ -12,6 +12,7 @@ import {
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useAuth } from "../context/AuthProvider";
+import { API_URL } from "../utils/constants";
 
 const DeleteModal = ({ isOpen, onClose }) => {
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -31,7 +32,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
-        "http://localhost:4000/user/delete-account",
+        `${API_URL}/user/delete-account`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

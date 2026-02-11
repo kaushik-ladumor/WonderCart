@@ -20,6 +20,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthProvider";
 import UpdatePassword from "./UpdatePassword";
 import DeleteModal from "./DeletedModel";
+import { API_URL } from "../utils/constants";
 
 const Profile = () => {
   const { authUser, setAuthUser } = useAuth();
@@ -33,7 +34,7 @@ const Profile = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await axios.get("http://localhost:4000/user/profile", {
+        const response = await axios.get(`${API_URL}/user/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

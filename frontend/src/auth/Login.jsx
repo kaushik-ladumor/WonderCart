@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "../Firebase";
+import { API_URL } from "../utils/constants";
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({
@@ -33,7 +34,7 @@ function Login() {
       const user = result.user;
 
       const response = await axios.post(
-        "http://localhost:4000/user/google-auth",
+        `${API_URL}/user/google-auth`,
         {
           email: user.email,
           username: user.displayName || user.email.split("@")[0],
@@ -88,7 +89,7 @@ function Login() {
     try {
       setDisabled(true);
       const result = await axios.post(
-        "http://localhost:4000/user/login",
+        `${API_URL}/user/login`,
         userInfo,
       );
 

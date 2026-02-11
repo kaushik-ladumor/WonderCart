@@ -3,13 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAjNlsY6f0MQOjACuuRnxVCWlJoE4HyanI",
-    authDomain: "wondercart-project.firebaseapp.com",
-    projectId: "wondercart-project",
-    storageBucket: "wondercart-project.firebasestorage.app",
-    messagingSenderId: "886588133348",
-    appId: "1:886588133348:web:f7812e55c42259850081f1",
-    measurementId: "G-9L08YB3KPV"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

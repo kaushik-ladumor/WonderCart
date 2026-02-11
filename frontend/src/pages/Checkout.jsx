@@ -24,6 +24,7 @@ import {
 import toast from "react-hot-toast";
 import Loader from "../components/Loader";
 import { useCart } from "../context/CartContext";
+import { API_URL } from "../utils/constants";
 
 import AddAddressModal from "./AddAddressModal";
 import EditAddressModal from "./EditAddressModal";
@@ -40,7 +41,6 @@ const Checkout = () => {
   const [editingAddress, setEditingAddress] = useState(null);
   const [deletingAddressId, setDeletingAddressId] = useState(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
   const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
   // Round price to nearest integer (no decimals)
@@ -87,7 +87,7 @@ const Checkout = () => {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/cart`, {
+      const response = await axios.get(`${API_URL}/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -127,7 +127,7 @@ const Checkout = () => {
 
   const loadAddresses = async (token) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/user/address`, {
+      const res = await axios.get(`${API_URL}/user/address`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -155,7 +155,7 @@ const Checkout = () => {
 
     try {
       const response = await axios.put(
-        `${API_BASE_URL}/user/address/${addressId}/default`,
+        `${API_URL}/user/address/${addressId}/default`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -181,7 +181,7 @@ const Checkout = () => {
     try {
       setDeletingAddressId(addressId);
       const response = await axios.delete(
-        `${API_BASE_URL}/user/address/${addressId}`,
+        `${API_URL}/user/address/${addressId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -317,7 +317,7 @@ const Checkout = () => {
       }
 
       const response = await axios.post(
-        `${API_BASE_URL}/order/create`,
+        `${API_URL}/order/create`,
         orderData,
         {
           headers: {
@@ -427,7 +427,7 @@ const Checkout = () => {
       const token = getToken();
 
       const response = await axios.post(
-        `${API_BASE_URL}/order/verify-payment`,
+        `${API_URL}/order/verify-payment`,
         {
           razorpay_payment_id: paymentResponse.razorpay_payment_id,
           razorpay_order_id: paymentResponse.razorpay_order_id,

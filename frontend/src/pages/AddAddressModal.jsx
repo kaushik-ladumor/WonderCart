@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader2, MapPin, X } from "lucide-react";
+import { API_URL } from "../utils/constants";
 
 const AddAddressModal = ({ onAddressAdded }) => {
   const [formData, setFormData] = useState({
@@ -63,7 +64,7 @@ const AddAddressModal = ({ onAddressAdded }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:4000/user/address",
+        `${API_URL}/user/address`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -168,11 +169,10 @@ const AddAddressModal = ({ onAddressAdded }) => {
                     onClick={() =>
                       setFormData({ ...formData, addressType: type })
                     }
-                    className={`flex-1 px-3 py-2 rounded border text-sm font-medium ${
-                      formData.addressType === type
+                    className={`flex-1 px-3 py-2 rounded border text-sm font-medium ${formData.addressType === type
                         ? "bg-black text-white border-black"
                         : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     {type === "home" ? "Home" : "Work"}
                   </button>

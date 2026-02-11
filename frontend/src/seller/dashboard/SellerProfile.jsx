@@ -19,6 +19,7 @@ import UpdatePassword from "../../auth/UpdatePassword";
 import DeleteModal from '../../auth/DeletedModel'
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
+import { API_URL } from "../../utils/constants";
 
 const SellerProfile = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const SellerProfile = () => {
           return;
         }
 
-        const response = await axios.get(`http://localhost:4000/user/profile`, {
+        const response = await axios.get(`${API_URL}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

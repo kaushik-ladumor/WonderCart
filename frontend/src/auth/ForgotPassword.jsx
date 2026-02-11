@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
 import ResetPassword from "./ResetPassword";
+import { API_URL } from "../utils/constants";
 
 function ForgotPassword() {
   const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ function ForgotPassword() {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:4000/user/forget-password",
+        `${API_URL}/user/forget-password`,
         data,
       );
 

@@ -16,6 +16,7 @@ import {
   Tag,
 } from "lucide-react";
 import Loader from "../../components/Loader";
+import { API_URL } from "../../utils/constants";
 
 const SellerProducts = () => {
   const navigate = useNavigate();
@@ -25,17 +26,22 @@ const SellerProducts = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteLoading, setDeleteLoading] = useState({});
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (pageNum = 1, append = false) => {
     try {
-      setLoading(true);
+      if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
+
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:4000/product/seller/product",
+        `${API_URL}/product/seller/product?page=${pageNum}&limit=8`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -49,14 +55,34 @@ const SellerProducts = () => {
         throw new Error(data.message || "Failed to load products");
       }
 
-      const productList = data.products || data.data || [];
-      setProducts(productList);
-      setFilteredProducts(productList);
+      const productList = data.products || [];
+      const pagination = data.pagination;
+
+      if (append) {
+        setProducts((prev) => [...prev, ...productList]);
+        setFilteredProducts((prev) => [...prev, ...productList]);
+      } else {
+        setProducts(productList);
+        setFilteredProducts(productList);
+      }
+
+      if (pagination) {
+        setHasMore(pagination.page < pagination.pages);
+      } else {
+        setHasMore(productList.length === 8);
+      }
     } catch (err) {
       setError(err.message || "Failed to load products");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage, true);
   };
 
   const handleDelete = async (id) => {
@@ -73,7 +99,7 @@ const SellerProducts = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:4000/product/delete/${id}`,
+        `${API_URL}/product/delete/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -255,13 +281,12 @@ const SellerProducts = () => {
             <div className="bg-gray-50 rounded px-2 py-1.5">
               <p className="text-xs text-gray-600">Stock</p>
               <p
-                className={`text-sm font-bold ${
-                  isOutOfStock
-                    ? "text-red-600"
-                    : isLowStock
-                      ? "text-amber-600"
-                      : "text-green-600"
-                }`}
+                className={`text-sm font-bold ${isOutOfStock
+                  ? "text-red-600"
+                  : isLowStock
+                    ? "text-amber-600"
+                    : "text-green-600"
+                  }`}
               >
                 {stock}
               </p>
@@ -458,9 +483,26 @@ const SellerProducts = () => {
             </div>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 mb-6">
                 Showing {filteredProducts.length} of {products.length} products
               </p>
+
+              {hasMore && !searchTerm && (
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="px-8 py-2.5 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More Products"
+                  )}
+                </button>
+              )}
             </div>
           </>
         )}

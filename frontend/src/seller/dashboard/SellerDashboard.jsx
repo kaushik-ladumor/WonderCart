@@ -37,6 +37,7 @@ import {
 } from "recharts";
 import { useAuth } from "../../context/AuthProvider";
 import { useSocket } from "../../context/SocketProvider";
+import { API_URL } from "../../utils/constants";
 
 function SellerDashboard() {
   const navigate = useNavigate();
@@ -45,12 +46,12 @@ function SellerDashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  
+
 
   const fetchDashboard = async () => {
     try {
       const token = localStorage.getItem("token");
-      const result = await axios.get("http://localhost:4000/seller/dashboard", {
+      const result = await axios.get(`${API_URL}/seller/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDashboard(result.data);
@@ -250,7 +251,7 @@ function SellerDashboard() {
           </div>
           <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
             Live updates enabled
-          </div>  
+          </div>
         </div>
 
         {/* Top Stats Cards */}

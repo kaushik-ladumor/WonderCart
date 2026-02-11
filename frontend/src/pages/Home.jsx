@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Truck, Shield, Zap, Tag, ChevronRight, Package } from "lucide-react";
 import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
+import { API_URL } from "../utils/constants";
 
 function HomePage() {
   const [products, setProducts] = useState([]);
@@ -20,7 +21,7 @@ function HomePage() {
       : {};
 
     axios
-      .get("http://localhost:4000/product/get", config)
+      .get(`${API_URL}/product/get?limit=8`, config)
       .then((res) => {
         const productList = res.data.data || res.data;
         setProducts(productList);
@@ -39,7 +40,7 @@ function HomePage() {
 
   const fetchWishlist = async (token) => {
     try {
-      const res = await axios.get("http://localhost:4000/wishlist", {
+      const res = await axios.get(`${API_URL}/wishlist`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -64,14 +65,14 @@ function HomePage() {
     try {
       if (wishlist.includes(product._id)) {
         await axios.delete(
-          `http://localhost:4000/wishlist/remove/${product._id}`,
+          `${API_URL}/wishlist/remove/${product._id}`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         setWishlist((p) => p.filter((id) => id !== product._id));
         toast.success("Removed from wishlist");
       } else {
         await axios.post(
-          "http://localhost:4000/wishlist/add",
+          `${API_URL}/wishlist/add`,
           { productId: product._id },
           { headers: { Authorization: `Bearer ${token}` } },
         );

@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Hash,
 } from "lucide-react";
+import { API_URL } from "../utils/constants";
 
 const TrackOrder = () => {
   const socket = useSocket();
@@ -71,7 +72,7 @@ const TrackOrder = () => {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `http://localhost:4000/order/track/${orderId}`,
+        `${API_URL}/order/track/${orderId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -85,23 +86,23 @@ const TrackOrder = () => {
     }
   };
 
-useEffect(() => {
-  if (!socket || !orderId) return;
+  useEffect(() => {
+    if (!socket || !orderId) return;
 
-  const handleOrderUpdate = (data) => {
-    if (data.orderId === orderId) {
-      fetchOrder();
-      toast.success("Order status updated!");
-    }
-  };
+    const handleOrderUpdate = (data) => {
+      if (data.orderId === orderId) {
+        fetchOrder();
+        toast.success("Order status updated!");
+      }
+    };
 
-  socket.emit("join-order", orderId);
-  socket.on("order-updated", handleOrderUpdate);
+    socket.emit("join-order", orderId);
+    socket.on("order-updated", handleOrderUpdate);
 
-  return () => {
-    socket.off("order-updated", handleOrderUpdate);
-  };
-}, [socket, orderId]);
+    return () => {
+      socket.off("order-updated", handleOrderUpdate);
+    };
+  }, [socket, orderId]);
 
 
   const formatDate = (dateString) => {

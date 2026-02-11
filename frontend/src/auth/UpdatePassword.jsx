@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
+import { API_URL } from "../utils/constants";
 
 function UpdatePassword() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -46,7 +47,7 @@ function UpdatePassword() {
         }
 
         // If hasPassword not in stored data, fetch from backend
-        const response = await axios.get("http://localhost:4000/user/profile", {
+        const response = await axios.get(`${API_URL}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -93,7 +94,7 @@ function UpdatePassword() {
       }
 
       const response = await axios.put(
-        "http://localhost:4000/user/update-password",
+        `${API_URL}/user/update-password`,
         passwordData,
         {
           headers: {
@@ -186,8 +187,8 @@ function UpdatePassword() {
                     type={showCurrentPassword ? "text" : "password"}
                     placeholder="Enter current password"
                     className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.currentPassword
-                        ? "border-red-500"
-                        : "border-gray-300"
+                      ? "border-red-500"
+                      : "border-gray-300"
                       } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
                     disabled={loading}
                     {...register("currentPassword", {
@@ -282,8 +283,8 @@ function UpdatePassword() {
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm new password"
                   className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.confirmPassword
-                      ? "border-red-500"
-                      : "border-gray-300"
+                    ? "border-red-500"
+                    : "border-gray-300"
                     } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   disabled={loading}
                   {...register("confirmPassword", {

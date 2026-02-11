@@ -18,6 +18,7 @@ import axios from "axios";
 import { useSocket } from "../context/SocketProvider";
 import { useAuth } from "../context/AuthProvider";
 import ProductDetailModal from "./ProductDetail";
+import { API_URL } from "../utils/constants";
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -26,21 +27,47 @@ const AdminProducts = () => {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const socket = useSocket();
   const { token } = useAuth();
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (pageNum = 1, append = false) => {
     try {
-      setLoading(true);
-      const res = await axios.get("http://localhost:4000/admin/products", {
+      if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
+
+      const res = await axios.get(`${API_URL}/admin/products?page=${pageNum}&limit=8`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProducts(res.data.data.products || []);
+
+      const productList = res.data.data.products || [];
+      const pagination = res.data.data.pagination;
+
+      if (append) {
+        setProducts((prev) => [...prev, ...productList]);
+      } else {
+        setProducts(productList);
+      }
+
+      if (pagination) {
+        setHasMore(pagination.page < pagination.pages);
+      } else {
+        setHasMore(productList.length === 8);
+      }
     } catch (error) {
       console.error("Failed to load products:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage, true);
   };
 
   useEffect(() => {
@@ -72,7 +99,7 @@ const AdminProducts = () => {
   const approveProduct = async (productId) => {
     try {
       await axios.put(
-        `http://localhost:4000/admin/products/${productId}/approve`,
+        `${API_URL}/admin/products/${productId}/approve`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -85,7 +112,7 @@ const AdminProducts = () => {
   const rejectProduct = async (productId) => {
     try {
       await axios.delete(
-        `http://localhost:4000/admin/products/${productId}/reject`,
+        `${API_URL}/admin/products/${productId}/reject`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       fetchProducts();
@@ -432,6 +459,26 @@ const AdminProducts = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Load More Button */}
+      {products.length > 0 && hasMore && filter === "all" && !search && (
+        <div className="mt-8 text-center">
+          <button
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="px-8 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
+          >
+            {loadingMore ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Loading...
+              </>
+            ) : (
+              "Load More Products"
+            )}
+          </button>
         </div>
       )}
 

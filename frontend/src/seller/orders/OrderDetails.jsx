@@ -4,6 +4,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useSocket } from "../../context/SocketProvider";
 import Loader from "../../components/Loader";
+import { API_URL } from "../../utils/constants";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -43,52 +44,52 @@ const OrderDetails = () => {
   ];
 
 
-const fetchOrder = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
+  const fetchOrder = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const { data } = await axios.get(
-      `http://localhost:4000/order/seller/id/${id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    );
+      const { data } = await axios.get(
+        `${API_URL}/order/seller/id/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
-    if (data.success) {
-      setOrder(data.order);
-      setNewStatus(data.order.status);
-    }
-  } catch (err) {
-    toast.error("Failed to load order");
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  if (!id) return;
-  fetchOrder();
-}, [id]);
-
-useEffect(() => {
-  if (!socket || !id) return;
-
-  const handleOrderUpdate = (data) => {
-    if (data.orderId === id) {
-      fetchOrder();
+      if (data.success) {
+        setOrder(data.order);
+        setNewStatus(data.order.status);
+      }
+    } catch (err) {
+      toast.error("Failed to load order");
+    } finally {
+      setLoading(false);
     }
   };
 
-  socket.emit("join-order", id);
-  socket.on("order-updated", handleOrderUpdate);
+  useEffect(() => {
+    if (!id) return;
+    fetchOrder();
+  }, [id]);
 
-  return () => {
-    socket.off("order-updated", handleOrderUpdate);
-  };
-}, [socket, id]);
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    const handleOrderUpdate = (data) => {
+      if (data.orderId === id) {
+        fetchOrder();
+      }
+    };
+
+    socket.emit("join-order", id);
+    socket.on("order-updated", handleOrderUpdate);
+
+    return () => {
+      socket.off("order-updated", handleOrderUpdate);
+    };
+  }, [socket, id]);
 
 
   const handleStatusUpdate = async () => {
@@ -112,7 +113,7 @@ useEffect(() => {
     try {
       setUpdating(true);
       const { data } = await axios.put(
-        `http://localhost:4000/order/seller/id/${id}/status`,
+        `${API_URL}/order/seller/id/${id}/status`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

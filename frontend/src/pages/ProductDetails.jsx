@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Review from "./Review";
 import { useCart } from "../context/CartContext";
+import ProductCard from "../components/ProductCard";
 
 import {
   ShoppingCart,
@@ -17,6 +18,7 @@ import {
   Check,
 } from "lucide-react";
 import Loader from "../components/Loader";
+import { API_URL } from "../utils/constants";
 
 const ProductDetail = () => {
   const { setCartCount, refreshCart } = useCart();
@@ -35,6 +37,9 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const [addingToWishlist, setAddingToWishlist] = useState({});
 
   // Decode user ID from JWT
   useEffect(() => {
@@ -42,17 +47,66 @@ const ProductDetail = () => {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         setCurrentUserId(payload.id || payload.userId || payload._id);
+        fetchWishlist(token);
       } catch (err) {
         console.error("Invalid token");
       }
     }
   }, [token]);
 
+  const fetchWishlist = async (token) => {
+    try {
+      const res = await axios.get(`${API_URL}/wishlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) {
+        const ids = res.data.wishlist?.items?.map((i) => i.product) || [];
+        setWishlist(ids);
+      }
+    } catch { }
+  };
+
+  const toggleWishlist = async (e, productToToggle) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to manage wishlist");
+      return;
+    }
+
+    setAddingToWishlist((p) => ({ ...p, [productToToggle._id]: true }));
+
+    try {
+      if (wishlist.includes(productToToggle._id)) {
+        await axios.delete(
+          `${API_URL}/wishlist/remove/${productToToggle._id}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        setWishlist((p) => p.filter((id) => id !== productToToggle._id));
+        toast.success("Removed from wishlist");
+      } else {
+        await axios.post(
+          `${API_URL}/wishlist/add`,
+          { productId: productToToggle._id },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        setWishlist((p) => [...p, productToToggle._id]);
+        toast.success("Added to wishlist");
+      }
+    } catch {
+      toast.error("Failed to update wishlist");
+    } finally {
+      setAddingToWishlist((p) => ({ ...p, [productToToggle._id]: false }));
+    }
+  };
+
   // Fetch product
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:4000/product/${id}`);
+        const res = await axios.get(`${API_URL}/product/${id}`);
         const data = res.data.data;
         setProduct(data);
 
@@ -63,6 +117,9 @@ const ProductDetail = () => {
             setSelectedSize(first.sizes[0].size);
           }
         }
+
+        // Fetch recommended products
+        fetchRecommended(data.category, data._id);
       } catch (err) {
         toast.error("Failed to load product");
       } finally {
@@ -76,14 +133,29 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await axios.get(`http://localhost:4000/review/${id}`);
-        setReviews(res.data.data?.reviews || res.data.reviews || []);
+        const res = await axios.get(`${API_URL}/review/${id}`);
+        const reviewsData = res.data.data?.reviews || res.data.reviews || [];
+        setReviews(reviewsData);
       } catch (err) {
         setReviews([]);
       }
     };
     fetchReviews();
   }, [id, refreshKey]);
+
+  const fetchRecommended = async (category, productId) => {
+    try {
+      const res = await axios.get(
+        `${API_URL}/product/get?category=${encodeURIComponent(category)}&limit=5`,
+      );
+      if (res.data.success) {
+        const products = res.data.data.filter((p) => p._id !== productId);
+        setRecommendedProducts(products.slice(0, 4));
+      }
+    } catch (err) {
+      console.error("Failed to load recommendations");
+    }
+  };
 
   // Format price with commas for display (no decimals)
   const formatPriceDisplay = (price) => {
@@ -117,8 +189,8 @@ const ProductDetail = () => {
   const refreshReviews = async () => {
     try {
       const [revRes, prodRes] = await Promise.all([
-        axios.get(`http://localhost:4000/review/${id}`),
-        axios.get(`http://localhost:4000/product/${id}`),
+        axios.get(`${API_URL}/review/${id}`),
+        axios.get(`${API_URL}/product/${id}`),
       ]);
       setReviews(revRes.data.data?.reviews || revRes.data.reviews || []);
       setProduct(prodRes.data.data);
@@ -148,7 +220,7 @@ const ProductDetail = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/cart/add",
+        `${API_URL}/cart/add`,
         {
           productId: product._id,
           quantity,
@@ -596,7 +668,7 @@ const ProductDetail = () => {
                           if (confirm("Delete this review?")) {
                             axios
                               .delete(
-                                `http://localhost:4000/review/${review._id}`,
+                                `${API_URL}/review/${review._id}`,
                                 {
                                   headers: { Authorization: `Bearer ${token}` },
                                 },
@@ -615,6 +687,35 @@ const ProductDetail = () => {
             )}
           </div>
         </section>
+
+        {/* Recommended Products */}
+        {recommendedProducts.length > 0 && (
+          <section className="mt-12 pt-8 border-t">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">
+                You Might Also Like
+              </h2>
+              <button
+                onClick={() => navigate("/products")}
+                className="text-sm font-medium text-gray-600 hover:text-black hover:underline"
+              >
+                View All
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {recommendedProducts.map((p) => (
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  wishlist={wishlist}
+                  addingToWishlist={addingToWishlist}
+                  toggleWishlist={toggleWishlist}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

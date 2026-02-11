@@ -30,6 +30,7 @@ import {
   MessageCircle,
   Copy,
 } from "lucide-react";
+import { API_URL } from "../utils/constants";
 
 const ViewAllOrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -40,7 +41,6 @@ const ViewAllOrdersPage = () => {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   useEffect(() => {
     fetchOrders();
@@ -54,7 +54,7 @@ const ViewAllOrdersPage = () => {
       return;
     }
     try {
-      const response = await axios.get(`${API_BASE_URL}/order`, {
+      const response = await axios.get(`${API_URL}/order`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
