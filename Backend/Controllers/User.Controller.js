@@ -7,6 +7,7 @@ const Cart = require("../Models/Cart.Model");
 const Wishlist = require("../Models/WishList.Model");
 const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
+const cloudinary = require("../Utils/Cloudinary");
 
 const {
   sendVerificationCode,
@@ -15,6 +16,15 @@ const {
   sendForgatPasswordCode,
   contactSupport,
 } = require("../Middlewares/email");
+
+const getPublicId = (url) => {
+  const parts = url.split("/");
+  const uploadIndex = parts.indexOf("upload");
+  if (uploadIndex === -1) return null;
+  const startIndex = parts[uploadIndex + 1]?.startsWith("v") ? uploadIndex + 2 : uploadIndex + 1;
+  const publicIdWithExt = parts.slice(startIndex).join("/");
+  return publicIdWithExt.split(".")[0];
+};
 
 const signup = async (req, res) => {
   try {
@@ -784,8 +794,9 @@ const deleteAccount = async (req, res) => {
           for (const image of product.images) {
             if (image) {
               try {
-                await cloudinary.uploader.destroy(image);
-                console.log("Deleted Cloudinary Image:", image);
+                const publicId = getPublicId(image);
+                await cloudinary.uploader.destroy(publicId);
+                console.log("Deleted Cloudinary Image:", publicId);
               } catch (err) {
                 console.log("Cloudinary Error:", err);
               }

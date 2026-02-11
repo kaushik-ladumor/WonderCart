@@ -124,7 +124,11 @@ const rejectProduct = async (req, res) => {
 
         const getPublicId = (url) => {
             const parts = url.split("/");
-            return parts[parts.length - 1].split(".")[0];
+            const uploadIndex = parts.indexOf("upload");
+            if (uploadIndex === -1) return null;
+            const startIndex = parts[uploadIndex + 1]?.startsWith("v") ? uploadIndex + 2 : uploadIndex + 1;
+            const publicIdWithExt = parts.slice(startIndex).join("/");
+            return publicIdWithExt.split(".")[0];
         };
 
         for (const variant of product.variants) {

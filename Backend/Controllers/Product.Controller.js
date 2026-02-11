@@ -112,10 +112,11 @@ const getSingleProduct = async (req, res) => {
 
 const getPublicId = (url) => {
   const parts = url.split("/");
-  const file = parts.pop();
-  const folder = parts.slice(parts.indexOf("upload") + 1);
-  const fileName = file.split(".")[0];
-  return folder.join("/") + "/" + fileName;
+  const uploadIndex = parts.indexOf("upload");
+  if (uploadIndex === -1) return null;
+  const startIndex = parts[uploadIndex + 1]?.startsWith("v") ? uploadIndex + 2 : uploadIndex + 1;
+  const publicIdWithExt = parts.slice(startIndex).join("/");
+  return publicIdWithExt.split(".")[0];
 };
 
 const deleteProduct = async (req, res) => {
@@ -186,7 +187,8 @@ const createProduct = async (req, res) => {
       if (!variantMap[file.fieldname]) {
         variantMap[file.fieldname] = [];
       }
-      variantMap[file.fieldname].push(file.path);
+      // Ensure we use https for all Cloudinary URLs to prevent mixed content issues on mobile
+      variantMap[file.fieldname].push(file.path.replace("http://", "https://"));
     });
 
     for (const v of parsedVariants) {
@@ -314,7 +316,8 @@ const updateProduct = async (req, res) => {
         );
 
         if (newImages && newImages.length > 0) {
-          v.images = newImages.map((f) => f.path);
+          // Ensure we use https for all Cloudinary URLs
+          v.images = newImages.map((f) => f.path.replace("http://", "https://"));
         } else if (v.existingImages && v.existingImages.length > 0) {
           v.images = v.existingImages;
         } else {
