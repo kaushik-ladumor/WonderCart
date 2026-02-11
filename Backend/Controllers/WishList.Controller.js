@@ -1,4 +1,4 @@
-const WishList = require("../Models/Wishlist.Model");
+const WishList = require("../Models/WishList.Model");
 const Product = require("../Models/Product.Model");
 const mongoose = require("mongoose");
 

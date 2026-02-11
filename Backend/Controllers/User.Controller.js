@@ -4,7 +4,7 @@ const Product = require("../Models/Product.Model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Cart = require("../Models/Cart.Model");
-const Wishlist = require("../Models/Wishlist.Model");
+const Wishlist = require("../Models/WishList.Model");
 const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
 
