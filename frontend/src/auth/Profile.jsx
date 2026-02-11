@@ -264,6 +264,29 @@ const Profile = () => {
                   </span>
                 </button>
 
+                {/* Track Order Button */}
+                <button
+                  onClick={() => navigate("/track-order")}
+                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
+                      <Truck className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        Track Order
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Check your order status
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-gray-400 group-hover:text-gray-600 text-xl font-light">
+                    ›
+                  </span>
+                </button>
+
                 {/* My Orders Button */}
                 <button
                   onClick={handleMyOrders}
