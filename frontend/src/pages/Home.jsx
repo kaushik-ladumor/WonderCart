@@ -1,120 +1,54 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import toast from "react-hot-toast";
-import { Truck, Shield, Zap, Tag, ChevronRight, Package } from "lucide-react";
-import ProductCard from "../components/ProductCard";
+import {
+  Truck,
+  Shield,
+  Zap,
+  Tag,
+  ChevronRight,
+  ArrowRight,
+  Star,
+} from "lucide-react";
 import Loader from "../components/Loader";
-import { API_URL } from "../utils/constants";
 
 function HomePage() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [wishlist, setWishlist] = useState([]);
-  const [addingToWishlist, setAddingToWishlist] = useState({});
-
-  useEffect(() => {
-    const token =
-      localStorage.getItem("token") || localStorage.getItem("authToken");
-    const config = token
-      ? { headers: { Authorization: `Bearer ${token}` } }
-      : {};
-
-    axios
-      .get(`${API_URL}/product/get?limit=8`, config)
-      .then((res) => {
-        const productList = res.data.data || res.data;
-        setProducts(productList);
-        setLoading(false);
-      })
-      .catch(() => {
-        toast.error("Failed to load products");
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) fetchWishlist(token);
-  }, []);
-
-  const fetchWishlist = async (token) => {
-    try {
-      const res = await axios.get(`${API_URL}/wishlist`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data.success) {
-        const ids = res.data.wishlist?.items?.map((i) => i.product) || [];
-        setWishlist(ids);
-      }
-    } catch { }
-  };
-
-  const toggleWishlist = async (e, product) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Please login to manage wishlist");
-      return;
-    }
-
-    setAddingToWishlist((p) => ({ ...p, [product._id]: true }));
-
-    try {
-      if (wishlist.includes(product._id)) {
-        await axios.delete(
-          `${API_URL}/wishlist/remove/${product._id}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        setWishlist((p) => p.filter((id) => id !== product._id));
-        toast.success("Removed from wishlist");
-      } else {
-        await axios.post(
-          `${API_URL}/wishlist/add`,
-          { productId: product._id },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        setWishlist((p) => [...p, product._id]);
-        toast.success("Added to wishlist");
-      }
-    } catch {
-      toast.error("Failed to update wishlist");
-    } finally {
-      setAddingToWishlist((p) => ({ ...p, [product._id]: false }));
-    }
-  };
+  const [loading] = useState(false);
 
   if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-white">
-      {/* HERO */}
+      {/* HERO - Clean & Bold */}
       <section className="bg-black text-white">
         <div className="max-w-6xl mx-auto px-4 py-14 md:py-20">
           <div className="max-w-2xl">
             <span className="inline-block px-3 py-1 bg-white text-black text-xs font-semibold rounded mb-4">
-              NEW SEASON • 2026 COLLECTION
+              NEW SEASON • 2026
             </span>
-
             <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
-              Everyday Essentials,
+              Minimal.
               <br />
-              Elevated.
+              Timeless.
+              <br />
+              Yours.
             </h1>
-
-            <p className="text-gray-300 mb-6">
-              Thoughtfully crafted products designed for comfort, quality, and
-              modern living.
+            <p className="text-gray-300 mb-6 max-w-lg">
+              Curated essentials for the modern lifestyle. Thoughtfully
+              designed, built to last, made for you.
             </p>
-
-            <Link to="/products">
-              <button className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded font-medium hover:bg-gray-100 transition">
-                Explore Collection
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link to="/products">
+                <button className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded font-medium hover:bg-gray-100 transition w-full sm:w-auto">
+                  Shop Collection
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link to="/about">
+                <button className="inline-flex items-center gap-2 border border-white/30 text-white px-5 py-2.5 rounded font-medium hover:bg-white/10 transition w-full sm:w-auto">
+                  Our Story
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -123,81 +57,144 @@ function HomePage() {
       <section className="py-10 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              {
-                icon: Truck,
-                title: "Free Shipping",
-                desc: "On orders above ₹999",
-              },
-              {
-                icon: Shield,
-                title: "Secure Payments",
-                desc: "100% protected checkout",
-              },
-              {
-                icon: Zap,
-                title: "Fast Delivery",
-                desc: "2–4 business days",
-              },
-              {
-                icon: Tag,
-                title: "Best Value",
-                desc: "Quality at the right price",
-              },
-            ].map((f, i) => (
-              <div key={i}>
-                <f.icon className="w-6 h-6 mx-auto mb-2 text-black" />
-                <h3 className="font-semibold text-sm text-gray-900">
-                  {f.title}
-                </h3>
-                <p className="text-xs text-gray-600">{f.desc}</p>
-              </div>
-            ))}
+            <div>
+              <Truck className="w-6 h-6 mx-auto mb-2 text-black" />
+              <h3 className="font-semibold text-sm text-gray-900">
+                Free Shipping
+              </h3>
+              <p className="text-xs text-gray-600">On orders above ₹999</p>
+            </div>
+            <div>
+              <Shield className="w-6 h-6 mx-auto mb-2 text-black" />
+              <h3 className="font-semibold text-sm text-gray-900">
+                Secure Payments
+              </h3>
+              <p className="text-xs text-gray-600">100% protected</p>
+            </div>
+            <div>
+              <Zap className="w-6 h-6 mx-auto mb-2 text-black" />
+              <h3 className="font-semibold text-sm text-gray-900">
+                Fast Delivery
+              </h3>
+              <p className="text-xs text-gray-600">2–4 business days</p>
+            </div>
+            <div>
+              <Tag className="w-6 h-6 mx-auto mb-2 text-black" />
+              <h3 className="font-semibold text-sm text-gray-900">
+                Easy Returns
+              </h3>
+              <p className="text-xs text-gray-600">30-day guarantee</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* PRODUCTS */}
+      {/* BRAND PHILOSOPHY */}
+      <section className="py-14 bg-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Designed for today. Built for tomorrow.
+          </h2>
+          <p className="text-gray-600 text-sm mb-8 max-w-2xl mx-auto">
+            We believe in creating products that become part of your daily
+            ritual. No trends. No compromise. Just timeless essentials that work
+            harder, look better, and last longer.
+          </p>
+          <div className="flex justify-center">
+            <Link to="/products">
+              <button className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded font-medium hover:bg-gray-800 transition">
+                Explore the collection
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* VALUES */}
       <section className="py-14 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Featured Products
+              Why shop with us
             </h2>
             <p className="text-gray-600 text-sm">
-              Handpicked favorites our customers love
+              Quality isn't just a promise. It's our standard.
             </p>
           </div>
 
-          {products.length === 0 ? (
-            <div className="text-center py-20">
-              <Package className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                We’re Curating Something Special ✨
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded border border-gray-100">
+              <div className="w-10 h-10 bg-black rounded flex items-center justify-center mb-4">
+                <Star className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Premium Quality
               </h3>
-              <p className="text-gray-600 mb-6">
-                New products are on the way. Stay tuned!
+              <p className="text-sm text-gray-600">
+                Every product is hand-picked and tested for durability, comfort,
+                and finish.
               </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-black text-white px-6 py-2.5 rounded font-medium hover:bg-gray-800 transition"
-              >
-                Refresh Page
-              </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {products.map((product) => (
-                <ProductCard
-                  key={product._id}
-                  product={product}
-                  wishlist={wishlist}
-                  addingToWishlist={addingToWishlist}
-                  toggleWishlist={toggleWishlist}
-                />
-              ))}
+
+            <div className="bg-white p-6 rounded border border-gray-100">
+              <div className="w-10 h-10 bg-black rounded flex items-center justify-center mb-4">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                2 Year Warranty
+              </h3>
+              <p className="text-sm text-gray-600">
+                We stand behind our products. If something's wrong, we make it
+                right.
+              </p>
             </div>
-          )}
+
+            <div className="bg-white p-6 rounded border border-gray-100">
+              <div className="w-10 h-10 bg-black rounded flex items-center justify-center mb-4">
+                <Tag className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Fair Pricing</h3>
+              <p className="text-sm text-gray-600">
+                No inflated markups. Just honest prices for exceptional
+                products.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* QUOTE / TESTIMONIAL */}
+      <section className="py-14 bg-white">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <div className="text-4xl text-gray-300 mb-4">"</div>
+          <p className="text-lg md:text-xl text-gray-900 font-medium mb-6">
+            The best things in life aren't things. But when you need them, they
+            should be exceptional.
+          </p>
+          <p className="text-sm text-gray-600">— Our promise to you</p>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="py-14 bg-black text-white">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold mb-3">
+            Ready for something better?
+          </h2>
+          <p className="text-gray-300 text-sm mb-6 max-w-xl mx-auto">
+            Join thousands of customers who've made the switch to mindful,
+            quality essentials.
+          </p>
+          <Link to="/products">
+            <button className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded font-medium hover:bg-gray-100 transition">
+              Start shopping
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </Link>
+          <p className="text-xs text-gray-400 mt-4">
+            Free shipping on all orders above ₹999
+          </p>
         </div>
       </section>
     </div>

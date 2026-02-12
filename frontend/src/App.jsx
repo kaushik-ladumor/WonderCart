@@ -6,8 +6,8 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import About from './pages/AboutPage'
 import Login from "./auth/Login";
-
 import Home from "./pages/Home";
 import Signup from "./auth/Signup";
 import ForgotPassword from "./auth/ForgotPassword";
@@ -64,41 +64,43 @@ function App() {
         position="top-right"
         reverseOrder={false}
         toastOptions={{
-          className: 'bg-white text-gray-900 border border-gray-100 shadow-xl rounded-2xl px-6 py-4 min-w-[320px]',
+          className:
+            "bg-white text-gray-900 border border-gray-100 shadow-xl rounded-2xl px-6 py-4 min-w-[320px]",
           duration: 4000,
           style: {
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(0, 0, 0, 0.05)',
-            padding: '16px 24px',
-            color: '#1a1a1a',
-            fontSize: '14px',
-            fontWeight: '500',
-            borderRadius: '16px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(0, 0, 0, 0.05)",
+            padding: "16px 24px",
+            color: "#1a1a1a",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "16px",
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
           },
           success: {
             iconTheme: {
-              primary: '#000',
-              secondary: '#fff',
+              primary: "#000",
+              secondary: "#fff",
             },
             style: {
-              borderLeft: '4px solid #10b981',
-            }
+              borderLeft: "4px solid #10b981",
+            },
           },
           error: {
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: "#ef4444",
+              secondary: "#fff",
             },
             style: {
-              borderLeft: '4px solid #ef4444',
-            }
+              borderLeft: "4px solid #ef4444",
+            },
           },
           loading: {
             style: {
-              borderLeft: '4px solid #3b82f6',
-            }
+              borderLeft: "4px solid #3b82f6",
+            },
           },
         }}
       />
@@ -180,6 +182,7 @@ function App() {
           <Route path="/categories" element={<Category />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/about" element={<About />} />
 
           {/* Page Not Found */}
           <Route path="*" element={<PageNotFound />} />
