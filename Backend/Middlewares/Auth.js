@@ -5,40 +5,36 @@ const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Authorization header missing",
+        message: "Authorization token missing",
       });
     }
 
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : authHeader;
+    const token = authHeader.split(" ")[1];
 
-    if (!token) {
+    // 🚨 Guard against bad tokens
+    if (!token || token === "null" || token === "undefined") {
       return res.status(401).json({
         success: false,
-        message: "Authentication token required",
+        message: "Invalid authentication token",
       });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded JWT:", decoded);
 
     let email = decoded.email;
-    if (!email) {
-      // If email missing in token, fetch from DB
+    if (!email && decoded.userId) {
       const user = await User.findById(decoded.userId).select("email");
       if (user) email = user.email;
     }
 
     req.user = {
       userId: decoded.userId,
-      email: email,
+      email,
       role: decoded.role,
     };
-    console.log("Authenticated User:", req.user);
 
     next();
   } catch (error) {
@@ -53,7 +49,7 @@ const authMiddleware = async (req, res, next) => {
 
     return res.status(401).json({
       success: false,
-      message: "Invalid authentication token",
+      message: "Invalid or malformed token",
     });
   }
 };

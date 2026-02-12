@@ -9,13 +9,20 @@ const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
 const cloudinary = require("../Utils/Cloudinary");
 
-const {
-  sendVerificationCode,
+// const {
+//   sendVerificationCode,
+//   sendWelcomeEmail,
+//   sendResendCode,
+//   sendForgatPasswordCode,
+//   contactSupport,
+// } = require("../Middlewares/email");
+
+const { sendVerificationCode,
   sendWelcomeEmail,
   sendResendCode,
   sendForgatPasswordCode,
   contactSupport,
-} = require("../Middlewares/email");
+} = require('../Middlewares/EmailService');
 
 const getPublicId = (url) => {
   const parts = url.split("/");
@@ -160,9 +167,7 @@ const login = async (req, res) => {
     );
 
     sendWelcomeEmail(user.email, user.username)
-      .catch(err =>
-        console.error("Welcome Email Error:", err)
-      );
+      .catch(err => console.error("Welcome email failed:", err));
 
     return res.status(200).json({
       success: true,
@@ -233,10 +238,6 @@ const googleAuth = async (req, res) => {
         isVerified: true,
       });
     }
-
-    sendWelcomeEmail(user.email, user.username).catch((err) =>
-      console.error("Welcome Email Error:", err)
-    );
 
     const token = jwt.sign(
       {
