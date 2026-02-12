@@ -33,6 +33,29 @@ const getPublicId = (url) => {
   return publicIdWithExt.split(".")[0];
 };
 
+const generateTokens = async (user) => {
+  const accessToken = jwt.sign(
+    {
+      userId: user._id,
+      role: user.role,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  const refreshToken = jwt.sign(
+    { userId: user._id },
+    process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken };
+};
+
 const signup = async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
@@ -69,20 +92,13 @@ const signup = async (req, res) => {
 
     await sendVerificationCode(newUser.email, verificationCode);
 
-    const token = jwt.sign(
-      {
-        userId: newUser._id,
-        role: newUser.role,
-        email: newUser.email,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const { accessToken, refreshToken } = await generateTokens(newUser);
 
     return res.status(201).json({
       success: true,
       message: "User created successfully. Please verify your email.",
-      token,
+      token: accessToken,
+      refreshToken,
       user: {
         _id: newUser._id,
         username: newUser.username,
@@ -155,21 +171,13 @@ const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        user: user.username,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const { accessToken, refreshToken } = await generateTokens(user);
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
+      token: accessToken,
+      refreshToken,
       user: {
         _id: user._id,
         username: user.username,
@@ -236,19 +244,12 @@ const googleAuth = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role,
-        email: user.email,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const { accessToken, refreshToken } = await generateTokens(user);
 
     return res.status(isNewUser ? 201 : 200).json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken,
       isNewUser,
       user: {
         _id: user._id,
@@ -859,9 +860,52 @@ const deleteAccount = async (req, res) => {
   }
 };
 
+const refreshToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(401).json({ success: false, message: "Refresh token required" });
+
+    const user = await User.findOne({ refreshToken: token });
+    if (!user) return res.status(403).json({ success: false, message: "Invalid refresh token" });
+
+    jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        user.refreshToken = null;
+        await user.save();
+        return res.status(403).json({ success: false, message: "Refresh token expired" });
+      }
+
+      const accessToken = jwt.sign(
+        {
+          userId: user._id,
+          role: user.role,
+          email: user.email,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "15m" }
+      );
+
+      res.status(200).json({ success: true, accessToken });
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    await User.findByIdAndUpdate(userId, { refreshToken: null });
+    res.status(200).json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   signup,
   login,
+  logout,
   verify,
   resendCode,
   forgatPassword,
@@ -876,4 +920,5 @@ module.exports = {
   deleteAddress,
   googleAuth,
   deleteAccount,
+  refreshToken,
 };

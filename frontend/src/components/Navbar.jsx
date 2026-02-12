@@ -28,9 +28,20 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await axios.post(`${API_URL}/user/logout`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error("Logout API failed", error);
+    }
     localStorage.removeItem("Users");
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     setAuthUser(null);
     window.location.href = "/";
   };
@@ -170,7 +181,7 @@ export default function Navbar() {
           <div className="flex items-center flex-shrink-0">
             <a
               href="/"
-              className="text-lg sm:text-xl md:text-2xl font-bold tracking-wide hover:text-gray-300 transition"
+              className="text-lg sm:text-xl md:text-2xl font-black tracking-tighter uppercase hover:text-gray-300 transition"
             >
               WonderCart
             </a>
@@ -181,7 +192,7 @@ export default function Navbar() {
               <a
                 key={item}
                 href={`/${item.toLowerCase()}`}
-                className="text-sm text-gray-300 hover:text-white transition"
+                className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 hover:text-white transition"
               >
                 {item}
               </a>

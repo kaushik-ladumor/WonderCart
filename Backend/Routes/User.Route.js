@@ -7,6 +7,8 @@ const Authenticate = require('../Middlewares/Auth');
 
 userRouter.post("/signup", userController.signup);
 userRouter.post("/login", userController.login);
+userRouter.post("/refresh-token", userController.refreshToken);
+userRouter.post("/logout", Authenticate, userController.logout);
 userRouter.post("/verify", userController.verify);
 userRouter.post("/resendCode", userController.resendCode);
 userRouter.post("/forget-password", userController.forgatPassword);

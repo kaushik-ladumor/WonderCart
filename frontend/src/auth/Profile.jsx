@@ -51,8 +51,20 @@ const Profile = () => {
     fetchProfile();
   }, [setAuthUser]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await axios.post(`${API_URL}/user/logout`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error("Logout API failed", error);
+    }
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("Users");
     setAuthUser(null);
     navigate("/");
   };
@@ -69,7 +81,7 @@ const Profile = () => {
     addresses.find((addr) => addr.isDefault) || addresses[0];
 
   const handleMyOrders = () => {
-    navigate("/orders");
+    navigate("/my-orders");
   };
 
   return (

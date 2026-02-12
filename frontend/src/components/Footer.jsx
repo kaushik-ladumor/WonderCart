@@ -1,107 +1,150 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Facebook, Twitter, Instagram, Mail } from "lucide-react";
+import {
+  ShoppingCart,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Mail,
+  Phone,
+  MapPin,
+  ChevronRight
+} from "lucide-react";
 
-const Footer = () => {
+function Footer() {
+  const currentYear = new Date().getFullYear();
+
+  const footerLinks = {
+    shop: [
+      { name: "All Products", path: "/shop" },
+      { name: "Categories", path: "/categories" },
+      { name: "Track Order", path: "/track-order" },
+      { name: "Wishlist", path: "/wishlist" },
+    ],
+    support: [
+      { name: "Contact Us", path: "/contact" },
+      { name: "FAQ", path: "/faq" },
+      { name: "Shipping Policy", path: "/shipping" },
+      { name: "Returns & Refunds", path: "/returns" },
+    ],
+    company: [
+      { name: "Our Story", path: "/about" },
+      { name: "Privacy Policy", path: "/privacy" },
+      { name: "Terms of Service", path: "/terms" },
+    ]
+  };
+
   return (
-    <footer className="bg-black text-white border-t border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          {/* Brand */}
-          <div>
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <ShoppingCart className="w-7 h-7" />
-              <span className="text-xl font-bold">WonderCart</span>
+    <footer className="bg-black text-white pt-12 pb-6 border-t border-white/5 font-sans">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-10">
+          {/* Brand & Mission */}
+          <div className="space-y-4">
+            <Link to="/" className="flex items-center gap-2 group">
+              <ShoppingCart className="w-5 h-5" />
+              <span className="text-xl font-bold tracking-tighter uppercase transition-colors">
+                WonderCart
+              </span>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              A modern e-commerce platform delivering quality products with
-              secure checkout and fast delivery.
+            <p className="text-gray-400 text-[10px] leading-relaxed max-w-xs uppercase tracking-widest font-bold">
+              Curating essential lifestyle products with a focus on quality,
+              minimalism, and timeless design. Built for the modern standard.
             </p>
-
-            <div className="flex gap-4 mt-4">
-              <Facebook className="w-5 h-5 hover:text-gray-300 cursor-pointer" />
-              <Twitter className="w-5 h-5 hover:text-gray-300 cursor-pointer" />
-              <Instagram className="w-5 h-5 hover:text-gray-300 cursor-pointer" />
-              <Mail className="w-5 h-5 hover:text-gray-300 cursor-pointer" />
+            <div className="flex gap-4">
+              {[Facebook, Instagram, Twitter, Linkedin].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="w-8 h-8 flex items-center justify-center border border-white/10 hover:bg-white hover:text-black transition-all"
+                >
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Links */}
+          {/* Shop Links */}
           <div>
-            <h3 className="font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link to="/" className="hover:text-white">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop" className="hover:text-white">
-                  Shop
-                </Link>
-              </li>
-              <li>
-                <Link to="/categories" className="hover:text-white">
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link to="/deals" className="hover:text-white">
-                  Deals
-                </Link>
-              </li>
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">Shop</h3>
+            <ul className="space-y-3">
+              {footerLinks.shop.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    to={link.path}
+                    className="group text-[10px] uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors flex items-center gap-2 font-bold"
+                  >
+                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -ml-5 group-hover:ml-0 transition-all" />
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Support Links */}
           <div>
-            <h3 className="font-semibold mb-4">Support</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link to="/contact" className="hover:text-white">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/faq" className="hover:text-white">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link to="/shipping" className="hover:text-white">
-                  Shipping
-                </Link>
-              </li>
-              <li>
-                <Link to="/returns" className="hover:text-white">
-                  Returns
-                </Link>
-              </li>
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">Support</h3>
+            <ul className="space-y-3">
+              {footerLinks.support.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    to={link.path}
+                    className="group text-[10px] uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors flex items-center gap-2 font-bold"
+                  >
+                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -ml-5 group-hover:ml-0 transition-all" />
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div>
-            <h3 className="font-semibold mb-4">Newsletter</h3>
-            <p className="text-gray-400 text-sm mb-3">
-              Get updates on new arrivals and exclusive offers.
-            </p>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full bg-gray-800 px-4 py-2 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
-            />
-            <button className="w-full bg-white text-black mt-3 py-2 rounded-lg font-semibold hover:bg-gray-200">
-              Subscribe
-            </button>
+          {/* Contact Info */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">Contact</h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-4 group">
+                <MapPin className="w-4 h-4 text-gray-400" />
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 leading-relaxed font-bold">
+                  123 Design Studio,<br />Modern District, NY 10001
+                </p>
+              </div>
+              <div className="flex items-center gap-4 group cursor-pointer font-bold">
+                <Mail className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                  hello@wondercart.com
+                </p>
+              </div>
+              <div className="flex items-center gap-4 group cursor-pointer font-bold">
+                <Phone className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                  +1 (555) 000-1234
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-10 pt-6 text-center text-sm text-gray-400">
-          © {new Date().getFullYear()} WonderCart. All rights reserved.
+        {/* Bottom Bar */}
+        <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500 font-bold">
+            © {currentYear} WonderCart. Pure Design.
+          </p>
+          <div className="flex gap-8">
+            {footerLinks.company.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className="text-[10px] uppercase tracking-[0.2em] text-gray-500 hover:text-white transition-colors font-bold"
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </footer>
   );
-};
+}
 
 export default Footer;

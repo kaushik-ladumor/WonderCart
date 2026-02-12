@@ -21,7 +21,7 @@ function Signup() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [tempEmail, setTempEmail] = useState("");
   const navigate = useNavigate();
-  const { setAuthUser } = useAuth();
+  const { setAuthUser, setToken, setRefreshToken } = useAuth();
 
   const {
     register,
@@ -62,11 +62,14 @@ function Signup() {
       toast.dismiss();
 
       if (response.data.success) {
-        const { token, user, isNewUser } = response.data;
+        const { token, refreshToken: rToken, user, isNewUser } = response.data;
 
         localStorage.setItem("token", token);
+        localStorage.setItem("refreshToken", rToken);
         localStorage.setItem("Users", JSON.stringify(user));
         setAuthUser(user);
+        setToken(token);
+        setRefreshToken(rToken);
 
         toast.success(
           isNewUser ? "Account created successfully!" : "Welcome back!",
@@ -150,8 +153,11 @@ function Signup() {
         // New user created successfully - show verify modal
         toast.success("Signup successful! Please verify your email.");
         localStorage.setItem("token", response.data.token);
+        localStorage.setItem("refreshToken", response.data.refreshToken);
         localStorage.setItem("Users", JSON.stringify(response.data.user));
         setAuthUser(response.data.user);
+        setToken(response.data.token);
+        setRefreshToken(response.data.refreshToken);
         setTempEmail(data.email);
 
         // Store email for verification

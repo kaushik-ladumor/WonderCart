@@ -5,11 +5,33 @@ const Cart = require("../Models/Cart.Model");
 const User = require("../Models/User.Model");
 const mongoose = require("mongoose");
 // const { sendOrderConfirmation } = require('../Middlewares/email');
-const {sendOrderConfirmation} = require('../Middlewares/EmailService');
+const { sendOrderConfirmation } = require('../Middlewares/EmailService');
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Notification = require("../Models/Notification.Model");
 
+const getMyOrders = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const orders = await Order.find({ user: userId })
+      .populate({
+        path: "items.product",
+        select: "name price variants",
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+  }
+};
 
 const createOrder = async (req, res) => {
   console.log("REQ.USER =", req.user);
@@ -821,5 +843,6 @@ module.exports = {
   getAllOrders,
   getSellerOrders,
   verifyPayment,
-  trackOrder
+  trackOrder,
+  getMyOrders
 };

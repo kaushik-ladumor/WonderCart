@@ -10,7 +10,8 @@ const {
   verifyPayment,
   getSellerOrderById,
   getSellerOrders,
-  trackOrder
+  trackOrder,
+  getMyOrders
 } = require("../Controllers/Order.Controller");
 const authenticate = require("../Middlewares/Auth");
 const authorizeRoles = require("../Middlewares/authorizeRoles");
@@ -22,6 +23,7 @@ router.get("/", authenticate, getOrders);
 router.get("/id/:orderId", authenticate, getOrderById);
 router.patch("/id/:orderId/cancel", authenticate, cancelOrder);
 router.get("/track/:orderId", authenticate, trackOrder);
+router.get("/my-orders", authenticate, getMyOrders);
 // -------------------- SELLER ROUTES --------------------
 router.get(
   "/seller/orders",

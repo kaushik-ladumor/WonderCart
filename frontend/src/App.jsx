@@ -31,6 +31,8 @@ import ReturnsRefunds from "./Compony/ReturnsRefunds";
 import PrivacyPolicy from "./Compony/PrivacyPolicy";
 import ShippingPolicy from "./Compony/ShippingPolicy";
 import { useAuth } from "./context/AuthProvider";
+import axios from "axios";
+import { API_URL } from "./utils/constants";
 
 import SellerLayout from "./seller/SellerLayout";
 import SellerDashboard from "./seller/dashboard/SellerDashboard";
@@ -54,8 +56,63 @@ import AdminProducts from "./Admin/AdminProducts";
 import AdminUsers from "./Admin/AdminUsers"
 import AdminProfile from "./Admin/AdminProfile"
 
+import { useEffect } from "react";
+
 function App() {
-  const { authUser } = useAuth();
+  const { authUser, setToken, setAuthUser } = useAuth();
+
+  useEffect(() => {
+    // Request Interceptor
+    const reqInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response Interceptor
+    const resInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          try {
+            const refreshToken = localStorage.getItem("refreshToken");
+            if (refreshToken) {
+              const res = await axios.create().post(`${API_URL}/user/refresh-token`, {
+                token: refreshToken,
+              });
+              if (res.data.success) {
+                const newToken = res.data.accessToken;
+                localStorage.setItem("token", newToken);
+                setToken(newToken);
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return axios(originalRequest);
+              }
+            }
+          } catch (err) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("Users");
+            setToken(null);
+            setAuthUser(null);
+            window.location.href = "/";
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
+    };
+  }, [setToken, setAuthUser]);
 
   return (
     <BrowserRouter>
@@ -168,7 +225,7 @@ function App() {
           <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/AllOrder" element={<AllOrder />} />
+          <Route path="/my-orders" element={<AllOrder />} />
           <Route path="/orderConfirm/:id" element={<OrderConform />} />
           <Route path="/product-detail/:id" element={<ProductDetail />} />
           <Route path="/wishlist" element={<WishlistPage />} />

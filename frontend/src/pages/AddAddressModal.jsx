@@ -170,8 +170,8 @@ const AddAddressModal = ({ onAddressAdded }) => {
                       setFormData({ ...formData, addressType: type })
                     }
                     className={`flex-1 px-3 py-2 rounded border text-sm font-medium ${formData.addressType === type
-                        ? "bg-black text-white border-black"
-                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                      ? "bg-black text-white border-black"
+                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                       }`}
                   >
                     {type === "home" ? "Home" : "Work"}

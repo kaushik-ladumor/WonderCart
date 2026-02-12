@@ -17,7 +17,7 @@ provider.setCustomParameters({
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const { setAuthUser } = useAuth();
+  const { setAuthUser, setToken, setRefreshToken } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -45,10 +45,14 @@ function Login() {
 
       const loggedUser = response.data.user;
       const token = response.data.token;
+      const rToken = response.data.refreshToken;
 
       localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", rToken);
       localStorage.setItem("Users", JSON.stringify(loggedUser));
       setAuthUser(loggedUser);
+      setToken(token);
+      setRefreshToken(rToken);
 
       document.getElementById("login_modal")?.close();
       reset();
@@ -96,10 +100,14 @@ function Login() {
       if (result.data) {
         const user = result.data.user;
         const token = result.data.token;
+        const rToken = result.data.refreshToken;
 
         localStorage.setItem("token", token);
+        localStorage.setItem("refreshToken", rToken);
         localStorage.setItem("Users", JSON.stringify(user));
         setAuthUser(user);
+        setToken(token);
+        setRefreshToken(rToken);
 
         document.getElementById("login_modal")?.close();
         reset();

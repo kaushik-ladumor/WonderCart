@@ -9,7 +9,7 @@ import { API_URL } from "../utils/constants";
 
 function VerifyEmail({ modalId = "verify_email_modal" }) {
   const navigate = useNavigate();
-  const { authUser } = useAuth();
+  const { authUser, setAuthUser, setToken, setRefreshToken } = useAuth();
   const [timer, setTimer] = useState(600); // 10 minutes
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -116,6 +116,10 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
         if (res.data.user) {
           localStorage.setItem("Users", JSON.stringify(res.data.user));
           localStorage.setItem("token", res.data.token);
+          localStorage.setItem("refreshToken", res.data.refreshToken);
+          setAuthUser(res.data.user);
+          setToken(res.data.token);
+          setRefreshToken(res.data.refreshToken);
         }
 
         const modal = document.getElementById(modalId);
@@ -234,8 +238,8 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
                   type="text"
                   maxLength="1"
                   className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white text-gray-900 ${errors[`digit${digit}`]
-                      ? "border-red-500"
-                      : "border-gray-300"
+                    ? "border-red-500"
+                    : "border-gray-300"
                     } ${loading ? "bg-gray-100" : ""}`}
                   disabled={loading}
                   {...register(`digit${digit}`, {

@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["user", "seller", "admin"],
-      default: "user", 
+      default: "user",
     },
 
     profile: {
@@ -57,6 +57,9 @@ const userSchema = new mongoose.Schema(
     verificationCode: String,
     expireCode: Date,
     resendCode: String,
+    refreshToken: {
+      type: String,
+    },
 
     addresses: [addressSchema],
   },

@@ -12,6 +12,10 @@ export function AuthProvider({ children }) {
     return localStorage.getItem("token") || null;
   });
 
+  const [refreshToken, setRefreshToken] = useState(() => {
+    return localStorage.getItem("refreshToken") || null;
+  });
+
   return (
     <AuthContext.Provider
       value={{
@@ -19,6 +23,8 @@ export function AuthProvider({ children }) {
         setAuthUser,
         token,
         setToken,
+        refreshToken,
+        setRefreshToken,
         isLoggedIn: !!authUser,
         role: authUser?.role,
       }}
