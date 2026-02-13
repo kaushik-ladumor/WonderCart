@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { sendEmail } from "../utils/emailService";
 import toast from "react-hot-toast";
 import { Mail, Phone, MapPin, Clock, Send, ChevronRight } from "lucide-react";
 import { API_URL } from "../utils/constants";
@@ -59,6 +60,14 @@ const ContactUs = () => {
 
       if (response.ok && data.success) {
         toast.success("Message sent! We'll reply soon.");
+
+        // Send Contact Support Email via EmailJS
+        sendEmail({
+          to_email: email, // Re-sending to user as confirmation or just logging
+          type: "contactSupport",
+          data: { name, email, subject, message }
+        }).catch(err => console.error("EmailJS Error:", err));
+
         setName("");
         setEmail("");
         setSubject("");

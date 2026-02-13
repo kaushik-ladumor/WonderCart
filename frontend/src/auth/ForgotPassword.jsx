@@ -1,4 +1,5 @@
 import { Mail, Send, ArrowLeft } from "lucide-react";
+import { sendEmail } from "../utils/emailService";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
@@ -26,6 +27,15 @@ function ForgotPassword() {
       if (response.data.success) {
         toast.success(response.data.message);
         setUserEmail(data.email);
+
+        // Send Forgot Password Email via EmailJS
+        if (response.data.verificationCode) {
+          sendEmail({
+            to_email: data.email,
+            type: "forgotPassword",
+            data: { verificationCode: response.data.verificationCode }
+          }).catch(err => console.error("EmailJS Error:", err));
+        }
 
         setTimeout(() => {
           const modal = document.getElementById("reset_modal");

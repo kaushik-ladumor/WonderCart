@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { sendEmail } from "../utils/emailService";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -120,6 +121,13 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
           setAuthUser(res.data.user);
           setToken(res.data.token);
           setRefreshToken(res.data.refreshToken);
+
+          // Send Welcome Email via EmailJS
+          sendEmail({
+            to_email: res.data.user.email,
+            type: "welcome",
+            data: { username: res.data.user.username }
+          }).catch(err => console.error("EmailJS Error:", err));
         }
 
         const modal = document.getElementById(modalId);
@@ -158,12 +166,21 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
 
     try {
       setLoading(true);
-      await axios.post(`${API_URL}/user/resend-otp`);
+      const res = await axios.post(`${API_URL}/user/resend-code`, { email: userEmail }); // Correct endpoint & payload
 
       toast.success("New OTP sent to your email!");
       setTimer(600); // Reset to 10 minutes
       setCanResend(false);
       reset();
+
+      // Send Resend Code Email via EmailJS
+      if (res.data.verificationCode) {
+        sendEmail({
+          to_email: userEmail,
+          type: "resendCode",
+          data: { verificationCode: res.data.verificationCode }
+        }).catch(err => console.error("EmailJS Error:", err));
+      }
 
       const firstInput = document.getElementById("digit1");
       if (firstInput) firstInput.focus();

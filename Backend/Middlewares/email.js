@@ -80,14 +80,14 @@ const sendForgatPasswordCode = async (email, verificationCode) => {
 const contactSupport = async (name, email, subject, message) => {
   try {
     const response = await transporter.sendMail({
-    from: '"WonderCart Contact Form" <wondercarthelp@gmail.com>',
-    to: email,
-    subject: `New Contact Form Submission: ${subject}`,
-    html: contactSupport_Email_Template
-      .replace("{name}", name)
-      .replace("{email}", email)
-      .replace("{subject}", subject)
-      .replace("{message}", message),
+      from: '"WonderCart Contact Form" <wondercarthelp@gmail.com>',
+      to: email,
+      subject: `New Contact Form Submission: ${subject}`,
+      html: contactSupport_Email_Template
+        .replace("{name}", name)
+        .replace("{email}", email)
+        .replace("{subject}", subject)
+        .replace("{message}", message),
     });
     console.log("Contact support email sent:", response.messageId);
   } catch (error) {

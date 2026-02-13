@@ -9,20 +9,7 @@ const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
 const cloudinary = require("../Utils/Cloudinary");
 
-// const {
-//   sendVerificationCode,
-//   sendWelcomeEmail,
-//   sendResendCode,
-//   sendForgatPasswordCode,
-//   contactSupport,
-// } = require("../Middlewares/email");
 
-const { sendVerificationCode,
-  sendWelcomeEmail,
-  sendResendCode,
-  sendForgatPasswordCode,
-  contactSupport,
-} = require('../Middlewares/EmailService');
 
 const getPublicId = (url) => {
   const parts = url.split("/");
@@ -90,7 +77,7 @@ const signup = async (req, res) => {
       expireCode,
     });
 
-    await sendVerificationCode(newUser.email, verificationCode);
+    // await sendVerificationCode(newUser.email, verificationCode);
 
     const { accessToken, refreshToken } = await generateTokens(newUser);
 
@@ -99,6 +86,7 @@ const signup = async (req, res) => {
       message: "User created successfully. Please verify your email.",
       token: accessToken,
       refreshToken,
+      verificationCode, // Return code for frontend EmailJS
       user: {
         _id: newUser._id,
         username: newUser.username,
@@ -305,7 +293,7 @@ const verify = async (req, res) => {
     user.expireCode = null;
 
     await user.save();
-    await sendWelcomeEmail(user.email, user.username);
+    // await sendWelcomeEmail(user.email, user.username);
 
     res.status(200).json({
       success: true,
@@ -360,11 +348,12 @@ const resendCode = async (req, res) => {
     user.expireCode = expiry;
 
     await user.save();
-    await sendResendCode(user.email, user.verificationCode);
+    // await sendResendCode(user.email, user.verificationCode);
 
     res.status(200).json({
       success: true,
       message: "New verification code sent successfully",
+      verificationCode: user.verificationCode, // Return for EmailJS
     });
   } catch (error) {
     res.status(500).json({
@@ -408,11 +397,12 @@ const forgatPassword = async (req, res) => {
     user.expireCode = expiry;
 
     await user.save();
-    await sendForgatPasswordCode(user.email, user.verificationCode);
+    // await sendForgatPasswordCode(user.email, user.verificationCode);
 
     res.status(200).json({
       success: true,
       message: "Password reset code sent to your email",
+      verificationCode: user.verificationCode, // Return for EmailJS
     });
   } catch (error) {
     res.status(500).json({

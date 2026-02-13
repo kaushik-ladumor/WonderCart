@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { sendEmail } from "../utils/emailService";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -326,7 +327,6 @@ const Checkout = () => {
           },
         },
       );
-
       if (response.data.success) {
         if (selectedPayment === "Razorpay") {
           openRazorpay(response.data.razorpayOrder, orderData);
@@ -334,6 +334,20 @@ const Checkout = () => {
           sessionStorage.removeItem("directOrder");
           sessionStorage.removeItem("directOrderTotal");
           if (refreshCart) await refreshCart();
+
+          // Send Order Confirmation Email via EmailJS
+          const storedUser = JSON.parse(localStorage.getItem("Users"));
+          if (response.data.order) {
+            sendEmail({
+              to_email: storedUser?.email || response.data.order.address?.email,
+              type: "orderConfirmation",
+              data: {
+                user: storedUser,
+                order: response.data.order
+              }
+            }).catch(err => console.error("EmailJS Error:", err));
+          }
+
           toast.success("Order placed successfully!");
           navigate(`/orderConfirm/${response.data.order._id}`);
         }
@@ -446,6 +460,19 @@ const Checkout = () => {
         sessionStorage.removeItem("directOrderTotal");
 
         if (refreshCart) await refreshCart();
+
+        // Send Order Confirmation Email via EmailJS
+        const storedUser = JSON.parse(localStorage.getItem("Users"));
+        if (response.data.order) {
+          sendEmail({
+            to_email: storedUser?.email || response.data.order.address?.email,
+            type: "orderConfirmation",
+            data: {
+              user: storedUser,
+              order: response.data.order
+            }
+          }).catch(err => console.error("EmailJS Error:", err));
+        }
 
         toast.success("Payment successful! Order placed.");
         navigate(`/orderConfirm/${response.data.order._id}`);

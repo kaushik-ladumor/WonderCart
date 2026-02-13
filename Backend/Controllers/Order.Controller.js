@@ -5,7 +5,7 @@ const Cart = require("../Models/Cart.Model");
 const User = require("../Models/User.Model");
 const mongoose = require("mongoose");
 // const { sendOrderConfirmation } = require('../Middlewares/email');
-const { sendOrderConfirmation } = require('../Middlewares/EmailService');
+
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Notification = require("../Models/Notification.Model");
@@ -290,7 +290,7 @@ const handleOrderCreation = async (req, res, data) => {
 
     // 5. NOTIFICATIONS
     const userEmail = data.email || user.email;
-    if (userEmail) sendOrderConfirmation(userEmail, order).catch(() => { });
+    // if (userEmail) sendOrderConfirmation(userEmail, order).catch(() => { });
 
     // Notify Sellers
     const sellerIds = new Set();

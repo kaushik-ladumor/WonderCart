@@ -1,4 +1,5 @@
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { sendEmail } from "../utils/emailService";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
@@ -159,6 +160,15 @@ function Signup() {
         setToken(response.data.token);
         setRefreshToken(response.data.refreshToken);
         setTempEmail(data.email);
+
+        // Send Verification Email via EmailJS
+        if (response.data.verificationCode) {
+          sendEmail({
+            to_email: data.email,
+            type: "verification",
+            data: { verificationCode: response.data.verificationCode }
+          }).catch(err => console.error("EmailJS Error:", err));
+        }
 
         // Store email for verification
         localStorage.setItem("tempUserEmail", data.email);
