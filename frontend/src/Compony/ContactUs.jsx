@@ -62,11 +62,19 @@ const ContactUs = () => {
         toast.success("Message sent! We'll reply soon.");
 
         // Send Contact Support Email via EmailJS
+        // 1. Send copy to Admin
         sendEmail({
-          to_email: email, // Re-sending to user as confirmation or just logging
+          to_email: "wondercarthelp@gmail.com",
           type: "contactSupport",
           data: { name, email, subject, message }
-        }).catch(err => console.error("EmailJS Error:", err));
+        }).catch(err => console.error("EmailJS Error (Admin):", err));
+
+        // 2. Send confirmation to User (optional, using same template for now)
+        sendEmail({
+          to_email: email,
+          type: "contactSupport",
+          data: { name, email, subject, message }
+        }).catch(err => console.error("EmailJS Error (User):", err));
 
         setName("");
         setEmail("");

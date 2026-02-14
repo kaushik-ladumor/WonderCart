@@ -116,37 +116,43 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
 
         if (res.data.user) {
           localStorage.setItem("Users", JSON.stringify(res.data.user));
-          localStorage.setItem("token", res.data.token);
-          localStorage.setItem("refreshToken", res.data.refreshToken);
           setAuthUser(res.data.user);
-          setToken(res.data.token);
-          setRefreshToken(res.data.refreshToken);
 
-          // Send Welcome Email via EmailJS
-          sendEmail({
-            to_email: res.data.user.email,
-            type: "welcome",
-            data: { username: res.data.user.username }
-          }).catch(err => console.error("EmailJS Error:", err));
-        }
-
-        const modal = document.getElementById(modalId);
-        if (modal) modal.close();
-
-        reset();
-
-        setTimeout(() => {
-          const storedUser = JSON.parse(localStorage.getItem("Users"));
-          if (!storedUser) {
-            navigate("/");
-            return;
+          if (res.data.token) {
+            localStorage.setItem("token", res.data.token);
+            setToken(res.data.token);
+          }
+          if (res.data.refreshToken) {
+            localStorage.setItem("refreshToken", res.data.refreshToken);
+            setRefreshToken(res.data.refreshToken);
           }
 
-          const role = storedUser.role;
-          if (role === "seller") navigate("/seller/dashboard");
-          else if (role === "admin") navigate("/admin");
-          else navigate("/");
-        }, 800);
+          // Welcome email removed - not needed here
+
+          const modal = document.getElementById(modalId);
+          if (modal) modal.close();
+
+          reset();
+
+          // Only navigate if user is on signup page (not already logged in and browsing)
+          // If they're verifying from profile, just close modal and stay on current page
+          const currentPath = window.location.pathname;
+          if (currentPath === "/signup" || currentPath === "/") {
+            setTimeout(() => {
+              const storedUser = JSON.parse(localStorage.getItem("Users"));
+              if (!storedUser) {
+                navigate("/");
+                return;
+              }
+
+              const role = storedUser.role;
+              if (role === "seller") navigate("/seller/dashboard");
+              else if (role === "admin") navigate("/admin");
+              else navigate("/");
+            }, 800);
+          }
+          // If verifying from profile or other pages, just stay on current page
+        }
       }
     } catch (err) {
       toast.error(

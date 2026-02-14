@@ -176,13 +176,14 @@ function Signup() {
         reset();
 
         // Show verify modal after a short delay
+        // Navigate to home immediately, verification can happen later in profile
         setTimeout(() => {
-          setShowVerifyModal(true);
-          const modal = document.getElementById("verify_email_modal");
-          if (modal) {
-            modal.showModal();
+          if (response.data.user.role === "seller") {
+            navigate("/seller/dashboard");
+          } else {
+            navigate("/");
           }
-        }, 500);
+        }, 1500);
       } else {
         // Handle other errors
         toast.error(

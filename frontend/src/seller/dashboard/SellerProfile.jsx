@@ -11,11 +11,13 @@ import {
   Store,
   Key,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useAuth } from "../../context/AuthProvider";
 import UpdatePassword from "../../auth/UpdatePassword";
+import VerifyEmail from "../../auth/VerifyEmail";
 import DeleteModal from '../../auth/DeletedModel'
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
@@ -176,6 +178,27 @@ const SellerProfile = () => {
                 </div>
               </div>
 
+              {/* Verification Warning */}
+              {!profileData.isVerified && (
+                <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-yellow-800">
+                      <AlertTriangle className="w-5 h-5" />
+                      <span className="font-semibold">Email Not Verified</span>
+                    </div>
+                    <p className="text-sm text-yellow-700">
+                      Verify your email to add products, manage orders, and access all seller features.
+                    </p>
+                    <button
+                      onClick={() => document.getElementById("verify_email_modal")?.showModal()}
+                      className="text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-900 px-4 py-2 rounded-md font-medium transition-colors w-fit"
+                    >
+                      Verify Email Now
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-50 p-4 border border-gray-200 rounded-lg">
@@ -325,6 +348,9 @@ const SellerProfile = () => {
 
       {/* Update Password Modal */}
       <UpdatePassword />
+
+      {/* Verify Email Modal */}
+      <VerifyEmail modalId="verify_email_modal" email={profileData.email} />
 
       {/* Delete Account Modal */}
       <DeleteModal

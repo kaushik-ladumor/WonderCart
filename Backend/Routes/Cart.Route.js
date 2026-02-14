@@ -1,5 +1,6 @@
 const express = require("express");
 const CartRouter = express.Router();
+const requireVerification = require("../Middlewares/RequireVerification");
 
 const {
   addCart,
@@ -14,7 +15,7 @@ const authenticate = require("../Middlewares/Auth");
 // 🔐 All routes use authenticate
 
 // Add item to cart
-CartRouter.post("/add", authenticate, addCart);
+CartRouter.post("/add", authenticate, requireVerification, addCart);
 
 // Get logged-in user's cart
 CartRouter.get("/", authenticate, getCart);

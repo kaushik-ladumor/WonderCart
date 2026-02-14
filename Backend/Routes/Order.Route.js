@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const requireVerification = require("../Middlewares/RequireVerification");
 const {
   createOrder,
   getOrders,
@@ -18,7 +19,7 @@ const authorizeRoles = require("../Middlewares/authorizeRoles");
 const Notification = require("../Models/Notification.Model");
 
 // -------------------- CUSTOMER ROUTES --------------------
-router.post("/create", authenticate, createOrder);
+router.post("/create", authenticate, requireVerification, createOrder);
 router.get("/", authenticate, getOrders);
 router.get("/id/:orderId", authenticate, getOrderById);
 router.patch("/id/:orderId/cancel", authenticate, cancelOrder);
@@ -43,6 +44,7 @@ router.put(
   "/seller/id/:orderId/status",
   authenticate,
   authorizeRoles("seller"),
+  requireVerification,
   updateOrderStatus
 );
 

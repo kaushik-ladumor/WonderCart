@@ -14,6 +14,7 @@ const Authorization = require("../Middlewares/Auth");
 const authorizeRoles = require("../Middlewares/authorizeRoles");
 
 const productRouter = express.Router();
+const requireVerification = require("../Middlewares/RequireVerification");
 
 // ✅ PUBLIC ROUTES
 productRouter.get("/get", getProduct);
@@ -36,6 +37,7 @@ productRouter.post(
   "/create",
   Authorization,
   authorizeRoles("seller"),
+  requireVerification,
   upload.any(),
   createProduct
 );
@@ -44,6 +46,7 @@ productRouter.put(
   "/update/:id",
   Authorization,
   authorizeRoles("seller", "admin"),
+  requireVerification,
   upload.any(),
   updateProduct
 );
@@ -52,6 +55,7 @@ productRouter.delete(
   "/delete/:id",
   Authorization,
   authorizeRoles("seller", "admin"),
+  requireVerification,
   deleteProduct
 );
 

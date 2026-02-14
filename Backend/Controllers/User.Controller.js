@@ -133,12 +133,12 @@ const login = async (req, res) => {
       });
     }
 
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email before logging in",
-      });
-    }
+    // if (!user.isVerified) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Please verify your email before logging in",
+    //   });
+    // }
 
     if (!user.password) {
       return res.status(500).json({
@@ -295,9 +295,13 @@ const verify = async (req, res) => {
     await user.save();
     // await sendWelcomeEmail(user.email, user.username);
 
+    const { accessToken, refreshToken } = await generateTokens(user);
+
     res.status(200).json({
       success: true,
       message: "Account verified successfully",
+      token: accessToken,
+      refreshToken,
       user: {
         _id: user._id,
         username: user.username,
@@ -570,7 +574,7 @@ const contact = async (req, res) => {
         message: "All fields (name, email, subject, message) are required",
       });
     }
-    await contactSupport(name, email, subject, message);
+    // await contactSupport(name, email, subject, message); // TODO: Implement backend storage or admin notification
     res.status(200).json({
       success: true,
       message: "Your message has been received. We will get back to you shortly.",
