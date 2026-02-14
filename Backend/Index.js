@@ -39,7 +39,9 @@ const io = new Server(server, {
     origin: [
       "http://localhost:5173",
       "https://wonder-cart-three.vercel.app",
-      "https://wonder-cart-p6ep8tntl-kaushik-ladumors-projects.vercel.app"
+      "https://wonder-cart-p6ep8tntl-kaushik-ladumors-projects.vercel.app",
+      "https://wonder-cart-gc1pbvdds-kaushik-ladumors-projects.vercel.app",
+      "https://wonder-cart-git-main-kaushik-ladumors-projects.vercel.app"
     ],
     credentials: true,
     methods: ["GET", "POST"]
