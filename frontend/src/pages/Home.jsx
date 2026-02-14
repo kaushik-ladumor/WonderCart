@@ -62,28 +62,36 @@ function HomePage() {
               <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider">
                 Free Shipping
               </h3>
-              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">On orders above ₹999</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">
+                On orders above ₹999
+              </p>
             </div>
             <div>
               <Shield className="w-5 h-5 mx-auto mb-2 text-black" />
               <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider">
                 Secure Payments
               </h3>
-              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">100% protected</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">
+                100% protected
+              </p>
             </div>
             <div>
               <Zap className="w-5 h-5 mx-auto mb-2 text-black" />
               <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider">
                 Fast Delivery
               </h3>
-              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">2–4 business days</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">
+                2–4 business days
+              </p>
             </div>
             <div>
               <Tag className="w-5 h-5 mx-auto mb-2 text-black" />
               <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider">
                 Easy Returns
               </h3>
-              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">30-day guarantee</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-tighter">
+                30-day guarantee
+              </p>
             </div>
           </div>
         </div>
@@ -154,7 +162,9 @@ function HomePage() {
               <div className="w-8 h-8 bg-black rounded flex items-center justify-center mb-3">
                 <Tag className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-semibold text-sm text-gray-900 mb-1 uppercase tracking-wider">Fair Pricing</h3>
+              <h3 className="font-semibold text-sm text-gray-900 mb-1 uppercase tracking-wider">
+                Fair Pricing
+              </h3>
               <p className="text-xs text-gray-500 leading-relaxed">
                 No inflated markups. Just honest prices for exceptional
                 products.
@@ -172,7 +182,9 @@ function HomePage() {
             The best things in life aren't things. But when you need them, they
             should be exceptional.
           </p>
-          <p className="text-xs text-gray-500 uppercase tracking-[0.2em]">— Our promise</p>
+          <p className="text-xs text-gray-500 uppercase tracking-[0.2em]">
+            — Our promise
+          </p>
         </div>
       </section>
 

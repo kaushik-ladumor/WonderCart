@@ -156,6 +156,7 @@ const AdminNavbar = () => {
   const navItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/admin/products", label: "Products", icon: Package },
+    { path: "/admin/users", label: "Users", icon: User },
     { path: "/admin/profile", label: "Profile", icon: User },
   ];
 

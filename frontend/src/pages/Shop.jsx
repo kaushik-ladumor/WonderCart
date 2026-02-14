@@ -61,7 +61,11 @@ function Shop() {
     }
   }, [sortBy, products.length]);
 
-  const fetchAllProducts = (pageNum = 1, append = false, category = selectedCategory) => {
+  const fetchAllProducts = (
+    pageNum = 1,
+    append = false,
+    category = selectedCategory,
+  ) => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
 
@@ -71,9 +75,13 @@ function Shop() {
       ? { headers: { Authorization: `Bearer ${token}` } }
       : {};
 
-    const categoryParam = category !== "all" ? `&category=${encodeURIComponent(category)}` : "";
+    const categoryParam =
+      category !== "all" ? `&category=${encodeURIComponent(category)}` : "";
     axios
-      .get(`${API_URL}/product/get?page=${pageNum}&limit=8${categoryParam}`, config)
+      .get(
+        `${API_URL}/product/get?page=${pageNum}&limit=8${categoryParam}`,
+        config,
+      )
       .then((res) => {
         const productList = res.data.data || [];
         const pagination = res.data.pagination;
@@ -224,12 +232,9 @@ function Shop() {
 
     try {
       if (wishlist.includes(product._id)) {
-        await axios.delete(
-          `${API_URL}/wishlist/remove/${product._id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        await axios.delete(`${API_URL}/wishlist/remove/${product._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setWishlist((prev) => prev.filter((id) => id !== product._id));
         toast.success("Removed from wishlist");
       } else {
@@ -361,10 +366,11 @@ function Shop() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleClearFilters}
-                className={`px-3 py-1.5 text-xs rounded border ${selectedCategory === "all"
-                  ? "bg-black text-white border-black"
-                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                className={`px-3 py-1.5 text-xs rounded border ${
+                  selectedCategory === "all"
+                    ? "bg-black text-white border-black"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 All
               </button>
@@ -372,10 +378,11 @@ function Shop() {
                 <button
                   key={cat}
                   onClick={() => filterByCategory(cat)}
-                  className={`px-3 py-1.5 text-xs rounded border ${selectedCategory === cat
-                    ? "bg-black text-white border-black"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  className={`px-3 py-1.5 text-xs rounded border ${
+                    selectedCategory === cat
+                      ? "bg-black text-white border-black"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   {cat}
                 </button>

@@ -12,5 +12,6 @@ adminRouter.get("/orders", Authorization, authorizationRole('admin'), adminContr
 
 adminRouter.put("/products/:productId/approve", Authorization, authorizationRole('admin'), requireVerification, adminController.productApproval);
 adminRouter.delete("/products/:productId/reject", Authorization, authorizationRole('admin'), requireVerification, adminController.rejectProduct);
+adminRouter.delete("/users/delete", Authorization, authorizationRole('admin'), requireVerification, adminController.deleteUser);
 
 module.exports = adminRouter;
