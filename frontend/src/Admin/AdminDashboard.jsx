@@ -1,299 +1,345 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { API_URL } from "../utils/constants";
+import { useAuth } from "../context/AuthProvider";
+import Loader from "../components/Loader";
+
+// Charts
 import {
-  Users,
-  Package,
-  ShoppingCart,
-  DollarSign,
-  TrendingUp,
-  Activity,
-  Calendar,
-  ArrowUpRight,
-  MoreVertical,
-} from "lucide-react";
-import { useState, useEffect } from "react";
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
-const AdminDashboard = () => {
-  const [stats, setStats] = useState({
-    users: 0,
-    products: 0,
-    orders: 0,
-    revenue: 0,
-  });
+function AdminDashboard() {
+  // ================= STATES =================
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(0);
+  const [product, setProduct] = useState(0);
+  const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [userRoleCount, setUserRoleCount] = useState(0);
+  const [sellerRoleCount, setSellerRoleCount] = useState(0);
+  const [todayUsers, setTodayUsers] = useState(0);
+  const [todaySellers, setTodaySellers] = useState(0);
+  const [todayProducts, setTodayProducts] = useState(0);
+  const [monthUsers, setMonthUsers] = useState(0);
+  const [monthSellers, setMonthSellers] = useState(0);
+  const { token } = useAuth();
 
-  const [loading, setLoading] = useState(true);
+  // ================= FETCH USERS =================
+  const fetchUserCount = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/admin/users/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  // Recent orders data
-  const recentOrders = [
-    {
-      id: "ORD-001",
-      customer: "John Doe",
-      amount: "$299.99",
-      status: "completed",
-      time: "10:42 AM",
-    },
-    {
-      id: "ORD-002",
-      customer: "Jane Smith",
-      amount: "$149.99",
-      status: "pending",
-      time: "09:15 AM",
-    },
-    {
-      id: "ORD-003",
-      customer: "Robert Johnson",
-      amount: "$89.99",
-      status: "completed",
-      time: "Yesterday",
-    },
-    {
-      id: "ORD-004",
-      customer: "Emily Davis",
-      amount: "$459.99",
-      status: "processing",
-      time: "Yesterday",
-    },
-    {
-      id: "ORD-005",
-      customer: "Michael Brown",
-      amount: "$199.99",
-      status: "completed",
-      time: "Dec 12",
-    },
-  ];
+      const usersData = response.data.data.users;
+      setUsers(usersData);
+      setUser(response.data.data.userCount);
+      setUserRoleCount(usersData.filter((u) => u.role === "user").length);
+      setSellerRoleCount(usersData.filter((u) => u.role === "seller").length);
 
-  // Sales chart data
-  const salesData = [
-    { month: "Jan", sales: 65 },
-    { month: "Feb", sales: 78 },
-    { month: "Mar", sales: 90 },
-    { month: "Apr", sales: 81 },
-    { month: "May", sales: 56 },
-    { month: "Jun", sales: 55 },
-    { month: "Jul", sales: 40 },
-    { month: "Aug", sales: 72 },
-    { month: "Sep", sales: 85 },
-    { month: "Oct", sales: 60 },
-    { month: "Nov", sales: 75 },
-    { month: "Dec", sales: 90 },
-  ];
+      const today = new Date().toDateString();
+      const todayList = usersData.filter(
+        (u) => new Date(u.createdAt).toDateString() === today,
+      );
+      setTodayUsers(todayList.filter((u) => u.role === "user").length);
+      setTodaySellers(todayList.filter((u) => u.role === "seller").length);
 
-  // Stats cards
-  const statCards = [
-    {
-      title: "Total Users",
-      value: "1,248",
-      icon: <Users className="text-blue-600" size={24} />,
-      change: "+12.5%",
-      color: "bg-blue-50 border-blue-100",
-    },
-    {
-      title: "Total Products",
-      value: "356",
-      icon: <Package className="text-green-600" size={24} />,
-      change: "+8.2%",
-      color: "bg-green-50 border-green-100",
-    },
-    {
-      title: "Total Orders",
-      value: "894",
-      icon: <ShoppingCart className="text-purple-600" size={24} />,
-      change: "+24.7%",
-      color: "bg-purple-50 border-purple-100",
-    },
-    {
-      title: "Total Revenue",
-      value: "$12,458",
-      icon: <DollarSign className="text-orange-600" size={24} />,
-      change: "+18.3%",
-      color: "bg-orange-50 border-orange-100",
-    },
-  ];
+      const now = new Date();
+      const monthList = usersData.filter((u) => {
+        const d = new Date(u.createdAt);
+        return (
+          d.getMonth() === now.getMonth() &&
+          d.getFullYear() === now.getFullYear()
+        );
+      });
+      setMonthUsers(monthList.filter((u) => u.role === "user").length);
+      setMonthSellers(monthList.filter((u) => u.role === "seller").length);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ================= FETCH PRODUCTS =================
+  const fetchProductCount = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/admin/products/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const productsData = response.data.data.products;
+      setProducts(productsData);
+      setProduct(response.data.data.productCount);
+
+      const today = new Date().toDateString();
+      const todayProductsList = productsData.filter(
+        (p) => new Date(p.createdAt).toDateString() === today,
+      );
+      setTodayProducts(todayProductsList.length);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ================= LOAD DASHBOARD =================
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    await fetchUserCount();
+    await fetchProductCount();
+    setLoading(false);
+  };
 
   useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setStats({
-        users: 1248,
-        products: 356,
-        orders: 894,
-        revenue: 12458,
-      });
-      setLoading(false);
-    }, 1000);
+    if (token) {
+      fetchDashboardData();
+    }
+  }, [token]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  // ================= CHART DATA =================
+  const todayChartData = [
+    {
+      name: "Today",
+      users: todayUsers,
+      sellers: todaySellers,
+      products: todayProducts,
+    },
+  ];
 
+  const monthlyUserData = () => {
+    const months = Array(12).fill(0);
+    users.forEach((u) => {
+      const month = new Date(u.createdAt).getMonth();
+      months[month]++;
+    });
+    return months.map((count, index) => ({
+      month: new Date(0, index).toLocaleString("default", { month: "short" }),
+      users: count,
+    }));
+  };
+
+  const productsPerDay = () => {
+    const days = {};
+    products.forEach((p) => {
+      const day = new Date(p.createdAt).toLocaleDateString();
+      days[day] = (days[day] || 0) + 1;
+    });
+    return Object.keys(days).map((day) => ({
+      day: day.slice(0, 5),
+      products: days[day],
+    }));
+  };
+
+  const rolePieData = [
+    { name: "Users", value: userRoleCount },
+    { name: "Sellers", value: sellerRoleCount },
+  ];
+
+  const COLORS = ["#000000", "#666666"];
+
+  // ================= LOADER =================
+  if (loading) return <Loader />;
+
+  // ================= UI =================
   return (
-    <div className="min-h-screen bg-[#F2F2F2] p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-[#000000]">
-          Dashboard Overview
-        </h1>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2">
-          <p className="text-[#B6B09F]">
-            Welcome back! Here's what's happening today.
+    <div className="p-4 md:p-6 bg-white min-h-screen">
+      <h1 className="text-2xl md:text-3xl font-bold text-black mb-6">
+        Admin Dashboard
+      </h1>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-sm text-gray-500 mb-1">Total Users</p>
+          <p className="text-2xl font-bold text-black">{user}</p>
+          <p className="text-xs text-gray-400 mt-2">
+            Buyers: {userRoleCount} | Sellers: {sellerRoleCount}
           </p>
-          <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-            <Calendar size={18} className="text-[#B6B09F]" />
-            <span className="text-sm text-[#000000] font-medium">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </span>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-sm text-gray-500 mb-1">Total Products</p>
+          <p className="text-2xl font-bold text-black">{product}</p>
+          <p className="text-xs text-gray-400 mt-2">Today: {todayProducts}</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-sm text-gray-500 mb-1">Today's Activity</p>
+          <p className="text-2xl font-bold text-black">
+            {todayUsers + todaySellers + todayProducts}
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Users: {todayUsers} | Sellers: {todaySellers}
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-sm text-gray-500 mb-1">This Month</p>
+          <p className="text-2xl font-bold text-black">
+            {monthUsers + monthSellers}
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Users: {monthUsers} | Sellers: {monthSellers}
+          </p>
+        </div>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Today Bar Chart */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h2 className="text-lg font-semibold text-black mb-4">
+            Today's Overview
+          </h2>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={todayChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip />
+                <Bar dataKey="users" fill="#000000" />
+                <Bar dataKey="sellers" fill="#4b5563" />
+                <Bar dataKey="products" fill="#9ca3af" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Role Distribution Pie Chart */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h2 className="text-lg font-semibold text-black mb-4">
+            User Distribution
+          </h2>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={rolePieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label
+                >
+                  {rolePieData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Monthly User Growth Line Chart */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h2 className="text-lg font-semibold text-black mb-4">
+            Monthly User Growth
+          </h2>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyUserData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="users"
+                  stroke="#000000"
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Products Per Day Bar Chart */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h2 className="text-lg font-semibold text-black mb-4">
+            Products Added Per Day
+          </h2>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={productsPerDay()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="day"
+                  stroke="#6b7280"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis stroke="#6b7280" />
+                <Tooltip />
+                <Bar dataKey="products" fill="#4b5563" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statCards.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-xl border p-6 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg ${stat.color}`}>{stat.icon}</div>
-              <div className="flex items-center space-x-1 text-green-600 text-sm font-medium">
-                <TrendingUp size={16} />
-                <span>{stat.change}</span>
-              </div>
-            </div>
-            <h3 className="text-3xl font-bold text-[#000000] mb-2">
-              {stat.value}
-            </h3>
-            <p className="text-[#B6B09F] text-sm">{stat.title}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Charts & Data Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sales Chart */}
-        <div className="bg-white rounded-xl border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-[#000000]">
-                Sales Overview
-              </h2>
-              <p className="text-sm text-[#B6B09F]">Monthly performance</p>
-            </div>
-            <button className="flex items-center space-x-1 text-[#000000] hover:text-[#B6B09F] transition-colors">
-              <MoreVertical size={20} />
-            </button>
-          </div>
-
-          {/* Simple Chart */}
-          <div className="h-64 flex items-end justify-between pt-8">
-            {salesData.map((item, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center flex-1 mx-1"
-              >
-                <div className="relative w-8 md:w-10">
-                  <div
-                    className="w-full bg-gradient-to-t from-[#EAE4D5] to-[#B6B09F] rounded-t-lg transition-all hover:opacity-80"
-                    style={{ height: `${item.sales}%`, minHeight: "20px" }}
-                  />
-                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-[#B6B09F] font-medium">
-                    ${item.sales * 10}
-                  </div>
-                </div>
-                <span className="text-xs text-[#B6B09F] mt-2">
-                  {item.month}
-                </span>
-              </div>
-            ))}
-          </div>
+      {/* Detailed Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="font-medium text-black mb-2">Today's Details</h3>
+          <p className="text-sm text-gray-600">
+            Users:{" "}
+            <span className="font-semibold text-black">{todayUsers}</span>
+          </p>
+          <p className="text-sm text-gray-600">
+            Sellers:{" "}
+            <span className="font-semibold text-black">{todaySellers}</span>
+          </p>
+          <p className="text-sm text-gray-600">
+            Products:{" "}
+            <span className="font-semibold text-black">{todayProducts}</span>
+          </p>
         </div>
 
-        {/* Recent Orders */}
-        <div className="bg-white rounded-xl border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-[#000000]">
-                Recent Orders
-              </h2>
-              <p className="text-sm text-[#B6B09F]">Latest transactions</p>
-            </div>
-            <button className="flex items-center space-x-1 text-[#000000] hover:text-[#B6B09F] transition-colors text-sm font-medium">
-              View All <ArrowUpRight size={16} />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {recentOrders.map((order) => (
-              <div
-                key={order.id}
-                className="flex items-center justify-between p-4 bg-[#F2F2F2] rounded-lg hover:bg-[#EAE4D5] transition-colors"
-              >
-                <div>
-                  <p className="font-medium text-[#000000]">{order.customer}</p>
-                  <p className="text-sm text-[#B6B09F]">
-                    {order.id} • {order.time}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-[#000000]">{order.amount}</p>
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      order.status === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : order.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-blue-100 text-blue-800"
-                    }`}
-                  >
-                    {order.status.charAt(0).toUpperCase() +
-                      order.status.slice(1)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <Activity size={24} className="text-[#000000]" />
-            <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
-              Live
-            </span>
-          </div>
-          <h3 className="text-2xl font-bold text-[#000000]">98.7%</h3>
-          <p className="text-[#B6B09F] text-sm">System Uptime</p>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="font-medium text-black mb-2">Monthly Details</h3>
+          <p className="text-sm text-gray-600">
+            New Users:{" "}
+            <span className="font-semibold text-black">{monthUsers}</span>
+          </p>
+          <p className="text-sm text-gray-600">
+            New Sellers:{" "}
+            <span className="font-semibold text-black">{monthSellers}</span>
+          </p>
         </div>
 
-        <div className="bg-white rounded-xl border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <Users size={24} className="text-[#000000]" />
-            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-              +24
-            </span>
-          </div>
-          <h3 className="text-2xl font-bold text-[#000000]">42</h3>
-          <p className="text-[#B6B09F] text-sm">New Users Today</p>
-        </div>
-
-        <div className="bg-white rounded-xl border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <ShoppingCart size={24} className="text-[#000000]" />
-            <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
-              Hot
-            </span>
-          </div>
-          <h3 className="text-2xl font-bold text-[#000000]">18</h3>
-          <p className="text-[#B6B09F] text-sm">Pending Orders</p>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="font-medium text-black mb-2">Overall Stats</h3>
+          <p className="text-sm text-gray-600">
+            Total Users:{" "}
+            <span className="font-semibold text-black">{user}</span>
+          </p>
+          <p className="text-sm text-gray-600">
+            Total Products:{" "}
+            <span className="font-semibold text-black">{product}</span>
+          </p>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default AdminDashboard;
