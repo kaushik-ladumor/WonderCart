@@ -34,6 +34,20 @@ function Footer() {
     ]
   };
 
+  const socialLinks = [
+    {
+      icon: Facebook,
+      url: "https://www.facebook.com/profile.php?id=100087449514921",
+    },
+    { icon: Instagram, url: "https://www.instagram.com/kaushik_ahir04/" },
+    { icon: Twitter, url: "https://x.com/kaushik_ahir04" },
+    {
+      icon: Linkedin,
+      url: "https://www.linkedin.com/in/kaushik-ladumor-3a7b18290/",
+    },
+  ];
+
+
   return (
     <footer className="bg-black text-white pt-12 pb-6 border-t border-white/5 font-sans">
       <div className="max-w-6xl mx-auto px-6">
@@ -51,10 +65,12 @@ function Footer() {
               minimalism, and timeless design. Built for the modern standard.
             </p>
             <div className="flex gap-4">
-              {[Facebook, Instagram, Twitter, Linkedin].map((Icon, i) => (
+              {socialLinks.map(({ icon: Icon, url }, i) => (
                 <a
                   key={i}
-                  href="#"
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-8 h-8 flex items-center justify-center border border-white/10 hover:bg-white hover:text-black transition-all"
                 >
                   <Icon className="w-4 h-4" />
@@ -65,7 +81,9 @@ function Footer() {
 
           {/* Shop Links */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">Shop</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">
+              Shop
+            </h3>
             <ul className="space-y-3">
               {footerLinks.shop.map((link) => (
                 <li key={link.name}>
@@ -83,7 +101,9 @@ function Footer() {
 
           {/* Support Links */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">Support</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">
+              Support
+            </h3>
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
@@ -101,24 +121,26 @@ function Footer() {
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">Contact</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-white">
+              Contact
+            </h3>
             <div className="space-y-3">
               <div className="flex items-start gap-4 group">
                 <MapPin className="w-4 h-4 text-gray-400" />
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 leading-relaxed font-bold">
-                  123 Design Studio,<br />Modern District, NY 10001
+                  WonderCart Headquarters Surat, Gujarat, India
                 </p>
               </div>
               <div className="flex items-center gap-4 group cursor-pointer font-bold">
                 <Mail className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
-                  hello@wondercart.com
+                  wondercarthelp@gamil.com
                 </p>
               </div>
               <div className="flex items-center gap-4 group cursor-pointer font-bold">
                 <Phone className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
-                  +1 (555) 000-1234
+                  +91 7226987466
                 </p>
               </div>
             </div>

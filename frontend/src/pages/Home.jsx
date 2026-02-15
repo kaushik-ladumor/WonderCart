@@ -37,7 +37,7 @@ function HomePage() {
               designed, built to last, made for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link to="/products">
+              <Link to="/shop">
                 <button className="inline-flex items-center gap-2 bg-white text-black px-5 py-2 rounded font-medium hover:bg-gray-100 transition w-full sm:w-auto text-sm">
                   Shop Collection
                   <ChevronRight className="w-4 h-4" />
@@ -109,7 +109,7 @@ function HomePage() {
             harder, look better, and last longer.
           </p>
           <div className="flex justify-center">
-            <Link to="/products">
+            <Link to="/shop">
               <button className="inline-flex items-center gap-2 bg-black text-white px-5 py-2 rounded font-medium hover:bg-gray-800 transition text-sm">
                 Explore the collection
                 <ArrowRight className="w-4 h-4" />

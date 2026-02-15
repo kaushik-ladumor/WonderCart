@@ -33,6 +33,7 @@ import ShippingPolicy from "./Compony/ShippingPolicy";
 import { useAuth } from "./context/AuthProvider";
 import axios from "axios";
 import { API_URL } from "./utils/constants";
+import TermsOfService from "./pages/TermsOfService";
 
 import SellerLayout from "./seller/SellerLayout";
 import SellerDashboard from "./seller/dashboard/SellerDashboard";
@@ -240,6 +241,7 @@ function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/about" element={<About />} />
+          <Route path="/terms" element={<TermsOfService />} />
 
           {/* Page Not Found */}
           <Route path="*" element={<PageNotFound />} />
