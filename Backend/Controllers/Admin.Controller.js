@@ -6,6 +6,7 @@ const Review = require("../Models/Review.Model");
 const Cart = require("../Models/Cart.Model");
 const Wishlist = require("../Models/WishList.Model");
 const Notification = require("../Models/Notification.Model");
+const Coupon = require("../Models/Coupon.Model");
 
 const getUser = async (req, res) => {
     try {
@@ -293,6 +294,222 @@ const deleteUser = async (req, res) => {
     }
 }
 
+
+
+const createCoupon = async (req, res) => {
+    try {
+
+        let {
+            code,
+            name,
+            description,
+            dealType,
+            discount,
+            maxDiscount,
+            perUserLimit,
+            startDate,
+            expirationDate,
+            targetType,
+            targetRole,
+            minCompletedOrders,
+            allowedUsers,
+            randomUserCount
+        } = req.body;
+
+        if (!code || !dealType || (dealType !== 'free_shipping' && (discount === undefined || discount === null || discount === ""))) {
+            return res.status(400).json({
+                message: "Required fields missing"
+            });
+        }
+
+        code = code.toUpperCase().trim();
+
+        if (Number(discount) < 0 || (maxDiscount && Number(maxDiscount) < 0) || Number(perUserLimit) < 0 || (minCompletedOrders && Number(minCompletedOrders) < 0) || (randomUserCount && Number(randomUserCount) < 0)) {
+            return res.status(400).json({
+                message: "Numeric values cannot be negative"
+            });
+        }
+
+        const existingCoupon = await Coupon.findOne({ code });
+        if (existingCoupon) {
+            return res.status(400).json({
+                message: "Coupon code already exists"
+            });
+        }
+
+        // Handle dates automatically
+        const finalStartDate = startDate ? new Date(startDate) : new Date();
+        const finalExpirationDate = expirationDate ? new Date(expirationDate) : null;
+
+        if (finalExpirationDate && finalStartDate >= finalExpirationDate) {
+            return res.status(400).json({
+                message: "Expiration date must be after start date"
+            });
+        }
+
+        let finalAllowedUsers = allowedUsers || [];
+
+        if (targetType === "specific_users" && randomUserCount) {
+            const randomUsers = await User.aggregate([
+                { $match: { role: targetRole || 'user' } },
+                { $sample: { size: Number(randomUserCount) } }
+            ]);
+            finalAllowedUsers = randomUsers.map(user => user._id);
+        } else if (targetType === "loyal_users" && minCompletedOrders) {
+            const loyalUsers = await Order.aggregate([
+                { $match: { status: 'delivered' } },
+                { $group: { _id: "$user", count: { $sum: 1 } } },
+                { $match: { count: { $gte: Number(minCompletedOrders) } } }
+            ]);
+            finalAllowedUsers = loyalUsers.map(user => user._id);
+        }
+
+        const coupon = new Coupon({
+            code,
+            name,
+            description,
+            dealType,
+            discount,
+            maxDiscount: dealType === 'percentage' ? maxDiscount : undefined,
+            perUserLimit,
+            startDate: finalStartDate,
+            expirationDate: finalExpirationDate,
+            targetType,
+            targetRole: targetType === 'specific_users' ? targetRole : 'user',
+            minCompletedOrders: targetType === 'loyal_users' ? minCompletedOrders : 0,
+            allowedUsers: finalAllowedUsers
+        });
+
+        await coupon.save();
+
+        res.status(201).json({
+            message: "Coupon created successfully",
+            data: coupon
+        });
+
+    } catch (error) {
+        console.error("Create Coupon Error:", error);
+        res.status(500).json({
+            message: "Server Error"
+        });
+    }
+};
+
+
+
+const getCoupon = async (req, res) => {
+    try {
+
+        const coupon = await Coupon.find().sort({ createdAt: -1 });
+        const couponCount = await Coupon.countDocuments();
+
+        res.status(200).json({
+            message: "Coupons retrieved successfully",
+            data: { coupon, couponCount }
+        });
+
+    } catch (error) {
+        console.error("Get Coupon Error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+const getSingleCoupon = async (req, res) => {
+    try {
+        const { couponId } = req.params;
+        const coupon = await Coupon.findById(couponId);
+
+        if (!coupon) {
+            return res.status(404).json({ message: "Coupon not found" });
+        }
+
+        res.status(200).json({
+            message: "Coupon retrieved successfully",
+            data: coupon
+        });
+    } catch (error) {
+        console.error("Get Single Coupon Error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+const updateCoupon = async (req, res) => {
+    try {
+        const { couponId } = req.params;
+        const updateData = req.body;
+
+        const coupon = await Coupon.findById(couponId);
+        if (!coupon) {
+            return res.status(404).json({ message: "Coupon not found" });
+        }
+
+        const numericFields = ['discount', 'maxDiscount', 'perUserLimit', 'minCompletedOrders', 'randomUserCount'];
+        for (const field of numericFields) {
+            if (updateData[field] !== undefined && Number(updateData[field]) < 0) {
+                return res.status(400).json({ message: `${field} cannot be negative` });
+            }
+        }
+
+        if (updateData.code) {
+            const exist = await Coupon.findOne({
+                code: updateData.code.toUpperCase().trim(),
+                _id: { $ne: couponId }
+            });
+
+            if (exist) {
+                return res.status(400).json({ message: "Coupon code already exists" });
+            }
+
+            updateData.code = updateData.code.toUpperCase().trim();
+        }
+
+        if (updateData.startDate && updateData.expirationDate) {
+            if (new Date(updateData.startDate) >= new Date(updateData.expirationDate)) {
+                return res.status(400).json({ message: "Invalid date range" });
+            }
+        }
+
+        Object.assign(coupon, updateData);
+
+        if (coupon.dealType !== 'percentage') {
+            coupon.maxDiscount = undefined;
+        }
+
+        await coupon.save();
+
+        res.status(200).json({
+            message: "Coupon updated successfully",
+            data: coupon
+        });
+
+    } catch (error) {
+        console.error("Update Coupon Error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+const deleteCoupon = async (req, res) => {
+    try {
+
+        const { couponId } = req.params;
+
+        const coupon = await Coupon.findByIdAndDelete(couponId);
+
+        if (!coupon) {
+            return res.status(404).json({ message: "Coupon not found" });
+        }
+
+        res.status(200).json({
+            message: "Coupon deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Delete Coupon Error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
 module.exports = {
     getUser,
     getProduct,
@@ -300,4 +517,9 @@ module.exports = {
     productApproval,
     rejectProduct,
     deleteUser,
+    createCoupon,
+    getCoupon,
+    getSingleCoupon,
+    updateCoupon,
+    deleteCoupon
 };

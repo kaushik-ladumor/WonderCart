@@ -15,6 +15,7 @@ import {
   LogIn,
   Home,
   ChevronRight,
+  Tag,
 } from "lucide-react";
 import { API_URL } from "../utils/constants";
 
@@ -321,7 +322,18 @@ const OrderConfirmationPage = () => {
                 })}
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                {order.couponCode && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-green-600 font-medium flex items-center gap-1">
+                      <Tag className="w-3 h-3" />
+                      Coupon Applied ({order.couponCode})
+                    </span>
+                    <span className="font-semibold text-green-600">
+                      -{formatPrice(order.couponDiscount)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-semibold text-gray-900 text-sm">

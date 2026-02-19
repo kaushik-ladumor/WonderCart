@@ -12,6 +12,7 @@ import {
   X,
   ShieldCheck,
   Bell,
+  Ticket,
 } from "lucide-react";
 
 const AdminNavbar = () => {
@@ -157,6 +158,7 @@ const AdminNavbar = () => {
     { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/admin/products", label: "Products", icon: Package },
     { path: "/admin/users", label: "Users", icon: User },
+    { path: "/admin/coupon", label: "Coupons", icon: Ticket },
     { path: "/admin/profile", label: "Profile", icon: User },
   ];
 

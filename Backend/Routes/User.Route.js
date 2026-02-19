@@ -3,6 +3,7 @@ const express = require('express');
 const userRouter = express.Router();
 
 const userController = require('../Controllers/User.Controller');
+
 const Authenticate = require('../Middlewares/Auth');
 
 userRouter.post("/signup", userController.signup);
@@ -20,11 +21,34 @@ userRouter.post("/contact", userController.contact);
 
 userRouter.post('/google-auth', userController.googleAuth);
 
-// Address Routes
+
+/* ================================
+   Address Routes
+================================ */
+
 userRouter.post("/address", Authenticate, userController.addAddress);
 userRouter.get("/address", Authenticate, userController.getAddresses);
 userRouter.put("/address/:addressId", Authenticate, userController.updateAddress);
 userRouter.put("/address/:addressId/default", Authenticate, userController.setDefaultAddress);
 userRouter.delete("/address/:addressId", Authenticate, userController.deleteAddress);
+
+
+/* ================================
+   Coupon Routes (NEW)
+================================ */
+
+// Get eligible coupons for logged-in user
+userRouter.get(
+    "/coupons",
+    Authenticate,
+    userController.getAvailableCoupons
+);
+
+// Apply coupon
+userRouter.post(
+    "/apply-coupon",
+    Authenticate,
+    userController.applyCoupon
+);
 
 module.exports = userRouter;

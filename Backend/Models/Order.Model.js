@@ -109,6 +109,17 @@ const orderSchema = new mongoose.Schema(
     cancelledAt: {
       type: Date,
     },
+    coupon: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon",
+    },
+    couponCode: {
+      type: String,
+    },
+    couponDiscount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

@@ -181,9 +181,23 @@ const ProductDetail = () => {
     setSelectedColor(color);
     setSelectedImage(0);
     const variant = product.variants.find((v) => v.color === color);
+    let newSize = "";
+    let newStock = 0;
+
     if (variant?.sizes?.length > 0) {
-      setSelectedSize(variant.sizes[0].size);
+      newSize = variant.sizes[0].size;
+      newStock = variant.sizes[0].stock || 0;
+      setSelectedSize(newSize);
     }
+    setQuantity(newStock > 0 ? 1 : 0);
+  };
+
+  const handleSizeChange = (size) => {
+    setSelectedSize(size);
+    const variant = product.variants.find((v) => v.color === selectedColor);
+    const sizeObj = variant?.sizes?.find((s) => s.size === size);
+    const newStock = sizeObj?.stock || 0;
+    setQuantity(newStock > 0 ? 1 : 0);
   };
 
   const refreshReviews = async () => {
@@ -482,7 +496,7 @@ const ProductDetail = () => {
                     return (
                       <button
                         key={s.size}
-                        onClick={() => !outOfStock && setSelectedSize(s.size)}
+                        onClick={() => !outOfStock && handleSizeChange(s.size)}
                         disabled={outOfStock}
                         className={`py-1.5 rounded text-xs font-medium transition ${s.size === selectedSize && !outOfStock
                           ? "bg-black text-white"

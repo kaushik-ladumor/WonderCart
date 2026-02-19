@@ -15,6 +15,8 @@ import {
   Trash2,
   AlertTriangle,
   Truck,
+  Ticket,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -28,6 +30,9 @@ const Profile = () => {
   const { authUser, setAuthUser } = useAuth();
   const [addresses, setAddresses] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [coupons, setCoupons] = useState([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
+  const [showCoupons, setShowCoupons] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,7 +54,23 @@ const Profile = () => {
       }
     };
 
+    const fetchCoupons = async () => {
+      try {
+        setLoadingCoupons(true);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API_URL}/user/coupons`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCoupons(response.data.coupons || []);
+      } catch (error) {
+        console.error("Failed to fetch coupons", error);
+      } finally {
+        setLoadingCoupons(false);
+      }
+    };
+
     fetchProfile();
+    fetchCoupons();
   }, [setAuthUser]);
 
   const handleLogout = async () => {
@@ -340,6 +361,29 @@ const Profile = () => {
                     </p>
                     <p className="text-xs text-gray-500">
                       View your order history
+                    </p>
+                  </div>
+                </div>
+                <span className="text-gray-400 group-hover:text-gray-600 text-xl font-light">
+                  ›
+                </span>
+              </button>
+
+              {/* My Coupons Button */}
+              <button
+                onClick={() => navigate("/my-coupons")}
+                className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
+                    <Ticket className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      My Coupons
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {coupons.length > 0 ? `You have ${coupons.length} active coupons` : 'View available offers'}
                     </p>
                   </div>
                 </div>

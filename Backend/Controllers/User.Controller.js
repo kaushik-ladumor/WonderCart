@@ -8,6 +8,7 @@ const Wishlist = require("../Models/WishList.Model");
 const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
 const cloudinary = require("../Utils/Cloudinary");
+const Coupon = require("../Models/Coupon.Model");
 
 
 
@@ -532,7 +533,6 @@ const updatePassword = async (req, res) => {
   }
 };
 
-
 const profile = async (req, res) => {
   try {
     const id = req.user.userId; // 👈 JWT payload
@@ -563,7 +563,6 @@ const profile = async (req, res) => {
     });
   }
 };
-
 
 const contact = async (req, res) => {
   try {
@@ -896,6 +895,142 @@ const logout = async (req, res) => {
   }
 };
 
+
+const getAvailableCoupons = async (req, res) => {
+  try {
+
+    const userId = req.user.userId;
+    const user = await User.findById(userId).select("createdAt");
+
+    const coupons = await Coupon.find({ status: "active" });
+
+    const completedOrders = await Order.countDocuments({
+      user: userId,
+      status: "delivered"
+    });
+
+    const now = new Date();
+
+    const eligibleCoupons = await Promise.all(coupons.map(async (coupon) => {
+      if (coupon.startDate && now < coupon.startDate) return null;
+      if (coupon.expirationDate && now > coupon.expirationDate) return null;
+
+      if (coupon.targetType === "new_users") {
+        if (completedOrders > 0) return null;
+        if (user && user.createdAt < coupon.createdAt) return null;
+      }
+
+      if (coupon.targetType === "loyal_users" &&
+        completedOrders < (coupon.minCompletedOrders || 0)) return null;
+
+      if (coupon.targetType === "specific_users") {
+        const isAllowed = coupon.allowedUsers.some(
+          id => id.toString() === userId.toString()
+        );
+        if (!isAllowed) return null;
+      }
+
+      // Check per user limit
+      const usageCount = await Order.countDocuments({
+        user: userId,
+        coupon: coupon._id,
+        status: { $ne: "cancelled" }
+      });
+
+      if (usageCount >= (coupon.perUserLimit || 1)) return null;
+
+      return coupon;
+    }));
+
+    res.json({ coupons: eligibleCoupons.filter(c => c !== null) });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+const applyCoupon = async (req, res) => {
+  try {
+
+    const userId = req.user.userId;
+    const { couponCode } = req.body;
+
+    if (!couponCode) {
+      return res.status(400).json({ message: "Coupon code required" });
+    }
+
+    const coupon = await Coupon.findOne({
+      code: couponCode.toUpperCase(),
+      status: "active"
+    });
+
+    if (!coupon) {
+      return res.status(400).json({ message: "Invalid coupon" });
+    }
+
+    const now = new Date();
+    if (coupon.startDate && now < coupon.startDate) {
+      return res.status(400).json({ message: "Coupon campaign has not started yet" });
+    }
+
+    if (coupon.expirationDate && now > coupon.expirationDate) {
+      return res.status(400).json({ message: "Coupon has expired" });
+    }
+
+    const completedOrders = await Order.countDocuments({
+      user: userId,
+      status: "delivered"
+    });
+
+    if (coupon.targetType === "new_users") {
+      const user = await User.findById(userId).select("createdAt");
+      if (completedOrders > 0) {
+        return res.status(400).json({ message: "Only new users allowed" });
+      }
+      if (user && user.createdAt < coupon.createdAt) {
+        return res.status(400).json({ message: "This coupon is only for users who registered after its creation" });
+      }
+    }
+
+    if (coupon.targetType === "loyal_users" &&
+      completedOrders < (coupon.minCompletedOrders || 0)) {
+      return res.status(400).json({ message: "Not eligible (loyalty required)" });
+    }
+
+    if (coupon.targetType === "specific_users") {
+      const allowed = coupon.allowedUsers.some(
+        id => id.toString() === userId.toString()
+      );
+
+      if (!allowed) {
+        return res.status(400).json({ message: "Not your lucky coupon" });
+      }
+    }
+
+    // Check per user limit
+    const usageCount = await Order.countDocuments({
+      user: userId,
+      coupon: coupon._id,
+      status: { $ne: "cancelled" }
+    });
+
+    if (usageCount >= (coupon.perUserLimit || 1)) {
+      return res.status(400).json({ message: "You have already used this coupon" });
+    }
+
+    res.json({
+      success: true,
+      coupon
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
 module.exports = {
   signup,
   login,
@@ -915,4 +1050,6 @@ module.exports = {
   googleAuth,
   deleteAccount,
   refreshToken,
+  applyCoupon,
+  getAvailableCoupons,
 };

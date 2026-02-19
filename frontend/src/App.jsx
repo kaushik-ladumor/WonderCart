@@ -56,8 +56,12 @@ import AdminDashboard from "./Admin/AdminDashboard";
 import AdminProducts from "./Admin/AdminProducts";
 import AdminUsers from "./Admin/AdminUsers"
 import AdminProfile from "./Admin/AdminProfile"
+import MyCoupons from "./pages/MyCoupons";
 
 import { useEffect } from "react";
+import AddCoupon from "./Admin/AddCoupon";
+import EditCoupon from "./Admin/EditCoupon";
+import AdminCoupon from "./Admin/AdminCoupon";
 
 function App() {
   const { authUser, setToken, setAuthUser } = useAuth();
@@ -208,6 +212,9 @@ function App() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="profile" element={<AdminProfile />} />
+          <Route path="coupon/add" element={<AddCoupon />} />
+          <Route path="coupon/edit/:couponId" element={<EditCoupon />} />
+          <Route path="coupon" element={<AdminCoupon />} />
         </Route>
 
         {/* ================= MAIN USER ROUTES ================= */}
@@ -242,6 +249,7 @@ function App() {
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/about" element={<About />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/my-coupons" element={<MyCoupons />} />
 
           {/* Page Not Found */}
           <Route path="*" element={<PageNotFound />} />

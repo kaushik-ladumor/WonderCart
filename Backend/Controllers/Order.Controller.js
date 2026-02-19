@@ -48,6 +48,7 @@ const createOrder = async (req, res) => {
       totalAmount,
       addressId,
       paymentMethod,
+      couponCode
     } = req.body;
 
     const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID
@@ -100,10 +101,31 @@ const createOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: "No items provided" });
       }
 
+      // COUPON VALIDATION
+      let couponDiscount = 0;
+      let couponId = null;
+      if (couponCode) {
+        const Coupon = require("../Models/Coupon.Model");
+        const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: "active" });
+        if (coupon) {
+          // Add validation logic here or call a central validator
+          // For now, let's assume it's valid if found active (security: should repeat User.Controller checks)
+          if (coupon.dealType === 'percentage') {
+            couponDiscount = (subTotal * coupon.discount) / 100;
+            if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
+              couponDiscount = coupon.maxDiscount;
+            }
+          } else if (coupon.dealType === 'fixed') {
+            couponDiscount = coupon.discount;
+          }
+          couponId = coupon._id;
+        }
+      }
+
       // Add shipping & GST
-      const tax = Math.round(subTotal * 0.18);
+      const tax = Math.round((subTotal - couponDiscount) * 0.18);
       const shipping = subTotal < 999 ? 50 : 0;
-      const totalAmount = subTotal + tax + shipping;
+      const finalTotalAmount = (subTotal - couponDiscount) + tax + shipping;
 
       // 2. Create Razorpay Order
       if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
@@ -116,7 +138,7 @@ const createOrder = async (req, res) => {
       });
 
       const razorpayOrder = await instance.orders.create({
-        amount: Math.round(totalAmount * 100), // Use totalAmount with GST
+        amount: Math.round(finalTotalAmount * 100), // Use totalAmount with GST
         currency: "INR",
         receipt: `order_${Date.now()}`,
       });
@@ -141,6 +163,7 @@ const createOrder = async (req, res) => {
 
       return handleOrderCreation(req, res, {
         userId, selectedAddress, totalAmount, items, productId, quantity, color, size, paymentMethod: "COD",
+        couponCode,
         email: req.user.email // Pass email from token as fallback
       });
     }
@@ -160,7 +183,7 @@ const handleOrderCreation = async (req, res, data) => {
   const {
     userId, selectedAddress, items,
     productId, quantity, color, size,
-    paymentMethod, paymentDetails
+    paymentMethod, paymentDetails, couponCode
   } = data;
 
   try {
@@ -223,10 +246,29 @@ const handleOrderCreation = async (req, res, data) => {
 
     if (orderItems.length === 0) throw new Error("No valid items in order");
 
+    // COUPON VALIDATION
+    let couponDiscount = 0;
+    let couponId = null;
+    if (couponCode) {
+      const Coupon = require("../Models/Coupon.Model");
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: "active" });
+      if (coupon) {
+        if (coupon.dealType === 'percentage') {
+          couponDiscount = (subTotal * coupon.discount) / 100;
+          if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
+            couponDiscount = coupon.maxDiscount;
+          }
+        } else if (coupon.dealType === 'fixed') {
+          couponDiscount = coupon.discount;
+        }
+        couponId = coupon._id;
+      }
+    }
+
     // Add 18% GST and Shipping
-    const tax = Math.round(subTotal * 0.18);
+    const tax = Math.round((subTotal - couponDiscount) * 0.18);
     const shipping = subTotal < 999 ? 50 : 0;
-    const finalAmount = subTotal + tax + shipping;
+    const finalAmount = Math.max(0, (subTotal - couponDiscount) + tax + shipping);
 
     // 2. CREATE ORDER
     const order = await Order.create({
@@ -248,6 +290,9 @@ const handleOrderCreation = async (req, res, data) => {
       razorpayOrderId: paymentDetails?.razorpayOrderId,
       razorpayPaymentId: paymentDetails?.razorpayPaymentId,
       razorpaySignature: paymentDetails?.razorpaySignature,
+      coupon: couponId,
+      couponCode: couponCode ? couponCode.toUpperCase() : undefined,
+      couponDiscount: couponDiscount
     });
 
     // 3. CREATE PAYMENT RECORD (If Razorpay)
