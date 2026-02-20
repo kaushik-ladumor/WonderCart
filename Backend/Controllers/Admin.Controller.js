@@ -379,7 +379,13 @@ const createCoupon = async (req, res) => {
             const allUsers = await User.find({ role: targetRole || 'user' }).select("_id");
             finalAllowedUsers = allUsers.map(user => user._id);
         } else if (targetType === "new_users") {
-            finalAllowedUsers = []; // Will be populated as users register
+            // Assign to users who have placed 0 successful/processing orders
+            const usersWithOrders = await Order.distinct("user");
+            const eligibleUsers = await User.find({
+                role: targetRole || 'user',
+                _id: { $nin: usersWithOrders }
+            }).select("_id");
+            finalAllowedUsers = eligibleUsers.map(user => user._id);
         }
 
         const coupon = new Coupon({
@@ -480,7 +486,6 @@ const updateCoupon = async (req, res) => {
             if (exist) {
                 return res.status(400).json({ message: "Coupon code already exists" });
             }
-
             updateData.code = updateData.code.toUpperCase().trim();
         }
 

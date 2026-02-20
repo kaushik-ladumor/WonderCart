@@ -23,17 +23,21 @@ const getPublicId = (url) => {
 
 const assignCouponsToNewUser = async (userId, role) => {
   try {
-    const coupons = await Coupon.find({
-      targetType: { $in: ["all", "new_users"] },
-      targetRole: role
-    });
-
-    for (const coupon of coupons) {
-      if (!coupon.allowedUsers.includes(userId)) {
-        coupon.allowedUsers.push(userId);
-        await coupon.save();
-      }
-    }
+    const now = new Date();
+    // Dynamically assign existing "all" and "new_users" coupons to the new user
+    await Coupon.updateMany(
+      {
+        status: "active",
+        targetType: { $in: ["all", "new_users"] },
+        targetRole: role || "user",
+        $or: [
+          { expirationDate: null },
+          { expirationDate: { $gt: now } }
+        ],
+        startDate: { $lte: now }
+      },
+      { $addToSet: { allowedUsers: userId } }
+    );
   } catch (error) {
     console.error("Error assigning coupons to new user:", error);
   }
@@ -923,19 +927,36 @@ const logout = async (req, res) => {
 const getAvailableCoupons = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const coupons = await Coupon.find({
-      status: "active",
-      allowedUsers: { $in: [userId] }
-    });
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const now = new Date();
+    const pastOrdersCount = await Order.countDocuments({
+      user: userId,
+      status: { $ne: "cancelled" }
+    });
+
+    // Find coupons where user is explicitly allowed OR it's a general/new user coupon
+    const coupons = await Coupon.find({
+      status: "active",
+      targetRole: user.role || "user",
+      $or: [
+        { allowedUsers: { $in: [userId] } },
+        { targetType: "all" },
+        { targetType: "new_users" }
+      ],
+      $or: [
+        { expirationDate: null },
+        { expirationDate: { $gt: now } }
+      ],
+      startDate: { $lte: now }
+    });
 
     const eligibleCoupons = await Promise.all(coupons.map(async (coupon) => {
-      // Date Check
-      if (coupon.startDate && now < coupon.startDate) return null;
-      if (coupon.expirationDate && now > coupon.expirationDate) return null;
+      // 1. Eligibility Check (Additional layer for new_users)
+      if (coupon.targetType === "new_users" && pastOrdersCount > 0) return null;
 
-      // Usage Check
+      // 2. Usage Check (Per user limit)
       const usageCount = await Order.countDocuments({
         user: userId,
         coupon: coupon._id,
@@ -966,13 +987,20 @@ const applyCoupon = async (req, res) => {
       return res.status(400).json({ message: "Coupon code required" });
     }
 
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     const coupon = await Coupon.findOne({
       code: couponCode.toUpperCase(),
       status: "active"
     });
 
     if (!coupon) {
-      return res.status(400).json({ message: "Invalid coupon" });
+      return res.status(400).json({ message: "Invalid or inactive coupon" });
+    }
+
+    if (coupon.targetRole && coupon.targetRole !== user.role) {
+      return res.status(400).json({ message: `This coupon is only valid for ${coupon.targetRole}s` });
     }
 
     const now = new Date();
@@ -984,11 +1012,22 @@ const applyCoupon = async (req, res) => {
       return res.status(400).json({ message: "Coupon has expired" });
     }
 
-    const isAllowed = coupon.allowedUsers.some(
+    // Eligibility Check
+    const pastOrders = await Order.countDocuments({
+      user: userId,
+      status: { $ne: "cancelled" }
+    });
+
+    const isExplicitlyAllowed = coupon.allowedUsers.some(
       id => id.toString() === userId.toString()
     );
 
-    if (!isAllowed) {
+    let isEligible = isExplicitlyAllowed || coupon.targetType === "all";
+    if (!isEligible && coupon.targetType === "new_users") {
+      isEligible = pastOrders === 0;
+    }
+
+    if (!isEligible) {
       return res.status(400).json({ message: "You are not eligible for this coupon" });
     }
 

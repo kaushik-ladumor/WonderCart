@@ -137,8 +137,15 @@ const createOrder = async (req, res) => {
         const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: "active" });
         if (coupon) {
           // 1. Eligibility Check
-          const isAllowed = coupon.allowedUsers.some(id => id.toString() === userId.toString());
-          if (!isAllowed) {
+          const pastOrders = await Order.countDocuments({ user: userId, status: { $ne: "cancelled" } });
+          const isExplicitlyAllowed = coupon.allowedUsers.some(id => id.toString() === userId.toString());
+
+          let isEligible = isExplicitlyAllowed || coupon.targetType === "all";
+          if (!isEligible && coupon.targetType === "new_users") {
+            isEligible = pastOrders === 0;
+          }
+
+          if (!isEligible) {
             return res.status(400).json({ success: false, message: "You are not eligible for this coupon" });
           }
 
@@ -158,11 +165,8 @@ const createOrder = async (req, res) => {
           }
 
           // 4. First Order Only Check
-          if (coupon.isFirstOrderOnly) {
-            const pastOrders = await Order.countDocuments({ user: userId, status: { $ne: "cancelled" } });
-            if (pastOrders > 0) {
-              return res.status(400).json({ success: false, message: "This coupon is only valid for your first order." });
-            }
+          if (coupon.isFirstOrderOnly && pastOrders > 0) {
+            return res.status(400).json({ success: false, message: "This coupon is only valid for your first order." });
           }
 
           // 5. Category Check & Applicable Subtotal
