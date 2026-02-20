@@ -44,11 +44,26 @@ const CouponSchema = new mongoose.Schema({
         enum: ['user', 'seller', 'admin'],
         default: 'user'
     },
+    targetCategory: {
+        type: String,
+        default: null
+    },
 
     minCompletedOrders: {
         type: Number,
         default: 0,
         min: 0
+    },
+
+    minOrderValue: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+
+    isFirstOrderOnly: {
+        type: Boolean,
+        default: false
     },
 
     allowedUsers: [{

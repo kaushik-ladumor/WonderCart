@@ -164,8 +164,8 @@ function AdminCoupon() {
                   <div className="mb-4">
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${c.dealType === "percentage"
-                          ? "bg-orange-50 text-orange-700 border border-orange-200"
-                          : "bg-blue-50 text-blue-700 border border-blue-200"
+                        ? "bg-orange-50 text-orange-700 border border-orange-200"
+                        : "bg-blue-50 text-blue-700 border border-blue-200"
                         }`}
                     >
                       {c.dealType === "percentage" ? (
@@ -208,6 +208,33 @@ function AdminCoupon() {
                         {c.perUserLimit} time{c.perUserLimit > 1 ? "s" : ""}
                       </span>
                     </div>
+                    {c.minOrderValue > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500 flex items-center gap-1">
+                          <CreditCard className="w-3 h-3" /> Min Order
+                        </span>
+                        <span className="font-medium text-gray-900 border-b border-dashed border-gray-300">
+                          ₹{c.minOrderValue}
+                        </span>
+                      </div>
+                    )}
+                    {c.isFirstOrderOnly && (
+                      <div className="flex items-center justify-between text-xs text-blue-600 font-medium pt-1">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" /> First Order Only
+                        </span>
+                      </div>
+                    )}
+                    {c.targetCategory && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500 flex items-center gap-1">
+                          <Tag className="w-3 h-3" /> Category
+                        </span>
+                        <span className="font-medium text-black bg-gray-100 px-1.5 py-0.5 rounded">
+                          {c.targetCategory}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Footer */}

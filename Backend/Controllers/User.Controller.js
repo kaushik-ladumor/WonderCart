@@ -21,6 +21,24 @@ const getPublicId = (url) => {
   return publicIdWithExt.split(".")[0];
 };
 
+const assignCouponsToNewUser = async (userId, role) => {
+  try {
+    const coupons = await Coupon.find({
+      targetType: { $in: ["all", "new_users"] },
+      targetRole: role
+    });
+
+    for (const coupon of coupons) {
+      if (!coupon.allowedUsers.includes(userId)) {
+        coupon.allowedUsers.push(userId);
+        await coupon.save();
+      }
+    }
+  } catch (error) {
+    console.error("Error assigning coupons to new user:", error);
+  }
+};
+
 const generateTokens = async (user) => {
   const accessToken = jwt.sign(
     {
@@ -77,6 +95,9 @@ const signup = async (req, res) => {
       verificationCode,
       expireCode,
     });
+
+    // Assign eligible coupons to new user
+    await assignCouponsToNewUser(newUser._id, newUser.role);
 
     // await sendVerificationCode(newUser.email, verificationCode);
 
@@ -231,6 +252,9 @@ const googleAuth = async (req, res) => {
         profile: photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
         isVerified: true,
       });
+
+      // Assign eligible coupons to new user
+      await assignCouponsToNewUser(user._id, user.role);
     }
 
     const { accessToken, refreshToken } = await generateTokens(user);
@@ -898,39 +922,20 @@ const logout = async (req, res) => {
 
 const getAvailableCoupons = async (req, res) => {
   try {
-
     const userId = req.user.userId;
-    const user = await User.findById(userId).select("createdAt");
-
-    const coupons = await Coupon.find({ status: "active" });
-
-    const completedOrders = await Order.countDocuments({
-      user: userId,
-      status: "delivered"
+    const coupons = await Coupon.find({
+      status: "active",
+      allowedUsers: { $in: [userId] }
     });
 
     const now = new Date();
 
     const eligibleCoupons = await Promise.all(coupons.map(async (coupon) => {
+      // Date Check
       if (coupon.startDate && now < coupon.startDate) return null;
       if (coupon.expirationDate && now > coupon.expirationDate) return null;
 
-      if (coupon.targetType === "new_users") {
-        if (completedOrders > 0) return null;
-        if (user && user.createdAt < coupon.createdAt) return null;
-      }
-
-      if (coupon.targetType === "loyal_users" &&
-        completedOrders < (coupon.minCompletedOrders || 0)) return null;
-
-      if (coupon.targetType === "specific_users") {
-        const isAllowed = coupon.allowedUsers.some(
-          id => id.toString() === userId.toString()
-        );
-        if (!isAllowed) return null;
-      }
-
-      // Check per user limit
+      // Usage Check
       const usageCount = await Order.countDocuments({
         user: userId,
         coupon: coupon._id,
@@ -945,6 +950,7 @@ const getAvailableCoupons = async (req, res) => {
     res.json({ coupons: eligibleCoupons.filter(c => c !== null) });
 
   } catch (error) {
+    console.error("getAvailableCoupons Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -978,34 +984,12 @@ const applyCoupon = async (req, res) => {
       return res.status(400).json({ message: "Coupon has expired" });
     }
 
-    const completedOrders = await Order.countDocuments({
-      user: userId,
-      status: "delivered"
-    });
+    const isAllowed = coupon.allowedUsers.some(
+      id => id.toString() === userId.toString()
+    );
 
-    if (coupon.targetType === "new_users") {
-      const user = await User.findById(userId).select("createdAt");
-      if (completedOrders > 0) {
-        return res.status(400).json({ message: "Only new users allowed" });
-      }
-      if (user && user.createdAt < coupon.createdAt) {
-        return res.status(400).json({ message: "This coupon is only for users who registered after its creation" });
-      }
-    }
-
-    if (coupon.targetType === "loyal_users" &&
-      completedOrders < (coupon.minCompletedOrders || 0)) {
-      return res.status(400).json({ message: "Not eligible (loyalty required)" });
-    }
-
-    if (coupon.targetType === "specific_users") {
-      const allowed = coupon.allowedUsers.some(
-        id => id.toString() === userId.toString()
-      );
-
-      if (!allowed) {
-        return res.status(400).json({ message: "Not your lucky coupon" });
-      }
+    if (!isAllowed) {
+      return res.status(400).json({ message: "You are not eligible for this coupon" });
     }
 
     // Check per user limit
@@ -1017,6 +1001,49 @@ const applyCoupon = async (req, res) => {
 
     if (usageCount >= (coupon.perUserLimit || 1)) {
       return res.status(400).json({ message: "You have already used this coupon" });
+    }
+
+    // Cart-dependent validations - only run if items are present
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+
+    if (cart && cart.items.length > 0) {
+      // 1. Min Order Value check
+      if (coupon.minOrderValue > 0) {
+        const cartSubtotal = cart.items.reduce((acc, item) => {
+          const variant = item.product?.variants?.find(v => v.color === item.color);
+          const sizeObj = variant?.sizes?.find(s => s.size === item.size);
+          return acc + (sizeObj?.sellingPrice || 0) * item.quantity;
+        }, 0);
+
+        if (cartSubtotal < coupon.minOrderValue) {
+          return res.status(400).json({ message: `Minimum order value of ₹${coupon.minOrderValue} required for this coupon.` });
+        }
+      }
+
+      // 2. Category check - Strict & Case-insensitive
+      if (coupon.targetCategory) {
+        const targetCat = coupon.targetCategory.toLowerCase().trim();
+        const hasCategoryProduct = cart.items.some(
+          item => item.product && item.product.category?.toLowerCase().trim() === targetCat
+        );
+
+        if (!hasCategoryProduct) {
+          return res.status(400).json({ message: `This coupon is exclusively for ${coupon.targetCategory} products. Your current cart does not contain any eligible items.` });
+        }
+      }
+    }
+    // If cart is empty, we skip product-specific checks and allow the coupon to be applied provisionally.
+    // The conditions will be enforced once items are added and during checkout.
+
+    // 3. First Order Only check (Not cart dependent)
+    if (coupon.isFirstOrderOnly) {
+      const pastOrders = await Order.countDocuments({
+        user: userId,
+        status: { $ne: "cancelled" }
+      });
+      if (pastOrders > 0) {
+        return res.status(400).json({ message: "This coupon is only valid for your first order." });
+      }
     }
 
     res.json({

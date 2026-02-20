@@ -9,6 +9,33 @@ const mongoose = require("mongoose");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Notification = require("../Models/Notification.Model");
+const Coupon = require("../Models/Coupon.Model");
+
+const checkLoyalUserCoupons = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) return;
+
+    const completedOrdersCount = await Order.countDocuments({
+      user: userId,
+      status: "delivered"
+    });
+
+    const loyalCoupons = await Coupon.find({
+      targetType: "loyal_users",
+      targetRole: user.role,
+      minCompletedOrders: { $lte: completedOrdersCount },
+      allowedUsers: { $ne: userId }
+    });
+
+    for (const coupon of loyalCoupons) {
+      coupon.allowedUsers.push(userId);
+      await coupon.save();
+    }
+  } catch (error) {
+    console.error("Error checking loyal user coupons:", error);
+  }
+};
 
 const getMyOrders = async (req, res) => {
   try {
@@ -62,6 +89,7 @@ const createOrder = async (req, res) => {
 
       // 1. Validate items & stock (WITHOUT deducting)
       let subTotal = 0;
+      let orderItemsData = []; // To store category and price for coupon validation
 
       if (productId && quantity) {
         // Buy Now (Single Item)
@@ -78,6 +106,7 @@ const createOrder = async (req, res) => {
           return res.status(400).json({ success: false, message: `Only ${sizeObj.stock} available` });
         }
         subTotal = sizeObj.sellingPrice * quantity;
+        orderItemsData.push({ category: product.category, price: sizeObj.sellingPrice, quantity });
 
       } else if (items && items.length > 0) {
         // Cart Checkout
@@ -94,8 +123,8 @@ const createOrder = async (req, res) => {
           if (sizeObj.stock < item.quantity) {
             return res.status(400).json({ success: false, message: `Stock insufficient for ${product.name}` });
           }
-          // TRUSTED PRICE CALCULATION
           subTotal += sizeObj.sellingPrice * item.quantity;
+          orderItemsData.push({ category: product.category, price: sizeObj.sellingPrice, quantity: item.quantity });
         }
       } else {
         return res.status(400).json({ success: false, message: "No items provided" });
@@ -105,27 +134,81 @@ const createOrder = async (req, res) => {
       let couponDiscount = 0;
       let couponId = null;
       if (couponCode) {
-        const Coupon = require("../Models/Coupon.Model");
         const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: "active" });
         if (coupon) {
-          // Add validation logic here or call a central validator
-          // For now, let's assume it's valid if found active (security: should repeat User.Controller checks)
+          // 1. Eligibility Check
+          const isAllowed = coupon.allowedUsers.some(id => id.toString() === userId.toString());
+          if (!isAllowed) {
+            return res.status(400).json({ success: false, message: "You are not eligible for this coupon" });
+          }
+
+          // 2. Usage Limit Check
+          const usageCount = await Order.countDocuments({
+            user: userId,
+            coupon: coupon._id,
+            status: { $ne: "cancelled" }
+          });
+          if (usageCount >= (coupon.perUserLimit || 1)) {
+            return res.status(400).json({ success: false, message: "Usage limit exceeded for this coupon" });
+          }
+
+          // 3. Min Order Value Check
+          if (coupon.minOrderValue > 0 && subTotal < coupon.minOrderValue) {
+            return res.status(400).json({ success: false, message: `Minimum order value of ₹${coupon.minOrderValue} required.` });
+          }
+
+          // 4. First Order Only Check
+          if (coupon.isFirstOrderOnly) {
+            const pastOrders = await Order.countDocuments({ user: userId, status: { $ne: "cancelled" } });
+            if (pastOrders > 0) {
+              return res.status(400).json({ success: false, message: "This coupon is only valid for your first order." });
+            }
+          }
+
+          // 5. Category Check & Applicable Subtotal
+          let applicableSubTotal = subTotal;
+          if (coupon.targetCategory) {
+            const targetCat = coupon.targetCategory.toLowerCase().trim();
+            const categoryItems = orderItemsData.filter(item => item.category?.toLowerCase().trim() === targetCat);
+            if (categoryItems.length === 0) {
+              return res.status(400).json({ success: false, message: `This coupon is exclusively for ${coupon.targetCategory} items.` });
+            }
+            applicableSubTotal = categoryItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+          }
+
+          // Calculate Base for Discount
+          const tempTax = Math.round(subTotal * 0.18);
+          const tempShipping = subTotal < 999 ? 50 : 0;
+
+          // The base for discount should be (Category Subtotal + its Tax)
+          // Scale tax for percentage calculation if category specific
+          let baseForDiscount = applicableSubTotal + Math.round(applicableSubTotal * 0.18);
+
+          // Only global coupons can discount the shipping charge part of the total
+          if (!coupon.targetCategory) {
+            baseForDiscount += tempShipping;
+          }
+
           if (coupon.dealType === 'percentage') {
-            couponDiscount = (subTotal * coupon.discount) / 100;
+            couponDiscount = (baseForDiscount * coupon.discount) / 100;
             if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
               couponDiscount = coupon.maxDiscount;
             }
           } else if (coupon.dealType === 'fixed') {
-            couponDiscount = coupon.discount;
+            couponDiscount = Math.min(coupon.discount, baseForDiscount);
+          } else if (coupon.dealType === 'free_shipping') {
+            couponDiscount = tempShipping;
           }
           couponId = coupon._id;
+        } else {
+          return res.status(400).json({ success: false, message: "Invalid or inactive coupon" });
         }
       }
 
-      // Add shipping & GST
-      const tax = Math.round((subTotal - couponDiscount) * 0.18);
+      // Final calculation
+      const tax = Math.round(subTotal * 0.18);
       const shipping = subTotal < 999 ? 50 : 0;
-      const finalTotalAmount = (subTotal - couponDiscount) + tax + shipping;
+      const finalTotalAmount = Math.max(0, (subTotal + tax + shipping) - couponDiscount);
 
       // 2. Create Razorpay Order
       if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
@@ -214,7 +297,8 @@ const handleOrderCreation = async (req, res, data) => {
         price: sizeObj.sellingPrice,
         name: product.name,
         color,
-        size
+        size,
+        category: product.category
       });
     } else if (items && items.length > 0) {
       // Cart
@@ -239,7 +323,8 @@ const handleOrderCreation = async (req, res, data) => {
           price: sizeObj.sellingPrice,
           name: item.name || product.name,
           color: item.color,
-          size: item.size
+          size: item.size,
+          category: product.category
         });
       }
     }
@@ -250,25 +335,72 @@ const handleOrderCreation = async (req, res, data) => {
     let couponDiscount = 0;
     let couponId = null;
     if (couponCode) {
-      const Coupon = require("../Models/Coupon.Model");
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: "active" });
       if (coupon) {
+        // 1. Eligibility Check
+        const isAllowed = coupon.allowedUsers.some(id => id.toString() === userId.toString());
+        if (!isAllowed) throw new Error("You are not eligible for this coupon");
+
+        // 2. Usage Limit Check
+        const usageCount = await Order.countDocuments({
+          user: userId,
+          coupon: coupon._id,
+          status: { $ne: "cancelled" }
+        });
+        if (usageCount >= (coupon.perUserLimit || 1)) throw new Error("Usage limit exceeded for this coupon");
+
+        // 3. Min Order Value Check
+        if (coupon.minOrderValue > 0 && subTotal < coupon.minOrderValue) {
+          throw new Error(`Minimum order value of ₹${coupon.minOrderValue} required.`);
+        }
+
+        // 4. First Order Only Check
+        if (coupon.isFirstOrderOnly) {
+          const pastOrders = await Order.countDocuments({ user: userId, status: { $ne: "cancelled" } });
+          if (pastOrders > 0) throw new Error("This coupon is only valid for your first order.");
+        }
+
+        // 5. Category Check & Applicable Subtotal
+        let applicableSubTotal = subTotal;
+        if (coupon.targetCategory) {
+          const targetCat = coupon.targetCategory.toLowerCase().trim();
+          const categoryItems = orderItems.filter(item => item.category?.toLowerCase().trim() === targetCat);
+          if (categoryItems.length === 0) {
+            throw new Error(`This coupon is exclusively for ${coupon.targetCategory} items.`);
+          }
+          applicableSubTotal = categoryItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        }
+
+        // Calculate Base for Discount
+        const tempTax = Math.round(subTotal * 0.18);
+        const tempShipping = subTotal < 999 ? 50 : 0;
+
+        let baseForDiscount = applicableSubTotal + Math.round(applicableSubTotal * 0.18);
+
+        if (!coupon.targetCategory) {
+          baseForDiscount += tempShipping;
+        }
+
         if (coupon.dealType === 'percentage') {
-          couponDiscount = (subTotal * coupon.discount) / 100;
+          couponDiscount = (baseForDiscount * coupon.discount) / 100;
           if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
             couponDiscount = coupon.maxDiscount;
           }
         } else if (coupon.dealType === 'fixed') {
-          couponDiscount = coupon.discount;
+          couponDiscount = Math.min(coupon.discount, baseForDiscount);
+        } else if (coupon.dealType === 'free_shipping') {
+          couponDiscount = tempShipping;
         }
         couponId = coupon._id;
+      } else {
+        throw new Error("Invalid or inactive coupon");
       }
     }
 
     // Add 18% GST and Shipping
-    const tax = Math.round((subTotal - couponDiscount) * 0.18);
+    const tax = Math.round(subTotal * 0.18);
     const shipping = subTotal < 999 ? 50 : 0;
-    const finalAmount = Math.max(0, (subTotal - couponDiscount) + tax + shipping);
+    const finalAmount = Math.max(0, (subTotal + tax + shipping) - couponDiscount);
 
     // 2. CREATE ORDER
     const order = await Order.create({
@@ -706,7 +838,11 @@ const updateOrderStatus = async (req, res) => {
 
     // ✅ Update status
     order.status = status;
-    if (status === "delivered") order.deliveredAt = new Date();
+    if (status === "delivered") {
+      order.deliveredAt = new Date();
+      // Check for loyalty coupons
+      await checkLoyalUserCoupons(order.user);
+    }
     if (status === "cancelled") order.cancelledAt = new Date();
     await order.save();
 

@@ -311,7 +311,10 @@ const createCoupon = async (req, res) => {
             expirationDate,
             targetType,
             targetRole,
+            targetCategory,
             minCompletedOrders,
+            minOrderValue,
+            isFirstOrderOnly,
             allowedUsers,
             randomUserCount
         } = req.body;
@@ -324,7 +327,7 @@ const createCoupon = async (req, res) => {
 
         code = code.toUpperCase().trim();
 
-        if (Number(discount) < 0 || (maxDiscount && Number(maxDiscount) < 0) || Number(perUserLimit) < 0 || (minCompletedOrders && Number(minCompletedOrders) < 0) || (randomUserCount && Number(randomUserCount) < 0)) {
+        if (Number(discount) < 0 || (maxDiscount && Number(maxDiscount) < 0) || Number(perUserLimit) < 0 || (minCompletedOrders && Number(minCompletedOrders) < 0) || (minOrderValue && Number(minOrderValue) < 0) || (randomUserCount && Number(randomUserCount) < 0)) {
             return res.status(400).json({
                 message: "Numeric values cannot be negative"
             });
@@ -358,10 +361,25 @@ const createCoupon = async (req, res) => {
         } else if (targetType === "loyal_users" && minCompletedOrders) {
             const loyalUsers = await Order.aggregate([
                 { $match: { status: 'delivered' } },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'user',
+                        foreignField: '_id',
+                        as: 'userData'
+                    }
+                },
+                { $unwind: '$userData' },
+                { $match: { 'userData.role': targetRole || 'user' } },
                 { $group: { _id: "$user", count: { $sum: 1 } } },
                 { $match: { count: { $gte: Number(minCompletedOrders) } } }
             ]);
             finalAllowedUsers = loyalUsers.map(user => user._id);
+        } else if (targetType === "all") {
+            const allUsers = await User.find({ role: targetRole || 'user' }).select("_id");
+            finalAllowedUsers = allUsers.map(user => user._id);
+        } else if (targetType === "new_users") {
+            finalAllowedUsers = []; // Will be populated as users register
         }
 
         const coupon = new Coupon({
@@ -375,8 +393,11 @@ const createCoupon = async (req, res) => {
             startDate: finalStartDate,
             expirationDate: finalExpirationDate,
             targetType,
-            targetRole: targetType === 'specific_users' ? targetRole : 'user',
+            targetRole: targetType === 'specific_users' ? targetRole : (targetRole || 'user'),
+            targetCategory: targetCategory || null,
             minCompletedOrders: targetType === 'loyal_users' ? minCompletedOrders : 0,
+            minOrderValue: minOrderValue || 0,
+            isFirstOrderOnly: !!isFirstOrderOnly,
             allowedUsers: finalAllowedUsers
         });
 
@@ -443,7 +464,7 @@ const updateCoupon = async (req, res) => {
             return res.status(404).json({ message: "Coupon not found" });
         }
 
-        const numericFields = ['discount', 'maxDiscount', 'perUserLimit', 'minCompletedOrders', 'randomUserCount'];
+        const numericFields = ['discount', 'maxDiscount', 'perUserLimit', 'minCompletedOrders', 'minOrderValue', 'randomUserCount'];
         for (const field of numericFields) {
             if (updateData[field] !== undefined && Number(updateData[field]) < 0) {
                 return res.status(400).json({ message: `${field} cannot be negative` });

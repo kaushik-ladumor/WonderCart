@@ -127,13 +127,33 @@ const MyCoupons = () => {
                       `Get ${coupon.discount}${coupon.dealType === "percentage" ? "%" : "₹"} off on your next purchase.`}
                   </p>
 
-                  <div className="flex items-center gap-1 text-xs text-gray-500 pt-2 border-t border-dashed border-gray-200">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>
-                      {coupon.expirationDate
-                        ? `Expires ${new Date(coupon.expirationDate).toLocaleDateString()}`
-                        : "Never expires"}
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-dashed border-gray-200">
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>
+                        {coupon.expirationDate
+                          ? `Expires ${new Date(coupon.expirationDate).toLocaleDateString()}`
+                          : "Never expires"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      {coupon.isFirstOrderOnly && (
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-wider border border-indigo-100">
+                          <Zap className="w-3 h-3" /> 1st Order
+                        </div>
+                      )}
+                      {coupon.minOrderValue > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-100">
+                          Min: ₹{coupon.minOrderValue}
+                        </div>
+                      )}
+                      {coupon.targetCategory && (
+                        <div className="flex items-center gap-1 text-[10px] font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                          <ShoppingBag className="w-3 h-3" />
+                          {coupon.targetCategory}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

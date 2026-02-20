@@ -27,6 +27,9 @@ const orderItemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  category: {
+    type: String,
+  },
 });
 
 const addressSchema = new mongoose.Schema({

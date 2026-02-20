@@ -14,6 +14,7 @@ import {
   Gift,
   Percent,
   CreditCard,
+  Tag,
 } from "lucide-react";
 
 function AddCoupon() {
@@ -33,7 +34,10 @@ function AddCoupon() {
     neverExpires: true,
     targetType: "all",
     targetRole: "user",
+    targetCategory: "",
     minCompletedOrders: "",
+    minOrderValue: "",
+    isFirstOrderOnly: false,
     randomUserCount: "",
   });
 
@@ -247,6 +251,23 @@ function AddCoupon() {
                     onChange={handleChange}
                   />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">
+                    Min Order Value (₹)
+                  </label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      name="minOrderValue"
+                      type="number"
+                      min="0"
+                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
+                      placeholder="e.g., 500"
+                      value={formData.minOrderValue}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -355,6 +376,30 @@ function AddCoupon() {
                 </div>
               </div>
 
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isFirstOrderOnly"
+                    name="isFirstOrderOnly"
+                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+                    checked={formData.isFirstOrderOnly}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isFirstOrderOnly: e.target.checked,
+                      }))
+                    }
+                  />
+                  <label
+                    htmlFor="isFirstOrderOnly"
+                    className="text-xs font-medium text-gray-700 cursor-pointer"
+                  >
+                    First Order Only (Valid for new customers only)
+                  </label>
+                </div>
+              </div>
+
               {formData.targetType === "loyal_users" && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
                   <label className="text-xs font-medium text-blue-900">
@@ -413,6 +458,38 @@ function AddCoupon() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Category Targeting Card */}
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-gray-600" />
+                <h2 className="text-base font-bold text-gray-900">
+                  Inventory Targeting
+                </h2>
+              </div>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-gray-700">
+                  Product Category (Optional)
+                </label>
+                <div className="relative">
+                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    name="targetCategory"
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
+                    placeholder="e.g., Footwear, Electronics (Leave empty for all)"
+                    value={formData.targetCategory}
+                    onChange={handleChange}
+                  />
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1">
+                  If set, this coupon will only apply to products in this category.
+                </p>
+              </div>
             </div>
           </div>
 
