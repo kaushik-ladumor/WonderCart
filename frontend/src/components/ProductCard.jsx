@@ -27,12 +27,12 @@ const ProductCard = ({
 
   const getOriginalPrice = (variants) => {
     if (!variants?.length) return 0;
-    return variants[0]?.sizes?.[0]?.originalPrice || 0;
+    return Math.round(variants[0]?.sizes?.[0]?.originalPrice || 0);
   };
 
   const getSellingPrice = (variants) => {
     if (!variants?.length) return 0;
-    return variants[0]?.sizes?.[0]?.sellingPrice || 0;
+    return Math.round(variants[0]?.sizes?.[0]?.sellingPrice || 0);
   };
 
   const getDiscount = (variants) => {

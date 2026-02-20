@@ -325,11 +325,11 @@ const TrackOrder = () => {
                             {item.name}
                           </div>
                           <div className="text-xs text-gray-600">
-                            Qty: {item.quantity} × ₹{item.price}
+                            Qty: {item.quantity} × ₹{Math.round(item.price || 0).toLocaleString()}
                           </div>
                         </div>
                         <div className="font-medium">
-                          ₹{(item.price * item.quantity).toFixed(2)}
+                          ₹{(Math.round(item.price || 0) * item.quantity).toLocaleString()}
                         </div>
                       </div>
                     ))}
@@ -343,7 +343,7 @@ const TrackOrder = () => {
                   <div className="border-t border-gray-200 pt-3">
                     <div className="flex justify-between font-bold text-gray-900">
                       <span>Total</span>
-                      <span>₹{order.totalAmount?.toFixed(2) || "0.00"}</span>
+                      <span>₹{Math.round(order.totalAmount || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

@@ -190,12 +190,12 @@ const createOrder = async (req, res) => {
           }
 
           if (coupon.dealType === 'percentage') {
-            couponDiscount = (baseForDiscount * coupon.discount) / 100;
+            couponDiscount = Math.round((baseForDiscount * coupon.discount) / 100);
             if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
               couponDiscount = coupon.maxDiscount;
             }
           } else if (coupon.dealType === 'fixed') {
-            couponDiscount = Math.min(coupon.discount, baseForDiscount);
+            couponDiscount = Math.round(Math.min(coupon.discount, baseForDiscount));
           } else if (coupon.dealType === 'free_shipping') {
             couponDiscount = tempShipping;
           }
@@ -208,7 +208,7 @@ const createOrder = async (req, res) => {
       // Final calculation
       const tax = Math.round(subTotal * 0.18);
       const shipping = subTotal < 999 ? 50 : 0;
-      const finalTotalAmount = Math.max(0, (subTotal + tax + shipping) - couponDiscount);
+      const finalTotalAmount = Math.round(Math.max(0, (subTotal + tax + shipping) - couponDiscount));
 
       // 2. Create Razorpay Order
       if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
@@ -382,12 +382,12 @@ const handleOrderCreation = async (req, res, data) => {
         }
 
         if (coupon.dealType === 'percentage') {
-          couponDiscount = (baseForDiscount * coupon.discount) / 100;
+          couponDiscount = Math.round((baseForDiscount * coupon.discount) / 100);
           if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
             couponDiscount = coupon.maxDiscount;
           }
         } else if (coupon.dealType === 'fixed') {
-          couponDiscount = Math.min(coupon.discount, baseForDiscount);
+          couponDiscount = Math.round(Math.min(coupon.discount, baseForDiscount));
         } else if (coupon.dealType === 'free_shipping') {
           couponDiscount = tempShipping;
         }
@@ -400,7 +400,7 @@ const handleOrderCreation = async (req, res, data) => {
     // Add 18% GST and Shipping
     const tax = Math.round(subTotal * 0.18);
     const shipping = subTotal < 999 ? 50 : 0;
-    const finalAmount = Math.max(0, (subTotal + tax + shipping) - couponDiscount);
+    const finalAmount = Math.round(Math.max(0, (subTotal + tax + shipping) - couponDiscount));
 
     // 2. CREATE ORDER
     const order = await Order.create({

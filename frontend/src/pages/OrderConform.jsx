@@ -33,10 +33,9 @@ const OrderConfirmationPage = () => {
     const num = parseFloat(price);
     if (isNaN(num)) return "₹0";
 
-    const formatted = num.toFixed(2);
-    const parts = formatted.split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return `₹${parts.join(".")}`;
+    const rounded = Math.round(num);
+    const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `₹${formatted}`;
   };
 
   const getDeliveryDate = () => {

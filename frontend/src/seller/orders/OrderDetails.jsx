@@ -191,11 +191,11 @@ const OrderDetails = () => {
 
   const statusInfo = getStatusInfo(order.status);
   const subtotal =
-    order.items?.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0) ||
+    order.items?.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0) ||
     0;
   const tax = Math.round(subtotal * 0.18);
-  const shipping = 50;
-  const total = subtotal + tax + shipping;
+  const shipping = subtotal < 999 ? 50 : 0;
+  const couponDiscount = Math.round(order.couponDiscount || 0);
   const totalItems =
     order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
   const allowedStatuses = getAllowedStatuses();
@@ -269,7 +269,7 @@ const OrderDetails = () => {
               </h2>
               <div className="space-y-3">
                 {order.items?.map((item, idx) => {
-                  const itemTotal = (item.price || 0) * (item.quantity || 1);
+                  const itemTotal = Math.round(item.price || 0) * (item.quantity || 1);
                   const image =
                     item.image || item.product?.variants?.[0]?.images?.[0];
 
@@ -312,9 +312,9 @@ const OrderDetails = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">
-                            ₹{item.price || 0}
+                            ₹{Math.round(item.price || 0).toLocaleString()}
                           </span>
-                          <span className="font-bold">₹{itemTotal}</span>
+                          <span className="font-bold">₹{itemTotal.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -368,20 +368,26 @@ const OrderDetails = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>₹{subtotal}</span>
+                  <span>₹{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>₹{shipping}</span>
+                  <span>₹{shipping.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (18%)</span>
-                  <span>₹{tax}</span>
+                  <span className="text-gray-600">GST (18%)</span>
+                  <span>₹{tax.toLocaleString()}</span>
                 </div>
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="font-medium">Coupon {order.couponCode ? `(${order.couponCode})` : ""}</span>
+                    <span className="font-medium">-₹{couponDiscount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="border-t border-gray-200 pt-2">
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span>₹{total}</span>
+                    <span>₹{Math.round(order.totalAmount || 0).toLocaleString()}</span>
                   </div>
                 </div>
               </div>

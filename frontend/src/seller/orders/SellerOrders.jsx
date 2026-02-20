@@ -242,7 +242,7 @@ const SellerOrders = () => {
     },
     {
       label: "Revenue",
-      value: `₹${orders.reduce((s, o) => s + (o.totalAmount || 0), 0).toLocaleString()}`,
+      value: `₹${Math.round(orders.reduce((s, o) => s + (o.totalAmount || 0), 0)).toLocaleString()}`,
       icon: DollarSign,
       color: "text-green-600",
     },
@@ -388,7 +388,7 @@ const SellerOrders = () => {
                             </span>
                           </div>
                           <span>
-                            ₹{(item.price || 0) * (item.quantity || 1)}
+                            ₹{Math.round(item.price || 0) * (item.quantity || 1)}
                           </span>
                         </div>
                       ))}
@@ -405,7 +405,7 @@ const SellerOrders = () => {
                           {totalItems} items
                         </span>
                         <span className="font-bold">
-                          ₹{order.totalAmount?.toLocaleString()}
+                          ₹{Math.round(order.totalAmount || 0).toLocaleString()}
                         </span>
                       </div>
                       <button
@@ -434,9 +434,8 @@ const SellerOrders = () => {
               </span>
               <span className="font-bold">
                 Total: ₹
-                {filteredOrders
-                  .reduce((s, o) => s + (o.totalAmount || 0), 0)
-                  .toLocaleString()}
+                {Math.round(filteredOrders
+                  .reduce((s, o) => s + (o.totalAmount || 0), 0)).toLocaleString()}
               </span>
             </div>
           </div>

@@ -130,7 +130,7 @@ function SellerDashboard() {
     },
     {
       label: "Revenue",
-      value: `₹${totalEarnings.toLocaleString()}`,
+      value: `₹${Math.round(totalEarnings).toLocaleString()}`,
       icon: DollarSign,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
@@ -215,7 +215,7 @@ function SellerDashboard() {
   const quickStats = [
     {
       label: "Average Order Value",
-      value: `₹${parseFloat(avgOrderValue).toFixed(2)}`,
+      value: `₹${Math.round(parseFloat(avgOrderValue)).toLocaleString()}`,
       icon: CreditCard,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
@@ -406,7 +406,7 @@ function SellerDashboard() {
                   </div>
                   <div className="text-lg font-bold mb-1">{item.count}</div>
                   <div className="text-xs">
-                    ₹{item.earnings.toLocaleString()}
+                    ₹{Math.round(item.earnings).toLocaleString()}
                   </div>
                 </div>
               );
@@ -460,7 +460,7 @@ function SellerDashboard() {
               </span>
             </div>
             <div className="text-gray-900 font-bold">
-              Total Revenue: ₹{totalEarnings.toLocaleString()}
+              Total Revenue: ₹{Math.round(totalEarnings).toLocaleString()}
             </div>
           </div>
         </div>

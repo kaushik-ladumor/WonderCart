@@ -215,7 +215,7 @@ function AllOrderDetail() {
                     Total
                   </p>
                   <p className="text-lg font-medium text-gray-900">
-                    ₹{order.totalAmount?.toFixed(2)}
+                    ₹{Math.round(order.totalAmount || 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -255,22 +255,34 @@ function AllOrderDetail() {
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">Subtotal</span>
                           <span className="font-medium text-gray-900">
-                            ₹{(order.totalAmount * 0.82).toFixed(2)}
+                            ₹{Math.round(
+                              order.items?.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0) || 0
+                            ).toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs mt-2">
-                          <span className="text-gray-600">Tax</span>
+                          <span className="text-gray-600">GST (18%)</span>
                           <span className="font-medium text-gray-900">
-                            ₹{(order.totalAmount * 0.18).toFixed(2)}
+                            ₹{Math.round(
+                              (order.items?.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0) || 0) * 0.18
+                            ).toLocaleString()}
                           </span>
                         </div>
+                        {order.couponCode && (
+                          <div className="flex justify-between text-xs mt-2">
+                            <span className="text-green-600 font-medium">Coupon ({order.couponCode})</span>
+                            <span className="font-medium text-green-600">
+                              -₹{Math.round(order.couponDiscount || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
                         <div className="border-t border-gray-200 mt-3 pt-3">
                           <div className="flex justify-between text-sm">
                             <span className="font-medium text-gray-900">
                               Total
                             </span>
                             <span className="font-bold text-gray-900">
-                              ₹{order.totalAmount?.toFixed(2)}
+                              ₹{Math.round(order.totalAmount || 0).toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -332,7 +344,7 @@ function AllOrderDetail() {
                                 </div>
                               </div>
                               <span className="text-sm font-medium text-gray-900">
-                                ₹{item.price?.toFixed(2)}
+                                ₹{Math.round(item.price || 0).toLocaleString()}
                               </span>
                             </div>
                           </div>

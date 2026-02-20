@@ -235,13 +235,13 @@ const Cart = () => {
     };
   }, [socket]);
 
-  // Calculate prices using sellingPrice
+  // Calculate prices using sellingPrice (rounded to whole numbers)
   const getItemPrice = (item) => {
-    return item.sellingPrice || item.price || 0;
+    return Math.round(item.sellingPrice || item.price || 0);
   };
 
   const getItemOriginalPrice = (item) => {
-    return item.originalPrice || 0;
+    return Math.round(item.originalPrice || 0);
   };
 
   // Calculate totals (only in-stock items)

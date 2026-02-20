@@ -540,16 +540,49 @@ const Checkout = () => {
     }
   };
 
-  // Calculate rounded prices
+  // Calculate rounded prices — must match backend Order.Controller.js logic exactly
   const subtotal = orderItems.reduce(
     (sum, item) => sum + Math.round(item.price || 0) * (item.quantity || 1),
     0,
   );
 
+  const totalSavings = orderItems.reduce((sum, item) => {
+    const savings = (item.originalPrice || 0) - (item.price || 0);
+    return sum + (savings > 0 ? savings * (item.quantity || 1) : 0);
+  }, 0);
+
+  // GST and shipping calculated on full subtotal (before coupon), matching backend
+  const gst = Math.round(subtotal * 0.18);
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+
+  // Coupon discount calculation — mirrors backend exactly
   let couponDiscountAmount = 0;
   if (appliedCoupon) {
+    // Determine applicable subtotal (for category coupons, only matching items)
+    let applicableSubTotal = subtotal;
+    if (appliedCoupon.targetCategory) {
+      const targetCat = appliedCoupon.targetCategory.toLowerCase().trim();
+      const categoryItems = orderItems.filter(
+        (item) => item.category?.toLowerCase().trim() === targetCat,
+      );
+      if (categoryItems.length > 0) {
+        applicableSubTotal = categoryItems.reduce(
+          (acc, item) => acc + Math.round(item.price || 0) * (item.quantity || 1),
+          0,
+        );
+      }
+    }
+
+    // Base for discount = applicable subtotal + its tax (+ shipping for global coupons)
+    let baseForDiscount = applicableSubTotal + Math.round(applicableSubTotal * 0.18);
+    if (!appliedCoupon.targetCategory) {
+      baseForDiscount += shipping;
+    }
+
     if (appliedCoupon.dealType === "percentage") {
-      couponDiscountAmount = (subtotal * appliedCoupon.discount) / 100;
+      couponDiscountAmount = Math.round(
+        (baseForDiscount * appliedCoupon.discount) / 100,
+      );
       if (
         appliedCoupon.maxDiscount &&
         couponDiscountAmount > appliedCoupon.maxDiscount
@@ -557,19 +590,15 @@ const Checkout = () => {
         couponDiscountAmount = appliedCoupon.maxDiscount;
       }
     } else if (appliedCoupon.dealType === "fixed") {
-      couponDiscountAmount = appliedCoupon.discount;
+      couponDiscountAmount = Math.round(
+        Math.min(appliedCoupon.discount, baseForDiscount),
+      );
+    } else if (appliedCoupon.dealType === "free_shipping") {
+      couponDiscountAmount = shipping;
     }
   }
 
-  const discountedSubtotal = Math.max(0, subtotal - couponDiscountAmount);
-  const totalSavings = orderItems.reduce((sum, item) => {
-    const savings = (item.originalPrice || 0) - (item.price || 0);
-    return sum + (savings > 0 ? savings * (item.quantity || 1) : 0);
-  }, 0);
-
-  const gst = Math.round(discountedSubtotal * 0.18);
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const total = discountedSubtotal + gst + shipping;
+  const total = Math.round(Math.max(0, subtotal + gst + shipping - couponDiscountAmount));
 
   if (loading) {
     return <Loader />;
@@ -658,20 +687,18 @@ const Checkout = () => {
                       {addresses.map((addr) => (
                         <div
                           key={addr._id}
-                          className={`p-3 rounded-lg transition-all cursor-pointer ${
-                            selectedAddressId === addr._id
+                          className={`p-3 rounded-lg transition-all cursor-pointer ${selectedAddressId === addr._id
                               ? "border-2 border-black bg-gray-50"
                               : "border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                          }`}
+                            }`}
                           onClick={() => handleAddressSelect(addr._id)}
                         >
                           <div className="flex items-start gap-3">
                             <div
-                              className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                                selectedAddressId === addr._id
+                              className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedAddressId === addr._id
                                   ? "border-black bg-black"
                                   : "border-gray-400"
-                              }`}
+                                }`}
                             >
                               {selectedAddressId === addr._id && (
                                 <Check className="w-2.5 h-2.5 text-white" />
@@ -778,19 +805,17 @@ const Checkout = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <button
                       onClick={() => setSelectedPayment("Razorpay")}
-                      className={`p-3 rounded-lg border transition-all text-left ${
-                        selectedPayment === "Razorpay"
+                      className={`p-3 rounded-lg border transition-all text-left ${selectedPayment === "Razorpay"
                           ? "border-2 border-black bg-gray-50"
                           : "border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                            selectedPayment === "Razorpay"
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === "Razorpay"
                               ? "border-black bg-black"
                               : "border-gray-400"
-                          }`}
+                            }`}
                         >
                           {selectedPayment === "Razorpay" && (
                             <Check className="w-2.5 h-2.5 text-white" />
@@ -812,19 +837,17 @@ const Checkout = () => {
 
                     <button
                       onClick={() => setSelectedPayment("COD")}
-                      className={`p-3 rounded-lg border transition-all text-left ${
-                        selectedPayment === "COD"
+                      className={`p-3 rounded-lg border transition-all text-left ${selectedPayment === "COD"
                           ? "border-2 border-black bg-gray-50"
                           : "border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                            selectedPayment === "COD"
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === "COD"
                               ? "border-black bg-black"
                               : "border-gray-400"
-                          }`}
+                            }`}
                         >
                           {selectedPayment === "COD" && (
                             <Check className="w-2.5 h-2.5 text-white" />
