@@ -24,7 +24,7 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
     if (!variants?.length) return "₹0";
 
     const allPrices = variants
-      .flatMap((v) => v.sizes?.map((s) => s.price || 0) || [0])
+      .flatMap((v) => v.sizes?.map((s) => s.sellingPrice || 0) || [0])
       .filter((p) => p > 0);
 
     if (allPrices.length === 0) return "₹0";
@@ -102,13 +102,12 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
               Stock
             </span>
             <span
-              className={`font-medium ${
-                isOutOfStock
+              className={`font-medium ${isOutOfStock
                   ? "text-red-600"
                   : isLowStock
                     ? "text-amber-600"
                     : "text-green-600"
-              }`}
+                }`}
             >
               {stock} units
             </span>

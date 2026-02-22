@@ -188,7 +188,7 @@ const SellerProducts = () => {
       if (!variants?.length) return "₹0";
 
       const allPrices = variants
-        .flatMap((v) => v.sizes?.map((s) => s.price || 0) || [0])
+        .flatMap((v) => v.sizes?.map((s) => s.sellingPrice || 0) || [0])
         .filter((p) => p > 0);
 
       if (allPrices.length === 0) return "₹0";
