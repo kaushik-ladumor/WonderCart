@@ -1,7 +1,8 @@
 const Product = require("../Models/Product.Model");
 const cloudinary = require("../Utils/Cloudinary");
 const Review = require("../Models/Review.Model");
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const jwt = require("jsonwebtoken");
 
 // Helper function to calculate discount percentage
 const calculateDiscount = (originalPrice, sellingPrice) => {
@@ -93,6 +94,34 @@ const getSingleProduct = async (req, res) => {
         success: false,
         message: "Product not found",
       });
+    }
+
+    // Check if product is approved or user is authorized (owner/admin)
+    if (product.status !== "approved") {
+      const authHeader = req.headers.authorization;
+      let authorized = false;
+
+      if (authHeader) {
+        try {
+          const token = authHeader.split(" ")[1];
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          if (
+            decoded.role === "admin" ||
+            String(product.owner._id) === String(decoded.userId)
+          ) {
+            authorized = true;
+          }
+        } catch (err) {
+          // Token invalid, keep authorized = false
+        }
+      }
+
+      if (!authorized) {
+        return res.status(403).json({
+          success: false,
+          message: "This product is pending approval and is not publicly available.",
+        });
+      }
     }
 
     res.status(200).json({
@@ -401,6 +430,7 @@ const searchQuery = async (req, res) => {
           },
         },
       },
+      { $match: { status: "approved" } },
       { $skip: skip },
       { $limit: limit },
     ]);

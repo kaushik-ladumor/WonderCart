@@ -208,7 +208,10 @@ const AddProduct = () => {
         },
       });
 
-      toast.success("Product added successfully!");
+      toast.success(
+        "Product submission successful! It is now pending approval and will be reviewed by our admin within 24 hours.",
+        { duration: 6000 }
+      );
       navigate("/seller/products");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add product");

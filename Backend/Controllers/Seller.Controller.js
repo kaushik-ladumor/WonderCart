@@ -7,8 +7,11 @@ const sellerDashboard = async (req, res) => {
         const sellerId = new mongoose.Types.ObjectId(req.user.userId);
 
         // Get seller's products
-        const productIds = await Product.find({ owner: sellerId }).distinct("_id");
-        const productCount = productIds.length;
+        const products = await Product.find({ owner: sellerId });
+        const productIds = products.map(p => p._id);
+        const productCount = products.length;
+        const pendingProductCount = products.filter(p => p.status === "pending").length;
+        const approvedProductCount = products.filter(p => p.status === "approved").length;
 
         // Get all orders containing seller's products
         const orders = await Order.find({
@@ -51,6 +54,8 @@ const sellerDashboard = async (req, res) => {
 
         res.json({
             productCount,
+            pendingProductCount,
+            approvedProductCount,
             orderCount,
             totalEarnings,
             avgOrderValue,

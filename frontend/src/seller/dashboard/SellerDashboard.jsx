@@ -138,12 +138,13 @@ function SellerDashboard() {
       onClick: () => navigate("/seller/earnings"),
     },
     {
-      label: "Success Rate",
-      value: `${successRate}%`,
-      icon: Target,
+      label: "Pending Approval",
+      value: dashboard?.pendingProductCount || 0,
+      icon: Clock,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
-      description: "Order completion",
+      description: "Awaiting review",
+      onClick: () => navigate("/seller/products"),
     },
   ];
 

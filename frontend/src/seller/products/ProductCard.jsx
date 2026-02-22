@@ -53,19 +53,29 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
           />
         </div>
 
-        {/* Stock Badge */}
-        <div className="absolute top-2 left-2">
+        {/* Status & Stock Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
+          {product.status === "pending" && (
+            <span className="px-2 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase rounded shadow-sm">
+              Pending Approval
+            </span>
+          )}
+          {product.status === "rejected" && (
+            <span className="px-2 py-1 bg-red-600 text-white text-[10px] font-bold uppercase rounded shadow-sm">
+              Rejected
+            </span>
+          )}
           {isOutOfStock ? (
-            <span className="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded shadow-sm">
+            <span className="px-2 py-1 bg-gray-600 text-white text-[10px] font-bold uppercase rounded shadow-sm">
               Out of Stock
             </span>
           ) : isLowStock ? (
-            <span className="px-2 py-1 bg-amber-500 text-white text-xs font-medium rounded shadow-sm">
+            <span className="px-2 py-1 bg-orange-500 text-white text-[10px] font-bold uppercase rounded shadow-sm">
               Low Stock
             </span>
           ) : (
-            <span className="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded shadow-sm">
-              In Stock
+            <span className="px-2 py-1 bg-green-600 text-white text-[10px] font-bold uppercase rounded shadow-sm">
+              Active
             </span>
           )}
         </div>
@@ -103,10 +113,10 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
             </span>
             <span
               className={`font-medium ${isOutOfStock
-                  ? "text-red-600"
-                  : isLowStock
-                    ? "text-amber-600"
-                    : "text-green-600"
+                ? "text-red-600"
+                : isLowStock
+                  ? "text-amber-600"
+                  : "text-green-600"
                 }`}
             >
               {stock} units
