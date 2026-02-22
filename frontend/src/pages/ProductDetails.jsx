@@ -456,7 +456,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Color Selection */}
-            {product.variants?.length > 1 && (
+            {product.variants?.length > 0 && (
               <div>
                 <h3 className="font-medium text-gray-900 mb-1.5 text-sm">
                   Color:{" "}
@@ -470,8 +470,8 @@ const ProductDetail = () => {
                       key={v.color}
                       onClick={() => handleColorChange(v.color)}
                       className={`px-2.5 py-1 rounded text-xs font-medium transition ${v.color === selectedColor
-                        ? "bg-black text-white"
-                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                          ? "bg-black text-white"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                         }`}
                     >
                       {v.color}

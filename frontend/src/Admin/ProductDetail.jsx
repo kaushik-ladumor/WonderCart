@@ -132,11 +132,10 @@ const ProductDetailModal = ({ product }) => {
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`w-12 h-12 border ${
-                      currentImageIndex === index
+                    className={`w-12 h-12 border ${currentImageIndex === index
                         ? "border-black bg-white"
                         : "border-gray-200 bg-white/50 hover:border-gray-400"
-                    } transition-colors p-1`}
+                      } transition-colors p-1`}
                   >
                     <img
                       src={image}
@@ -173,7 +172,7 @@ const ProductDetailModal = ({ product }) => {
               </div>
 
               {/* Variants / Colors */}
-              {product.variants?.length > 1 && (
+              {product.variants?.length > 0 && (
                 <div>
                   <h3 className="text-[9px] font-medium text-gray-500 uppercase tracking-wider mb-2">
                     Color / Variant
@@ -187,11 +186,10 @@ const ProductDetailModal = ({ product }) => {
                           setSelectedSize(0);
                           setCurrentImageIndex(0);
                         }}
-                        className={`px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider border ${
-                          selectedVariant === index
+                        className={`px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider border ${selectedVariant === index
                             ? "border-black bg-black text-white"
                             : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                        } transition-colors`}
+                          } transition-colors`}
                       >
                         {variant.color}
                       </button>
@@ -210,17 +208,15 @@ const ProductDetailModal = ({ product }) => {
                     <div
                       key={index}
                       onClick={() => setSelectedSize(index)}
-                      className={`flex items-center justify-between p-2.5 border text-xs cursor-pointer ${
-                        selectedSize === index
+                      className={`flex items-center justify-between p-2.5 border text-xs cursor-pointer ${selectedSize === index
                           ? "border-black bg-gray-50"
                           : "border-gray-200 bg-white hover:border-gray-400"
-                      } transition-colors`}
+                        } transition-colors`}
                     >
                       <div className="flex items-center gap-2.5">
                         <div
-                          className={`w-2 h-2 rounded-full ${
-                            size.stock > 0 ? "bg-gray-900" : "bg-gray-300"
-                          }`}
+                          className={`w-2 h-2 rounded-full ${size.stock > 0 ? "bg-gray-900" : "bg-gray-300"
+                            }`}
                         />
                         <span className="text-[11px] font-medium uppercase tracking-wider">
                           {size.size}
@@ -261,13 +257,13 @@ const ProductDetailModal = ({ product }) => {
                     <span>
                       {product.createdAt
                         ? new Date(product.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            },
-                          )
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          },
+                        )
                         : "N/A"}
                     </span>
                   </div>
