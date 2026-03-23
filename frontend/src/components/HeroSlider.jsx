@@ -1,6 +1,7 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // Import Swiper styles
 import "swiper/css";
@@ -9,154 +10,106 @@ import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 
 function HeroSlider() {
-  // Hero slider data with colorful images
   const heroSlides = [
     {
       id: 1,
-      title: "THE MINIMALIST COLLECTION",
-      subtitle: "EST. 2026",
-      description:
-        "Define your style with absolute simplicity. Our latest essentials.",
-      image:
-        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80",
-      cta: "EXPLORE",
+      subtitle: "EXCLUSIVE LAUNCH",
+      title: "The Modern Editorial Series.",
+      description: "Curated selection of premium essentials from global artisans.",
+      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80",
+      secondaryImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=80",
     },
     {
       id: 2,
-      title: "MODERN ELECTRONICS",
-      subtitle: "PURE TECH",
-      description:
-        "Experience technology in its purest form. High-performance designs.",
-      image:
-        "https://plus.unsplash.com/premium_photo-1661304671477-37c77d0c6930?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGVsZWN0cm9uaWNzfGVufDB8fDB8fHww",
-      cta: "SHOP TECH",
-    },
-    {
-      id: 3,
-      title: "LUXURY FOOTWEAR",
-      subtitle: "STEP IN STYLE",
-      description:
-        "Discover footwear that makes a statement without saying a word.",
-      image:
-        "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1600&auto=format&fit=crop&q=80",
-      cta: "VIEW ALL",
-    },
+      subtitle: "TECH ESSENTIALS",
+      title: "Audio Perfection Reimagined.",
+      description: "Discover the next generation of studio-grade sound equipment.",
+      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80",
+      secondaryImage: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=400&auto=format&fit=crop&q=80",
+    }
   ];
 
   return (
-    <section className="relative w-full h-screen">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Swiper
-        modules={[Navigation, Pagination, Autoplay, EffectFade]}
+        modules={[Autoplay, Pagination, EffectFade]}
         effect="fade"
-        navigation={{
-          nextEl: ".hero-swiper-button-next",
-          prevEl: ".hero-swiper-button-prev",
-        }}
-        pagination={{
-          clickable: true,
-          el: ".hero-swiper-pagination",
-        }}
-        autoplay={{
-          delay: 5000,
-          disableOnInteraction: false,
-        }}
+        autoplay={{ delay: 6000 }}
+        pagination={{ clickable: true, el: ".hero-pagination" }}
         loop={true}
-        speed={1000}
-        className="w-full h-full"
+        className="rounded-3xl overflow-hidden"
       >
         {heroSlides.map((slide) => (
           <SwiperSlide key={slide.id}>
-            <div className="relative w-full h-full">
-              {/* Background Image */}
-              <div className="absolute inset-0 w-full h-full">
-                <img
-                  src={slide.image}
-                  alt={slide.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40"></div>
-              </div>
-
-              {/* Content */}
-              <div className="relative z-10 h-full flex items-center justify-center px-4 sm:px-6 lg:px-8">
-                <div className="text-center text-white max-w-4xl mx-auto">
-                  <p className="text-xs sm:text-sm md:text-base tracking-[0.3em] mb-3 sm:mb-4 font-light opacity-90">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
+              {/* Left Panel - Hero Content */}
+              <div className="lg:col-span-2 bg-gradient-to-br from-[#004ac6] to-[#2563eb] rounded-3xl p-8 md:p-12 lg:p-16 flex flex-col justify-center text-white relative overflow-hidden">
+                <div className="relative z-10">
+                  <span className="font-body text-xs md:text-sm font-bold tracking-[0.2em] text-white/80 block mb-4 uppercase">
                     {slide.subtitle}
-                  </p>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 tracking-tight leading-tight">
+                  </span>
+                  <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 max-w-xl">
                     {slide.title}
                   </h1>
-                  <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto font-light px-4">
+                  <p className="font-body text-sm md:text-base text-white/80 mb-10 max-w-md leading-relaxed">
                     {slide.description}
                   </p>
-                  <button className="group bg-white text-black px-6 sm:px-8 md:px-10 py-3 sm:py-4 text-xs sm:text-sm md:text-base font-semibold tracking-wider hover:bg-black hover:text-white transition-all duration-300 inline-flex items-center gap-2">
-                    {slide.cta}
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  <Link to="/shop">
+                    <button className="bg-white text-[#004ac6] font-semibold rounded-lg px-8 py-4 hover:scale-[1.02] transition-all duration-300 shadow-lg shadow-blue-900/20">
+                      Explore Now
+                    </button>
+                  </Link>
+                </div>
+
+                {/* Decorative Elements */}
+                <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-[-5%] left-[-5%] w-48 h-48 bg-[#2563eb]/20 rounded-full blur-2xl"></div>
+              </div>
+
+              {/* Right Panel - Stacked Cards */}
+              <div className="flex flex-col gap-6">
+                <div className="flex-1 bg-[#f0f4ff] rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
+                  <img
+                    src={slide.image}
+                    alt="Featured"
+                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute bottom-6 left-6">
+                    <p className="font-display font-bold text-[#141b2d] text-lg">New Arrivals</p>
+                    <p className="font-body text-xs text-[#5c6880]">Shop the collection</p>
+                  </div>
+                </div>
+                <div className="flex-1 bg-[#e1e8fd] rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
+                  <img
+                    src={slide.secondaryImage}
+                    alt="Trending"
+                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute bottom-6 left-6">
+                    <p className="font-display font-bold text-[#141b2d] text-lg">Tech Deals</p>
+                    <p className="font-body text-xs text-[#5c6880]">Up to 40% Off</p>
+                  </div>
                 </div>
               </div>
             </div>
           </SwiperSlide>
         ))}
-
-        {/* Navigation Buttons */}
-        <div className="hero-swiper-button-prev absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-white/20 transition-all duration-300 group">
-          <svg
-            className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </div>
-        <div className="hero-swiper-button-next absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-white/20 transition-all duration-300 group">
-          <svg
-            className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </div>
-
-        {/* Pagination */}
-        <div className="hero-swiper-pagination absolute bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2"></div>
+        {/* Custom Pagination */}
+        <div className="hero-pagination flex justify-center gap-2 mt-6"></div>
       </Swiper>
 
-      {/* Custom Pagination Styles */}
       <style jsx>{`
-        .hero-swiper-pagination :global(.swiper-pagination-bullet) {
+        .hero-pagination :global(.swiper-pagination-bullet) {
           width: 8px;
           height: 8px;
-          background: white;
-          opacity: 0.5;
+          background: #004ac6;
+          opacity: 0.2;
           transition: all 0.3s;
         }
-        .hero-swiper-pagination :global(.swiper-pagination-bullet-active) {
-          width: 32px;
+        .hero-pagination :global(.swiper-pagination-bullet-active) {
+          width: 24px;
           border-radius: 4px;
           opacity: 1;
-        }
-        @media (min-width: 640px) {
-          .hero-swiper-pagination :global(.swiper-pagination-bullet) {
-            width: 10px;
-            height: 10px;
-          }
-          .hero-swiper-pagination :global(.swiper-pagination-bullet-active) {
-            width: 40px;
-          }
         }
       `}</style>
     </section>

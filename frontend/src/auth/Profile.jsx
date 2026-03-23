@@ -107,332 +107,190 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-8 px-3 sm:px-4 md:px-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            My Profile
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-2">
-            Manage your account settings and preferences
-          </p>
+    <div className="min-h-screen bg-[#f9f9ff] py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] font-bold text-[#004ac6] mb-2 block">
+              Dashboard
+            </span>
+            <h1 className="font-display text-4xl font-extrabold text-[#141b2d] tracking-tight">
+              My Profile
+            </h1>
+          </div>
+          <div className="flex items-center gap-4">
+             <button
+              onClick={handleLogout}
+              className="bg-white text-[#141b2d] font-bold border border-[#f0f4ff] rounded-xl px-6 py-3 hover:bg-[#f0f4ff] transition-all flex items-center gap-2 text-sm shadow-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Profile Info */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Profile Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-6 md:p-8 transition-all duration-300 hover:shadow-md">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6 mb-6 sm:mb-8">
-                {/* Profile Image */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Main Profile Info */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-[#f0f4ff] shadow-sm relative overflow-hidden group">
+              {/* Decorative accent */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#f0f4ff] rounded-bl-[4rem] -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              
+              <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-10">
                 <div className="relative">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-white ring-offset-4 ring-offset-gray-100 shadow-lg overflow-hidden">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] bg-[#f0f4ff] flex items-center justify-center overflow-hidden border-4 border-white shadow-xl">
                     {authUser?.profile ? (
-                      <img
-                        src={authUser.profile}
-                        alt={authUser.username}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={authUser.profile} alt={authUser.username} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                        <User className="w-12 h-12 text-blue-600" />
-                      </div>
+                      <User className="w-20 h-20 text-[#004ac6]/30" />
                     )}
                   </div>
+                  {authUser?.isVerified && (
+                    <div className="absolute -bottom-2 -right-2 bg-[#004ac6] text-white p-2 rounded-xl shadow-lg border-4 border-white">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                  )}
                 </div>
 
-                {/* User Info */}
-                <div className="flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                      {authUser?.username || "User"}
-                    </h2>
-                    {authUser?.isVerified && (
-                      <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span className="text-xs font-medium">Verified</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-gray-600 text-sm sm:text-base">
-                      <Mail className="w-4 h-4 flex-shrink-0 text-gray-500" />
-                      <span className="truncate">{authUser?.email || ""}</span>
+                <div className="flex-1 text-center md:text-left">
+                  <h2 className="font-display text-3xl font-bold text-[#141b2d] mb-2">{authUser?.username}</h2>
+                  <p className="font-body text-[#5c6880] mb-6">{authUser?.email}</p>
+                  
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                    <div className="bg-[#f0f4ff] px-4 py-2 rounded-xl border border-[#e1e8fd]">
+                      <p className="font-body text-[10px] uppercase tracking-wider text-[#004ac6] font-bold mb-0.5">Member Since</p>
+                      <p className="font-body text-sm font-bold text-[#141b2d]">{authUser?.createdAt ? formatDate(authUser.createdAt) : 'N/A'}</p>
                     </div>
-
-                    <div className="flex items-center gap-2 text-gray-600 text-sm sm:text-base">
-                      <Shield className="w-4 h-4 flex-shrink-0 text-gray-500" />
-                      <span className="capitalize">
-                        {authUser?.role || "User"}
-                      </span>
+                    <div className="bg-white px-4 py-2 rounded-xl border border-[#f0f4ff] shadow-sm">
+                      <p className="font-body text-[10px] uppercase tracking-wider text-[#5c6880] font-bold mb-0.5">Account Type</p>
+                      <p className="font-body text-sm font-bold text-[#141b2d] capitalize">{authUser?.role || 'Customer'}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Verification Status */}
               {!authUser?.isVerified && (
-                <div className="mt-4 sm:ml-auto">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2 text-yellow-800">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span className="text-sm font-medium">Email not verified</span>
-                      </div>
-                      <p className="text-xs text-yellow-700">
-                        Verify your email to access all features.
-                      </p>
-                      <button
-                        onClick={() => document.getElementById("verify_email_modal")?.showModal()}
-                        className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-900 px-3 py-1.5 rounded-md font-medium transition-colors w-fit"
-                      >
-                        Verify Now
-                      </button>
+                <div className="mt-12 p-6 bg-[#fef2f2] rounded-3xl border border-[#fee2e2] flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-500 shadow-sm">
+                      <AlertTriangle className="w-6 h-6" />
+                    </div>
+                    <div className="text-center md:text-left">
+                      <p className="font-body text-sm font-bold text-[#141b2d]">Email Unverified</p>
+                      <p className="font-body text-xs text-[#5c6880]">Verify your email to unlock all features.</p>
                     </div>
                   </div>
+                  <button
+                    onClick={() => document.getElementById("verify_email_modal")?.showModal()}
+                    className="bg-red-500 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-red-600 transition-colors text-sm"
+                  >
+                    Verify Now
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                  <p className="text-xs text-gray-600 font-medium">Joined</p>
-                </div>
-                <p className="text-sm font-semibold text-gray-900">
-                  {authUser?.createdAt
-                    ? formatDate(authUser.createdAt)
-                    : "N/A"}
-                </p>
-              </div>
+            {/* Address & Orders Quick View */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               {defaultAddress ? (
+                  <div className="bg-white rounded-[2rem] p-8 border border-[#f0f4ff] shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="w-12 h-12 bg-[#f0f4ff] rounded-2xl flex items-center justify-center text-[#004ac6]">
+                        <MapPin className="w-6 h-6" />
+                      </div>
+                      <span className="bg-[#f0f4ff] text-[#004ac6] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#e1e8fd]">
+                        Primary Address
+                      </span>
+                    </div>
+                    <h3 className="font-display text-xl font-bold text-[#141b2d] mb-4">Shipping Details</h3>
+                    <div className="font-body text-[#5c6880] text-sm leading-loose">
+                      <p className="text-[#141b2d] font-bold">{defaultAddress.fullName}</p>
+                      <p>{defaultAddress.street}</p>
+                      <p>{defaultAddress.city}, {defaultAddress.state} {defaultAddress.zipCode}</p>
+                      <p className="mt-2 text-[#004ac6] font-semibold">{defaultAddress.phone}</p>
+                    </div>
+                    <button onClick={() => navigate('/address')} className="mt-8 text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline">
+                      Manage Addresses
+                    </button>
+                  </div>
+               ) : (
+                  <div className="bg-white rounded-[2rem] p-8 border border-[#f0f4ff] shadow-sm flex flex-col items-center justify-center text-center">
+                    <MapPin className="w-12 h-12 text-[#e1e8fd] mb-4" />
+                    <p className="font-body text-sm text-[#5c6880]">No address added yet</p>
+                    <button onClick={() => navigate('/address')} className="mt-4 text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline">
+                      Add New Address
+                    </button>
+                  </div>
+               )}
 
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <User className="w-4 h-4 text-gray-500" />
-                  <p className="text-xs text-gray-600 font-medium">Role</p>
-                </div>
-                <p className="text-sm font-semibold text-gray-900 capitalize">
-                  {authUser?.role || "User"}
-                </p>
-              </div>
-
-              <div className="col-span-2 md:col-span-1 bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-4 h-4 text-gray-500" />
-                  <p className="text-xs text-gray-600 font-medium">Status</p>
-                </div>
-                <p className="text-sm font-semibold text-emerald-700">
-                  {authUser?.isVerified ? "Verified" : "Active"}
-                </p>
-              </div>
+               <div className="bg-[#141b2d] rounded-[2rem] p-8 shadow-xl shadow-black/10 flex flex-col justify-between group overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/10 transition-colors"></div>
+                  <div className="relative z-10">
+                    <Package className="w-10 h-10 text-white mb-6" />
+                    <h3 className="font-display text-2xl font-bold text-white mb-2">My Orders</h3>
+                    <p className="font-body text-white/60 text-sm">Track your shipments and view past purchases.</p>
+                  </div>
+                  <button
+                    onClick={handleMyOrders}
+                    className="relative z-10 mt-8 w-fit bg-white text-[#141b2d] font-bold px-6 py-3 rounded-xl hover:scale-105 transition-transform text-sm"
+                  >
+                    View History
+                  </button>
+               </div>
             </div>
           </div>
 
-          {/* Address Card */}
-          {defaultAddress && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-6 md:p-8 transition-all duration-300 hover:shadow-md">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-gray-900 text-lg">
-                      Default Address
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                      Your primary delivery address
-                    </p>
-                  </div>
-                </div>
-                {defaultAddress.isDefault && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                    Default
-                  </span>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <p className="text-base font-semibold text-gray-900">
-                    {defaultAddress.fullName}
-                  </p>
-                  <div className="flex items-center gap-2 text-gray-600 text-sm mt-1">
-                    <Phone className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{defaultAddress.phone}</span>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div className="text-gray-700 text-sm space-y-1">
-                    <p className="font-medium">{defaultAddress.street}</p>
-                    <p>
-                      {defaultAddress.city}, {defaultAddress.state}{" "}
-                      {defaultAddress.zipCode}
-                    </p>
-                    <p>{defaultAddress.country}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column - Settings */}
-        <div className="space-y-6">
-          {/* Account Settings */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-6 transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-200">
-              <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
-                <Settings className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="font-bold text-gray-900 text-lg">
-                Account Settings
-              </h2>
+          {/* Side Menu & Actions */}
+          <div className="space-y-8">
+            <div className="bg-white rounded-[2rem] p-8 border border-[#f0f4ff] shadow-sm">
+               <h3 className="font-body text-[10px] uppercase tracking-[0.2em] font-bold text-[#5c6880] mb-8">Account Settings</h3>
+               
+               <div className="space-y-4">
+                  {[
+                    { id: 'update-pass', icon: Key, title: 'Security', desc: 'Manage your password', action: () => document.getElementById("update_password_modal")?.showModal() },
+                    { id: 'track', icon: Truck, title: 'Track Order', desc: 'Real-time shipment tracking', action: () => navigate("/track-order") },
+                    { id: 'coupons', icon: Ticket, title: 'My Coupons', desc: `${coupons.length} active offers`, action: () => navigate("/my-coupons") },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={item.action}
+                      className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-[#f9f9ff] transition-all border border-transparent hover:border-[#f0f4ff] group text-left"
+                    >
+                      <div className="w-12 h-12 bg-[#f0f4ff] rounded-xl flex items-center justify-center text-[#004ac6] group-hover:scale-110 transition-transform">
+                        <item.icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-body text-sm font-bold text-[#141b2d]">{item.title}</p>
+                        <p className="font-body text-[10px] text-[#5c6880]">{item.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+               </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Update Password Button */}
-              <button
-                onClick={() =>
-                  document
-                    .getElementById("update_password_modal")
-                    ?.showModal()
-                }
-                className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
-                    <Key className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Update Password
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Change your account password
-                    </p>
-                  </div>
-                </div>
-                <span className="text-gray-400 group-hover:text-gray-600 text-xl font-light">
-                  ›
-                </span>
-              </button>
-
-              {/* Track Order Button */}
-              <button
-                onClick={() => navigate("/track-order")}
-                className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
-                    <Truck className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Track Order
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Check your order status
-                    </p>
-                  </div>
-                </div>
-                <span className="text-gray-400 group-hover:text-gray-600 text-xl font-light">
-                  ›
-                </span>
-              </button>
-
-              {/* My Orders Button */}
-              <button
-                onClick={handleMyOrders}
-                className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
-                    <Package className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      My Orders
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      View your order history
-                    </p>
-                  </div>
-                </div>
-                <span className="text-gray-400 group-hover:text-gray-600 text-xl font-light">
-                  ›
-                </span>
-              </button>
-
-              {/* My Coupons Button */}
-              <button
-                onClick={() => navigate("/my-coupons")}
-                className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
-                    <Ticket className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      My Coupons
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {coupons.length > 0 ? `You have ${coupons.length} active coupons` : 'View available offers'}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-gray-400 group-hover:text-gray-600 text-xl font-light">
-                  ›
-                </span>
-              </button>
+            <div className="bg-white rounded-[2rem] p-8 border border-red-50 shadow-sm overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+               <h3 className="font-body text-[10px] uppercase tracking-[0.2em] font-bold text-[#5c6880] mb-8 relative z-10">Danger Zone</h3>
+               
+               <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-bold hover:bg-red-50 transition-all text-sm relative z-10 shadow-sm"
+               >
+                 <Trash2 className="w-4 h-4" />
+                 Permanently Delete Account
+               </button>
             </div>
           </div>
 
-          {/* Danger Zone */}
-          <div className="bg-white border border-red-200 rounded-2xl shadow-sm p-5 sm:p-6 transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center gap-3 mb-5">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <h2 className="font-bold text-red-900">Account Actions</h2>
-            </div>
-
-            <div className="space-y-4">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-3 py-3.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 active:scale-[0.98]"
-              >
-                <LogOut className="w-5 h-5" />
-                Log Out
-              </button>
-
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="w-full flex items-center justify-center gap-3 py-3.5 bg-white text-red-600 border-2 border-red-300 rounded-xl font-semibold hover:bg-red-50 hover:border-red-400 transition-all duration-200 active:scale-[0.98]"
-              >
-                <Trash2 className="w-5 h-5" />
-                Delete Account
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Update Password Modal */}
       <UpdatePassword />
-
-      {/* Verify Email Modal */}
       <VerifyEmail modalId="verify_email_modal" email={authUser?.email} />
-
-      {/* Delete Modal Component */}
-      <DeleteModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-      />
+      <DeleteModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
     </div>
   );
 };

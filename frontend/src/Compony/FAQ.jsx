@@ -82,10 +82,10 @@ function FAQ() {
 
   const filteredQuestions = searchTerm
     ? allQuestions.filter(
-        (item) =>
-          item.q.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.a.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+      (item) =>
+        item.q.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.a.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
     : null;
 
   const toggleAccordion = (index) => {
@@ -144,9 +144,8 @@ function FAQ() {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ml-3 ${
-                        openIndex === index ? "transform rotate-180" : ""
-                      }`}
+                      className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ml-3 ${openIndex === index ? "transform rotate-180" : ""
+                        }`}
                     />
                   </button>
                   {openIndex === index && (
@@ -189,11 +188,10 @@ function FAQ() {
                           {item.q}
                         </span>
                         <ChevronDown
-                          className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ml-3 ${
-                            openIndex === globalIndex
+                          className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ml-3 ${openIndex === globalIndex
                               ? "transform rotate-180"
                               : ""
-                          }`}
+                            }`}
                         />
                       </button>
                       {openIndex === globalIndex && (

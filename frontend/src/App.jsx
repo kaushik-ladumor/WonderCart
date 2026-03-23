@@ -50,6 +50,7 @@ import Loader from "./components/Loader";
 import Category from "./pages/Category";
 import Shop from "./pages/Shop";
 import TrackOrder from "./pages/TrackOrder";
+import VisualSearch from "./pages/VisualSearch";
 
 import AdminLayout from "./Admin/components/AdminLayout";
 import AdminDashboard from "./Admin/AdminDashboard";
@@ -57,6 +58,7 @@ import AdminProducts from "./Admin/AdminProducts";
 import AdminUsers from "./Admin/AdminUsers"
 import AdminProfile from "./Admin/AdminProfile"
 import MyCoupons from "./pages/MyCoupons";
+
 
 import { useEffect } from "react";
 import AddCoupon from "./Admin/AddCoupon";
@@ -250,6 +252,8 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/my-coupons" element={<MyCoupons />} />
+          <Route path="/visual-search" element={<VisualSearch />} />
+
 
           {/* Page Not Found */}
           <Route path="*" element={<PageNotFound />} />

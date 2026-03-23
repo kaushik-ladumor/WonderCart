@@ -7,19 +7,19 @@ function Loader() {
         {/* Dots animation */}
         <div className="flex space-x-1.5">
           <div
-            className="w-2 h-2 bg-black rounded-full animate-bounce"
+            className="w-2 h-2 bg-[#A020F0] rounded-full animate-bounce"
             style={{ animationDelay: "0ms" }}
           ></div>
           <div
-            className="w-2 h-2 bg-black rounded-full animate-bounce"
+            className="w-2 h-2 bg-[#A020F0] rounded-full animate-bounce"
             style={{ animationDelay: "150ms" }}
           ></div>
           <div
-            className="w-2 h-2 bg-black rounded-full animate-bounce"
+            className="w-2 h-2 bg-[#A020F0] rounded-full animate-bounce"
             style={{ animationDelay: "300ms" }}
           ></div>
           <div
-            className="w-2 h-2 bg-black rounded-full animate-bounce"
+            className="w-2 h-2 bg-[#A020F0] rounded-full animate-bounce"
             style={{ animationDelay: "300ms" }}
           ></div>
         </div>

@@ -51,130 +51,73 @@ const ProductCard = ({
   const isWishlisted = wishlist.includes(product._id);
 
   return (
-    <div className="group h-full">
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full flex flex-col">
-        <Link to={`/product-detail/${product._id}`} className="flex-shrink-0">
-          {/* Image Section */}
-          <div className="relative aspect-square overflow-hidden bg-white">
-            <img
-              src={getProductImage(product.variants)}
-              alt={product.name}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+    <div className="bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-[0_4px_16px_rgba(0,74,198,0.08)] transition-shadow">
+      <Link to={`/product-detail/${product._id}`}>
+        {/* Image section — all overlays INSIDE this */}
+        <div className="relative bg-[#f0f4ff] aspect-[4/3]">
+          <img
+            src={getProductImage(product.variants)}
+            alt={product.name}
+            className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
+          />
+
+          {/* Rating badge — top left */}
+          <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-full px-2 py-0.5 flex items-center gap-1 text-xs font-semibold text-[#141b2d]">
+            <span className="text-[#004ac6]">★</span> {product.averageRating || 4.5}
+          </div>
+
+          {/* Wishlist — top right */}
+          <button
+            onClick={(e) => toggleWishlist(e, product)}
+            disabled={addingToWishlist[product._id]}
+            className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-full text-[#5c6880] hover:text-[#004ac6] transition-all z-20"
+          >
+            <Heart
+              className={`w-3.5 h-3.5 ${isWishlisted ? "text-red-500 fill-red-500" : ""}`}
             />
+          </button>
 
-            {/* Wishlist Button */}
-            <button
-              onClick={(e) => toggleWishlist(e, product)}
-              disabled={addingToWishlist[product._id]}
-              className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow hover:scale-110 transition z-10"
-              aria-label="Add to wishlist"
-            >
-              <Heart
-                className={`w-3.5 h-3.5 ${isWishlisted
-                  ? "text-red-500 fill-red-500"
-                  : "text-gray-400 hover:text-red-500"
-                  }`}
-              />
-            </button>
-
-            {/* Sold Out Overlay */}
-            {stock === 0 && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <span className="text-white text-xs font-bold tracking-wider px-2 py-1 bg-black/70 rounded">
-                  SOLD OUT
-                </span>
-              </div>
-            )}
-
-            {/* Discount Badge */}
-            {discount > 0 && (
-              <div className="absolute top-2 left-2">
-                <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs font-bold rounded">
-                  {discount}% OFF
-                </span>
-              </div>
-            )}
-          </div>
-        </Link>
-
-        {/* Content Section */}
-        <div className="p-3 space-y-2 flex-grow flex flex-col">
-          {/* Category */}
-          <p className="text-xs text-gray-500 uppercase tracking-wide">
-            {product.category || "Collection"}
-          </p>
-
-          {/* Product Name */}
-          <Link to={`/product-detail/${product._id}`}>
-            <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight hover:text-gray-600 transition">
-              {product.name}
-            </h3>
-          </Link>
-
-          {/* Rating */}
-          <div className="flex items-center gap-1">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-3 h-3 ${i < Math.round(product.averageRating || 4)
-                    ? "text-yellow-400 fill-yellow-400"
-                    : "text-gray-300"
-                    }`}
-                />
-              ))}
-            </div>
-            <span className="text-xs text-gray-500">
-              ({product.numReviews || 0})
-            </span>
-          </div>
-
-          {/* Color Variants Preview */}
-          {product.variants && product.variants.length > 1 && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-gray-500">Colors:</span>
-              <div className="flex gap-1">
-                {product.variants.slice(0, 4).map((variant, index) => (
-                  <div
-                    key={index}
-                    className="w-4 h-4 rounded-full border-2 border-gray-300"
-                    style={{
-                      backgroundColor:
-                        variant.color === "natural" || variant.color === "white"
-                          ? "#f5f5f5"
-                          : variant.color || "#e5e5e5",
-                    }}
-                    title={variant.color}
-                  />
-                ))}
-                {product.variants.length > 4 && (
-                  <span className="text-xs text-gray-400">
-                    +{product.variants.length - 4}
-                  </span>
-                )}
-              </div>
+          {/* Discount badge — bottom left, INSIDE image area */}
+          {discount > 0 && (
+            <div className="absolute bottom-2 left-2 bg-[#004ac6] text-white text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full">
+              {discount}% OFF
             </div>
           )}
 
-          {/* Price */}
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-base font-bold text-gray-900">
-              ₹{sellingPrice.toLocaleString()}
-            </span>
-
-            {discount > 0 && (
-              <span className="text-xs text-gray-400 line-through">
-                ₹{originalPrice.toLocaleString()}
+          {/* Sold Out Overlay */}
+          {stock === 0 && (
+            <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] flex items-center justify-center z-10">
+              <span className="bg-[#141b2d] text-white text-[9px] font-bold tracking-widest px-3 py-1 rounded-full uppercase">
+                Archived
               </span>
+            </div>
+          )}
+        </div>
+      </Link>
+
+      <div className="p-3">
+        <p className="text-[10px] uppercase tracking-widest text-[#004ac6] font-semibold mb-0.5">
+          {product.category || "General Archive"}
+        </p>
+        <Link to={`/product-detail/${product._id}`}>
+          <h3 className="font-semibold text-[#141b2d] text-sm leading-snug line-clamp-2 mb-1">
+            {product.name}
+          </h3>
+        </Link>
+        <div className="flex items-center justify-between mt-1">
+          <div className="flex items-baseline gap-1">
+            <span className="text-[#5c6880] text-xs font-normal">₹</span>
+            <span className="font-bold text-base text-[#141b2d]">{sellingPrice.toLocaleString()}</span>
+            {discount > 0 && (
+              <span className="text-xs line-through text-[#5c6880] ml-1">₹{originalPrice.toLocaleString()}</span>
             )}
           </div>
-
-          {/* Low Stock Alert */}
-          {stock > 0 && stock <= 5 && (
-            <p className="text-xs font-medium text-red-600">
-              Only {stock} left!
-            </p>
-          )}
+          <Link
+            to={`/product-detail/${product._id}`}
+            className="p-1.5 rounded-full text-[#141b2d] hover:bg-[#f0f4ff] transition-colors"
+          >
+            <Star className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </div>

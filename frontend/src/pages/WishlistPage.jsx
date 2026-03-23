@@ -12,6 +12,7 @@ import {
   Package,
   Loader2,
   AlertCircle,
+  Tag,
   ShoppingCart,
 } from "lucide-react";
 import Loader from "../components/Loader";

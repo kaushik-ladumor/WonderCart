@@ -3,6 +3,8 @@ const cloudinary = require("../Utils/Cloudinary");
 const Review = require("../Models/Review.Model");
 const mongoose = require('mongoose');
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
+const { getProductEmbedding } = require("../Services/Embedding");
 
 // Helper function to calculate discount percentage
 const calculateDiscount = (originalPrice, sellingPrice) => {
@@ -264,11 +266,28 @@ const createProduct = async (req, res) => {
       }
     }
 
+    let vector = [];
+    try {
+      // Get the first image of the first variant to generate multimodal vector
+      const firstImageUrl = parsedVariants[0].images[0];
+      if (firstImageUrl) {
+        console.log("Generating multimodal vector for:", firstImageUrl);
+        const response = await axios.get(firstImageUrl, { responseType: 'arraybuffer' });
+        const buffer = Buffer.from(response.data, 'binary');
+        vector = await getProductEmbedding(buffer, name, category);
+        console.log(`Vector generated successfully, dimensions: ${vector.length}`);
+      }
+    } catch (vectorError) {
+      console.error("Vector generation failed:", vectorError.message);
+      // Don't fail the whole request if vector fails
+    }
+
     const product = await Product.create({
       name,
       description,
       category,
       variants: parsedVariants,
+      vector,
       owner: req.user.userId,
       status: "pending",
     });
@@ -380,6 +399,20 @@ const updateProduct = async (req, res) => {
       });
 
       product.variants = parsedVariants;
+
+      // Handle Vector Update with multimodal embedding
+      try {
+        const firstImageUrl = product.variants[0]?.images[0];
+        if (firstImageUrl) {
+          console.log("Updating multimodal vector for:", firstImageUrl);
+          const response = await axios.get(firstImageUrl, { responseType: 'arraybuffer' });
+          const buffer = Buffer.from(response.data, 'binary');
+          product.vector = await getProductEmbedding(buffer, product.name, product.category);
+          console.log(`Vector updated successfully, dimensions: ${product.vector.length}`);
+        }
+      } catch (vectorError) {
+        console.error("Vector update failed:", vectorError.message);
+      }
     }
 
     await product.save();

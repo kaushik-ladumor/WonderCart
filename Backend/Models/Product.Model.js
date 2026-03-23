@@ -55,6 +55,7 @@ const productSchema = new mongoose.Schema(
     description: String,
     category: String,
     variants: [variantSchema],
+    vector: [Number],
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

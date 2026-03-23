@@ -137,17 +137,17 @@ const DeleteModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white border border-gray-300 max-w-md w-full shadow-2xl">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-black flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-white" />
+    <div className="fixed inset-0 bg-[#141b2d]/30 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-[2rem] max-w-[420px] w-full shadow-[0_20px_60px_-15px_rgba(20,27,45,0.08)] border border-white/50">
+        <div className="p-8">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-black">Delete Account</h3>
-                <p className="text-sm text-gray-500">
+                <h3 className="font-display text-lg font-bold text-[#141b2d]">Delete Account</h3>
+                <p className="font-body text-[11px] text-[#5c6880] mt-0.5">
                   Permanent action - cannot be undone
                 </p>
               </div>
@@ -159,42 +159,42 @@ const DeleteModal = ({ isOpen, onClose }) => {
                 setActiveOrders(false);
                 setOrderDetails(null);
               }}
-              className="p-2 hover:bg-gray-100 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-colors -mt-1 -mr-1"
               disabled={isDeleting}
             >
-              <X className="w-5 h-5 text-gray-700" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           {activeOrders ? (
             <div className="space-y-6">
               <div
-                className={`border rounded-lg p-4 ${getStatusColor(orderDetails?.status)}`}
+                className={`border rounded-2xl p-4 ${getStatusColor(orderDetails?.status)}`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5">
+                  <div className="mt-0.5 flex-shrink-0">
                     {getStatusIcon(orderDetails?.status)}
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Package className="w-4 h-4" />
-                      <p className="text-sm font-semibold">
+                      <p className="text-[13px] font-bold">
                         Active Orders Found
                       </p>
                     </div>
-                    <p className="text-sm">
+                    <p className="text-xs">
                       {getStatusText(orderDetails?.status)}
                     </p>
 
                     <div className="mt-3 space-y-2">
-                      <p className="text-xs font-medium text-gray-700">
+                      <p className="text-[11px] font-bold opacity-80 uppercase tracking-widest">
                         What you need to do:
                       </p>
-                      <ul className="text-xs text-gray-600 space-y-1">
+                      <ul className="text-xs space-y-1.5 opacity-90">
                         {getActionSteps(orderDetails?.status).map(
                           (step, index) => (
                             <li key={index} className="flex items-start">
-                              <span className="text-red-500 mr-2">•</span>
+                              <span className="mr-2">•</span>
                               {step}
                             </li>
                           ),
@@ -205,28 +205,28 @@ const DeleteModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="bg-[#f0f4ff]/50 border border-[#f0f4ff] rounded-2xl p-5">
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-[13px] font-bold text-[#141b2d]">
                     Why can't you delete your account?
                   </p>
-                  <ul className="text-xs text-gray-700 space-y-2">
+                  <ul className="text-[11px] text-[#5c6880] space-y-2.5 leading-relaxed">
                     <li className="flex items-start">
-                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500 mr-2.5 mt-0.5 flex-shrink-0" />
                       <span>
                         Account deletion is blocked while orders are active to
                         protect both buyers and sellers
                       </span>
                     </li>
                     <li className="flex items-start">
-                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500 mr-2.5 mt-0.5 flex-shrink-0" />
                       <span>
                         This ensures order fulfillment and prevents transaction
                         issues
                       </span>
                     </li>
                     <li className="flex items-start">
-                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500 mr-2.5 mt-0.5 flex-shrink-0" />
                       <span>
                         Once all orders are completed or cancelled, you can
                         delete your account
@@ -236,14 +236,14 @@ const DeleteModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => {
                     setActiveOrders(false);
                     setOrderDetails(null);
                     navigate("/orders");
                   }}
-                  className="flex-1 py-3 px-4 bg-black text-white font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3.5 px-4 bg-[#141b2d] text-white font-display font-bold text-xs rounded-xl hover:bg-[#004ac6] transition-colors flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Package className="w-4 h-4" />
                   View Orders
@@ -254,7 +254,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                     setOrderDetails(null);
                     setDeleteConfirm("");
                   }}
-                  className="flex-1 py-3 px-4 border border-gray-400 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-3.5 px-4 border border-gray-200 bg-white text-[#141b2d] font-display font-bold text-xs rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   OK
                 </button>
@@ -263,45 +263,44 @@ const DeleteModal = ({ isOpen, onClose }) => {
           ) : (
             <div className="space-y-6">
               <div>
-                <p className="text-gray-700 mb-4">
+                <p className="font-body text-[13px] text-[#5c6880] leading-relaxed mb-6">
                   Are you sure you want to delete your account? This will
                   permanently remove all your data from our servers.
                 </p>
 
-                <div className="bg-gray-50 border border-gray-300 p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-black">
-                        What will be deleted:
-                      </p>
-                      <ul className="text-sm text-gray-700 space-y-1.5">
-                        <li className="flex items-start">
-                          <span className="text-red-600 mr-2">•</span>Your
-                          reviews and ratings
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-red-600 mr-2">•</span>Cart and
-                          wishlist items
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-red-600 mr-2">•</span>Account
-                          details and preferences
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-red-600 mr-2">•</span>Order
-                          history and notifications
-                        </li>
-                      </ul>
+                <div className="bg-[#fff5f5] border border-red-50 rounded-[1rem] p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-[14px] h-[14px] rounded-full bg-[#ef4444] flex items-center justify-center text-white">
+                      <span className="text-[9px] font-black leading-none">!</span>
                     </div>
+                    <span className="text-[10px] font-bold text-[#ef4444] uppercase tracking-widest">
+                      What will be deleted:
+                    </span>
                   </div>
+                  <ul className="text-xs text-[#5c6880] space-y-2.5 font-medium pl-1">
+                    <li className="flex items-center">
+                      <div className="w-[3px] h-[3px] rounded-full bg-[#ef4444] mr-3" />
+                      Your reviews and ratings
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-[3px] h-[3px] rounded-full bg-[#ef4444] mr-3" />
+                      Cart and wishlist items
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-[3px] h-[3px] rounded-full bg-[#ef4444] mr-3" />
+                      Account details and preferences
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-[3px] h-[3px] rounded-full bg-[#ef4444] mr-3" />
+                      Order history and notifications
+                    </li>
+                  </ul>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-black">
-                  Type <span className="font-bold text-red-600">DELETE</span> to
-                  confirm
+                <label className="block text-[9px] font-bold text-[#5c6880] uppercase tracking-widest">
+                  Type DELETE to confirm
                 </label>
                 <input
                   type="text"
@@ -310,27 +309,27 @@ const DeleteModal = ({ isOpen, onClose }) => {
                     setDeleteConfirm(e.target.value.toUpperCase())
                   }
                   placeholder="Type DELETE here"
-                  className="w-full px-4 py-3 border border-gray-400 bg-white text-black font-medium placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  className="w-full px-4 py-3.5 bg-[#f0f4ff] border border-transparent rounded-xl text-sm font-medium text-[#141b2d] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all"
                   disabled={isDeleting}
                   autoComplete="off"
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => {
                     onClose();
                     setDeleteConfirm("");
                   }}
                   disabled={isDeleting}
-                  className="flex-1 py-3 px-4 border border-gray-400 text-black font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="flex-1 py-3.5 px-4 bg-white border border-gray-200 text-[#141b2d] font-display font-bold text-xs rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteAccount}
                   disabled={isDeleting || deleteConfirm !== "DELETE"}
-                  className="flex-1 py-3 px-4 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3.5 px-4 bg-[#ef4444] text-white font-display font-bold text-xs rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
                 >
                   {isDeleting ? (
                     <>

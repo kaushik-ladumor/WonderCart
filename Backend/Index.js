@@ -28,10 +28,17 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-
 app.use(cors(corsOptions));
+
+// Debugging middleware to log incoming requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log("Headers:", JSON.stringify(req.headers, null, 2));
+  next();
+});
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Removed express.urlencoded — it can interfere with multipart/form-data parsing
 app.use(mainRoutes);
 
 const server = http.createServer(app);
@@ -46,12 +53,13 @@ const io = new Server(server, {
       "https://wonder-cart-git-main-kaushik-ladumors-projects.vercel.app",
     ],
     credentials: true,
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+  },
 });
 
 global.io = io;
 initSocket(io);
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -11,11 +11,12 @@ import {
   MapPin,
   Loader2,
   AlertCircle,
-  CreditCard,
-  LogIn,
+  CreditCard as PaymentIcon,
   Home,
   ChevronRight,
-  Tag,
+  Hash,
+  Printer,
+  SquareCheckBig,
 } from "lucide-react";
 import { API_URL } from "../utils/constants";
 
@@ -206,350 +207,184 @@ const OrderConfirmationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-4 py-5">
-        {/* Success Banner */}
-        <div className="bg-gradient-to-r from-black to-gray-900 rounded-lg p-4 text-white mb-5">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            <div className="text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                <CheckCircle className="w-5 h-5" />
-                <h1 className="text-xl font-bold">Order Confirmed</h1>
+    <div className="min-h-screen bg-white pb-12">
+      <div className="max-w-7xl mx-auto px-4 py-4 lg:py-6">
+        
+        {/* Success Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
+           <div className="space-y-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 shadow-sm">
+                 <CheckCircle className="w-5 h-5" />
               </div>
-              <p className="text-gray-300 text-xs">
-                Thank you for your purchase. We'll notify you when your order
-                ships.
+              <h1 className="font-display text-4xl font-extrabold text-[#141b2d] tracking-tight">Order Confirmed</h1>
+              <p className="font-body text-[13px] text-[#5c6880] max-w-lg leading-relaxed">
+                Thank you for shopping! Your curator is preparing your selection. We'll send you an email as soon as your order is out for delivery.
               </p>
-            </div>
-            <div className="bg-white/10 rounded px-3 py-2 min-w-[140px]">
-              <div className="text-center">
-                <div className="text-lg font-bold mb-0.5">
-                  {formatPrice(order.totalAmount)}
+           </div>
+           
+           <div className="bg-[#f0f4ff]/70 border border-blue-50 rounded-2xl p-5 min-w-[180px] text-right shadow-sm">
+             <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-60 block mb-0.5">Total Amount</span>
+             <span className="font-display text-2xl font-extrabold text-[#004ac6] tracking-tighter italic">{formatPrice(order.totalAmount)}</span>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Main Content (Left) */}
+          <div className="lg:col-span-8 space-y-6">
+             
+             {/* Delivery Status Card */}
+             <div className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm">
+                <div className="flex items-center gap-2.5 mb-6">
+                   <Truck className="w-4 h-4 text-[#004ac6]" />
+                   <span className="font-display text-sm font-bold text-[#141b2d]">Delivery Status</span>
                 </div>
-                <div className="text-xs text-gray-300">Total Amount</div>
-              </div>
-            </div>
+                
+                <div className="relative pt-2 pb-6">
+                  <div className="absolute top-[30px] left-8 right-8 h-1 bg-[#f0f4ff] rounded-full">
+                     <div className="h-full w-1/3 bg-[#004ac6] rounded-full shadow-md transition-all duration-1000"></div>
+                  </div>
+                  
+                  <div className="flex justify-between relative z-10">
+                    {[
+                      { label: 'Ordered', icon: CheckCircle, date: new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#004ac6] text-white shadow-md' },
+                      { label: 'Processing', icon: CheckCircle, date: 'Oct 12, 02:15 PM', color: 'bg-[#004ac6] text-white shadow-md' },
+                      { label: 'Shipped', icon: Truck, date: 'Oct 13, 09:00 AM', color: 'bg-white border-[#004ac6] text-[#004ac6]' },
+                      { label: 'Delivered', icon: Home, date: 'Pending', color: 'bg-[#f0f4ff] text-[#e1e8fd]' }
+                    ].map((step, i) => (
+                       <div key={i} className="flex flex-col items-center gap-2">
+                          <div className={`w-10 h-10 rounded-full border-4 border-white flex items-center justify-center ${step.color}`}>
+                             <step.icon className="w-4 h-4" />
+                          </div>
+                          <div className="text-center">
+                             <p className={`font-display text-[10px] font-bold uppercase tracking-widest block ${step.color.includes('text-[#e1e8fd]') ? 'text-gray-300' : 'text-[#141b2d]'}`}>{step.label}</p>
+                             <p className="font-body text-[8px] text-gray-400 mt-0.5">{step.date}</p>
+                          </div>
+                       </div>
+                    ))}
+                  </div>
+                </div>
+             </div>
+
+             {/* Order Items */}
+             <div className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm">
+                <h2 className="font-display text-sm font-bold text-[#141b2d] mb-6">Order Items</h2>
+                <div className="space-y-3">
+                   {order.items?.map((item, i) => (
+                      <div key={i} className="bg-[#f9f9ff] border border-[#f0f4ff] rounded-xl p-3 flex gap-4 items-center hover:bg-white transition-all group">
+                         <div className="w-16 h-16 bg-white rounded-lg overflow-hidden shadow-sm flex-shrink-0">
+                            {getProductImage(item) ? (
+                               <img src={getProductImage(item)} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            ) : (
+                               <div className="w-full h-full flex items-center justify-center text-gray-200"><Package className="w-6 h-6" /></div>
+                            )}
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start">
+                               <div>
+                                  <h3 className="font-display text-[12px] font-bold text-[#141b2d] mb-0.5 truncate">{item.product?.name || item.name}</h3>
+                                  <p className="font-body text-[9px] text-[#5c6880] uppercase tracking-widest font-semibold flex items-center gap-2">
+                                     {item.size && <span>Size: {item.size}</span>}
+                                     {item.size && item.quantity && <span className="opacity-30">|</span>}
+                                     <span>Qty: {item.quantity || 1}</span>
+                                  </p>
+                                  <p className="font-display text-[12px] font-extrabold text-[#004ac6] mt-1 italic tracking-tight">{formatPrice(item.price)}</p>
+                               </div>
+                               <button className="text-[9px] font-bold text-[#004ac6] uppercase tracking-[0.2em] hover:text-[#141b2d] transition-colors pt-1">
+                                  Track Item
+                               </button>
+                            </div>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+          </div>
+
+          <div className="lg:col-span-4 space-y-5">
+             
+             {/* Order Info */}
+             <div className="bg-[#f0f4ff]/50 rounded-[1.5rem] p-6 border border-blue-50 shadow-sm">
+                <h2 className="font-display text-sm font-bold text-[#141b2d] mb-5 flex items-center gap-2">
+                   <Hash className="w-3.5 h-3.5 text-[#004ac6]" /> Order Information
+                </h2>
+                <div className="space-y-3.5">
+                   <div className="flex justify-between items-center group">
+                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Order Number</span>
+                      <span className="font-display text-[11px] font-bold text-[#141b2d]">#WC-{order._id.slice(-8).toUpperCase()}</span>
+                   </div>
+                   <div className="flex justify-between items-center group">
+                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Order Date</span>
+                      <span className="font-display text-[11px] font-bold text-[#141b2d]">{new Date(order.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}</span>
+                   </div>
+                   <div className="flex justify-between items-center group">
+                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Payment</span>
+                      <div className="flex items-center gap-2">
+                         <div className="w-5 h-5 bg-[#004ac6] rounded flex items-center justify-center shadow-sm"><PaymentIcon className="w-3 h-3 text-white" /></div>
+                         <span className="font-display text-[11px] font-bold text-[#141b2d] capitalize">{order.paymentMethod || "Razorpay"}</span>
+                      </div>
+                   </div>
+                   <div className="flex justify-between items-center group">
+                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Status</span>
+                      <span className="bg-[#e7f6ed] text-[#006e2c] text-[8px] font-black uppercase px-2 py-0.5 rounded leading-none border border-[#006e2c]/10 tracking-widest">PAID</span>
+                   </div>
+                   <div className="flex justify-between items-center group">
+                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Track</span>
+                      <span className="font-display text-[11px] font-bold text-[#004ac6] uppercase tracking-widest italic">{order.status === 'pending' ? 'IN TRANSIT' : order.status.toUpperCase()}</span>
+                   </div>
+                </div>
+             </div>
+
+             {/* Shipping Address */}
+             <div className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm">
+                <h2 className="font-display text-sm font-bold text-[#141b2d] mb-4 flex items-center gap-2">
+                   <MapPin className="w-3.5 h-3.5 text-[#004ac6]" /> Shipping Address
+                </h2>
+                <div className="space-y-2.5">
+                   <p className="font-display text-[12px] font-bold text-[#141b2d] mb-0.5">{order.address?.fullName || "Aditya Sharma"}</p>
+                   <p className="font-body text-[10px] text-[#5c6880] leading-relaxed uppercase">
+                      {order.address?.street},<br />
+                      {order.address?.city}, {order.address?.state} {order.address?.zipCode}
+                   </p>
+                   <div className="pt-1.5 flex items-center gap-2 text-[#141b2d]">
+                      <Phone className="w-3 h-3 opacity-40" />
+                      <span className="font-body text-[10px] font-bold">{order.address?.phone || "+91 98765 43210"}</span>
+                   </div>
+                </div>
+             </div>
+
+             {/* Help Card */}
+             <div className="bg-[#f0f4ff]/70 rounded-[1.5rem] p-6 border-l-[4px] border-l-[#004ac6] shadow-sm">
+                <h3 className="font-display text-[12px] font-bold text-[#141b2d] mb-2.5">Need Help?</h3>
+                <p className="font-body text-[10px] text-[#5c6880] mb-5 leading-relaxed">Our curators are available 24/7 to assist with your delivery.</p>
+                <div className="space-y-2.5">
+                   <a href="mailto:support@wondercart.com" className="flex items-center gap-2.5 group">
+                      <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-[#004ac6] shadow-sm"><Mail className="w-3 h-3" /></div>
+                      <span className="font-display text-[10px] font-bold text-[#141b2d] group-hover:text-[#004ac6] transition-colors">support@wondercart.com</span>
+                   </a>
+                   <a href="tel:1800-99-WONDER" className="flex items-center gap-2.5 group">
+                      <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-[#004ac6] shadow-sm"><Phone className="w-3 h-3" /></div>
+                      <span className="font-display text-[10px] font-bold text-[#141b2d] group-hover:text-[#004ac6] transition-colors">1800-99-WONDER</span>
+                   </a>
+                </div>
+             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-4">
-            {/* Order Items */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-gray-100 rounded flex items-center justify-center">
-                  <Package className="w-3.5 h-3.5 text-gray-700" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">
-                    Order Items
-                  </h2>
-                  <p className="text-gray-600 text-xs">
-                    {order.items?.length || 0} items in your order
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {order.items?.map((item, index) => {
-                  const productName =
-                    item.product?.name || item.name || "Product";
-                  const productPrice = item.price || 0;
-                  const productImage = getProductImage(item);
-
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                        {productImage ? (
-                          <img
-                            src={productImage}
-                            alt={productName}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src =
-                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                            <Package className="w-4 h-4 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-3">
-                          <div>
-                            <h3 className="font-medium text-gray-900 text-xs mb-1 line-clamp-2">
-                              {productName}
-                            </h3>
-                            <div className="flex flex-wrap gap-1 mb-1">
-                              {item.color && (
-                                <span className="text-xs text-gray-600 bg-white px-1.5 py-0.5 rounded border border-gray-200">
-                                  {item.color}
-                                </span>
-                              )}
-                              {item.size && (
-                                <span className="text-xs text-gray-600 bg-white px-1.5 py-0.5 rounded border border-gray-200">
-                                  Size: {item.size}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              Qty:{" "}
-                              <span className="font-semibold">
-                                {item.quantity || 1}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-semibold text-gray-900 text-xs">
-                              {formatPrice(productPrice * (item.quantity || 1))}
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              {formatPrice(productPrice)} each
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
-                {order.couponCode && (
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-green-600 font-medium flex items-center gap-1">
-                      <Tag className="w-3 h-3" />
-                      Coupon Applied ({order.couponCode})
-                    </span>
-                    <span className="font-semibold text-green-600">
-                      -{formatPrice(order.couponDiscount)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 text-sm">
-                      Order Total
-                    </h3>
-                    <p className="text-gray-600 text-xs">
-                      Including all charges
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">
-                      {formatPrice(order.totalAmount)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery Status */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-blue-50 rounded flex items-center justify-center">
-                  <Truck className="w-3.5 h-3.5 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">
-                    Delivery Status
-                  </h2>
-                  <p className="text-gray-600 text-xs">
-                    Estimated delivery: {getDeliveryDate()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <CheckCircle className="w-2.5 h-2.5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 text-xs">
-                      Order Confirmed
-                    </h4>
-                    <p className="text-gray-600 text-xs">
-                      Your order has been received
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-white border-2 border-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 text-xs">
-                      Processing
-                    </h4>
-                    <p className="text-gray-600 text-xs">
-                      Preparing your order for shipment
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 text-xs">
-                      Shipped
-                    </h4>
-                    <p className="text-gray-600 text-xs">
-                      On the way to your location
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {/* Order Information */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-purple-50 rounded flex items-center justify-center">
-                  <Calendar className="w-3.5 h-3.5 text-purple-600" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">
-                    Order Information
-                  </h2>
-                  <p className="text-gray-600 text-xs">Important details</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Order Number</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {order._id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Order Date</p>
-                  <p className="font-medium text-gray-900 text-xs">
-                    {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Payment Method</p>
-                  <div className="flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-gray-500" />
-                    <p className="font-medium text-gray-900 text-xs">
-                      {order.paymentMethod || "Not specified"}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Payment Status</p>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${order.paymentStatus === "paid"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                      }`}
-                  >
-                    {order.paymentStatus?.toUpperCase() || "PENDING"}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Order Status</p>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${order.status === "delivered"
-                      ? "bg-green-100 text-green-800"
-                      : order.status === "cancelled"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-blue-100 text-blue-800"
-                      }`}
-                  >
-                    {order.status?.toUpperCase() || "PROCESSING"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Shipping Address */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-indigo-50 rounded flex items-center justify-center">
-                  <MapPin className="w-3.5 h-3.5 text-indigo-600" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">
-                    Shipping Address
-                  </h2>
-                  <p className="text-gray-600 text-xs">Delivery location</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div>
-                  <p className="font-medium text-gray-900 text-xs mb-0.5">
-                    {order.address?.fullName || "Customer"}
-                  </p>
-                  <p className="text-gray-600 text-xs">
-                    {order.address?.street || "Address not specified"}
-                  </p>
-                  <p className="text-gray-600 text-xs">
-                    {order.address?.city}, {order.address?.state}{" "}
-                    {order.address?.zipcode}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1.5 pt-2 border-t border-gray-100">
-                  <Phone className="w-3.5 h-3.5 text-gray-500" />
-                  <p className="text-gray-600 text-xs">
-                    {order.address?.phone || "Phone not provided"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Help Section */}
-            <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-              <h3 className="font-semibold text-gray-900 text-xs mb-2">
-                Need Help?
-              </h3>
-              <p className="text-gray-600 text-xs mb-3">
-                Our support team is available to assist you.
-              </p>
-              <div className="space-y-1.5">
-                <a
-                  href="mailto:wondercarthelp@gmail.com"
-                  className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 transition-colors text-xs"
-                >
-                  <Mail className="w-3 h-3" />
-                  wondercarthelp@gmail.com
-                </a>
-                <a
-                  href="tel:+917226987466"
-                  className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 transition-colors text-xs"
-                >
-                  <Phone className="w-3 h-3" />
-                  +91 7226987466
-                </a>
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate("/")}
-              className="w-full py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-1.5"
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              Continue Shopping
-            </button>
-          </div>
+        {/* Action Buttons */}
+        <div className="mt-12 flex flex-wrap justify-center gap-4">
+           <button 
+             onClick={() => navigate("/shop")}
+             className="min-w-[220px] h-12 bg-[#004ac6] text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-blue-500/10 hover:bg-[#141b2d] transition-all active:scale-95"
+           >
+             Continue Shopping
+           </button>
+           <button 
+             onClick={() => window.print()}
+             className="min-w-[180px] h-12 bg-[#f0f4ff] text-[#004ac6] rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-blue-100 transition-all active:scale-95"
+           >
+             Print Invoice
+           </button>
         </div>
       </div>
     </div>

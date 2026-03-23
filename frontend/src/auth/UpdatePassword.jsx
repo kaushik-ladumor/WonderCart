@@ -1,4 +1,4 @@
-import { Lock, Eye, EyeOff, X } from "lucide-react";
+import { Lock, Eye, EyeOff, X, Shield, Key } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
@@ -145,213 +145,154 @@ function UpdatePassword() {
   const isSettingNewPassword = hasPassword === false;
 
   return (
-    <dialog id="update_password_modal" className="modal">
-      <div className="modal-box max-w-md p-5 bg-white rounded-lg shadow-xl border border-gray-200">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-          <div className="text-left">
-            <h3 className="font-bold text-gray-900 text-lg">
-              {isSettingNewPassword ? "Set Password" : "Update Password"}
-            </h3>
-            <p className="text-gray-600 text-sm mt-1">
-              {isSettingNewPassword
-                ? "Set a password for your account"
-                : "Enter your current and new password"}
-            </p>
-          </div>
+    <dialog id="update_password_modal" className="modal font-body">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+        <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
+          
+          {/* Close Button */}
           <button
             onClick={closeModal}
             disabled={loading}
-            className="p-1 hover:bg-gray-100 rounded disabled:opacity-50"
+            className="absolute top-4 right-4 p-1.5 rounded-full text-[#5c6880] hover:bg-[#f0f4ff] transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4" />
           </button>
-        </div>
 
-        {checkingPassword ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-            <span className="ml-3 text-sm text-gray-600">Loading...</span>
+          {/* Modal header */}
+          <div className="px-6 pt-6 pb-0 text-center">
+            <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
+              {isSettingNewPassword ? "SECURE ACCOUNT" : "SAFETY FIRST"}
+            </span>
+            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+              {isSettingNewPassword ? "Set Password" : "Update Password"}
+            </h3>
+            <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+              {isSettingNewPassword
+                ? "Set a password to enable multi-method login."
+                : "Regular password rotation is recommended."}
+            </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Current Password - Only when user already has a password */}
-            {needsCurrentPassword && (
-              <div className="text-left">
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type={showCurrentPassword ? "text" : "password"}
-                    placeholder="Enter current password"
-                    className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.currentPassword
-                      ? "border-red-500"
-                      : "border-gray-300"
-                      } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                    disabled={loading}
-                    {...register("currentPassword", {
-                      required:
-                        needsCurrentPassword &&
-                        "Current password is required",
-                    })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
-                    disabled={loading}
-                  >
-                    {showCurrentPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.currentPassword && (
-                  <p className="text-red-600 text-xs mt-1 text-left">
-                    {errors.currentPassword.message}
-                  </p>
+
+          {/* Modal body */}
+          <div className="px-6 py-4">
+            {checkingPassword ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <div className="w-10 h-10 border-4 border-[#f0f4ff] border-t-[#004ac6] rounded-full animate-spin"></div>
+                <span className="font-body text-[10px] uppercase tracking-widest font-bold text-[#5c6880]">Synchronizing...</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Current Password */}
+                {needsCurrentPassword && (
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
+                      Current Password
+                    </label>
+                    <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                      <Lock className="w-4 h-4 text-[#5c6880]" />
+                      <input
+                        type={showCurrentPassword ? "text" : "password"}
+                        placeholder="Current password"
+                        className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                        disabled={loading}
+                        {...register("currentPassword", {
+                          required: needsCurrentPassword && "Required",
+                        })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="text-[#5c6880] hover:text-[#141b2d]"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </div>
-            )}
 
-            {/* Info banner for first-time password setup */}
-            {isSettingNewPassword && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
-                <p className="text-xs text-blue-700">
-                  You signed in with Google and haven't set a password yet. Set
-                  one now to also enable email & password login.
-                </p>
-              </div>
-            )}
-
-            {/* New Password */}
-            <div className="text-left">
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                New Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.newPassword ? "border-red-500" : "border-gray-300"
-                    } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                  disabled={loading}
-                  {...register("newPassword", {
-                    required: "New password is required",
-                    minLength: {
-                      value: 8,
-                      message: "Password must be at least 8 characters",
-                    },
-                  })}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
-                  disabled={loading}
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
+                {/* New Password */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
+                    New Password
+                  </label>
+                  <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                    <Lock className="w-4 h-4 text-[#5c6880]" />
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="Min. 8 characters"
+                      className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                      disabled={loading}
+                      {...register("newPassword", {
+                        required: "Required",
+                        minLength: { value: 8, message: "Min 8 chars" },
+                      })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="text-[#5c6880] hover:text-[#141b2d]"
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {errors.newPassword && (
+                    <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.newPassword.message}</p>
                   )}
-                </button>
-              </div>
-              {errors.newPassword && (
-                <p className="text-red-600 text-xs mt-1 text-left">
-                  {errors.newPassword.message}
-                </p>
-              )}
-              <p className="text-xs text-gray-500 mt-1 text-left">
-                Must be at least 8 characters long
-              </p>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="text-left">
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Confirm New Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.confirmPassword
-                    ? "border-red-500"
-                    : "border-gray-300"
-                    } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                  disabled={loading}
-                  {...register("confirmPassword", {
-                    required: "Please confirm your password",
-                    validate: (value) =>
-                      value === newPassword || "Passwords don't match",
-                  })}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
-                  disabled={loading}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-red-600 text-xs mt-1 text-left">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
-
-            {/* Update Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm mt-4"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  {isSettingNewPassword
-                    ? "Setting Password..."
-                    : "Updating Password..."}
                 </div>
-              ) : isSettingNewPassword ? (
-                "Set Password"
-              ) : (
-                "Update Password"
-              )}
-            </button>
-          </form>
-        )}
 
-        {/* Security Note */}
-        <div className="mt-6 pt-5 border-t border-gray-200 text-left">
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            <div className="w-4 h-4 flex items-center justify-center">
-              <Lock className="w-3 h-3 text-green-600" />
+                {/* Confirm Password */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
+                    Confirm Password
+                  </label>
+                  <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                    <Lock className="w-4 h-4 text-[#5c6880]" />
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Verify new password"
+                      className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                      disabled={loading}
+                      {...register("confirmPassword", {
+                        required: "Required",
+                        validate: (value) => value === newPassword || "Keys don't match",
+                      })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="text-[#5c6880] hover:text-[#141b2d]"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.confirmPassword.message}</p>
+                  )}
+                </div>
+
+                {/* Primary Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform mt-4 disabled:opacity-50"
+                >
+                  {loading ? "Processing..." : isSettingNewPassword ? "Set Secure Password" : "Save Changes"}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Modal footer */}
+          <div className="px-6 pb-6 pt-2 border-t border-[#f0f4ff] bg-gray-50/30">
+            <div className="flex items-center gap-3 text-[#5c6880]">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-[#f0f4ff]">
+                <Shield className="w-3.5 h-3.5 text-[#004ac6]" />
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-medium leading-tight">Your credential data is encrypted using archival-grade protocols.</span>
             </div>
-            <span>Your password is encrypted and securely stored</span>
           </div>
         </div>
       </div>
-
-      {/* Modal backdrop */}
-      <form method="dialog" className="modal-backdrop">
-        <button onClick={closeModal} disabled={loading}>
-          close
-        </button>
-      </form>
     </dialog>
   );
 }
