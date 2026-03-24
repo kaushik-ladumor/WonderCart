@@ -10,10 +10,13 @@ import {
   LogOut,
   Menu,
   X,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useSocket } from "../context/SocketProvider";
 import { API_URL } from "../utils/constants";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const SellerNavbar = () => {
   const { setAuthUser } = useAuth();
@@ -23,7 +26,29 @@ const SellerNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [profileStatus, setProfileStatus] = useState("email_pending");
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    fetchProfileStatus();
+  }, []);
+
+  const fetchProfileStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await axios.get(`${API_URL}/seller/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) {
+        setProfileStatus(res.data.profile.profileStatus);
+      }
+    } catch (err) {
+      console.error("Failed to fetch profile status in navbar");
+    }
+  };
+
+  const isProfileActive = profileStatus === "active";
 
   const navItems = [
     { path: "/seller/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -211,16 +236,26 @@ const SellerNavbar = () => {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPath === item.path;
+                const isLocked = !isProfileActive && item.path !== "/seller/dashboard" && item.path !== "/seller/profile";
+
                 return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`text-sm flex items-center gap-2 transition-colors ${isActive ? "text-white font-bold underline underline-offset-8 decoration-2" : "text-gray-300 hover:text-white"
-                      }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
-                  </Link>
+                  <div key={item.path} className="relative group">
+                    <Link
+                      to={isLocked ? "#" : item.path}
+                      onClick={(e) => {
+                        if (isLocked) {
+                          e.preventDefault();
+                          toast.error("Complete your profile to unlock this feature");
+                        }
+                      }}
+                      className={`text-sm flex items-center gap-2 transition-colors ${isActive ? "text-white font-bold underline underline-offset-8 decoration-2" : "text-gray-300 hover:text-white"
+                        } ${isLocked ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {item.label}
+                      {isLocked && <Lock className="w-3 h-3 text-gray-500" />}
+                    </Link>
+                  </div>
                 );
               })}
             </div>
@@ -391,22 +426,34 @@ const SellerNavbar = () => {
               <div className="px-4 mb-4">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Management</p>
                 <div className="space-y-1">
-                  {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentPath === item.path;
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition ${isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-50"
-                          }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Icon className="w-5 h-5" />
-                        {item.label}
-                      </Link>
-                    )
-                  })}
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = currentPath === item.path;
+                      const isLocked = !isProfileActive && item.path !== "/seller/dashboard" && item.path !== "/seller/profile";
+                      
+                      return (
+                        <Link
+                          key={item.path}
+                          to={isLocked ? "#" : item.path}
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition ${isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-50"
+                            } ${isLocked ? "opacity-50" : ""}`}
+                          onClick={(e) => {
+                            if (isLocked) {
+                              e.preventDefault();
+                              toast.error("Complete your profile to unlock this feature");
+                            } else {
+                              setMobileMenuOpen(false);
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-5 h-5" />
+                            {item.label}
+                          </div>
+                          {isLocked && <Lock className="w-4 h-4 text-gray-400" />}
+                        </Link>
+                      )
+                    })}
                 </div>
               </div>
             </div>

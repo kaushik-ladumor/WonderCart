@@ -102,6 +102,88 @@ function SellerDashboard() {
 
   if (loading) return <Loader />;
 
+  const sellerProfile = dashboard?.sellerProfile || {};
+  const profileStatus = sellerProfile.profileStatus || "email_pending";
+  const profileActive = profileStatus === "active";
+
+  // ─── Profile Incomplete/Pending: Show onboarding prompt ───
+  if (!profileActive) {
+    const statusConfig = {
+      email_pending: { label: "Get Started", color: "blue", desc: "Complete your seller profile to unlock all features.", icon: "📋" },
+      email_verified: { label: "Complete Profile", color: "blue", desc: "Add your business and bank details to continue.", icon: "📝" },
+      submitted: { label: "Under Review", color: "amber", desc: "Your application is being reviewed. We'll notify you soon.", icon: "⏳" },
+      rejected: { label: "Action Required", color: "red", desc: sellerProfile.rejectionReason || "Your application needs attention.", icon: "⚠️" },
+      suspended: { label: "Suspended", color: "gray", desc: "Your account has been suspended. Contact support.", icon: "🚫" },
+    };
+    const cfg = statusConfig[profileStatus] || statusConfig.email_pending;
+
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Seller Dashboard</h1>
+              <p className="text-sm text-gray-600">Welcome to WonderCart Seller Hub</p>
+            </div>
+          </div>
+
+          {/* Onboarding Card */}
+          <div className={`bg-white border-2 border-${cfg.color}-200 rounded-2xl p-8 text-center mb-6`}>
+            <div className="text-5xl mb-4">{cfg.icon}</div>
+            <span className={`inline-block px-3 py-1 bg-${cfg.color}-100 text-${cfg.color}-800 rounded-full text-xs font-bold uppercase tracking-wider mb-3`}>
+              {cfg.label}
+            </span>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {profileStatus === "submitted" ? "Application Under Review" : "Complete Your Seller Profile"}
+            </h2>
+            <p className="text-gray-500 max-w-md mx-auto mb-6">{cfg.desc}</p>
+            
+            {profileStatus !== "submitted" && profileStatus !== "suspended" && (
+              <button onClick={() => navigate("/seller/profile")}
+                className="px-8 py-3.5 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition shadow-lg">
+                {profileStatus === "rejected" ? "Edit & Resubmit" : "Setup Profile →"}
+              </button>
+            )}
+
+            {/* Progress Steps */}
+            <div className="flex items-center justify-center gap-4 mt-8">
+              {[
+                { label: "Email", done: sellerProfile.emailVerified },
+                { label: "Business", done: sellerProfile.step2Completed },
+                { label: "Bank", done: sellerProfile.step3Completed },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
+                    ${s.done ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}>
+                    {s.done ? "✓" : i + 1}
+                  </div>
+                  <span className={`text-xs font-medium ${s.done ? "text-green-700" : "text-gray-400"}`}>{s.label}</span>
+                  {i < 2 && <div className={`w-12 h-0.5 ${s.done ? "bg-green-300" : "bg-gray-200"}`} />}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Locked Feature Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 opacity-40 pointer-events-none select-none">
+            {[
+              { label: "Products", value: "—", desc: "Locked" },
+              { label: "Orders", value: "—", desc: "Locked" },
+              { label: "Revenue", value: "—", desc: "Locked" },
+              { label: "Earnings", value: "—", desc: "Locked" },
+            ].map((s, i) => (
+              <div key={i} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="text-xs text-gray-500 mb-1">{s.label}</div>
+                <div className="text-xl font-bold text-gray-300">{s.value}</div>
+                <div className="text-xs text-gray-300 mt-1">{s.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const totalOrders = dashboard?.orderCount || 0;
   const productCount = dashboard?.productCount || 0;
   const totalEarnings = dashboard?.totalEarnings || 0;

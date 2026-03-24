@@ -64,6 +64,7 @@ import { useEffect } from "react";
 import AddCoupon from "./Admin/AddCoupon";
 import EditCoupon from "./Admin/EditCoupon";
 import AdminCoupon from "./Admin/AdminCoupon";
+import AdminSellerApplications from "./Admin/AdminSellerApplications";
 
 function App() {
   const { authUser, setToken, setAuthUser } = useAuth();
@@ -217,6 +218,7 @@ function App() {
           <Route path="coupon/add" element={<AddCoupon />} />
           <Route path="coupon/edit/:couponId" element={<EditCoupon />} />
           <Route path="coupon" element={<AdminCoupon />} />
+          <Route path="seller-applications" element={<AdminSellerApplications />} />
         </Route>
 
         {/* ================= MAIN USER ROUTES ================= */}

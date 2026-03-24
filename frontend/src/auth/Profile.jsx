@@ -17,6 +17,8 @@ import {
   Truck,
   Ticket,
   ChevronRight,
+  Wallet,
+  ArrowRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -24,36 +26,38 @@ import { useAuth } from "../context/AuthProvider";
 import UpdatePassword from "./UpdatePassword";
 import VerifyEmail from "./VerifyEmail";
 import DeleteModal from "./DeletedModel";
+import WalletModal from "./WalletModal";
 import { API_URL } from "../utils/constants";
 
 const Profile = () => {
   const { authUser, setAuthUser } = useAuth();
   const [addresses, setAddresses] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const [coupons, setCoupons] = useState([]);
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [showCoupons, setShowCoupons] = useState(false);
   const navigate = useNavigate();
 
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await axios.get(`${API_URL}/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setAuthUser(response.data.user);
+      setAddresses(response.data.user.addresses || []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to fetch profile");
+    }
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const response = await axios.get(`${API_URL}/user/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setAuthUser(response.data.user);
-        setAddresses(response.data.user.addresses || []);
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Failed to fetch profile");
-      }
-    };
-
     const fetchCoupons = async () => {
       try {
         setLoadingCoupons(true);
@@ -193,38 +197,31 @@ const Profile = () => {
               )}
             </div>
 
-            {/* Address & Orders Quick View */}
+            {/* Address & Wallet Quick View */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               {defaultAddress ? (
-                  <div className="bg-white rounded-[2rem] p-8 border border-[#f0f4ff] shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="w-12 h-12 bg-[#f0f4ff] rounded-2xl flex items-center justify-center text-[#004ac6]">
-                        <MapPin className="w-6 h-6" />
-                      </div>
-                      <span className="bg-[#f0f4ff] text-[#004ac6] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#e1e8fd]">
-                        Primary Address
-                      </span>
-                    </div>
-                    <h3 className="font-display text-xl font-bold text-[#141b2d] mb-4">Shipping Details</h3>
-                    <div className="font-body text-[#5c6880] text-sm leading-loose">
-                      <p className="text-[#141b2d] font-bold">{defaultAddress.fullName}</p>
-                      <p>{defaultAddress.street}</p>
-                      <p>{defaultAddress.city}, {defaultAddress.state} {defaultAddress.zipCode}</p>
-                      <p className="mt-2 text-[#004ac6] font-semibold">{defaultAddress.phone}</p>
-                    </div>
-                    <button onClick={() => navigate('/address')} className="mt-8 text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline">
-                      Manage Addresses
-                    </button>
+               <div className="bg-white rounded-[2rem] p-8 border border-[#f0f4ff] shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-8">
+                     <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#004ac6]">
+                        <Wallet className="w-6 h-6" />
+                     </div>
+                     <span className="bg-green-100 text-green-700 text-[9px] font-extrabold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-green-200">
+                        Active Wallet
+                     </span>
                   </div>
-               ) : (
-                  <div className="bg-white rounded-[2rem] p-8 border border-[#f0f4ff] shadow-sm flex flex-col items-center justify-center text-center">
-                    <MapPin className="w-12 h-12 text-[#e1e8fd] mb-4" />
-                    <p className="font-body text-sm text-[#5c6880]">No address added yet</p>
-                    <button onClick={() => navigate('/address')} className="mt-4 text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline">
-                      Add New Address
-                    </button>
+                  <div>
+                    <h3 className="font-display text-[10px] font-bold text-[#5c6880] uppercase tracking-widest mb-1">Available Funds</h3>
+                    <p className="font-display text-4xl font-black text-[#141b2d] tracking-tight italic">
+                      ₹{authUser?.walletBalance?.toLocaleString() || '0'}
+                    </p>
                   </div>
-               )}
+                  <button 
+                    onClick={() => setShowWalletModal(true)}
+                    className="mt-8 bg-[#004ac6] text-white font-bold px-6 py-4 rounded-2xl hover:bg-[#141b2d] transition-all text-xs tracking-widest uppercase flex items-center justify-center gap-2 group shadow-lg shadow-blue-500/10"
+                  >
+                     Add Money 
+                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+               </div>
 
                <div className="bg-[#141b2d] rounded-[2rem] p-8 shadow-xl shadow-black/10 flex flex-col justify-between group overflow-hidden relative">
                   <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/10 transition-colors"></div>
@@ -240,6 +237,36 @@ const Profile = () => {
                     View History
                   </button>
                </div>
+            </div>
+
+            {/* Address Row */}
+            <div className="bg-white rounded-[2rem] p-8 border border-[#f0f4ff] shadow-sm">
+                {defaultAddress ? (
+                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                      <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 bg-[#f0f4ff] rounded-2xl flex items-center justify-center text-[#004ac6]">
+                           <MapPin className="w-6 h-6" />
+                        </div>
+                        <div>
+                           <p className="font-display text-sm font-bold text-[#141b2d]">{defaultAddress.fullName}</p>
+                           <p className="font-body text-[#5c6880] text-[11px] leading-relaxed max-w-sm">
+                              {defaultAddress.street}, {defaultAddress.city}, {defaultAddress.state} {defaultAddress.zipCode}
+                           </p>
+                        </div>
+                      </div>
+                      <button onClick={() => navigate('/address')} className="text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline whitespace-nowrap">
+                        Manage Shipping Addresses
+                      </button>
+                   </div>
+                ) : (
+                   <div className="flex flex-col items-center justify-center text-center py-4">
+                     <MapPin className="w-12 h-12 text-[#e1e8fd] mb-4" />
+                     <p className="font-body text-sm text-[#5c6880]">No address added yet</p>
+                     <button onClick={() => navigate('/address')} className="mt-4 text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline">
+                       Add New Address
+                     </button>
+                   </div>
+                )}
             </div>
           </div>
 
@@ -291,6 +318,11 @@ const Profile = () => {
       <UpdatePassword />
       <VerifyEmail modalId="verify_email_modal" email={authUser?.email} />
       <DeleteModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
+      <WalletModal 
+        isOpen={showWalletModal} 
+        onClose={() => setShowWalletModal(false)} 
+        onRefresh={fetchProfile}
+      />
     </div>
   );
 };

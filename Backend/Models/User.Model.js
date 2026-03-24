@@ -61,6 +61,11 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
 
+    walletBalance: {
+      type: Number,
+      default: 0,
+    },
+
     addresses: [addressSchema],
   },
   { timestamps: true }

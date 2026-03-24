@@ -266,39 +266,44 @@ const OrderConfirmationPage = () => {
                 </div>
              </div>
 
-             {/* Order Items */}
-             <div className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm">
-                <h2 className="font-display text-sm font-bold text-[#141b2d] mb-6">Order Items</h2>
-                <div className="space-y-3">
-                   {order.items?.map((item, i) => (
-                      <div key={i} className="bg-[#f9f9ff] border border-[#f0f4ff] rounded-xl p-3 flex gap-4 items-center hover:bg-white transition-all group">
-                         <div className="w-16 h-16 bg-white rounded-lg overflow-hidden shadow-sm flex-shrink-0">
-                            {getProductImage(item) ? (
-                               <img src={getProductImage(item)} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                            ) : (
-                               <div className="w-full h-full flex items-center justify-center text-gray-200"><Package className="w-6 h-6" /></div>
-                            )}
-                         </div>
-                         <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start">
-                               <div>
-                                  <h3 className="font-display text-[12px] font-bold text-[#141b2d] mb-0.5 truncate">{item.product?.name || item.name}</h3>
-                                  <p className="font-body text-[9px] text-[#5c6880] uppercase tracking-widest font-semibold flex items-center gap-2">
-                                     {item.size && <span>Size: {item.size}</span>}
-                                     {item.size && item.quantity && <span className="opacity-30">|</span>}
-                                     <span>Qty: {item.quantity || 1}</span>
-                                  </p>
-                                  <p className="font-display text-[12px] font-extrabold text-[#004ac6] mt-1 italic tracking-tight">{formatPrice(item.price)}</p>
-                               </div>
-                               <button className="text-[9px] font-bold text-[#004ac6] uppercase tracking-[0.2em] hover:text-[#141b2d] transition-colors pt-1">
-                                  Track Item
-                               </button>
-                            </div>
-                         </div>
-                      </div>
-                   ))}
-                </div>
-             </div>
+             {/* Order Packages */}
+             {order.subOrders?.map((sub, idx) => (
+               <div key={sub._id} className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm mb-6 overflow-hidden">
+                  <div className="flex justify-between items-center mb-6 border-b border-[#f9f9ff] pb-4">
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                           <Package className="w-5 h-5" />
+                        </div>
+                        <div>
+                           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Package {idx + 1}</p>
+                           <p className="text-xs font-bold text-[#141b2d]">{sub.subOrderId}</p>
+                        </div>
+                     </div>
+                     <button 
+                       onClick={() => navigate(`/track-order?id=${sub.subOrderId}`)}
+                       className="text-[9px] font-bold text-[#004ac6] uppercase tracking-[0.2em] bg-blue-50 px-4 py-2 rounded-lg hover:bg-[#004ac6] hover:text-white transition-all"
+                     >
+                        Track Package
+                     </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                     {sub.items?.map((item, i) => (
+                        <div key={i} className="flex gap-4 items-center">
+                           <div className="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-xs text-gray-400 border border-gray-100">
+                              {item.quantity}x
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <h3 className="font-display text-[12px] font-bold text-[#141b2d] mb-0.5 truncate">{item.name}</h3>
+                              <p className="font-body text-[9px] text-[#5c6880] uppercase tracking-widest font-semibold">
+                                 {item.color} · {item.size}
+                              </p>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+             ))}
           </div>
 
           <div className="lg:col-span-4 space-y-5">
@@ -324,14 +329,20 @@ const OrderConfirmationPage = () => {
                          <span className="font-display text-[11px] font-bold text-[#141b2d] capitalize">{order.paymentMethod || "Razorpay"}</span>
                       </div>
                    </div>
-                   <div className="flex justify-between items-center group">
-                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Status</span>
-                      <span className="bg-[#e7f6ed] text-[#006e2c] text-[8px] font-black uppercase px-2 py-0.5 rounded leading-none border border-[#006e2c]/10 tracking-widest">PAID</span>
-                   </div>
-                   <div className="flex justify-between items-center group">
-                      <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Track</span>
-                      <span className="font-display text-[11px] font-bold text-[#004ac6] uppercase tracking-widest italic">{order.status === 'pending' ? 'IN TRANSIT' : order.status.toUpperCase()}</span>
-                   </div>
+                    <div className="flex justify-between items-center group">
+                       <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Status</span>
+                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded leading-none border tracking-widest ${
+                         order.paymentStatus === 'paid' 
+                           ? "bg-[#e7f6ed] text-[#006e2c] border-[#006e2c]/10" 
+                           : "bg-blue-50 text-[#004ac6] border-[#004ac6]/10"
+                       }`}>
+                         {order.paymentStatus === 'paid' ? 'PAID' : (order.paymentStatus?.replace('_', ' ') || 'CONFIRMED')}
+                       </span>
+                    </div>
+                    <div className="flex justify-between items-center group">
+                       <span className="font-display text-[9px] font-bold uppercase tracking-widest text-[#5c6880] opacity-70">Track</span>
+                       <span className="font-display text-[11px] font-bold text-[#004ac6] uppercase tracking-widest italic">{order.paymentStatus === 'paid' ? 'READY TO SHIP' : 'PROCESSING'}</span>
+                    </div>
                 </div>
              </div>
 
@@ -342,10 +353,10 @@ const OrderConfirmationPage = () => {
                 </h2>
                 <div className="space-y-2.5">
                    <p className="font-display text-[12px] font-bold text-[#141b2d] mb-0.5">{order.address?.fullName || "Aditya Sharma"}</p>
-                   <p className="font-body text-[10px] text-[#5c6880] leading-relaxed uppercase">
-                      {order.address?.street},<br />
-                      {order.address?.city}, {order.address?.state} {order.address?.zipCode}
-                   </p>
+                    <p className="font-body text-[10px] text-[#5c6880] leading-relaxed uppercase">
+                       {order.address?.street},<br />
+                       {order.address?.city}, {order.address?.state} {order.address?.zipcode || order.address?.zipCode}
+                    </p>
                    <div className="pt-1.5 flex items-center gap-2 text-[#141b2d]">
                       <Phone className="w-3 h-3 opacity-40" />
                       <span className="font-body text-[10px] font-bold">{order.address?.phone || "+91 98765 43210"}</span>

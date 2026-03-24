@@ -1,5 +1,5 @@
 // src/seller/products/AddProduct.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -11,19 +11,49 @@ import {
   Package,
   Tag,
   ArrowLeft,
-  Image as ImageIcon,
+  ImageIcon,
   Save,
+  ChevronDown,
 } from "lucide-react";
 import { API_URL } from "../../utils/constants";
+import { Link } from "react-router-dom";
 
 const AddProduct = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [fetchingCategories, setFetchingCategories] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     category: "",
   });
+
+  useEffect(() => {
+    fetchApprovedCategories();
+  }, []);
+
+  const fetchApprovedCategories = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/seller/categories`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) {
+        setCategories(res.data.categories);
+        // If profile is not active, backend returns 403 or empty list
+      }
+    } catch (err) {
+      if (err.response?.status === 403) {
+        toast.error("Complete your profile to add products");
+        navigate("/seller/dashboard");
+      } else {
+        console.error("Failed to fetch categories:", err);
+      }
+    } finally {
+      setFetchingCategories(false);
+    }
+  };
 
   const [variants, setVariants] = useState([
     {
@@ -208,10 +238,9 @@ const AddProduct = () => {
         },
       });
 
-      toast.success(
-        "Product submission successful! It is now pending approval and will be reviewed by our admin within 24 hours.",
-        { duration: 6000 }
-      );
+      toast.success("Product published successfully! It is now live for customers.", {
+        duration: 4000,
+      });
       navigate("/seller/products");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add product");
@@ -266,18 +295,33 @@ const AddProduct = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                  Category *
+                <label className="block text-xs font-medium text-gray-700 mb-1.5 font-bold uppercase tracking-wider">
+                  Category * {categories.length === 0 && !fetchingCategories && <span className="text-red-500 normal-case">(No approved categories)</span>}
                 </label>
-                <input
-                  type="text"
-                  name="category"
-                  required
-                  value={formData.category}
-                  onChange={handleChange}
-                  placeholder="e.g., Electronics, Fashion"
-                  className="w-full text-sm px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                />
+                <div className="relative">
+                  <select
+                    name="category"
+                    required
+                    value={formData.category}
+                    onChange={handleChange}
+                    disabled={fetchingCategories || categories.length === 0}
+                    className="w-full text-sm px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white appearance-none"
+                  >
+                    <option value="">Select an approved category</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1.5 flex items-center gap-1">
+                  Don't see your category? 
+                  <Link to="/seller/profile" className="text-blue-600 font-bold hover:underline">Request more info →</Link>
+                </p>
               </div>
 
               <div className="md:col-span-2">

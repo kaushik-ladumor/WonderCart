@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Product = require("../Models/Product.Model");
-const Order = require("../Models/Order.Model");
+const MasterOrder = require("../Models/MasterOrder.Model");
+const SubOrder = require("../Models/SubOrder.Model");
 const { userInput } = require("./AiService");
 const { askResponse } = require("./AiModel");
 
@@ -25,8 +26,32 @@ const getCategories = async () => {
 };
 
 const getOrder = async (orderId) => {
-    if (!orderId || !mongoose.Types.ObjectId.isValid(orderId)) return null;
-    return await Order.findById(orderId).populate("items.product");
+    if (!orderId) return null;
+
+    // Try finding by MasterOrder first
+    let order = await MasterOrder.findOne({
+        $or: [
+            { orderId: orderId.toUpperCase() },
+            { _id: mongoose.Types.ObjectId.isValid(orderId) ? orderId : null }
+        ].filter(Boolean)
+    }).populate({
+        path: "subOrders",
+        populate: { path: "seller", select: "shopName" }
+    });
+
+    if (order) return { type: "master", data: order };
+
+    // Try finding by SubOrder
+    let subOrder = await SubOrder.findOne({
+        $or: [
+            { subOrderId: orderId.toUpperCase() },
+            { _id: mongoose.Types.ObjectId.isValid(orderId) ? orderId : null }
+        ].filter(Boolean)
+    }).populate("masterOrder");
+
+    if (subOrder) return { type: "sub", data: subOrder };
+
+    return null;
 };
 
 const chatbotHandler = async (req, res) => {
@@ -69,67 +94,73 @@ Only reference products from the given list. Keep response concise and friendly.
 
         // ================= ORDER QUERY =================
         if (intent.intent === "order_query") {
-            const order = await getOrder(intent.order_id);
+            const result = await getOrder(intent.order_id);
 
-            if (!order) {
+            if (!result) {
                 return res.json({
-                    message: "Sorry, I couldn't find that order. Please check the order ID and try again."
+                    message: "Sorry, I couldn't find that order. Please check the order ID (e.g., ORD-1001) and try again."
                 });
             }
 
+            const { type, data } = result;
             const field = intent.requested_field;
 
             if (field === "totalAmount") {
+                const amount = type === "master" ? data.totalAmount : data.subTotal + (data.shippingCost || 0);
                 return res.json({
-                    message: `The total payment for this order is ₹${order.totalAmount}.`
+                    message: `The total payment for this ${type === "master" ? "order" : "package"} is ₹${amount}.`
                 });
             }
 
             if (field === "status") {
-                return res.json({
-                    message: `Your order is currently: ${order.status}.`
-                });
+                if (type === "sub") {
+                    return res.json({ message: `Your package status is: ${data.status}.` });
+                } else {
+                    const statuses = data.subOrders.map(s => `${s.subOrderId}: ${s.status}`).join("; ");
+                    return res.json({ message: `Order status summary: ${statuses}` });
+                }
             }
 
             if (field === "paymentStatus") {
                 return res.json({
-                    message: `Payment status: ${order.paymentStatus}.`
+                    message: `Payment status: ${data.paymentStatus}.`
                 });
             }
 
             if (field === "trackingNumber") {
+                if (type === "master") {
+                    return res.json({ message: "This order contains multiple packages. Please ask for a specific sub-order (e.g., ORD-1001-A) to get its tracking number." });
+                }
                 return res.json({
-                    message: order.trackingNumber
-                        ? `Your tracking number is: ${order.trackingNumber}`
-                        : "Tracking number is not available yet. Please check back later."
+                    message: data.trackingId
+                        ? `Your tracking ID is: ${data.trackingId}`
+                        : "Tracking ID is not available yet. Once the seller ships the item, it will show up here."
                 });
             }
 
             if (field === "address") {
-                const a = order.address;
+                const a = type === "master" ? data.address : data.masterOrder.address;
                 return res.json({
-                    message: `Delivery address: ${a.street}, ${a.city}, ${a.state}, ${a.country}`
+                    message: `Delivery address: ${a.street}, ${a.city}, ${a.state}, ${a.country} (PIN: ${a.zipCode || a.zipcode})`
                 });
             }
 
             if (field === "items") {
-                // FIX: items.product is populated, so use i.product?.name with fallback to i.name
-                const itemsList = order.items
-                    .map(i => {
-                        const name = i.product?.name || i.name || "Unknown item";
-                        return `${name} (Qty: ${i.quantity})`;
-                    })
+                const itemsList = data.items
+                    .map(i => `${i.name || "Item"} (Qty: ${i.quantity})`)
                     .join(", ");
 
                 return res.json({
-                    message: `Items in your order: ${itemsList}`
+                    message: `Items in this ${type === "master" ? "order" : "package"}: ${itemsList}`
                 });
             }
 
             // Default order summary
-            return res.json({
-                message: `Order status: ${order.status}. Total: ₹${order.totalAmount}.`
-            });
+            const summary = type === "master" 
+                ? `Order ${data.orderId} status: ${data.paymentStatus}. Total: ₹${data.totalAmount}.`
+                : `Package ${data.subOrderId} status: ${data.status}. Items: ${data.items.length}.`;
+            
+            return res.json({ message: summary });
         }
 
         // ================= GENERAL CHAT =================

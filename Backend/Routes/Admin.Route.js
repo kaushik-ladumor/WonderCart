@@ -110,4 +110,68 @@ adminRouter.delete(
     adminController.deleteCoupon
 );
 
+/* ===========================
+   Seller Application Routes
+=========================== */
+
+const sellerController = require("../Controllers/Seller.Controller");
+
+// Get seller applications
+adminRouter.get(
+    "/seller-applications",
+    Authorization,
+    authorizationRole('admin'),
+    sellerController.getSellerApplications
+);
+
+// Get single application
+adminRouter.get(
+    "/seller-applications/:profileId",
+    Authorization,
+    authorizationRole('admin'),
+    sellerController.getSingleApplication
+);
+
+// Approve seller
+adminRouter.put(
+    "/seller-applications/:profileId/approve",
+    Authorization,
+    authorizationRole('admin'),
+    requireVerification,
+    sellerController.approveSeller
+);
+
+// Reject seller
+adminRouter.put(
+    "/seller-applications/:profileId/reject",
+    Authorization,
+    authorizationRole('admin'),
+    requireVerification,
+    sellerController.rejectSeller
+);
+
+// Request more info
+adminRouter.put(
+    "/seller-applications/:profileId/request-info",
+    Authorization,
+    authorizationRole('admin'),
+    sellerController.requestSellerInfo
+);
+
+// Approve category request
+adminRouter.put(
+    "/seller-applications/:profileId/category/:requestId/approve",
+    Authorization,
+    authorizationRole('admin'),
+    sellerController.approveCategoryRequest
+);
+
+// Reject category request
+adminRouter.put(
+    "/seller-applications/:profileId/category/:requestId/reject",
+    Authorization,
+    authorizationRole('admin'),
+    sellerController.rejectCategoryRequest
+);
+
 module.exports = adminRouter;

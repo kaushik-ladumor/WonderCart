@@ -3,6 +3,7 @@ const express = require('express');
 const userRouter = express.Router();
 
 const userController = require('../Controllers/User.Controller');
+const walletController = require('../Controllers/Wallet.Controller');
 
 const Authenticate = require('../Middlewares/Auth');
 
@@ -44,11 +45,17 @@ userRouter.get(
     userController.getAvailableCoupons
 );
 
-// Apply coupon
 userRouter.post(
     "/apply-coupon",
     Authenticate,
     userController.applyCoupon
 );
+
+/* ================================
+   Wallet Routes
+================================ */
+userRouter.get("/wallet/status", Authenticate, walletController.getWalletStatus);
+userRouter.post("/wallet/topup", Authenticate, walletController.topUpWallet);
+userRouter.post("/wallet/verify", Authenticate, walletController.verifyWalletTopUp);
 
 module.exports = userRouter;

@@ -221,16 +221,6 @@ const SellerProducts = () => {
 
           {/* Status & Stock Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1.5">
-            {product.status === "pending" && (
-              <span className="px-2 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase rounded shadow-sm">
-                Pending Approval
-              </span>
-            )}
-            {product.status === "rejected" && (
-              <span className="px-2 py-1 bg-red-600 text-white text-[10px] font-bold uppercase rounded shadow-sm">
-                Rejected
-              </span>
-            )}
             {isOutOfStock ? (
               <span className="px-2 py-1 bg-gray-600 text-white text-[10px] font-bold uppercase rounded shadow-sm">
                 Out of Stock

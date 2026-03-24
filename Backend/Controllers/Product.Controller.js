@@ -211,6 +211,20 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing fields" });
     }
 
+    // ─── Category Restriction: Sellers can only list in approved categories ───
+    const SellerProfile = require("../Models/SellerProfile.Model");
+    const sellerProfile = await SellerProfile.findOne({ user: req.user.userId });
+
+    if (sellerProfile && sellerProfile.profileStatus === "active") {
+      const approvedCategories = sellerProfile.sellerCategories.map(c => c.toLowerCase().trim());
+      if (!approvedCategories.includes(category.toLowerCase().trim())) {
+        return res.status(403).json({
+          success: false,
+          message: "This category is not approved for your seller account.",
+        });
+      }
+    }
+
     const parsedVariants = JSON.parse(variants);
     const variantMap = {};
 
@@ -289,7 +303,7 @@ const createProduct = async (req, res) => {
       variants: parsedVariants,
       vector,
       owner: req.user.userId,
-      status: "pending",
+      status: "approved",
     });
 
     return res.status(201).json({ success: true, data: product });
