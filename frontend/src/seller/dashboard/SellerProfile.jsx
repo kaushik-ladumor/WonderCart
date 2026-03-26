@@ -209,6 +209,8 @@ const SellerProfile = () => {
   });
   const [panFile, setPanFile] = useState(null);
   const [identityFile, setIdentityFile] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const [gstFile, setGstFile] = useState(null);
   const [pinLoading, setPinLoading] = useState(false);
   const [warehousePinLoading, setWarehousePinLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -340,14 +342,16 @@ const SellerProfile = () => {
 
   // Save Step 2
   const handleSaveStep2 = async () => {
-    const errors = {};
-    if (!businessForm.shopName.trim()) errors.shopName = "Shop name is required";
-    if (!businessForm.panNumber.trim()) errors.panNumber = "PAN is required";
-    else if (!validatePan(businessForm.panNumber)) errors.panNumber = "Invalid PAN format (e.g. AAAAA9999A)";
     if (businessForm.gstNumber && !validateGst(businessForm.gstNumber)) errors.gstNumber = "Invalid GST format";
     if (businessForm.sellerCategories.length === 0) errors.categories = "Select at least one category";
     if (!businessForm.businessAddress.pinCode) errors.businessPin = "PIN code required";
     if (!businessForm.businessAddress.addressLine1) errors.businessAddr = "Address line 1 required";
+    
+    // Document validations for new registrations
+    if (!profile?.step2Completed) {
+      if (!logoFile) errors.logo = "Shop Logo / Image is required";
+      if (!identityFile) errors.identity = "Identity Document is required";
+    }
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -366,25 +370,23 @@ const SellerProfile = () => {
       formData.append("supportEmail", businessForm.supportEmail);
       formData.append("supportPhone", businessForm.supportPhone);
       formData.append("warehouseSameAsBusiness", businessForm.warehouseSameAsBusiness);
-
-      // Send arrays and objects as JSON strings
-      businessForm.sellerCategories.forEach(c => formData.append("sellerCategories[]", c));
       formData.append("businessAddress", JSON.stringify(businessForm.businessAddress));
       formData.append("warehouseAddress", JSON.stringify(
         businessForm.warehouseSameAsBusiness ? businessForm.businessAddress : businessForm.warehouseAddress
       ));
+      
+      businessForm.sellerCategories.forEach(c => formData.append("sellerCategories[]", c));
 
       if (panFile) formData.append("panCardDocument", panFile);
       if (identityFile) formData.append("identityDocument", identityFile);
+      if (logoFile) formData.append("shopLogo", logoFile);
+      if (gstFile) formData.append("gstBill", gstFile);
 
-      // Need to send as JSON instead since we have nested objects
-      const payload = {
-        ...businessForm,
-        warehouseAddress: businessForm.warehouseSameAsBusiness ? businessForm.businessAddress : businessForm.warehouseAddress,
-      };
-
-      const res = await axios.post(`${API_URL}/seller/business-details`, payload, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      const res = await axios.post(`${API_URL}/seller/business-details`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          "Content-Type": "multipart/form-data" 
+        },
       });
 
       if (res.data.success) {
@@ -814,6 +816,70 @@ const SellerProfile = () => {
                       <input type="tel" value={businessForm.supportPhone} disabled={!isEditable}
                         onChange={e => setBusinessForm(p => ({ ...p, supportPhone: e.target.value }))}
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm" placeholder="+91 XXXXX XXXXX" />
+                    </div>
+                  </div>
+
+                  {/* Document Uploads */}
+                  <div className="mt-8 pt-6 border-t border-gray-100">
+                    <h3 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2">
+                       <Upload className="w-4 h-4" /> Business Documents
+                    </h3>
+                    
+                    <div className="space-y-6">
+                      {/* Shop Logo */}
+                      <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 transition-all hover:border-blue-300 group">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-white border border-gray-100 rounded-2xl flex items-center justify-center shadow-sm overflow-hidden text-gray-300">
+                              {logoFile ? <img src={URL.createObjectURL(logoFile)} alt="Logo Preview" className="w-full h-full object-cover" /> : <Store className="w-8 h-8 opacity-20" />}
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Shop Logo / Image *</h4>
+                              <p className="text-[11px] text-gray-500 mt-0.5">Recommended 512x512px (JPG, PNG)</p>
+                            </div>
+                          </div>
+                          <label className="cursor-pointer bg-white px-5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 transition shadow-sm active:scale-95">
+                            {logoFile ? "Change Image" : "Select Image"}
+                            <input type="file" className="hidden" accept="image/*" onChange={e => { setLogoFile(e.target.files[0]); setFieldErrors(p => ({ ...p, logo: "" })); }} disabled={!isEditable} />
+                          </label>
+                        </div>
+                        {fieldErrors.logo && <p className="text-xs text-red-500 mt-3 font-medium flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> {fieldErrors.logo}</p>}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Identity Document */}
+                        <div className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-blue-200 transition-colors">
+                          <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                                <Shield className="w-5 h-5" />
+                              </div>
+                              <h4 className="text-sm font-bold text-gray-900">Identity Doc *</h4>
+                            </div>
+                            <label className="cursor-pointer w-full py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-100 transition">
+                              {identityFile ? identityFile.name : "Select Identity File"}
+                              <input type="file" className="hidden" accept=".pdf,.jpg,.png" onChange={e => { setIdentityFile(e.target.files[0]); setFieldErrors(p => ({ ...p, identity: "" })); }} disabled={!isEditable} />
+                            </label>
+                          </div>
+                          {fieldErrors.identity && <p className="text-xs text-red-500 mt-2">{fieldErrors.identity}</p>}
+                        </div>
+
+                        {/* GST Bill */}
+                        <div className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-blue-200 transition-colors">
+                          <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <h4 className="text-sm font-bold text-gray-900">GST Bill <span className="text-gray-400 font-normal">(Optional)</span></h4>
+                            </div>
+                            <label className="cursor-pointer w-full py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-100 transition">
+                              {gstFile ? gstFile.name : "Select GST Document"}
+                              <input type="file" className="hidden" accept=".pdf,.jpg,.png" onChange={e => setGstFile(e.target.files[0])} disabled={!isEditable} />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

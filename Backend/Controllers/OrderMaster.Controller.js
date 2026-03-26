@@ -18,6 +18,14 @@ const razorpay = new Razorpay({
   key_secret: RAZORPAY_KEY_SECRET,
 });
 
+const customerOrderPopulate = {
+  path: "subOrders",
+  populate: [
+    { path: "seller", select: "shopName" },
+    { path: "items.product", select: "name image images variants" },
+  ],
+};
+
 /**
  * Split items by seller and prepare sub-orders data
  */
@@ -331,10 +339,7 @@ const verifyPayment = async (req, res) => {
 const getMyOrders = async (req, res) => {
   try {
     const orders = await MasterOrder.find({ user: req.user.userId })
-      .populate({
-        path: "subOrders",
-        populate: { path: "seller", select: "shopName" }
-      })
+      .populate(customerOrderPopulate)
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, orders });
@@ -424,7 +429,10 @@ const trackOrder = async (req, res) => {
         // Return full MasterOrder so customer sees all packages
         const masterOrder = await MasterOrder.findById(subOrder.masterOrder).populate({
           path: "subOrders",
-          populate: { path: "seller", select: "shopName" }
+          populate: [
+            { path: "seller", select: "shopName" },
+            { path: "items.product", select: "name image images variants" },
+          ]
         });
         return res.status(200).json({ success: true, order: masterOrder });
       } else {
@@ -437,10 +445,7 @@ const trackOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    const masterOrder = await MasterOrder.findOne(query).populate({
-      path: "subOrders",
-      populate: { path: "seller", select: "shopName" }
-    });
+    const masterOrder = await MasterOrder.findOne(query).populate(customerOrderPopulate);
 
     if (!masterOrder) {
       // Check if it's a SubOrder ObjectId
@@ -448,7 +453,10 @@ const trackOrder = async (req, res) => {
       if (subOrder) {
         const fullMaster = await MasterOrder.findById(subOrder.masterOrder).populate({
           path: "subOrders",
-          populate: { path: "seller", select: "shopName" }
+          populate: [
+            { path: "seller", select: "shopName" },
+            { path: "items.product", select: "name image images variants" },
+          ]
         });
         return res.status(200).json({ success: true, order: fullMaster });
       }
@@ -494,10 +502,7 @@ const getMasterOrderById = async (req, res) => {
       query.orderId = orderId;
     }
 
-    const order = await MasterOrder.findOne(query).populate({
-      path: "subOrders",
-      populate: { path: "seller", select: "shopName" }
-    });
+    const order = await MasterOrder.findOne(query).populate(customerOrderPopulate);
 
     if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 

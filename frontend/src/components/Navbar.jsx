@@ -1,49 +1,76 @@
 import {
-  ShoppingCart,
-  Menu,
-  X,
-  Heart,
-  User,
-  LogOut,
-  Settings,
   Bell,
+  Heart,
+  Home,
+  LogOut,
+  Menu,
   Search,
   ShoppingBag,
-  Sparkles
+  User,
+  X,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { useAuth } from "../context/AuthProvider";
 import { useCart } from "../context/CartContext";
 import { useSocket } from "../context/SocketProvider";
 import { API_URL } from "../utils/constants";
-import axios from "axios";
+
+const navLinks = [
+  { label: "Shop", to: "/shop" },
+  { label: "Categories", to: "/categories" },
+  { label: "Deals", to: "/shop" },
+  { label: "New Arrivals", to: "/shop" },
+];
+
+const mobileTabs = [
+  { label: "Home", to: "/", icon: Home },
+  { label: "Explore", to: "/shop", icon: Search },
+  { label: "Cart", to: "/cart", icon: ShoppingBag },
+  { label: "Profile", to: "/profile", icon: User },
+];
+
+const isPathActive = (pathname, target) => {
+  if (target === "/") return pathname === "/";
+  return pathname === target || pathname.startsWith(`${target}/`);
+};
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { authUser, setAuthUser } = useAuth();
-  const socket = useSocket();
-  const { cartCount } = useCart();
-  const menuRef = useRef(null);
-  const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const { authUser, setAuthUser } = useAuth();
+  const { cartCount } = useCart();
+  const socket = useSocket();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const menuRef = useRef(null);
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
 
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("token");
       if (token) {
-        await axios.post(`${API_URL}/user/logout`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(
+          `${API_URL}/user/logout`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
       }
     } catch (error) {
       console.error("Logout API failed", error);
     }
+
     localStorage.removeItem("Users");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     setAuthUser(null);
-    window.location.href = "/";
+    setIsMenuOpen(false);
+    setShowDropdown(false);
+    navigate("/");
   };
 
   useEffect(() => {
@@ -54,63 +81,96 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
+    document.body.style.overflow = isMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setShowDropdown(false);
+    setShowNotifications(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setNotifications([]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/order/notifications`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success) {
+          const formatted = (data.notifications || []).map((item) => ({
+            id: item._id,
+            message: item.message,
+            time: new Date(item.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            read: item.isRead,
+          }));
+          setNotifications(formatted);
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
     fetchNotifications();
   }, [authUser]);
 
   useEffect(() => {
-    if (!socket || !authUser) return;
+    if (!socket || !authUser) return undefined;
+
     const handleNotification = (notification) => {
       setNotifications((prev) => [
         {
           id: notification.orderId || Date.now(),
           message: notification.message,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
           read: false,
         },
         ...prev,
       ]);
     };
+
     socket.on("notification", handleNotification);
     return () => socket.off("notification", handleNotification);
   }, [socket, authUser]);
 
-  const fetchNotifications = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      const res = await fetch(`${API_URL}/order/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        const formatted = data.notifications.map((n) => ({
-          id: n._id,
-          message: n.message,
-          time: new Date(n.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          read: n.isRead,
-        }));
-        setNotifications(formatted);
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  };
-
   const markAllRead = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
+
     try {
       await fetch(`${API_URL}/order/notifications/read-all`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
     } catch (error) {
       console.error("Error marking all as read:", error);
     }
@@ -119,6 +179,7 @@ export default function Navbar() {
   const clearAll = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
+
     try {
       await fetch(`${API_URL}/order/notifications/clear`, {
         method: "DELETE",
@@ -131,9 +192,11 @@ export default function Navbar() {
   };
 
   const deleteNotification = async (id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) => prev.filter((item) => item.id !== id));
+
     const token = localStorage.getItem("token");
     if (!token) return;
+
     try {
       await fetch(`${API_URL}/order/notifications/${id}`, {
         method: "DELETE",
@@ -144,231 +207,355 @@ export default function Navbar() {
     }
   };
 
-  const [showNotifications, setShowNotifications] = useState(false);
+  const unreadCount = notifications.filter((item) => !item.read).length;
+  const userName = authUser?.username || authUser?.name || "My Account";
+  const userEmail = authUser?.email || "WonderCart member";
 
   return (
-    <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-[#f0f4ff]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+    <>
+      <nav className="sticky top-0 z-50 border-b border-[#e4e8f2] bg-white">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-8">
+            <Link
+              to="/"
+              className="text-[1.75rem] font-semibold tracking-tight text-[#0f49d7]"
+            >
+              WonderCart
+            </Link>
 
-          {/* Logo Section */}
-          <div className="flex items-center flex-shrink-0">
-            <a href="/" className="flex items-center gap-2 group">
-              <span className="font-display font-bold text-xl text-[#141b2d] tracking-tight">
-                WonderCart
-              </span>
-            </a>
-          </div>
-
-          {/* Navigation Links - Centered */}
-          <div className="hidden lg:flex items-center justify-center flex-1 px-8 gap-8">
-            {["Shop", "Categories", "Deals", "New Arrivals"].map((item) => {
-              const href = `/${item.toLowerCase().replace(" ", "-")}`;
-              const isActive = window.location.pathname === href;
-              return (
-                <a
-                  key={item}
-                  href={href}
-                  className={`font-body text-[11px] uppercase tracking-[0.2em] transition-colors duration-200 ${
-                    isActive 
-                      ? "text-[#004ac6] font-bold" 
-                      : "text-[#5c6880] hover:text-[#141b2d] font-medium"
+            <div className="hidden lg:flex items-center gap-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  className={`text-sm font-medium ${
+                    isPathActive(location.pathname, link.to)
+                      ? "text-[#0f49d7]"
+                      : "text-[#42506d]"
                   }`}
                 >
-                  {item}
-                </a>
-              );
-            })}
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
-          {/* Right Action Icons */}
-          <div className="flex items-center gap-3">
-
-            {/* Search Bar */}
-            <div className="hidden md:flex items-center bg-[#f0f4ff] rounded-full px-3.5 py-1.5 gap-2 transition-all focus-within:ring-2 focus-within:ring-[#004ac6]/20 focus-within:bg-white border border-transparent focus-within:border-[#004ac6]/20 w-48 xl:w-56">
-              <Search className="w-3.5 h-3.5 text-[#5c6880]" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="bg-transparent border-none outline-none text-xs text-[#141b2d] w-full font-body placeholder:text-[#5c6880]/60"
+          <div className="hidden md:flex flex-1 justify-center px-4 lg:px-8">
+            <div className="flex w-full max-w-md items-center gap-2 rounded-[16px] border border-[#e3e7f3] bg-[#eef2ff] px-4 py-2.5">
+              <Search className="h-4 w-4 text-[#6d7892]" />
+              <input
+                type="text"
+                placeholder="Search products, brands..."
+                className="w-full bg-transparent text-sm text-[#11182d] outline-none placeholder:text-[#7c88a2]"
               />
             </div>
+          </div>
 
-            {/* Mobile Search Button */}
-            <button className="md:hidden p-2 rounded-full hover:bg-[#f0f4ff] transition-colors text-[#141b2d]">
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Notification Bell */}
+          <div className="flex items-center gap-2">
             {authUser && (
-              <div className="relative">
-                <button 
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2 rounded-full hover:bg-[#f0f4ff] transition-all text-[#141b2d] active:scale-90"
+              <div className="relative hidden lg:block" ref={notificationRef}>
+                <button
+                  onClick={() => setShowNotifications((prev) => !prev)}
+                  className="relative rounded-xl p-2 text-[#25324d]"
+                  aria-label="Notifications"
                 >
-                  <Bell className="w-5 h-5" />
-                  {notifications.some(n => !n.read) && (
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#004ac6] rounded-full ring-2 ring-white" />
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#0f49d7]" />
                   )}
                 </button>
-                
-                {/* Notification dropdown panel */}
-                <div className={`absolute right-0 top-full mt-3 w-80 bg-white rounded-2xl shadow-tonal-md z-[9999] overflow-hidden transition-all duration-300 ${showNotifications ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
-                  <div className="px-5 py-4 border-b border-[#f0f4ff] flex items-center justify-between bg-white">
-                    <h3 className="font-display font-bold text-[#141b2d] text-sm tracking-tight">Notifications</h3>
-                    <div className="flex gap-4">
-                       <button onClick={markAllRead} className="text-[10px] text-[#004ac6] font-bold uppercase tracking-widest hover:underline">Mark all read</button>
-                       <button onClick={clearAll} className="text-[10px] text-red-500 font-bold uppercase tracking-widest hover:underline">Clear</button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 top-full mt-3 w-[320px] overflow-hidden rounded-[18px] border border-[#e2e7f2] bg-white shadow-[0_18px_40px_rgba(17,24,45,0.08)]">
+                    <div className="flex items-center justify-between border-b border-[#edf1f8] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#11182d]">
+                        Notifications
+                      </p>
+                      <div className="flex items-center gap-3 text-[11px] font-medium">
+                        <button
+                          onClick={markAllRead}
+                          className="text-[#0f49d7]"
+                        >
+                          Mark all read
+                        </button>
+                        <button onClick={clearAll} className="text-[#cf2b2b]">
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-10 text-center text-sm text-[#6a7690]">
+                          No notifications yet
+                        </div>
+                      ) : (
+                        notifications.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-start gap-3 border-b border-[#f4f6fb] px-4 py-3 last:border-b-0"
+                          >
+                            <span
+                              className={`mt-1.5 h-2 w-2 rounded-full ${
+                                item.read ? "bg-[#d9deeb]" : "bg-[#0f49d7]"
+                              }`}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm leading-6 text-[#11182d]">
+                                {item.message}
+                              </p>
+                              <p className="mt-1 text-[11px] text-[#7c88a2]">
+                                {item.time}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => deleteNotification(item.id)}
+                              className="rounded-lg p-1 text-[#7c88a2]"
+                              aria-label="Delete notification"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
-                  <div className="max-h-80 overflow-y-auto bg-white custom-scrollbar">
-                    {notifications.length === 0 ? (
-                      <div className="p-10 text-center">
-                         <p className="text-xs text-[#5c6880] font-body">No notifications yet</p>
-                      </div>
-                    ) : (
-                      notifications.map((n) => (
-                        <div key={n.id} className="px-5 py-4 hover:bg-[#f9f9ff] flex items-start gap-3 relative group transition-colors">
-                          <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-transparent' : 'bg-[#004ac6]'}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-[#141b2d] font-medium leading-relaxed">{n.message}</p>
-                            <p className="text-[10px] text-[#5c6880] mt-1 font-body uppercase tracking-wider">{n.time}</p>
-                          </div>
-                          <button onClick={() => deleteNotification(n.id)} className="opacity-0 group-hover:opacity-100 p-1 text-[#5c6880] hover:text-red-500 transition-all">
-                             <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
-            {/* Wishlist */}
-            <a href="/wishlist" className="p-2 rounded-full hover:bg-[#f0f4ff] transition-all text-[#141b2d] active:scale-90">
-              <Heart className="w-5 h-5" />
-            </a>
+            <Link
+              to="/wishlist"
+              className="hidden rounded-xl p-2 text-[#25324d] lg:block"
+              aria-label="Wishlist"
+            >
+              <Heart className="h-5 w-5" />
+            </Link>
 
-            {/* Cart with Badge */}
-            <a href="/cart" className="relative p-2 rounded-full hover:bg-[#f0f4ff] transition-all text-[#141b2d] active:scale-90">
-              <ShoppingBag className="w-5 h-5" />
+            <Link
+              to="/cart"
+              className="relative hidden rounded-xl p-2 text-[#25324d] lg:block"
+              aria-label="Cart"
+            >
+              <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 bg-[#004ac6] text-white text-[9px] font-bold rounded-full min-w-[15px] h-[15px] flex items-center justify-center ring-2 ring-white">
+                <span className="absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0f49d7] px-1 text-[10px] font-semibold text-white">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
-            </a>
+            </Link>
 
-            {/* User Profile */}
             {authUser ? (
-              <div className="relative" ref={dropdownRef}>
-                <button 
-                  onClick={() => setShowDropdown(!showDropdown)}
-                  className="w-8 h-8 rounded-xl ring-2 ring-transparent hover:ring-[#004ac6]/10 overflow-hidden transition-all active:scale-95"
+              <div className="relative hidden lg:block" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowDropdown((prev) => !prev)}
+                  className="overflow-hidden rounded-xl"
+                  aria-label="Profile menu"
                 >
-                  {authUser.avatar ? (
-                    <img src={authUser.avatar} alt="User" className="w-full h-full object-cover" />
+                  {authUser.profile ? (
+                    <img
+                      src={authUser.profile}
+                      alt={userName}
+                      className="h-9 w-9 rounded-xl object-cover"
+                    />
                   ) : (
-                    <div className="w-full h-full bg-[#f0f4ff] flex items-center justify-center">
-                      <User className="w-4 h-4 text-[#004ac6]" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eef2ff] text-[#0f49d7]">
+                      <User className="h-4.5 w-4.5" />
                     </div>
                   )}
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute top-full right-0 mt-3 w-60 bg-white rounded-2xl shadow-tonal-md py-2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="px-5 py-3 border-b border-[#f0f4ff] mb-2">
-                      <p className="text-xs font-bold text-[#141b2d] font-display tracking-tight">{authUser.name}</p>
-                      <p className="text-[10px] text-[#5c6880] font-body truncate mt-0.5">{authUser.email}</p>
+                  <div className="absolute right-0 top-full mt-3 w-60 rounded-[18px] border border-[#e2e7f2] bg-white p-2 shadow-[0_18px_40px_rgba(17,24,45,0.08)]">
+                    <div className="border-b border-[#edf1f8] px-3 py-3">
+                      <p className="text-sm font-semibold text-[#11182d]">
+                        {userName}
+                      </p>
+                      <p className="mt-1 text-[12px] text-[#6d7892]">
+                        {userEmail}
+                      </p>
                     </div>
-                    <a href="/profile" className="flex items-center gap-3 px-5 py-2.5 text-xs text-[#5c6880] hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-colors font-medium">
-                      <User className="w-4 h-4" /> Profile Details
-                    </a>
-                    <a href="/my-orders" className="flex items-center gap-3 px-5 py-2.5 text-xs text-[#5c6880] hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-colors font-medium">
-                      <ShoppingBag className="w-4 h-4" /> Order History
-                    </a>
-                    <div className="h-px bg-[#f0f4ff] my-2 mx-5" />
-                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-5 py-2.5 text-xs text-red-500 font-bold hover:bg-red-50/50 transition-colors">
-                      <LogOut className="w-4 h-4" /> Secure Logout
-                    </button>
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#25324d]"
+                      >
+                        <User className="h-4 w-4" />
+                        Profile
+                      </Link>
+                      <Link
+                        to="/my-orders"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#25324d]"
+                      >
+                        <ShoppingBag className="h-4 w-4" />
+                        My Orders
+                      </Link>
+                    </div>
+                    <div className="border-t border-[#edf1f8] pt-2">
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#cf2b2b]"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
               <button
                 onClick={() => document.getElementById("login_modal")?.showModal()}
-                className="bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white text-[11px] uppercase tracking-widest font-bold px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-900/10 hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                className="hidden rounded-xl bg-[#0f49d7] px-4 py-2.5 text-sm font-medium text-white lg:block"
               >
                 Sign In
               </button>
             )}
 
-            {/* Mobile Menu Toggle */}
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 rounded-full hover:bg-[#f0f4ff] transition-colors text-[#141b2d] active:scale-95"
+              onClick={() => setIsMenuOpen(true)}
+              className="rounded-xl p-2 text-[#25324d] lg:hidden"
+              aria-label="Open menu"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Menu */}
-      <div
-        className={`fixed inset-0 z-[60] bg-black/10 backdrop-blur-sm lg:hidden transition-opacity duration-500 ${isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-        onClick={() => setIsMenuOpen(false)}
-      />
-      <div
-        ref={menuRef}
-        className={`fixed top-0 right-0 h-full w-[280px] bg-white z-[70] lg:hidden transform transition-transform duration-500 ease-out-expo ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-6 flex items-center justify-between border-b border-[#f0f4ff]">
-            <span className="font-display font-bold text-lg text-[#141b2d] tracking-tight">WonderCart</span>
-            <button onClick={() => setIsMenuOpen(false)} className="p-2 text-[#5c6880] hover:bg-[#f0f4ff] rounded-full transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="p-6 flex flex-col gap-2">
-            {["Shop", "Categories", "Deals", "New Arrivals"].map((item) => (
-              <a 
-                key={item} 
-                href={`/${item.toLowerCase().replace(" ", "-")}`} 
-                onClick={() => setIsMenuOpen(false)} 
-                className="font-body text-sm font-semibold text-[#141b2d] px-4 py-3 rounded-2xl hover:bg-[#f0f4ff] transition-all active:scale-95"
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-[60] bg-white lg:hidden">
+          <div
+            ref={menuRef}
+            className="flex h-full flex-col bg-white"
+          >
+            <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-4">
+              <Link
+                to="/"
+                className="text-[1.55rem] font-semibold tracking-tight text-[#0f49d7]"
               >
-                {item}
-              </a>
-            ))}
-            <div className="h-px bg-[#f0f4ff] my-4 mx-2" />
-            <a href="/wishlist" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 font-body text-sm text-[#5c6880] px-4 py-3 rounded-2xl hover:bg-[#f0f4ff] transition-all">
-              <Heart className="w-5 h-5" /> Wishlist
-            </a>
-            <a href="/cart" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 font-body text-sm text-[#5c6880] px-4 py-3 rounded-2xl hover:bg-[#f0f4ff] transition-all">
-              <ShoppingBag className="w-5 h-5" /> Shopping Bag ({cartCount})
-            </a>
-            {authUser ? (
-              <button 
-                onClick={() => { handleLogout(); setIsMenuOpen(false); }} 
-                className="flex items-center gap-4 font-body text-sm text-red-500 font-bold px-4 py-3 rounded-2xl hover:bg-red-50/50 transition-all mt-4"
+                WonderCart
+              </Link>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl p-2 text-[#5c6880]"
+                aria-label="Close menu"
               >
-                <LogOut className="w-5 h-5" /> Secure Logout
+                <X className="h-5 w-5" />
               </button>
-            ) : (
-                <button
-                    onClick={() => { document.getElementById("login_modal")?.showModal(); setIsMenuOpen(false); }}
-                    className="w-full bg-[#141b2d] text-white font-bold py-4 rounded-2xl text-sm uppercase tracking-widest mt-4"
-                >
-                    Sign In
-                </button>
-            )}
+            </div>
+
+            <div className="border-b border-[#edf1f8] px-5 py-4">
+              <div className="flex items-center gap-2 rounded-[16px] border border-[#e3e7f3] bg-[#eef2ff] px-4 py-3">
+                <Search className="h-4 w-4 text-[#6d7892]" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="w-full bg-transparent text-sm text-[#11182d] outline-none placeholder:text-[#7c88a2]"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-6">
+              <div className="space-y-1">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    className={`block rounded-2xl px-4 py-3 text-base font-medium ${
+                      isPathActive(location.pathname, link.to)
+                        ? "bg-[#eef2ff] text-[#0f49d7]"
+                        : "text-[#25324d]"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-[24px] border border-[#e3e7f3] bg-[#f7f8fc] p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    to="/wishlist"
+                    className="rounded-2xl bg-white px-4 py-4 text-sm font-medium text-[#25324d]"
+                  >
+                    Wishlist
+                  </Link>
+                  <Link
+                    to="/cart"
+                    className="rounded-2xl bg-white px-4 py-4 text-sm font-medium text-[#25324d]"
+                  >
+                    Bag ({cartCount})
+                  </Link>
+                  {authUser ? (
+                    <>
+                      <Link
+                        to="/profile"
+                        className="rounded-2xl bg-white px-4 py-4 text-sm font-medium text-[#25324d]"
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="rounded-2xl bg-white px-4 py-4 text-left text-sm font-medium text-[#cf2b2b]"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        document.getElementById("login_modal")?.showModal();
+                        setIsMenuOpen(false);
+                      }}
+                      className="col-span-2 rounded-2xl bg-[#0f49d7] px-4 py-4 text-sm font-medium text-white"
+                    >
+                      Sign In
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      )}
+
+      <div className="fixed inset-x-3 bottom-3 z-40 rounded-[28px] border border-[#dde3f0] bg-white px-3 py-2 shadow-[0_18px_40px_rgba(17,24,45,0.12)] lg:hidden">
+        <div className="grid grid-cols-4 gap-1">
+          {mobileTabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = isPathActive(location.pathname, tab.to);
+
+            return (
+              <button
+                key={tab.label}
+                onClick={() => {
+                  if (tab.label === "Profile" && !authUser) {
+                    document.getElementById("login_modal")?.showModal();
+                    return;
+                  }
+                  navigate(tab.to);
+                }}
+                className={`flex flex-col items-center gap-1 rounded-[20px] px-2 py-2 ${
+                  active ? "bg-[#eef2ff] text-[#0f49d7]" : "text-[#6d7892]"
+                }`}
+              >
+                <div className="relative">
+                  <Icon className="h-4.5 w-4.5" />
+                  {tab.label === "Cart" && cartCount > 0 && (
+                    <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0f49d7] px-1 text-[10px] font-semibold text-white">
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em]">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </nav>
+    </>
   );
 }
-
-

@@ -13,7 +13,9 @@ import {
   ChevronUp,
   Search,
   ChevronRight,
+  Star
 } from "lucide-react";
+import Review from "./Review";
 
 function AllOrderDetail() {
   const navigate = useNavigate();
@@ -22,6 +24,48 @@ function AllOrderDetail() {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { token } = useAuth();
+  const [selectedReviewItem, setSelectedReviewItem] = useState(null);
+
+  const ReviewButton = ({ product, orderItemId, orderStatus }) => {
+    const [eligible, setEligible] = useState(false);
+
+    useEffect(() => {
+      if (orderStatus !== "DELIVERED") return;
+      const check = async () => {
+        try {
+          const res = await axios.get(
+            `${API_URL}/review/check-eligibility?productId=${product?._id || product}&orderItemId=${orderItemId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setEligible(res.data.eligible);
+        } catch (err) {
+          setEligible(false);
+        }
+      };
+      check();
+    }, [product, orderItemId, orderStatus, token]);
+
+    if (!eligible) return null;
+
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedReviewItem({
+            id: product?._id || product,
+            name: product?.name || "Product",
+            image: getProductImage({ product }),
+            orderItemId
+          });
+          document.getElementById("my_modal_8")?.showModal();
+        }}
+        className="mt-2 flex items-center gap-1 text-[10px] font-bold uppercase text-[#004ac6] bg-[#004ac6]/10 px-2 py-1 rounded"
+      >
+        <Star className="w-3 h-3 fill-[#004ac6]" />
+        Write Review
+      </button>
+    );
+  };
 
   const fetchOrders = async () => {
     try {
@@ -45,8 +89,24 @@ function AllOrderDetail() {
     setExpandedOrder(expandedOrder === id ? null : id);
   };
 
+  const getOrderItems = (order) => {
+    if (order?.items?.length) return order.items.filter(Boolean);
+    if (order?.subOrders?.length) {
+      return order.subOrders.flatMap((subOrder) => subOrder?.items || []).filter(Boolean);
+    }
+    return [];
+  };
+
+  const getPrimaryItem = (order) => getOrderItems(order)[0];
+
+  const getOrderItemCount = (order) => getOrderItems(order).length;
+
   const getProductImage = (item) => {
+    if (!item) return "https://via.placeholder.com/400x400?text=NO+IMAGE";
     if (item.image) return item.image;
+    if (item.productImg) return item.productImg;
+    if (item.product?.image) return item.product.image;
+    if (item.product?.images?.[0]) return item.product.images[0];
     if (item.product?.variants) {
       if (item.color) {
         const match = item.product.variants.find(
@@ -61,13 +121,16 @@ function AllOrderDetail() {
     return "https://via.placeholder.com/400x400?text=NO+IMAGE";
   };
 
-  const filteredOrders = orders.filter(
-    (order) =>
-      order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.items?.some((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-  );
+  const filteredOrders = orders.filter((order) => {
+    const normalizedSearch = searchTerm.toLowerCase();
+    return (
+      order._id.toLowerCase().includes(normalizedSearch) ||
+      (order.orderId || "").toLowerCase().includes(normalizedSearch) ||
+      getOrderItems(order).some((item) =>
+        (item?.name || "").toLowerCase().includes(normalizedSearch),
+      )
+    );
+  });
 
   const StatusBadge = ({ status }) => {
     const config = {
@@ -197,24 +260,24 @@ function AllOrderDetail() {
                   <div className="flex-1 flex gap-6 md:gap-8 items-start">
                     <div className="w-24 h-24 md:w-32 md:h-32 bg-[#f0f4ff] rounded-[1.5rem] overflow-hidden flex-shrink-0 border border-white shadow-inner">
                       <img
-                        src={getProductImage(order.items?.[0])}
-                        alt={order.items?.[0]?.name}
+                        src={getProductImage(getPrimaryItem(order))}
+                        alt={getPrimaryItem(order)?.name || "Ordered product"}
                         className="w-full h-full object-contain p-4 mix-blend-multiply"
                       />
                     </div>
                     <div className="flex-1 py-2">
                       <h3 className="font-display text-xl font-bold text-[#141b2d] mb-2 group-hover:text-[#004ac6] transition-colors">
-                        {order.items?.[0]?.name}
+                        {getPrimaryItem(order)?.name || "Ordered item"}
                       </h3>
                       <div className="flex flex-wrap gap-4 items-center">
                         <span className="font-body text-xs font-bold text-[#5c6880] bg-[#f9f9ff] px-3 py-1 rounded-lg border border-[#f0f4ff]">
-                          {order.items?.length} {order.items?.length === 1 ? 'item' : 'items'}
+                          {getOrderItemCount(order)} {getOrderItemCount(order) === 1 ? 'item' : 'items'}
                         </span>
-                        {order.items?.[0]?.size && (
-                          <span className="font-body text-xs text-[#5c6880]">Size: <b className="text-[#141b2d]">{order.items[0].size}</b></span>
+                        {getPrimaryItem(order)?.size && (
+                          <span className="font-body text-xs text-[#5c6880]">Size: <b className="text-[#141b2d]">{getPrimaryItem(order).size}</b></span>
                         )}
-                        {order.items?.[0]?.color && (
-                          <span className="font-body text-xs text-[#5c6880]">Color: <b className="text-[#141b2d]">{order.items[0].color}</b></span>
+                        {getPrimaryItem(order)?.color && (
+                          <span className="font-body text-xs text-[#5c6880]">Color: <b className="text-[#141b2d]">{getPrimaryItem(order).color}</b></span>
                         )}
                       </div>
                       <p className="font-body text-xs text-[#5c6880] mt-4 leading-relaxed line-clamp-2 md:line-clamp-none">
@@ -286,17 +349,22 @@ function AllOrderDetail() {
                           <h4 className="font-body text-[10px] font-bold text-[#141b2d] uppercase tracking-widest">Package Contents</h4>
                         </div>
                         <div className="bg-white rounded-2xl border border-[#f0f4ff] shadow-sm divide-y divide-[#f0f4ff] overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-                          {order.items?.map((item, idx) => (
+                          {getOrderItems(order).map((item, idx) => (
                             <div key={idx} className="p-4 flex gap-4 hover:bg-[#f9f9ff] transition-colors">
                               <div className="w-12 h-12 bg-[#f0f4ff] rounded-lg overflow-hidden flex-shrink-0">
-                                <img src={getProductImage(item)} alt={item.name} className="w-full h-full object-contain p-2" />
+                                <img src={getProductImage(item)} alt={item?.name || "Ordered product"} className="w-full h-full object-contain p-2" />
                               </div>
                               <div className="flex-1">
-                                <p className="font-body text-xs font-bold text-[#141b2d] line-clamp-1">{item.name}</p>
+                                <p className="font-body text-xs font-bold text-[#141b2d] line-clamp-1">{item?.name || "Ordered item"}</p>
                                 <div className="flex justify-between mt-1">
-                                  <span className="font-body text-[10px] text-[#5c6880] uppercase tracking-tighter">Qty: {item.quantity}</span>
-                                  <span className="font-body text-[10px] font-bold text-[#141b2d]">₹{Math.round(item.price * item.quantity).toLocaleString()}</span>
+                                  <span className="font-body text-[10px] text-[#5c6880] uppercase tracking-tighter">Qty: {item?.quantity || 0}</span>
+                                  <span className="font-body text-[10px] font-bold text-[#141b2d]">₹{Math.round((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</span>
                                 </div>
+                                <ReviewButton 
+                                  product={item?.product} 
+                                  orderItemId={item?._id} 
+                                  orderStatus={order.status} 
+                                />
                               </div>
                             </div>
                           ))}
@@ -319,6 +387,15 @@ function AllOrderDetail() {
           </button>
         </div>
       </div>
+      {selectedReviewItem && (
+        <Review 
+          id={selectedReviewItem.id} 
+          productName={selectedReviewItem.name} 
+          productImage={selectedReviewItem.image}
+          orderItemId={selectedReviewItem.orderItemId}
+          onSuccess={fetchOrders}
+        />
+      )}
     </div>
   );
 }

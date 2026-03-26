@@ -237,6 +237,8 @@ const saveBusinessDetails = async (req, res) => {
     // Handle document uploads
     let panCardUrl = profile.panCardDocument;
     let identityDocUrl = profile.identityDocument;
+    let shopLogoUrl = profile.shopLogo;
+    let gstBillUrl = profile.gstBill;
 
     if (req.files) {
       if (req.files.panCardDocument && req.files.panCardDocument[0]) {
@@ -245,20 +247,49 @@ const saveBusinessDetails = async (req, res) => {
       if (req.files.identityDocument && req.files.identityDocument[0]) {
         identityDocUrl = req.files.identityDocument[0].path.replace("http://", "https://");
       }
+      if (req.files.shopLogo && req.files.shopLogo[0]) {
+        shopLogoUrl = req.files.shopLogo[0].path.replace("http://", "https://");
+      }
+      if (req.files.gstBill && req.files.gstBill[0]) {
+        gstBillUrl = req.files.gstBill[0].path.replace("http://", "https://");
+      }
+    }
+
+    // Parse JSON strings from form-data
+    let parsedBusinessAddress = businessAddress;
+    let parsedWarehouseAddress = warehouseAddress;
+    let parsedCategories = sellerCategories;
+
+    try {
+      if (typeof businessAddress === "string") parsedBusinessAddress = JSON.parse(businessAddress);
+      if (typeof warehouseAddress === "string") parsedWarehouseAddress = JSON.parse(warehouseAddress);
+      // Handling arrays from form-data (might come as "sellerCategories[]" or a stringified array)
+      if (typeof sellerCategories === "string") parsedCategories = JSON.parse(sellerCategories);
+      else if (!sellerCategories && req.body["sellerCategories[]"]) {
+        parsedCategories = Array.isArray(req.body["sellerCategories[]"]) 
+          ? req.body["sellerCategories[]"] 
+          : [req.body["sellerCategories[]"]];
+      }
+    } catch (e) {
+      console.warn("Parse warning:", e.message);
     }
 
     profile.shopName = shopName;
     profile.businessType = businessType || "";
-    profile.sellerCategories = sellerCategories;
+    profile.sellerCategories = parsedCategories || [];
     profile.gstNumber = gstNumber ? gstNumber.toUpperCase() : "";
     profile.panNumber = panNumber.toUpperCase();
-    profile.businessAddress = businessAddress;
-    profile.warehouseSameAsBusiness = warehouseSameAsBusiness;
-    profile.warehouseAddress = warehouseSameAsBusiness ? businessAddress : warehouseAddress;
+    profile.businessAddress = parsedBusinessAddress;
+    profile.warehouseSameAsBusiness = warehouseSameAsBusiness === "true" || warehouseSameAsBusiness === true;
+    profile.warehouseAddress = (warehouseSameAsBusiness === "true" || warehouseSameAsBusiness === true) 
+      ? parsedBusinessAddress 
+      : parsedWarehouseAddress;
     profile.supportEmail = supportEmail || "";
     profile.supportPhone = supportPhone || "";
     profile.panCardDocument = panCardUrl;
     profile.identityDocument = identityDocUrl;
+    profile.shopLogo = shopLogoUrl;
+    profile.gstBill = gstBillUrl;
     profile.step2Completed = true;
 
     await profile.save();

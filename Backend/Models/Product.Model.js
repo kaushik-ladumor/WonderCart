@@ -67,11 +67,11 @@ const productSchema = new mongoose.Schema(
         ref: "Review",
       },
     ],
-    averageRating: {
+    average_rating: {
       type: Number,
       default: 0,
     },
-    numReviews: {
+    total_reviews: {
       type: Number,
       default: 0,
     },

@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @plugin "daisyui";
 
 @theme {
-  --font-display: "Manrope", sans-serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: "Poppins", sans-serif;
+  --font-body: "Poppins", sans-serif;
 
   --color-background: #f9f9ff;
   --color-surface: #ffffff;
@@ -68,4 +68,14 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #d1d5db;
   }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
 }

@@ -163,7 +163,7 @@ const AdminSellerApplications = () => {
           <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <img src={u?.profile || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt="" className="w-14 h-14 rounded-full border-2 border-gray-200" />
+                <img src={p.shopLogo || u?.profile || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt="" className="w-14 h-14 rounded-full border-2 border-gray-200 object-cover" />
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">{p.shopName || "Unnamed Shop"}</h1>
                   <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
@@ -193,7 +193,7 @@ const AdminSellerApplications = () => {
                   <div><p className="text-gray-400 text-xs mb-1">Submitted</p><p className="font-medium">{formatDate(p.submittedAt)}</p></div>
                 </div>
 
-                {/* Address */}
+                {/* address */}
                 {p.businessAddress && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 mb-2">Business Address</p>
@@ -203,6 +203,34 @@ const AdminSellerApplications = () => {
                     </p>
                   </div>
                 )}
+
+                {/* Documents Section */}
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2"><FileText className="w-4 h-4" /> Documents</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {p.panCardDocument && (
+                      <a href={p.panCardDocument} target="_blank" rel="noopener noreferrer" 
+                        className="flex items-center justify-between p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm group">
+                        <span className="text-xs font-semibold text-gray-600">PAN Card</span>
+                        <Eye className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" />
+                      </a>
+                    )}
+                    {p.identityDocument && (
+                      <a href={p.identityDocument} target="_blank" rel="noopener noreferrer" 
+                        className="flex items-center justify-between p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm group">
+                        <span className="text-xs font-semibold text-gray-600">Identity Doc</span>
+                        <Eye className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" />
+                      </a>
+                    )}
+                    {p.gstBill && (
+                      <a href={p.gstBill} target="_blank" rel="noopener noreferrer" 
+                        className="flex items-center justify-between p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm group">
+                        <span className="text-xs font-semibold text-gray-600">GST Bill</span>
+                        <Eye className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" />
+                      </a>
+                    )}
+                  </div>
+                </div>
 
                 {/* Categories */}
                 <div className="mt-4 pt-4 border-t border-gray-100">

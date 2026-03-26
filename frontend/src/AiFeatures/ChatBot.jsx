@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, Bot, Sparkles, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bot, MessageSquare, Send, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../utils/constants";
 
@@ -12,12 +13,13 @@ function ChatBotPanel({ onClose }) {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [chat, loading]);
 
   const sendMessage = async () => {
     if (!message.trim() || loading) return;
-    const userText = message;
+
+    const userText = message.trim();
     setChat((prev) => [
       ...prev,
       { id: Date.now(), sender: "user", text: userText },
@@ -29,6 +31,7 @@ function ChatBotPanel({ onClose }) {
       const res = await axios.post(`${API_URL}/chat/chatbot`, {
         message: userText,
       });
+
       setChat((prev) => [
         ...prev,
         {
@@ -40,17 +43,19 @@ function ChatBotPanel({ onClose }) {
         },
       ]);
     } catch (err) {
-      let errorText = "Sorry, I'm having trouble connecting. Please try again.";
+      let errorText = "Sorry, I am having trouble connecting. Please try again.";
       if (err.response?.status === 429) {
         const retryAfter = err.response.data?.retryAfter || 60;
         errorText = `AI is busy right now. Please wait ${retryAfter}s and try again.`;
       }
+
       setChat((prev) => [
         ...prev,
         { id: Date.now() + 1, sender: "bot", text: errorText },
       ]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleKeyDown = (e) => {
@@ -61,147 +66,170 @@ function ChatBotPanel({ onClose }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white font-body">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-[#004ac6] text-white flex-shrink-0 shadow-md relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16" />
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
-            <Bot className="w-5 h-5" strokeWidth={2} />
+    <div className="flex h-full flex-col bg-white text-[#11182d]">
+      <div className="flex items-center justify-between bg-[#0f49d7] px-5 py-4 text-white">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+            <Bot className="h-4.5 w-4.5" />
           </div>
           <div>
-            <span className="font-display font-bold text-base block leading-none mb-0.5">ChatBot</span>
-            <span className="text-[10px] text-white/60 uppercase tracking-widest font-black flex items-center gap-1.5">
-               <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Online
-            </span>
+            <p className="text-base font-semibold">ChatBot</p>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-white/75">
+              WonderCart Assistant
+            </p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all active:scale-90 relative z-10"
-          aria-label="Close chat"
-        >
-          <X className="w-4 h-4" strokeWidth={2.5} />
-        </button>
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-white"
+            aria-label="Close chat"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#f9f9ff] custom-scrollbar">
-        {chat.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-          >
+      <div className="flex-1 overflow-y-auto bg-[#f7f8fc] px-4 py-4">
+        <div className="space-y-4">
+          {chat.map((msg) => (
             <div
-              className={`flex items-end gap-2.5 max-w-[85%] ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+              key={msg.id}
+              className={`flex ${
+                msg.sender === "user" ? "justify-end" : "justify-start"
+              }`}
             >
-              {msg.sender === "bot" ? (
-                <div className="w-8 h-8 bg-white border border-[#f0f4ff] rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 mb-1">
-                   <Bot className="w-4 h-4 text-[#004ac6]" strokeWidth={2} />
-                </div>
-              ) : (
-                <div className="w-8 h-8 bg-[#141b2d] rounded-lg flex items-center justify-center flex-shrink-0 mb-1">
-                   <div className="w-2.5 h-2.5 bg-white/20 rounded-full" />
-                </div>
-              )}
               <div
-                className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sender === "user"
-                    ? "bg-[#004ac6] text-white rounded-br-none"
-                    : "bg-white text-[#141b2d] border border-[#f0f4ff] rounded-bl-none"
-                  }`}
+                className={`flex max-w-[88%] items-start gap-2 ${
+                  msg.sender === "user" ? "flex-row-reverse" : ""
+                }`}
               >
-                <p className="font-body text-[13px]">{msg.text}</p>
+                <div
+                  className={`mt-1 flex h-7 w-7 items-center justify-center rounded-full ${
+                    msg.sender === "user"
+                      ? "bg-[#11182d] text-white"
+                      : "bg-[#dfe7ff] text-[#0f49d7]"
+                  }`}
+                >
+                  {msg.sender === "user" ? (
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  ) : (
+                    <Bot className="h-3.5 w-3.5" />
+                  )}
+                </div>
 
-                {/* Products */}
-                {msg.products?.length > 0 && (
-                  <div className="mt-4 border-t border-black/5 pt-3 space-y-2">
-                    {msg.products.map((p) => (
-                      <div
-                        key={p._id}
-                        className="flex items-center gap-3 bg-white/50 border border-black/5 rounded-xl p-2 group cursor-pointer hover:bg-white transition-colors"
-                      >
-                        {p.images?.[0] && (
-                          <img
-                            src={p.images[0]}
-                            alt={p.name}
-                            className="w-10 h-10 object-cover rounded-lg shadow-sm"
-                          />
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold truncate text-[#141b2d]">{p.name}</p>
-                          <p className="text-[9px] text-[#5c6880] uppercase tracking-widest">{p.category}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div
+                  className={`rounded-[18px] border px-4 py-3 text-sm leading-6 ${
+                    msg.sender === "user"
+                      ? "border-[#0f49d7] bg-[#0f49d7] text-white"
+                      : "border-[#dfe5f2] bg-white text-[#11182d]"
+                  }`}
+                >
+                  <p>{msg.text}</p>
 
-                {/* Categories */}
-                {msg.categories?.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {msg.categories.map((c, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-[#f0f4ff] text-[#004ac6] text-[9px] font-bold uppercase rounded-lg border border-[#004ac6]/10">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+                  {msg.products?.length > 0 && (
+                    <div className="mt-3 space-y-2 border-t border-black/5 pt-3">
+                      {msg.products.map((product) => {
+                        const image =
+                          product.images?.[0] ||
+                          product.image ||
+                          product.variants?.find((variant) => variant?.images?.[0])
+                            ?.images?.[0];
 
-        {loading && (
-          <div className="flex justify-start">
-            <div className="flex items-end gap-2.5">
-              <div className="w-8 h-8 bg-white border border-[#f0f4ff] rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 mb-1">
-                 <Bot className="w-4 h-4 text-[#004ac6]" strokeWidth={2} />
-              </div>
-              <div className="p-4 rounded-2xl rounded-bl-none bg-white border border-[#f0f4ff] shadow-sm">
-                <div className="flex gap-1.5 items-center h-4">
-                  {[0, 1, 2].map((dot) => (
-                    <div
-                      key={dot}
-                      className="w-1.5 h-1.5 bg-[#004ac6] rounded-full animate-bounce"
-                      style={{ animationDelay: `${dot * 0.15}s` }}
-                    />
-                  ))}
+                        return (
+                          <Link
+                            key={product._id}
+                            to={`/product-detail/${product._id}`}
+                            className="flex items-center gap-3 rounded-2xl border border-[#e6eaf5] bg-[#f8faff] p-2"
+                          >
+                            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white">
+                              {image ? (
+                                <img
+                                  src={image}
+                                  alt={product.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <Bot className="h-4 w-4 text-[#0f49d7]" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-[#11182d]">
+                                {product.name}
+                              </p>
+                              <p className="text-[11px] uppercase tracking-[0.14em] text-[#6a7690]">
+                                {product.category || "WonderCart"}
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {msg.categories?.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {msg.categories.map((category, index) => (
+                        <Link
+                          key={`${category}-${index}`}
+                          to={`/shop?category=${encodeURIComponent(category)}`}
+                          className="rounded-full bg-[#eef2ff] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#0f49d7]"
+                        >
+                          {category}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          ))}
+
+          {loading && (
+            <div className="flex justify-start">
+              <div className="flex max-w-[88%] items-start gap-2">
+                <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#dfe7ff] text-[#0f49d7]">
+                  <Bot className="h-3.5 w-3.5" />
+                </div>
+                <div className="rounded-[18px] border border-[#dfe5f2] bg-white px-4 py-3 text-sm text-[#6a7690]">
+                  Thinking...
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="flex-shrink-0 p-5 bg-white border-t border-[#f0f4ff] shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex gap-3 items-center">
-          <div className="flex-1 relative group">
+      <div className="border-t border-[#e5e9f3] bg-white px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <MessageSquare className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c88a2]" />
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={loading}
-              className="w-full h-12 pl-12 pr-4 bg-[#f9f9ff] border border-[#f0f4ff] rounded-xl focus:outline-none focus:border-[#004ac6] focus:bg-white transition-all text-sm font-semibold text-[#141b2d] placeholder:text-gray-300 disabled:opacity-50"
-              placeholder="Write your message…"
-            />
-            <MessageSquare
-              className="w-4 h-4 text-[#004ac6]/30 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-[#004ac6] transition-colors"
-              strokeWidth={2}
+              placeholder="Write your message..."
+              className="h-12 w-full rounded-[16px] border border-[#dfe5f2] bg-[#f7f8fc] pl-11 pr-4 text-sm text-[#11182d] outline-none placeholder:text-[#7c88a2] disabled:opacity-60"
             />
           </div>
+
           <button
             onClick={sendMessage}
             disabled={!message.trim() || loading}
-            className="w-12 h-12 bg-[#004ac6] text-white rounded-xl flex items-center justify-center hover:bg-[#141b2d] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-500/10"
+            className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#0f49d7] text-white disabled:opacity-40"
+            aria-label="Send message"
           >
-            <Send className="w-4 h-4" strokeWidth={2.5} />
+            <Send className="h-4 w-4" />
           </button>
         </div>
-        <div className="text-[9px] font-bold text-gray-300 mt-2.5 text-right uppercase tracking-[0.2em]">
-           Powered by WonderCart Intelligence
+
+        <div className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-[#7c88a2]">
+          <span>Powered by WonderCart</span>
+          <span>{chat.length} message{chat.length > 1 ? "s" : ""}</span>
         </div>
       </div>
     </div>

@@ -33,6 +33,8 @@ sellerRouter.post(
   upload.fields([
     { name: "panCardDocument", maxCount: 1 },
     { name: "identityDocument", maxCount: 1 },
+    { name: "shopLogo", maxCount: 1 },
+    { name: "gstBill", maxCount: 1 },
   ]),
   saveBusinessDetails
 );

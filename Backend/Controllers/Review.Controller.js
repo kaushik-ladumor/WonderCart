@@ -1,54 +1,103 @@
 const Review = require("../Models/Review.Model");
 const Product = require("../Models/Product.Model");
+const SubOrder = require("../Models/SubOrder.Model");
+const Notification = require("../Models/Notification.Model");
 const mongoose = require("mongoose");
 
 const updateProductStats = async (productId) => {
-  const reviews = await Review.find({ product: productId });
+  const reviews = await Review.find({ product: productId, status: "approved" });
 
-  const numReviews = reviews.length;
-  const averageRating =
-    numReviews > 0
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / numReviews
+  const total_reviews = reviews.length;
+  const average_rating =
+    total_reviews > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / total_reviews
       : 0;
 
   await Product.findByIdAndUpdate(productId, {
-    numReviews,
-    averageRating: Math.round(averageRating * 10) / 10,
+    total_reviews,
+    average_rating: Math.round(average_rating * 10) / 10,
   });
 };
 
+const checkReviewEligibility = async (userId, productId, orderItemId) => {
+  // 1. Seller cannot review their own products
+  const product = await Product.findById(productId);
+  if (!product) return { eligible: false, message: "Product not found" };
+  if (String(product.owner) === String(userId)) {
+    return { eligible: false, message: "Sellers cannot review their own products" };
+  }
+
+  // 2. Same user cannot leave 2 reviews for same product across all orders
+  const existingProductReview = await Review.findOne({ user: userId, product: productId });
+  if (existingProductReview) {
+    return { eligible: false, message: "You have already reviewed this product" };
+  }
+
+  // 3. Find the specific order item
+  const order = await SubOrder.findOne({
+    "items._id": orderItemId,
+    seller: { $ne: userId } // Extra check
+  });
+
+  if (!order) return { eligible: false, message: "Order not found" };
+  
+  // 4. Order status must be DELIVERED
+  if (order.status !== "DELIVERED") {
+    return { eligible: false, message: "Item has not been delivered yet" };
+  }
+
+  // 5. Delivery confirmed at least 1 day ago
+  const now = new Date();
+  const deliveredAt = new Date(order.deliveredAt);
+  const oneDayInMs = 24 * 60 * 60 * 1000;
+  
+  if (now - deliveredAt < oneDayInMs) {
+    return { eligible: false, message: "Review available 1 day after delivery" };
+  }
+
+  // 6. Review window has not expired (30 days)
+  const thirtyDaysInMs = 30 * oneDayInMs;
+  if (now - deliveredAt > thirtyDaysInMs) {
+    return { eligible: false, message: "Review window has expired" };
+  }
+
+  return { eligible: true };
+};
+
+const checkEligibility = async (req, res) => {
+  try {
+    const { productId, orderItemId } = req.query;
+    const userId = req.user.userId;
+
+    const result = await checkReviewEligibility(userId, productId, orderItemId);
+    return res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 const addReview = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized. Please login.",
-      });
-    }
-
-    const { productId, rating, comment } = req.body;
+    const { productId, rating, comment, images, orderItemId } = req.body;
     const userId = req.user.userId;
 
-    if (!productId || rating === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Product ID and rating are required",
-      });
+    if (!productId || !orderItemId || rating === undefined) {
+      return res.status(400).json({ success: false, message: "Invalid payload" });
     }
 
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({
-        success: false,
-        message: "Rating must be between 1 and 5",
-      });
+    const { eligible, message } = await checkReviewEligibility(userId, productId, orderItemId);
+    if (!eligible) {
+      return res.status(403).json({ success: false, message });
     }
 
     const review = new Review({
       product: productId,
       user: userId,
+      orderItem: orderItemId,
       rating: Number(rating),
       comment: comment || "",
+      images: images || [],
+      status: "approved" // Mode A: Auto-publish
     });
 
     await review.save();
@@ -57,108 +106,108 @@ const addReview = async (req, res) => {
       $push: { reviews: review._id },
     });
 
+    // Notify Seller
+    const product = await Product.findById(productId);
+    if (product && product.owner) {
+      await Notification.create({
+        user: product.owner,
+        title: "New Product Review",
+        message: `Your product "${product.name}" received a ${rating}-star review.`,
+        type: "REVIEW"
+      });
+    }
+
     res.status(201).json({
       success: true,
-      message: "Review added successfully",
+      message: "Thank you! Your review has been submitted.",
       data: review,
     });
 
     updateProductStats(productId).catch(console.error);
   } catch (err) {
     console.error("ADD REVIEW ERROR:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong. Try again." });
   }
 };
-
 
 const getReview = async (req, res) => {
   try {
     const { id } = req.params;
-
     const product = await Product.findById(id);
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    const reviews = await Review.find({ product: id })
-      .populate("user", "username email isVerified")
+    const reviews = await Review.find({ product: id, status: "approved" })
+      .populate("user", "username")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
-      message: "Reviews fetched successfully",
       data: {
         reviews,
-        totalReviews: product.numReviews,
-        averageRating: product.averageRating,
+        total_reviews: product.total_reviews,
+        average_rating: product.average_rating,
       },
     });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: err.message,
-    });
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Delete Review
 const deleteReview = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized. Please login.",
-      });
-    }
-    const userId = req.user.userId; 
+    const userId = req.user.userId;
     const { reviewId } = req.params;
-
-
-
     const review = await Review.findById(reviewId);
 
     if (!review) {
-      return res.status(404).json({
-        success: false,
-        message: "Review not found",
-      });
+      return res.status(404).json({ success: false, message: "Review not found" });
     }
 
-    if (String(review.user) !== String(userId)) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized",
-      });
+    // Admin or Reviewer can delete
+    if (String(review.user) !== String(userId) && req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
     const productId = review.product;
-
-    await Product.findByIdAndUpdate(productId, {
-      $pull: { reviews: reviewId },
-    });
-
+    await Product.findByIdAndUpdate(productId, { $pull: { reviews: reviewId } });
     await review.deleteOne();
-
     await updateProductStats(productId);
 
-    return res.status(200).json({
-      success: true,
-      message: "Review deleted successfully",
-    });
+    return res.status(200).json({ success: true, message: "Review deleted successfully" });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: err.message,
-    });
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-module.exports = { addReview, getReview, deleteReview };
+const voteHelpful = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    // Simple 1-vote increment for now (user's request asks for helpful_count increment)
+    await Review.findByIdAndUpdate(reviewId, { $inc: { helpful_count: 1 } });
+    res.status(200).json({ success: true, message: "Vote recorded" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const reportReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const { reason } = req.body;
+    const review = await Review.findByIdAndUpdate(reviewId, { $inc: { reported_count: 1 } }, { new: true });
+    
+    if (review.reported_count > 5) {
+      review.status = "pending"; // Flag for admin
+      await review.save();
+      await updateProductStats(review.product);
+    }
+
+    res.status(200).json({ success: true, message: "Review reported" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { addReview, getReview, deleteReview, checkEligibility, voteHelpful, reportReview };

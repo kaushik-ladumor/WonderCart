@@ -70,6 +70,8 @@ const sellerProfileSchema = new mongoose.Schema({
   // Document uploads (Cloudinary URLs)
   panCardDocument: String,
   identityDocument: String, // Aadhaar or Business Registration
+  shopLogo: String,
+  gstBill: String,
 
   // ── Step 3: Bank Account ──
   bankAccountHolder: { type: String, trim: true },

@@ -130,15 +130,17 @@ function App() {
         reverseOrder={false}
         toastOptions={{
           className:
-            "bg-white text-gray-900 border border-gray-100 shadow-xl rounded-2xl px-6 py-4 min-w-[320px]",
+            "bg-white text-gray-900 border border-gray-100 shadow-xl rounded-2xl px-4 py-3 min-w-[280px] font-body",
           duration: 4000,
           style: {
             background: "rgba(255, 255, 255, 0.95)",
             backdropFilter: "blur(10px)",
             border: "1px solid rgba(0, 0, 0, 0.05)",
-            padding: "16px 24px",
+            padding: "12px 16px",
             color: "#1a1a1a",
-            fontSize: "14px",
+            fontFamily: "Poppins, sans-serif",
+            fontSize: "12px",
+            lineHeight: "18px",
             fontWeight: "500",
             borderRadius: "16px",
             boxShadow:
@@ -227,8 +229,10 @@ function App() {
           element={
             <>
               <Navbar />
-              <Outlet />
-              <Footer />
+              <div className="pb-24 lg:pb-0">
+                <Outlet />
+                <Footer />
+              </div>
             </>
           }
         >
