@@ -96,201 +96,182 @@ const AddAddressModal = ({ onAddressAdded }) => {
   };
 
   return (
-    <dialog id="add_address_modal" className="modal">
-      <div className="modal-box max-w-md p-5 bg-white rounded-lg shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-              <MapPin className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 text-lg">
-                Add New Address
-              </h3>
-              <p className="text-gray-600 text-xs mt-0.5">
-                Fill in your shipping details
-              </p>
-            </div>
-          </div>
+    <dialog id="add_address_modal" className="modal font-body shadow-none">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+        <div className="bg-white rounded-2xl w-full max-w-md mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto scrollbar-hide animate-in zoom-in-95 duration-300">
+          
+          {/* Close Button */}
           <button
             onClick={() => document.getElementById("add_address_modal").close()}
-            className="btn btn-sm btn-ghost btn-circle hover:bg-gray-100"
+            disabled={loading}
+            className="absolute top-4 right-4 p-1.5 rounded-full text-[#5c6880] hover:bg-[#f0f4ff] transition-colors z-10"
           >
             <X className="w-4 h-4" />
           </button>
-        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-3">
-            {/* Name & Phone Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter full name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
-                  required
-                />
+          {/* Modal Header */}
+          <div className="px-6 pt-6 pb-0 text-center">
+            <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
+              SHIPPING LOGISTICS
+            </span>
+            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+              Add New Address
+            </h3>
+            <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+              Verify your delivery coordinates for precision fulfillment.
+            </p>
+          </div>
+
+          <div className="px-6 py-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Full Name</label>
+                  <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      placeholder="NAME..."
+                      className="bg-transparent w-full text-xs text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Phone</label>
+                  <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="10-DIGIT..."
+                      className="bg-transparent w-full text-xs text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="10-digit number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Address Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                Address Type
-              </label>
-              <div className="flex gap-2">
-                {["home", "work"].map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, addressType: type })
-                    }
-                    className={`flex-1 px-3 py-2 rounded border text-sm font-medium ${formData.addressType === type
-                      ? "bg-black text-white border-black"
-                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Address Type</label>
+                <div className="grid grid-cols-2 gap-3 p-1 bg-[#f0f4ff] rounded-xl">
+                  {["home", "work"].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, addressType: type })}
+                      className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                        formData.addressType === type
+                          ? "bg-white text-[#004ac6] shadow-sm"
+                          : "text-[#5c6880] hover:text-[#004ac6]"
                       }`}
-                  >
-                    {type === "home" ? "Home" : "Work"}
-                  </button>
-                ))}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Street Address */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                Street Address
-              </label>
-              <textarea
-                name="street"
-                value={formData.street}
-                onChange={handleChange}
-                placeholder="House no., Building, Street, Area"
-                rows="2"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none text-sm text-gray-900 placeholder-gray-500 bg-white"
-                required
-              />
-            </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Street Address</label>
+                <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                  <textarea
+                    name="street"
+                    value={formData.street}
+                    onChange={handleChange}
+                    placeholder="LOCALE DETAILS..."
+                    rows="2"
+                    className="bg-transparent w-full text-xs text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold resize-none"
+                    required
+                  />
+                </div>
+              </div>
 
-            {/* City, State, ZIP Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  City
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="City"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
-                  required
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5 text-center">
+                  <label className="text-[8px] uppercase tracking-widest font-black text-[#5c6880]">City</label>
+                  <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5">
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      placeholder="CITY"
+                      className="bg-transparent w-full text-xs text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5 text-center">
+                  <label className="text-[8px] uppercase tracking-widest font-black text-[#5c6880]">State</label>
+                  <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5">
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      placeholder="STATE"
+                      className="bg-transparent w-full text-xs text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5 text-center">
+                  <label className="text-[8px] uppercase tracking-widest font-black text-[#5c6880]">Zip</label>
+                  <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5">
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleChange}
+                      placeholder="PIN"
+                      className="bg-transparent w-full text-xs text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  State
-                </label>
-                <input
-                  type="text"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  placeholder="State"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  ZIP Code
-                </label>
-                <input
-                  type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleChange}
-                  placeholder="PIN Code"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white"
-                  required
-                />
-              </div>
-            </div>
 
-            {/* Default Checkbox */}
-            <div className="pt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer group py-1">
                 <input
                   type="checkbox"
                   name="isDefault"
                   checked={formData.isDefault}
                   onChange={handleChange}
-                  className="w-4 h-4 text-black rounded border-gray-300 focus:ring-black"
+                  className="w-4 h-4 rounded border-2 border-transparent bg-[#f0f4ff] text-[#004ac6] focus:ring-[#004ac6]/10"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-[10px] font-bold text-[#5c6880] uppercase tracking-widest group-hover:text-[#141b2d] transition-colors">
                   Set as default shipping address
                 </span>
               </label>
-            </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50"
+                >
+                  {loading ? "PROCESSING..." : "CONFIRM ADDRESS"}
+                </button>
+              </div>
+            </form>
           </div>
 
-          {/* Footer Buttons */}
-          <div className="flex gap-2 pt-4 mt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={() =>
-                document.getElementById("add_address_modal").close()
-              }
-              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2.5 bg-black text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center text-sm"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Adding...
-                </>
-              ) : (
-                "Add Address"
-              )}
-            </button>
+          {/* Modal Footer */}
+          <div className="px-6 pb-6 pt-2 border-t border-[#f0f4ff] bg-gray-50/30">
+            <div className="flex items-center gap-3 text-[#5c6880]">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-[#f0f4ff]">
+                <MapPin className="w-3.5 h-3.5 text-[#004ac6]" />
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-medium leading-tight">Your data is secured. Precise location details ensure accurate delivery estimates.</span>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
-      {/* Modal backdrop */}
-      <form method="dialog" className="modal-backdrop">
-        <button>close</button>
-      </form>
     </dialog>
   );
 };

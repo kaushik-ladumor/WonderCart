@@ -7,7 +7,8 @@ import {
   ArrowRight, 
   ShieldCheck, 
   Zap,
-  Loader2
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { API_URL } from "../utils/constants";
 
@@ -79,77 +80,97 @@ const WalletModal = ({ isOpen, onClose, onRefresh }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-      <div 
-        className="absolute inset-0 bg-[#141b2d]/40 backdrop-blur-sm transition-opacity" 
-        onClick={onClose}
-      />
-      
-      <div className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-[#f0f4ff] overflow-hidden animate-in fade-in zoom-in duration-300">
-        <div className="p-8 sm:p-10">
-          <div className="flex justify-between items-start mb-8">
-            <div className="w-14 h-14 bg-[#f0f4ff] rounded-2xl flex items-center justify-center text-[#004ac6]">
-              <Wallet className="w-7 h-7" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+      <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
+        
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          disabled={loading}
+          className="absolute top-4 right-4 p-1.5 rounded-full text-[#5c6880] hover:bg-[#f0f4ff] transition-colors z-10"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Modal header */}
+        <div className="px-6 pt-6 pb-0 text-center">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
+            WALLET SERVICES
+          </span>
+          <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+            Recharge Funds
+          </h3>
+          <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+            Add balance to your secure wallet for instantaneous checkouts.
+          </p>
+        </div>
+
+        {/* Modal body */}
+        <div className="px-6 py-4 space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">
+              Credit Amount
+            </label>
+            <div className="relative bg-[#f0f4ff] rounded-xl px-4 py-3.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-[#141b2d]">₹</span>
+              <input 
+                type="number" 
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="bg-transparent w-full pl-6 text-xl font-bold text-[#141b2d] outline-none placeholder:text-[#5c6880]/30"
+              />
             </div>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
           </div>
 
-          <h2 className="font-display text-3xl font-extrabold text-[#141b2d] mb-2">Recharge Wallet</h2>
-          <p className="font-body text-[#5c6880] text-sm mb-8">Add funds to your WonderCart wallet for lightning fast checkouts.</p>
+          <div className="grid grid-cols-4 gap-2">
+            {presets.map(p => (
+              <button 
+                key={p}
+                onClick={() => setAmount(p.toString())}
+                className={`py-2.5 rounded-xl border border-transparent text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+                  amount === p.toString() 
+                    ? "bg-[#004ac6] text-white shadow-lg shadow-blue-500/20" 
+                    : "bg-[#f0f4ff] text-[#004ac6] hover:bg-[#e1e8fd]"
+                }`}
+              >
+                ₹{p}
+              </button>
+            ))}
+          </div>
 
-          <div className="space-y-6">
-             <div className="relative">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 font-display text-2xl font-bold text-[#141b2d]">₹</span>
-                <input 
-                  type="number" 
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-[#f9f9ff] border-2 border-[#f0f4ff] focus:border-[#004ac6] outline-none rounded-[1.5rem] pl-12 pr-6 py-5 font-display text-2xl font-bold text-[#141b2d] transition-all placeholder:text-[#e1e8fd]"
-                />
-             </div>
+          <div className="pt-2">
+            <button 
+              onClick={handleTopUp}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin mx-auto text-white/80" />
+              ) : (
+                <>CONTINUE TO PAYMENT <ArrowRight className="w-4 h-4" /></>
+              )}
+            </button>
+          </div>
+        </div>
 
-             <div className="grid grid-cols-4 gap-3">
-                {presets.map(p => (
-                  <button 
-                    key={p}
-                    onClick={() => setAmount(p.toString())}
-                    className="py-3 rounded-xl border border-[#f0f4ff] text-[10px] font-black tracking-widest uppercase hover:bg-[#004ac6] hover:text-white transition-all hover:-translate-y-1 active:scale-95"
-                  >
-                    +{p}
-                  </button>
-                ))}
-             </div>
-
-             <div className="pt-4">
-                <button 
-                  onClick={handleTopUp}
-                  disabled={loading}
-                  className="w-full bg-[#004ac6] text-white py-5 rounded-[1.5rem] font-display text-sm font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 hover:bg-[#141b2d] hover:shadow-black/10 transition-all flex items-center justify-center gap-3 active:scale-95"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>Initiate Checkout <ArrowRight className="w-4 h-4" /></>
-                  )}
-                </button>
-             </div>
-
-             <div className="flex items-center justify-center gap-6 pt-4">
-                <div className="flex items-center gap-2 opacity-40">
-                   <ShieldCheck className="w-4 h-4" />
-                   <span className="text-[10px] font-bold uppercase tracking-widest">Secure</span>
-                </div>
-                <div className="flex items-center gap-2 opacity-40">
-                   <Zap className="w-4 h-4" />
-                   <span className="text-[10px] font-bold uppercase tracking-widest">Instant</span>
-                </div>
-             </div>
+        {/* Modal footer */}
+        <div className="px-6 pb-6 pt-4 border-t border-[#f0f4ff] bg-gray-50/30">
+          <div className="flex items-center gap-4 justify-center">
+            <div className="flex items-center gap-2 text-[#5c6880] opacity-60">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="text-[9px] font-black uppercase tracking-widest">SECURE</span>
+            </div>
+            <div className="w-px h-3 bg-[#e1e8fd]"></div>
+            <div className="flex items-center gap-2 text-[#5c6880] opacity-60">
+              <Zap className="w-3.5 h-3.5" />
+              <span className="text-[9px] font-black uppercase tracking-widest">INSTANT</span>
+            </div>
+            <div className="w-px h-3 bg-[#e1e8fd]"></div>
+            <div className="flex items-center gap-2 text-[#5c6880] opacity-60">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="text-[9px] font-black uppercase tracking-widest">VERIFIED</span>
+            </div>
           </div>
         </div>
       </div>

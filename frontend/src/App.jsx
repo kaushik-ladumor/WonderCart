@@ -23,7 +23,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PageNotFound from "./pages/PageNotFound";
 import WishlistPage from "./pages/WishlistPage";
-import AddressPage from "./pages/AddAddressModal";
+import AddressPage from "./pages/Address";
 import { Toaster } from "react-hot-toast";
 import ContactUs from "./Compony/ContactUs";
 import FAQ from "./Compony/FAQ";
@@ -58,6 +58,7 @@ import AdminProducts from "./Admin/AdminProducts";
 import AdminUsers from "./Admin/AdminUsers"
 import AdminProfile from "./Admin/AdminProfile"
 import MyCoupons from "./pages/MyCoupons";
+import TopSellers from "./pages/TopSellers";
 
 
 import { useEffect } from "react";
@@ -242,25 +243,23 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/my-orders" element={<AllOrder />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/top-sellers" element={<TopSellers />} />
+          <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/orderConfirm/:id" element={<OrderConform />} />
           <Route path="/product-detail/:id" element={<ProductDetail />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/contact" element={<ContactUs />} />
+          <Route path="/about" element={<About />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/shipping" element={<ShippingPolicy />} />
           <Route path="/returns" element={<ReturnsRefunds />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/loader" element={<Loader />} />
-          <Route path="/address" element={<AddressPage />} />
-          <Route path="/categories" element={<Category />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/track-order" element={<TrackOrder />} />
-          <Route path="/about" element={<About />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/address" element={<AddressPage />} />
           <Route path="/my-coupons" element={<MyCoupons />} />
           <Route path="/visual-search" element={<VisualSearch />} />
-
-
+          <Route path="/loader" element={<Loader />} />
           {/* Page Not Found */}
           <Route path="*" element={<PageNotFound />} />
         </Route>

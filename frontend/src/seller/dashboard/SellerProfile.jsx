@@ -329,20 +329,35 @@ const SellerProfile = () => {
   const validatePan = (pan) => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan.toUpperCase());
   const validateGst = (gst) => /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gst.toUpperCase());
 
+  const [sendingOtp, setSendingOtp] = useState(false);
+
   // Send OTP
   const handleSendOtp = async () => {
+    setSendingOtp(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API_URL}/seller/send-otp`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      setShowOtpModal(true);
-    } catch {
-      toast.error("Failed to send OTP");
+      const res = await axios.post(`${API_URL}/seller/send-otp`, {}, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      if (res.data.success) {
+        setShowOtpModal(true);
+        toast.success("Verification code sent!");
+      } else {
+        toast.error(res.data.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setSendingOtp(false);
     }
   };
 
   // Save Step 2
   const handleSaveStep2 = async () => {
+    const errors = {};
+    if (!businessForm.shopName) errors.shopName = "Shop name required";
     if (businessForm.gstNumber && !validateGst(businessForm.gstNumber)) errors.gstNumber = "Invalid GST format";
+    if (businessForm.panNumber && !validatePan(businessForm.panNumber)) errors.panNumber = "Invalid PAN format";
     if (businessForm.sellerCategories.length === 0) errors.categories = "Select at least one category";
     if (!businessForm.businessAddress.pinCode) errors.businessPin = "PIN code required";
     if (!businessForm.businessAddress.addressLine1) errors.businessAddr = "Address line 1 required";
@@ -654,9 +669,12 @@ const SellerProfile = () => {
                       <CheckCircle className="w-3.5 h-3.5" /> Verified
                     </span>
                   ) : (
-                    <button onClick={handleSendOtp}
-                      className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-sm">
-                      Verify Email
+                    <button 
+                      onClick={handleSendOtp} 
+                      disabled={sendingOtp}
+                      className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                      {sendingOtp && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {sendingOtp ? "Sending..." : "Verify Email"}
                     </button>
                   )}
                 </div>

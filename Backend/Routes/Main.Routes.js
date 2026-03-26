@@ -13,6 +13,8 @@ const ChatRouter = require("./Chat.Route");
 const visualSearchRouter = require("./ViesualSearch.Route");
 const emailRouter = require("./Email.Route");
 
+const sellerReviewRouter = require("./SellerReview.Route");
+
 // Root API test
 mainRouter.get("/", (req, res) => {
     res.send("API Calling Successful");
@@ -26,6 +28,7 @@ mainRouter.use("/review", ReviewRouter);
 mainRouter.use("/cart", cartRouter);
 mainRouter.use("/order", orderRouter);
 mainRouter.use("/seller", sellerRouter);
+mainRouter.use("/seller-review", sellerReviewRouter);
 mainRouter.use("/admin", adminRouter);
 mainRouter.use("/email", emailRouter);
 mainRouter.use("/chat", ChatRouter);

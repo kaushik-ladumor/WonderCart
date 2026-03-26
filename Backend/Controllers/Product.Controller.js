@@ -89,7 +89,7 @@ const getSingleProduct = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(id).populate("owner", "name email");
+    const product = await Product.findById(id).populate("owner", "username email profile");
 
     if (!product) {
       return res.status(404).json({
@@ -97,6 +97,22 @@ const getSingleProduct = async (req, res) => {
         message: "Product not found",
       });
     }
+
+    // Fetch Seller Profile for detailed info (rating, shop name, logo)
+    const SellerProfile = require("../Models/SellerProfile.Model");
+    const sellerProfile = await SellerProfile.findOne({ user: product.owner?._id })
+      .select("shopName average_rating total_reviews shopLogo profileStatus createdAt");
+
+    // Merge seller info into a cleaner response object if needed, or send as separate field
+    // For now, attaching to data response
+    const responseData = {
+      ...product._doc,
+      seller: sellerProfile || { 
+        shopName: product.owner?.username || "Aura Seller", 
+        average_rating: 0, 
+        total_reviews: 0 
+      }
+    };
 
     // Check if product is approved or user is authorized (owner/admin)
     if (product.status !== "approved") {
@@ -129,7 +145,7 @@ const getSingleProduct = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Product fetched successfully",
-      data: product,
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({

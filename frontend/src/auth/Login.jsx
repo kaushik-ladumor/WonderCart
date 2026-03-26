@@ -168,85 +168,85 @@ function Login() {
           {/* Modal body */}
           <div className="px-6 py-4">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Input */}
-            <div>
-              <label className="text-xs uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
-                Email Address
-              </label>
-              <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6] transition-all">
-                <Mail className="w-4 h-4 text-[#5c6880]" />
-                <input
-                  type="email"
-                  placeholder="name@example.com"
-                  className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]"
-                  disabled={disabled}
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                      message: "Invalid email address",
-                    },
-                  })}
-                />
-              </div>
-              {errors.email && (
-                <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.email.message}</p>
-              )}
-            </div>
-
-            {/* Password Input */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs uppercase tracking-widest font-semibold text-[#5c6880]">
-                  Password
+              {/* Email Input */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
+                  Email Address
                 </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!disabled) {
-                      document.getElementById("login_modal")?.close();
-                      navigate("/forgot-password");
-                    }
-                  }}
-                  className="text-xs text-[#004ac6] hover:underline"
-                >
-                  Forgot?
-                </button>
+                <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                  <Mail className="w-4 h-4 text-[#5c6880]" />
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    disabled={disabled}
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                        message: "Invalid email address",
+                      },
+                    })}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.email.message}</p>
+                )}
               </div>
-              <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6] transition-all">
-                <Lock className="w-4 h-4 text-[#5c6880]" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]"
-                  disabled={disabled}
-                  {...register("password", {
-                    required: "Password is required",
-                  })}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-[#5c6880] hover:text-[#141b2d]"
-                  disabled={disabled}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-red-500 text-[10px] font-bold mt-1 ml-1 text-nowrap">{errors.password.message}</p>
-              )}
-            </div>
 
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={disabled}
-              className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform mt-4 disabled:opacity-50"
-            >
-              {disabled ? "Processing..." : "Sign In to Dashboard"}
-            </button>
-          </form>
+              {/* Password Input */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!disabled) {
+                        document.getElementById("login_modal")?.close();
+                        navigate("/forgot-password");
+                      }
+                    }}
+                    className="text-[10px] uppercase tracking-widest font-bold text-[#004ac6] hover:underline"
+                  >
+                    Forgot?
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                  <Lock className="w-4 h-4 text-[#5c6880]" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    disabled={disabled}
+                    {...register("password", {
+                      required: "Password is required",
+                    })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-[#5c6880] hover:text-[#141b2d]"
+                    disabled={disabled}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.password.message}</p>
+                )}
+              </div>
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                disabled={disabled}
+                className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform mt-2 disabled:opacity-50 shadow-lg shadow-blue-500/10 active:scale-95"
+              >
+                {disabled ? "Processing..." : "Sign In to Dashboard"}
+              </button>
+            </form>
           </div>
 
           {/* Modal footer */}
@@ -254,7 +254,7 @@ function Login() {
             {/* Divider */}
             <div className="flex items-center mb-6">
               <div className="flex-grow h-px bg-[#f0f4ff]"></div>
-              <span className="px-3 text-[10px] uppercase tracking-widest text-[#5c6880] text-center font-bold">Social authentication</span>
+              <span className="px-4 text-[10px] uppercase tracking-widest text-[#5c6880] font-bold opacity-60">Social Verification</span>
               <div className="flex-grow h-px bg-[#f0f4ff]"></div>
             </div>
 
@@ -263,7 +263,7 @@ function Login() {
               type="button"
               onClick={signInWithGoogle}
               disabled={disabled}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-[#e1e8fd] rounded-xl py-2.5 text-sm font-medium text-[#141b2d] hover:bg-[#f0f4ff] transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 bg-white border border-[#e1e8fd] rounded-xl h-11 text-xs font-bold uppercase tracking-widest text-[#141b2d] hover:bg-[#f0f4ff] transition-all disabled:opacity-50 active:scale-95"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -271,12 +271,12 @@ function Login() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-              Sign in with Google
+              Google Account
             </button>
 
             {/* Signup Footer */}
-            <div className="mt-5 text-center">
-              <p className="text-xs text-[#5c6880]">
+            <div className="mt-6 text-center">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-[#5c6880]">
                 New curator?{" "}
                 <button
                   type="button"
@@ -286,7 +286,7 @@ function Login() {
                       navigate("/signup");
                     }
                   }}
-                  className="text-[#004ac6] font-semibold hover:underline"
+                  className="text-[#004ac6] hover:underline"
                   disabled={disabled}
                 >
                   Create account

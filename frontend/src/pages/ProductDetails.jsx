@@ -523,25 +523,54 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={addToCart}
-              disabled={!selectedSize || stock <= 0}
-              className="w-full bg-[#1f2937] text-white font-bold rounded-xl py-4 text-[13px] uppercase tracking-wider disabled:opacity-50"
-            >
-              Add to Cart
-            </button>
-            <button
-              onClick={buyNow}
-              disabled={!selectedSize || stock <= 0}
-              className="w-full bg-[#2563eb] text-white font-bold rounded-xl py-4 text-[13px] uppercase tracking-wider disabled:opacity-50"
-            >
-              Buy Now
-            </button>
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={addToCart}
+                disabled={!selectedSize || stock <= 0}
+                className="w-full bg-[#1f2937] text-white font-bold rounded-xl py-4 text-[13px] uppercase tracking-wider disabled:opacity-50"
+              >
+                Add to Cart
+              </button>
+              <button
+                onClick={buyNow}
+                disabled={!selectedSize || stock <= 0}
+                className="w-full bg-[#2563eb] text-white font-bold rounded-xl py-4 text-[13px] uppercase tracking-wider disabled:opacity-50"
+              >
+                Buy Now
+              </button>
+            </div>
+
+            {/* Seller Info */}
+            <div className="mt-8 pt-8 border-t border-gray-100">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group cursor-pointer hover:border-[#2563eb]/30 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-xl overflow-hidden border border-gray-200 p-1 flex items-center justify-center">
+                    <img 
+                      src={product.seller?.shopLogo || "https://cdn-icons-png.flaticon.com/512/3225/3225191.png"} 
+                      alt="" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] font-bold text-[#141b2d]">{product.seller?.shopName || "Aura Seller"}</h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(product.seller?.average_rating || 0) ? "text-emerald-500 fill-emerald-500" : "text-gray-200 fill-gray-200"}`} />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
+                        Seller Rating: {product.seller?.average_rating || 0} ({product.seller?.total_reviews || 0})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#2563eb] transition-all" />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Tabs Section */}
       <div className="mt-20 border-b border-[#e5e7eb]">

@@ -19,7 +19,7 @@ import { API_URL } from "../utils/constants";
 
 const navLinks = [
   { label: "Shop", to: "/shop" },
-  { label: "Categories", to: "/categories" },
+  { label: "Top Sellers", to: "/top-sellers" },
   { label: "Deals", to: "/shop" },
   { label: "New Arrivals", to: "/shop" },
 ];
@@ -245,7 +245,7 @@ export default function Navbar() {
               <Search className="h-4 w-4 text-[#6d7892]" />
               <input
                 type="text"
-                placeholder="Search products, brands..."
+                placeholder="Search sellers..."
                 className="w-full bg-transparent text-sm text-[#11182d] outline-none placeholder:text-[#7c88a2]"
               />
             </div>

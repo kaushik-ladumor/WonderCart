@@ -41,26 +41,12 @@ const checkReviewEligibility = async (userId, productId, orderItemId) => {
 
   if (!order) return { eligible: false, message: "Order not found" };
   
-  // 4. Order status must be DELIVERED
+  // 5. Order status must be DELIVERED
   if (order.status !== "DELIVERED") {
     return { eligible: false, message: "Item has not been delivered yet" };
   }
 
-  // 5. Delivery confirmed at least 1 day ago
-  const now = new Date();
-  const deliveredAt = new Date(order.deliveredAt);
-  const oneDayInMs = 24 * 60 * 60 * 1000;
-  
-  if (now - deliveredAt < oneDayInMs) {
-    return { eligible: false, message: "Review available 1 day after delivery" };
-  }
-
-  // 6. Review window has not expired (30 days)
-  const thirtyDaysInMs = 30 * oneDayInMs;
-  if (now - deliveredAt > thirtyDaysInMs) {
-    return { eligible: false, message: "Review window has expired" };
-  }
-
+  // (Removed 1-day wait and 30-day expiry as per user request for immediate feedback)
   return { eligible: true };
 };
 

@@ -106,12 +106,10 @@ const orderSchema = new mongoose.Schema(
     razorpaySignature: {
       type: String,
     },
-    deliveredAt: {
-      type: Date,
-    },
-    cancelledAt: {
-      type: Date,
-    },
+    deliveredAt: Date,
+    cancelledAt: Date,
+    isSellerReviewed: { type: Boolean, default: false },
+    isSellerReviewSkipped: { type: Boolean, default: false },
     coupon: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Coupon",

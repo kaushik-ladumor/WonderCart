@@ -99,8 +99,11 @@ const sellerProfileSchema = new mongoose.Schema({
   platformCommissionRate: { type: Number, default: 10 }, // Percentage
   handlingTimeDays: { type: Number, default: 2 }, // Days to pack/ship
 
-  submittedAt: Date,
   approvedAt: Date,
+  
+  // Rating Stats
+  average_rating: { type: Number, default: 0 },
+  total_reviews: { type: Number, default: 0 },
 
 }, { timestamps: true });
 

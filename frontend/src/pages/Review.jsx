@@ -134,31 +134,49 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
   };
 
   return (
-    <dialog id="my_modal_8" className="modal">
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-        <div className="bg-white rounded-2xl w-full max-w-lg mx-auto shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <dialog id="my_modal_8" className="modal font-body shadow-none">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+        <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
           
+          {/* Close Button */}
           <button
             onClick={closeModal}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors z-10"
+            disabled={isSubmitting}
+            className="absolute top-4 right-4 p-1.5 rounded-full text-[#5c6880] hover:bg-[#f0f4ff] transition-colors z-10"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4" />
           </button>
 
-          <div className="p-8">
-            <h2 className="text-2xl font-bold text-[#141b2d] mb-6">Review your product</h2>
-            
-            {/* Product Header */}
-            <div className="flex items-center gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
+          {/* Modal header */}
+          <div className="px-6 pt-6 pb-0 text-center">
+            <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
+              PRODUCT EXPERIENCE
+            </span>
+            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+              Review Item
+            </h3>
+            <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+              Share your thoughts and help others make better choices.
+            </p>
+          </div>
+
+          {/* Product Preview */}
+          <div className="mx-6 mb-4 p-3 bg-[#f0f4ff] rounded-xl border border-transparent flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-white overflow-hidden shadow-sm flex-shrink-0 border border-[#f0f4ff]">
               <img 
                 src={productImage || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200"} 
                 alt={productName} 
-                className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                className="w-full h-full object-cover"
               />
-              <p className="font-semibold text-gray-800 line-clamp-2">{productName || "Product Name"}</p>
             </div>
+            <p className="text-[10px] font-bold text-[#141b2d] uppercase tracking-tight line-clamp-2 leading-tight">
+              {productName || "Product Name"}
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Modal body */}
+          <div className="px-6 py-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {/* Star Rating */}
               <div className="text-center">
                 <div className={`flex justify-center gap-2 mb-2 ${showError ? "animate-shake" : ""}`}>
@@ -175,42 +193,44 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
                       className="transition-all transform active:scale-95"
                     >
                       <Star
-                        className={`w-10 h-10 ${
+                        className={`w-9 h-9 ${
                           star <= (hoverRating || rating)
-                            ? "text-[#2563eb] fill-[#2563eb]"
-                            : "text-gray-300"
-                        }`}
+                            ? "text-[#ffc107] fill-[#ffc107]"
+                            : "text-[#f0f4ff] fill-[#f0f4ff]"
+                        } transition-colors`}
                       />
                     </button>
                   ))}
                 </div>
                 {rating > 0 && (
-                  <p className="text-sm font-bold text-[#2563eb] uppercase tracking-wider">
+                  <p className="text-[10px] font-black text-[#004ac6] uppercase tracking-[0.2em] animate-in fade-in slide-in-from-top-1">
                     {ratingLabels[rating]}
                   </p>
                 )}
                 {showError && (
-                  <p className="text-red-500 text-xs font-bold mt-2">Please select a star rating</p>
+                  <p className="text-red-500 text-[10px] font-bold mt-2">Please select a star rating</p>
                 )}
               </div>
 
               {/* Review Text */}
               <div>
-                <div className="flex justify-between items-end mb-2">
-                  <label className="text-xs font-bold uppercase text-gray-500 tracking-wider">Your Experience</label>
-                  <span className={`text-[10px] font-bold ${comment.length > 500 ? "text-red-500" : "text-gray-400"}`}>
+                <div className="flex justify-between items-end mb-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Your Comments</label>
+                  <span className={`text-[9px] font-bold ${comment.length > 500 ? "text-red-500" : "text-[#5c6880]/40"}`}>
                     {comment.length} / 500
                   </span>
                 </div>
-                <textarea
-                  {...register("comment", {
-                    minLength: { value: 10, message: "Review must be at least 10 characters" },
-                    maxLength: { value: 500, message: "Maximum 500 characters allowed" }
-                  })}
-                  placeholder="What did you like or dislike? Was it as described? Would you recommend it?"
-                  rows="4"
-                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:border-[#2563eb]/20 focus:bg-white focus:ring-4 focus:ring-[#2563eb]/5 rounded-xl outline-none text-sm transition-all resize-none"
-                />
+                <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                  <textarea
+                    {...register("comment", {
+                      minLength: { value: 10, message: "Review must be at least 10 characters" },
+                      maxLength: { value: 500, message: "Maximum 500 characters allowed" }
+                    })}
+                    placeholder="Tell us about the quality, fit, and overall value..."
+                    rows="3"
+                    className="bg-transparent w-full text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60 resize-none"
+                  />
+                </div>
                 {errors.comment && (
                   <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.comment.message}</p>
                 )}
@@ -218,26 +238,25 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
 
               {/* Photo Upload */}
               <div>
-                <label className="text-xs font-bold uppercase text-gray-500 tracking-wider mb-2 block">
-                  Add photos (optional)
+                <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-2 block">
+                  Add photos (UP TO 5)
                 </label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2.5">
                   {imagePreviews.map((preview, idx) => (
-                    <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                    <div key={idx} className="relative w-14 h-14 rounded-xl overflow-hidden border border-[#f0f4ff] shadow-sm animate-in zoom-in-50">
                       <img src={preview} alt="preview" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
-                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 hover:bg-black transition-colors"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-2.5 h-2.5" />
                       </button>
                     </div>
                   ))}
                   {images.length < 5 && (
-                    <label className="w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-[#2563eb]/40 hover:bg-[#2563eb]/5 transition-all">
-                      <Upload className="w-5 h-5 text-gray-400" />
-                      <span className="text-[10px] font-bold text-gray-400 mt-1">Upload</span>
+                    <label className="w-14 h-14 flex flex-col items-center justify-center bg-[#f0f4ff] rounded-xl cursor-pointer hover:bg-[#e1e8fd] transition-all border border-transparent active:scale-95">
+                      <Upload className="w-4 h-4 text-[#004ac6]" />
                       <input 
                         type="file" 
                         multiple 
@@ -251,30 +270,38 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 py-3 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
-                >
-                  Cancel
-                </button>
+              <div className="space-y-3 pt-2">
                 <button
                   type="submit"
                   disabled={rating === 0 || isSubmitting}
-                  className="flex-1 bg-[#141b2d] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#2563eb] disabled:opacity-50 disabled:bg-gray-300 transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50"
                 >
                   {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Submitting...</span>
-                    </>
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto text-white/80" />
                   ) : (
-                    "Submit Review"
+                    "Submit Verified Review"
                   )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="w-full h-10 bg-transparent text-[#5c6880] rounded-xl text-[10px] font-bold uppercase tracking-widest hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-all"
+                >
+                  NOT NOW
                 </button>
               </div>
             </form>
+          </div>
+
+          {/* Modal footer */}
+          <div className="px-6 pb-6 pt-2 border-t border-[#f0f4ff] bg-gray-50/30">
+            <div className="flex items-center gap-3 text-[#5c6880]">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-[#f0f4ff]">
+                <Check className="w-3.5 h-3.5 text-emerald-500" />
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-medium leading-tight">Reviews are screened for authenticity based on verified purchase data.</span>
+            </div>
           </div>
         </div>
       </div>

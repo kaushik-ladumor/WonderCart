@@ -37,8 +37,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-// Removed express.urlencoded — it can interfere with multipart/form-data parsing
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(mainRoutes);
 
 const server = http.createServer(app);

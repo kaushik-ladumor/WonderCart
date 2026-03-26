@@ -51,37 +51,33 @@ const OrderConfirmationPage = () => {
 
   // Function to get product image from variant
   const getProductImage = (item) => {
-    // Check if image is directly saved with order
-    if (item.image) {
-      return item.image;
-    }
+    // 1. Direct item image (highest priority)
+    if (item.image) return item.image;
+    if (item.productImg) return item.productImg;
 
-    // Check populated product variants
+    // 2. Variant-specific image (if color matches)
     if (item.product && item.product.variants) {
-      // If color is specified, find matching variant
       if (item.color) {
         const matchingVariant = item.product.variants.find(
           (v) => v.color && v.color.toLowerCase() === item.color.toLowerCase(),
         );
-        if (
-          matchingVariant &&
-          matchingVariant.images &&
-          matchingVariant.images.length > 0
-        ) {
+        if (matchingVariant?.images?.length > 0) {
           return matchingVariant.images[0];
         }
       }
 
-      // If no matching variant or color not specified, use first variant
-      if (item.product.variants.length > 0) {
-        const firstVariant = item.product.variants[0];
-        if (firstVariant.images && firstVariant.images.length > 0) {
-          return firstVariant.images[0];
-        }
-      }
+      // 3. First available variant image (fallback)
+      const firstWithImg = item.product.variants.find(v => v.images?.length > 0);
+      if (firstWithImg) return firstWithImg.images[0];
     }
 
-    return null;
+    // 4. Primary product image/gallery (last resort)
+    if (item.product) {
+      if (item.product.image) return item.product.image;
+      if (item.product.images?.length > 0) return item.product.images[0];
+    }
+
+    return "https://cdn-icons-png.flaticon.com/512/3225/3225191.png";
   };
 
   useEffect(() => {
@@ -289,15 +285,26 @@ const OrderConfirmationPage = () => {
                   
                   <div className="space-y-3">
                      {sub.items?.map((item, i) => (
-                        <div key={i} className="flex gap-4 items-center">
-                           <div className="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-xs text-gray-400 border border-gray-100">
-                              {item.quantity}x
+                        <div key={i} className="flex gap-5 items-center group/item hover:bg-gray-50/50 p-2 -mx-2 rounded-2xl transition-all">
+                           <div className="relative w-16 h-16 bg-[#f9f9ff] rounded-xl overflow-hidden flex-shrink-0 border border-[#f0f4ff] shadow-sm transform group-hover/item:scale-105 transition-transform">
+                              <img 
+                                 src={getProductImage(item) || "https://cdn-icons-png.flaticon.com/512/3225/3225191.png"} 
+                                 alt={item.name} 
+                                 className="w-full h-full object-contain p-2 mix-blend-multiply"
+                              />
+                              <div className="absolute top-0 right-0 bg-[#004ac6] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg shadow-sm">
+                                 {item.quantity}x
+                              </div>
                            </div>
                            <div className="flex-1 min-w-0">
-                              <h3 className="font-display text-[12px] font-bold text-[#141b2d] mb-0.5 truncate">{item.name}</h3>
-                              <p className="font-body text-[9px] text-[#5c6880] uppercase tracking-widest font-semibold">
-                                 {item.color} · {item.size}
-                              </p>
+                              <h3 className="font-display text-[13px] font-bold text-[#141b2d] mb-0.5 truncate group-hover/item:text-[#004ac6] transition-colors">{item.name}</h3>
+                              <div className="flex items-center gap-2">
+                                 <p className="font-body text-[9px] text-[#5c6880] uppercase tracking-widest font-semibold">
+                                    {item.color} · {item.size}
+                                 </p>
+                                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                                 <p className="font-body text-[10px] font-bold text-[#141b2d] italic">{formatPrice(item.price)}</p>
+                              </div>
                            </div>
                         </div>
                      ))}

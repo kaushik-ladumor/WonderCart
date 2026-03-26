@@ -12,6 +12,7 @@ import {
   Phone,
   Plus,
   Shield,
+  Trash2,
   Truck,
   Wallet,
 } from "lucide-react";
@@ -364,22 +365,61 @@ const Checkout = () => {
                         {address.phone}
                       </p>
 
-                      <div className="mt-2.5 flex items-center justify-between">
-                        <span className="text-[10px] uppercase tracking-[0.14em] text-[#6d7892]">
-                          {address.isDefault ? "Default" : "Saved"}
-                        </span>
-                        <span
-                          onClick={(e) => {
+                      <div className="mt-2.5 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingAddress(address);
+                              document.getElementById("edit_address_modal")?.showModal();
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline"
+                          >
+                            Edit
+                          </span>
+                          {!address.isDefault && (
+                            <span
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (window.confirm("Set as default address?")) {
+                                  try {
+                                    const token = getToken();
+                                    await axios.put(`${API_URL}/user/address/${address._id}/default`, {}, {
+                                      headers: { Authorization: `Bearer ${token}` }
+                                    });
+                                    loadAddresses(token);
+                                    toast.success("Default address updated");
+                                  } catch (err) {
+                                    toast.error("Failed to update default");
+                                  }
+                                }
+                              }}
+                              className="text-[10px] font-bold uppercase tracking-widest text-[#5c6880] hover:text-[#004ac6] transition-colors"
+                            >
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            setEditingAddress(address);
-                            document
-                              .getElementById("edit_address_modal")
-                              ?.showModal();
+                            if (window.confirm("Are you sure you want to delete this address?")) {
+                              try {
+                                const token = getToken();
+                                await axios.delete(`${API_URL}/user/address/${address._id}`, {
+                                  headers: { Authorization: `Bearer ${token}` }
+                                });
+                                loadAddresses(token);
+                                toast.success("Address deleted");
+                              } catch (err) {
+                                toast.error("Failed to delete address");
+                              }
+                            }
                           }}
-                          className="text-[0.78rem] font-medium text-[#0f49d7]"
+                          className="text-[#6d7892] hover:text-red-500 transition-colors"
                         >
-                          Edit
-                        </span>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </button>
                   );

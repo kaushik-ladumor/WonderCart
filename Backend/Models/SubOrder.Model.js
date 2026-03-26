@@ -54,6 +54,8 @@ const subOrderSchema = new mongoose.Schema({
   estimatedDeliveryDate: Date,
   deliveredAt: Date,
   payoutReleasedAt: Date,
+  isSellerReviewed: { type: Boolean, default: false },
+  isSellerReviewSkipped: { type: Boolean, default: false },
   
   // Fulfillment SLA
   handlingTimeDays: Number, // Copied from seller profile

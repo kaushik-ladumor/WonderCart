@@ -16,6 +16,7 @@ import {
   Star
 } from "lucide-react";
 import Review from "./Review";
+import SellerReview from "./SellerReview";
 
 function AllOrderDetail() {
   const navigate = useNavigate();
@@ -25,6 +26,42 @@ function AllOrderDetail() {
   const [searchTerm, setSearchTerm] = useState("");
   const { token } = useAuth();
   const [selectedReviewItem, setSelectedReviewItem] = useState(null);
+  const [selectedSubOrderForReview, setSelectedSubOrderForReview] = useState(null);
+
+  const SellerReviewButton = ({ subOrder }) => {
+    if (subOrder.status !== "DELIVERED" || subOrder.isSellerReviewed || subOrder.isSellerReviewSkipped) {
+      return null;
+    }
+
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedSubOrderForReview(subOrder);
+        }}
+        className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors shadow-sm"
+      >
+        <Star className="w-3.5 h-3.5 fill-emerald-600" />
+        Rate Seller Performance
+      </button>
+    );
+  };
+
+  const PendingReviewsBadge = ({ order }) => {
+    const pendingCount = order.subOrders?.filter(s => s.status === "DELIVERED" && !s.isSellerReviewed && !s.isSellerReviewSkipped).length || 0;
+    
+    if (pendingCount === 0) return null;
+
+    return (
+      <button 
+        onClick={(e) => { e.stopPropagation(); toggleExpand(order._id); }}
+        className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-100 group hover:bg-amber-100 transition-all cursor-pointer animate-pulse-slow"
+      >
+        <Star className="w-3 h-3 fill-amber-700" />
+        <span className="text-[9px] font-bold uppercase tracking-wider">{pendingCount} Review{pendingCount > 1 ? 's' : ''} Pending</span>
+      </button>
+    );
+  };
 
   const ReviewButton = ({ product, orderItemId, orderStatus }) => {
     const [eligible, setEligible] = useState(false);
@@ -241,6 +278,7 @@ function AllOrderDetail() {
                   </div>
 
                   <div className="flex items-center gap-4">
+                    <PendingReviewsBadge order={order} />
                     <StatusBadge status={order.status} />
                     <button
                       onClick={() => toggleExpand(order._id)}
@@ -342,29 +380,43 @@ function AllOrderDetail() {
                         </div>
                       </div>
 
-                      {/* List of items */}
                       <div className="lg:col-span-1">
                         <div className="flex items-center gap-3 mb-4">
                           <Package className="w-4 h-4 text-[#004ac6]" />
                           <h4 className="font-body text-[10px] font-bold text-[#141b2d] uppercase tracking-widest">Package Contents</h4>
                         </div>
-                        <div className="bg-white rounded-2xl border border-[#f0f4ff] shadow-sm divide-y divide-[#f0f4ff] overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-                          {getOrderItems(order).map((item, idx) => (
-                            <div key={idx} className="p-4 flex gap-4 hover:bg-[#f9f9ff] transition-colors">
-                              <div className="w-12 h-12 bg-[#f0f4ff] rounded-lg overflow-hidden flex-shrink-0">
-                                <img src={getProductImage(item)} alt={item?.name || "Ordered product"} className="w-full h-full object-contain p-2" />
+                        <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
+                          {order.subOrders?.map((subOrder, sIdx) => (
+                            <div key={sIdx} className="bg-white rounded-2xl border border-[#f0f4ff] shadow-sm overflow-hidden">
+                              <div className="bg-[#fcfcff] px-4 py-2 border-b border-[#f0f4ff] flex items-center justify-between">
+                                <p className="text-[10px] font-bold text-[#5c6880] uppercase tracking-wider">
+                                  Package {sIdx + 1} &bull; <span className="text-[#004ac6]">{subOrder.seller?.shopName || "Seller"}</span>
+                                </p>
+                                <StatusBadge status={subOrder.status} />
                               </div>
-                              <div className="flex-1">
-                                <p className="font-body text-xs font-bold text-[#141b2d] line-clamp-1">{item?.name || "Ordered item"}</p>
-                                <div className="flex justify-between mt-1">
-                                  <span className="font-body text-[10px] text-[#5c6880] uppercase tracking-tighter">Qty: {item?.quantity || 0}</span>
-                                  <span className="font-body text-[10px] font-bold text-[#141b2d]">₹{Math.round((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</span>
-                                </div>
-                                <ReviewButton 
-                                  product={item?.product} 
-                                  orderItemId={item?._id} 
-                                  orderStatus={order.status} 
-                                />
+                              <div className="divide-y divide-[#f0f4ff]">
+                                {subOrder.items?.map((item, idx) => (
+                                  <div key={idx} className="p-4 flex gap-4 hover:bg-[#f9f9ff] transition-colors group/item">
+                                    <div className="w-12 h-12 bg-[#f0f4ff] rounded-lg overflow-hidden flex-shrink-0">
+                                      <img src={getProductImage(item)} alt={item?.name || "Ordered product"} className="w-full h-full object-contain p-2" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-body text-xs font-bold text-[#141b2d] line-clamp-1 group-hover/item:text-[#004ac6] transition-colors">{item?.name || "Ordered item"}</p>
+                                      <div className="flex justify-between mt-1">
+                                        <span className="font-body text-[10px] text-[#5c6880] uppercase tracking-tighter">Qty: {item?.quantity || 0}</span>
+                                        <span className="font-body text-[10px] font-bold text-[#141b2d]">₹{Math.round((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</span>
+                                      </div>
+                                      <ReviewButton 
+                                        product={item?.product?._id || item?.product} 
+                                        orderItemId={item?._id} 
+                                        orderStatus={subOrder.status} 
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="px-4 pb-4">
+                                <SellerReviewButton subOrder={subOrder} />
                               </div>
                             </div>
                           ))}
@@ -393,6 +445,14 @@ function AllOrderDetail() {
           productName={selectedReviewItem.name} 
           productImage={selectedReviewItem.image}
           orderItemId={selectedReviewItem.orderItemId}
+          onSuccess={fetchOrders}
+        />
+      )}
+      {selectedSubOrderForReview && (
+        <SellerReview 
+          subOrder={selectedSubOrderForReview}
+          isOpen={true}
+          onClose={() => setSelectedSubOrderForReview(null)}
           onSuccess={fetchOrders}
         />
       )}
