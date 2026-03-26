@@ -109,11 +109,11 @@ function SellerDashboard() {
   // ─── Profile Incomplete/Pending: Show onboarding prompt ───
   if (!profileActive) {
     const statusConfig = {
-      email_pending: { label: "Get Started", color: "blue", desc: "Complete your seller profile to unlock all features.", icon: "📋" },
-      email_verified: { label: "Complete Profile", color: "blue", desc: "Add your business and bank details to continue.", icon: "📝" },
-      submitted: { label: "Under Review", color: "amber", desc: "Your application is being reviewed. We'll notify you soon.", icon: "⏳" },
-      rejected: { label: "Action Required", color: "red", desc: sellerProfile.rejectionReason || "Your application needs attention.", icon: "⚠️" },
-      suspended: { label: "Suspended", color: "gray", desc: "Your account has been suspended. Contact support.", icon: "🚫" },
+      email_pending: { label: "Get Started", color: "blue", border: "border-blue-200", bg: "bg-blue-100", text: "text-blue-800", desc: "Complete your seller profile to unlock all features.", icon: "📋" },
+      email_verified: { label: "Complete Profile", color: "blue", border: "border-blue-200", bg: "bg-blue-100", text: "text-blue-800", desc: "Add your business and bank details to continue.", icon: "📝" },
+      submitted: { label: "Under Review", color: "amber", border: "border-amber-200", bg: "bg-amber-100", text: "text-amber-800", desc: "Your application is being reviewed. We'll notify you soon.", icon: "⏳" },
+      rejected: { label: "Action Required", color: "red", border: "border-red-200", bg: "bg-red-100", text: "text-red-800", desc: sellerProfile.rejectionReason || "Your application needs attention.", icon: "⚠️" },
+      suspended: { label: "Suspended", color: "gray", border: "border-gray-200", bg: "bg-gray-100", text: "text-gray-800", desc: "Your account has been suspended. Contact support.", icon: "🚫" },
     };
     const cfg = statusConfig[profileStatus] || statusConfig.email_pending;
 
@@ -128,9 +128,9 @@ function SellerDashboard() {
           </div>
 
           {/* Onboarding Card */}
-          <div className={`bg-white border-2 border-${cfg.color}-200 rounded-2xl p-8 text-center mb-6`}>
+          <div className={`bg-white border-2 ${cfg.border} rounded-2xl p-8 text-center mb-6`}>
             <div className="text-5xl mb-4">{cfg.icon}</div>
-            <span className={`inline-block px-3 py-1 bg-${cfg.color}-100 text-${cfg.color}-800 rounded-full text-xs font-bold uppercase tracking-wider mb-3`}>
+            <span className={`inline-block px-3 py-1 ${cfg.bg} ${cfg.text} rounded-full text-xs font-bold uppercase tracking-wider mb-3`}>
               {cfg.label}
             </span>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -472,7 +472,7 @@ function SellerDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {orderPipeline.map((item) => {
               const Icon = item.icon;
               return (

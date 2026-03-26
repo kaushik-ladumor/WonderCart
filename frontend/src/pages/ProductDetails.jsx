@@ -355,7 +355,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 lg:px-10 py-2 font-body text-[#141b2d]">
+    <div className="max-w-[1400px] mx-auto px-4 py-2 font-body text-[#141b2d]">
 
       {/* Breadcrumb */}
       <nav className="text-[11px] text-[#868fa0] flex items-center gap-2 mb-6 uppercase tracking-wider">
@@ -404,7 +404,7 @@ const ProductDetail = () => {
           </div>
 
           {/* Mobile Thumbnails */}
-          <div className="flex md:hidden gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex md:hidden gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
             {images.map((img, i) => (
               <button
                 key={i}
@@ -419,12 +419,12 @@ const ProductDetail = () => {
         </div>
 
         {/* Right Column: Info */}
-        <div className="flex flex-col pr-4">
+        <div className="flex flex-col lg:pr-4">
           <div className="mb-3">
             <span className="inline-block bg-[#D1FAE5] text-[#065F46] text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wide mb-3">
               New Arrival
             </span>
-            <h1 className="text-[2.2rem] font-semibold leading-[1.1] mb-2 text-[#141b2d] tracking-tight">
+            <h1 className="text-2xl sm:text-[2.2rem] font-semibold leading-[1.2] lg:leading-[1.1] mb-2 text-[#141b2d] tracking-tight">
               {product.name}
             </h1>
             <div className="flex items-center gap-2 mb-6">
@@ -573,13 +573,13 @@ const ProductDetail = () => {
         </div>
 
       {/* Tabs Section */}
-      <div className="mt-20 border-b border-[#e5e7eb]">
-        <div className="flex gap-10">
+      <div className="mt-16 sm:mt-20 border-b border-[#e5e7eb]">
+        <div className="flex gap-6 sm:gap-10 overflow-x-auto scrollbar-hide">
           {["description", "specifications", "reviews"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 text-[13px] font-bold uppercase tracking-widest relative ${activeTab === tab ? "text-[#2563eb]" : "text-[#9ca3af]"
+              className={`pb-4 text-[11px] font-bold uppercase tracking-widest relative whitespace-nowrap ${activeTab === tab ? "text-[#2563eb]" : "text-[#9ca3af]"
                 }`}
             >
               {tab === "reviews" ? `Customer Reviews` : tab}
@@ -641,8 +641,8 @@ const ProductDetail = () => {
           {activeTab === "reviews" && (
             <div className="animate-in fade-in duration-500">
               {/* Rating Summary & Breakdown */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-16 items-start">
-                <div className="bg-[#f8fafc] p-10 rounded-[2.5rem] border border-[#f1f5f9] text-center shadow-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-16 items-start">
+                <div className="bg-[#f8fafc] p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-[#f1f5f9] text-center shadow-sm">
                   <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#94a3b8] mb-4">Product Experience</h4>
                   <div className="flex flex-col items-center">
                     <span className="text-6xl font-extrabold text-[#141b2d] tracking-tighter mb-2">{product.average_rating || 0}</span>
@@ -824,11 +824,11 @@ const ProductDetail = () => {
 
       {/* Recommended Section */}
       {recommendedProducts.length > 0 && (
-        <section className="mt-20">
-          <div className="flex justify-between items-end mb-10">
+        <section className="mt-16 sm:mt-20">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-10 gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-[#141b2d] tracking-tight">Complement Your Space</h2>
-              <p className="text-sm text-[#6b7280] mt-1">Items that pair perfectly with the {product.name}</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#141b2d] tracking-tight">Complement Your Space</h2>
+              <p className="text-[13px] sm:text-sm text-[#6b7280] mt-1">Items that pair perfectly with the {product.name}</p>
             </div>
             <div className="flex gap-2">
               <button className="w-10 h-10 rounded-full border border-[#e5e7eb] flex items-center justify-center text-[#9ca3af] hover:border-[#141b2d] hover:text-[#141b2d]">
@@ -839,7 +839,7 @@ const ProductDetail = () => {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {recommendedProducts.map((p) => (
               <ProductCard
                 key={p._id}

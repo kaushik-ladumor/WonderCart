@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Mail, CheckCircle, XCircle, Building2, Landmark, Shield, AlertTriangle, ChevronDown,
+  Mail, CheckCircle, XCircle, Building2, Landmark, Shield, AlertTriangle, ChevronDown, FileText,
   Upload, X, Loader2, Store, LogOut, Trash2, Key, Tag, Plus, Send, Clock, Ban, Info,
 } from "lucide-react";
 import toast from "react-hot-toast";
