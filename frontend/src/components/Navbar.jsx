@@ -228,11 +228,10 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   to={link.to}
-                  className={`text-sm font-medium ${
-                    isPathActive(location.pathname, link.to)
-                      ? "text-[#0f49d7]"
-                      : "text-[#42506d]"
-                  }`}
+                  className={`text-sm font-medium ${isPathActive(location.pathname, link.to)
+                    ? "text-[#0f49d7]"
+                    : "text-[#42506d]"
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -296,9 +295,8 @@ export default function Navbar() {
                             className="flex items-start gap-3 border-b border-[#f4f6fb] px-4 py-3 last:border-b-0"
                           >
                             <span
-                              className={`mt-1.5 h-2 w-2 rounded-full ${
-                                item.read ? "bg-[#d9deeb]" : "bg-[#0f49d7]"
-                              }`}
+                              className={`mt-1.5 h-2 w-2 rounded-full ${item.read ? "bg-[#d9deeb]" : "bg-[#0f49d7]"
+                                }`}
                             />
                             <div className="min-w-0 flex-1">
                               <p className="text-sm leading-6 text-[#11182d]">
@@ -462,11 +460,10 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     to={link.to}
-                    className={`block rounded-2xl px-4 py-3 text-base font-medium ${
-                      isPathActive(location.pathname, link.to)
-                        ? "bg-[#eef2ff] text-[#0f49d7]"
-                        : "text-[#25324d]"
-                    }`}
+                    className={`block rounded-2xl px-4 py-3 text-base font-medium ${isPathActive(location.pathname, link.to)
+                      ? "bg-[#eef2ff] text-[#0f49d7]"
+                      : "text-[#25324d]"
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -536,9 +533,8 @@ export default function Navbar() {
                   }
                   navigate(tab.to);
                 }}
-                className={`flex flex-col items-center gap-1 rounded-[20px] px-2 py-2 ${
-                  active ? "bg-[#eef2ff] text-[#0f49d7]" : "text-[#6d7892]"
-                }`}
+                className={`flex flex-col items-center gap-1 rounded-[20px] px-2 py-2 ${active ? "bg-[#eef2ff] text-[#0f49d7]" : "text-[#6d7892]"
+                  }`}
               >
                 <div className="relative">
                   <Icon className="h-4.5 w-4.5" />

@@ -107,10 +107,10 @@ const getSingleProduct = async (req, res) => {
     // For now, attaching to data response
     const responseData = {
       ...product._doc,
-      seller: sellerProfile || { 
-        shopName: product.owner?.username || "Aura Seller", 
-        average_rating: 0, 
-        total_reviews: 0 
+      seller: sellerProfile || {
+        shopName: product.owner?.username || "Aura Seller",
+        average_rating: 0,
+        total_reviews: 0
       }
     };
 

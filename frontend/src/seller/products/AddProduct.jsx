@@ -1,5 +1,5 @@
 // src/seller/products/AddProduct.jsx
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -319,7 +319,7 @@ const AddProduct = () => {
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-500 mt-1.5 flex items-center gap-1">
-                  Don't see your category? 
+                  Don't see your category?
                   <Link to="/seller/profile" className="text-blue-600 font-bold hover:underline">Request more info →</Link>
                 </p>
               </div>
