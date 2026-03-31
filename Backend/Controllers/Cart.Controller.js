@@ -1,5 +1,6 @@
 const Cart = require("../Models/Cart.Model");
 const Product = require("../Models/Product.Model");
+const Deal = require("../Models/Deal");
 
 // Helper: Emit cart update to user via socket
 const emitCartUpdate = (userId, cart, message = "cart-updated") => {
@@ -47,6 +48,18 @@ const addCart = async (req, res) => {
       });
     }
 
+    // Check for active deal
+    const activeDeal = await Deal.findOne({
+      productId: productId,
+      status: "live",
+      startTime: { $lte: new Date() },
+      endTime: { $gte: new Date() }
+    });
+
+    const isDealActive = !!activeDeal;
+    const currentPrice = isDealActive ? activeDeal.dealPrice : sizeObj.sellingPrice;
+    const currentDiscount = isDealActive ? activeDeal.discountPercent : (sizeObj.discount || 0);
+
     // Stock check
     if (sizeObj.stock < quantity) {
       return res.status(400).json({
@@ -78,10 +91,12 @@ const addCart = async (req, res) => {
       }
 
       existingItem.quantity += quantity;
-      existingItem.price = sizeObj.sellingPrice;
+      existingItem.price = currentPrice;
       existingItem.originalPrice = sizeObj.originalPrice;
-      existingItem.sellingPrice = sizeObj.sellingPrice;
-      existingItem.discount = sizeObj.discount || 0;
+      existingItem.sellingPrice = currentPrice;
+      existingItem.discount = currentDiscount;
+      existingItem.isDealApplied = isDealActive;
+      existingItem.dealId = isDealActive ? activeDeal._id : null;
     } else {
       const variantImage = variant.images?.[0] || "";
 
@@ -90,12 +105,14 @@ const addCart = async (req, res) => {
         quantity,
         color,
         size,
-        price: sizeObj.sellingPrice,
+        price: currentPrice,
         originalPrice: sizeObj.originalPrice,
-        sellingPrice: sizeObj.sellingPrice,
-        discount: sizeObj.discount || 0,
+        sellingPrice: currentPrice,
+        discount: currentDiscount,
         productImg: variantImage,
         productName: product.name,
+        isDealApplied: isDealActive,
+        dealId: isDealActive ? activeDeal._id : null
       });
     }
 
@@ -175,11 +192,25 @@ const getCart = async (req, res) => {
         }
       }
 
-      // Always sync prices from product
-      item.price = sizeObj.sellingPrice;
+      // Check for active deal during sync
+      const activeDeal = await Deal.findOne({
+        productId: product._id,
+        status: "live",
+        startTime: { $lte: new Date() },
+        endTime: { $gte: new Date() }
+      });
+
+      const isDealActive = !!activeDeal;
+      const currentPrice = isDealActive ? activeDeal.dealPrice : sizeObj.sellingPrice;
+      const currentDiscount = isDealActive ? activeDeal.discountPercent : (sizeObj.discount || 0);
+
+      // Always sync prices from product or active deal
+      item.price = currentPrice;
       item.originalPrice = sizeObj.originalPrice;
-      item.sellingPrice = sizeObj.sellingPrice;
-      item.discount = sizeObj.discount || 0;
+      item.sellingPrice = currentPrice;
+      item.discount = currentDiscount;
+      item.isDealApplied = isDealActive;
+      item.dealId = isDealActive ? activeDeal._id : null;
 
       validItems.push(item);
     }

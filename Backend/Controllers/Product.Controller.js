@@ -245,22 +245,27 @@ const createProduct = async (req, res) => {
     const variantMap = {};
 
     req.files.forEach((file) => {
-      if (!variantMap[file.fieldname]) {
-        variantMap[file.fieldname] = [];
+      const field = file.fieldname;
+      if (!variantMap[field]) {
+        variantMap[field] = [];
       }
-      // Ensure we use https for all Cloudinary URLs to prevent mixed content issues on mobile
-      variantMap[file.fieldname].push(file.path.replace("http://", "https://"));
+      variantMap[field].push(file.path.replace("http://", "https://"));
     });
 
+    console.log("Variant Map keys from req.files:", Object.keys(variantMap));
+    console.log("Parsed Variants colors from req.body:", parsedVariants.map(v => v.color));
+
     for (const v of parsedVariants) {
-      if (!variantMap[v.color]) {
+      const colorKey = v.color;
+      if (!variantMap[colorKey]) {
+        console.warn(`CRITICAL: Images missing for color: "${colorKey}"`);
         return res.status(400).json({
           success: false,
-          message: `Images missing for ${v.color}`,
+          message: `Images missing for ${colorKey}`,
         });
       }
 
-      v.images = variantMap[v.color];
+      v.images = variantMap[colorKey];
 
       if (!Array.isArray(v.sizes) || v.sizes.length === 0) {
         return res.status(400).json({

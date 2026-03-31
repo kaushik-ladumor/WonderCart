@@ -29,14 +29,18 @@ const ZONES = {
 const getZone = (sellerPin, customerPin) => {
   const remotePrefixes = ["18", "19", "78", "79", "80"]; // J&K, North East, etc.
   
-  const isRemote = remotePrefixes.some(p => customerPin.startsWith(p));
+  // Ensure we are working with strings to avoid crashes if numbers are passed
+  const sPin = String(sellerPin || "110001");
+  const cPin = String(customerPin || "110001");
+
+  const isRemote = remotePrefixes.some(p => cPin.startsWith(p));
   if (isRemote) return "ZONE_C";
 
-  if (sellerPin === customerPin || sellerPin.substring(0, 3) === customerPin.substring(0, 3)) {
+  if (sPin === cPin || sPin.substring(0, 3) === cPin.substring(0, 3)) {
     return "LOCAL";
   }
 
-  if (sellerPin[0] === customerPin[0]) {
+  if (sPin[0] === cPin[0]) {
     return "ZONE_A";
   }
 

@@ -46,6 +46,15 @@ const cartItemSchema = new mongoose.Schema({
   },
   productName: {
     type: String
+  },
+  isDealApplied: {
+    type: Boolean,
+    default: false
+  },
+  dealId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Deal',
+    default: null
   }
 }, { _id: true });
 

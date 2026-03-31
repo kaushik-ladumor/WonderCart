@@ -32,9 +32,17 @@ const customerOrderPopulate = {
 const prepareOrderSplitting = async (items, customerPin) => {
   const sellerGroups = {};
 
+  if (!customerPin) {
+    throw new Error("Shipping address is missing a valid pincode.");
+  }
+
   for (const item of items) {
     const product = await Product.findById(item.product).populate("owner");
-    if (!product) throw new Error(`Product ${item.product} not found`);
+    if (!product) throw new Error(`Product ${item.name || item.product} not found or no longer available.`);
+
+    if (!product.owner) {
+      throw new Error(`Product ${product.name} does not have a valid seller associated.`);
+    }
 
     const sellerId = product.owner._id.toString();
     if (!sellerGroups[sellerId]) {
@@ -49,11 +57,28 @@ const prepareOrderSplitting = async (items, customerPin) => {
       };
     }
 
-    const variant = product.variants.find(v => v.color === item.color);
+    if (!product.variants || product.variants.length === 0) {
+      throw new Error(`Product ${product.name} has no available variants.`);
+    }
+
+    // Try to find exact color match, otherwise fallback to first variant
+    let variant = product.variants.find(v => v.color === item.color);
+    if (!variant) {
+      console.warn(`Color ${item.color} not found for product ${product.name}, falling back to default variant.`);
+      variant = product.variants[0];
+    }
+
+    if (!variant.sizes || variant.sizes.length === 0) {
+      throw new Error(`No sizes available for product ${product.name} in ${variant.color} variant.`);
+    }
+
     const sizeObj = variant.sizes.find(s => s.size === item.size);
+    if (!sizeObj) {
+      throw new Error(`Size ${item.size} not found for ${product.name} (${variant.color}). Available: ${variant.sizes.map(s => s.size).join(", ")}`);
+    }
 
     if (sizeObj.stock < item.quantity) {
-      throw new Error(`Insufficient stock for ${product.name} (${item.size}, ${item.color})`);
+      throw new Error(`Insufficient stock for ${product.name} (${item.size}, ${variant.color}). Available: ${sizeObj.stock}`);
     }
 
     const price = sizeObj.sellingPrice;
@@ -62,8 +87,9 @@ const prepareOrderSplitting = async (items, customerPin) => {
       name: product.name,
       quantity: item.quantity,
       price: price,
-      color: item.color,
+      color: variant.color,
       size: item.size,
+      category: product.category,
     });
     sellerGroups[sellerId].subTotal += price * item.quantity;
   }
@@ -157,18 +183,26 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
  * API: Initialize Checkout / Place Order
  */
 const placeOrder = async (req, res) => {
+  console.log("[OrderCreate] Request received:", JSON.stringify(req.body, null, 2));
   const { items, addressId, paymentMethod, walletUsed, couponCode } = req.body;
   const userId = req.user.userId;
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ success: false, message: "No items found to place order." });
+  }
 
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const userDoc = await User.findById(userId);
-    if (!userDoc) throw new Error("User not found");
+    if (!userDoc) throw new Error("User account not found.");
 
     const selectedAddress = userDoc.addresses.id(addressId);
-    if (!selectedAddress) throw new Error("Shipping address not found");
+    if (!selectedAddress) throw new Error("Shipping address not selected.");
+
+    const zipCode = selectedAddress.zipCode || selectedAddress.zipcode;
+    if (!zipCode) throw new Error("Shipping address is missing a pincode.");
 
     const formattedAddress = {
       fullName: selectedAddress.fullName,
@@ -176,12 +210,12 @@ const placeOrder = async (req, res) => {
       street: selectedAddress.street,
       city: selectedAddress.city,
       state: selectedAddress.state,
-      zipCode: selectedAddress.zipCode || selectedAddress.zipcode,
+      zipCode: zipCode,
       country: selectedAddress.country || "India"
     };
 
     // 1. Prepare and Split
-    const subOrdersData = await prepareOrderSplitting(items, formattedAddress.zipCode);
+    const subOrdersData = await prepareOrderSplitting(items, zipCode);
     
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
@@ -190,8 +224,8 @@ const placeOrder = async (req, res) => {
     
     // Verify COD serviceability
     if (paymentMethod === "COD") {
-      if (!isCodServiceable(formattedAddress.zipCode)) {
-        throw new Error("COD is not available for this pincode.");
+      if (!isCodServiceable(zipCode)) {
+        throw new Error("Cash on Delivery (COD) is not available for this pincode.");
       }
       if (subTotal + tax + shipping > 5000) {
         throw new Error("COD is only available for orders below ₹5000.");
@@ -257,7 +291,10 @@ const placeOrder = async (req, res) => {
     res.status(201).json({ success: true, order: masterOrder });
 
   } catch (error) {
-    await session.abortTransaction();
+    console.error("Order Creation Logic Error:", error);
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     res.status(400).json({ success: false, message: error.message });
   } finally {
     session.endSession();
@@ -289,17 +326,18 @@ const verifyPayment = async (req, res) => {
     const selectedAddress = userDoc.addresses.id(orderData.addressId);
     if (!selectedAddress) throw new Error("Shipping address not found");
 
+    const zipCode = selectedAddress.zipCode || selectedAddress.zipcode;
     const formattedAddress = {
       fullName: selectedAddress.fullName,
       phone: selectedAddress.phone,
       street: selectedAddress.street,
       city: selectedAddress.city,
       state: selectedAddress.state,
-      zipCode: selectedAddress.zipCode || selectedAddress.zipcode,
+      zipCode: zipCode,
       country: selectedAddress.country || "India"
     };
 
-    const subOrdersData = await prepareOrderSplitting(orderData.items, formattedAddress.zipCode);
+    const subOrdersData = await prepareOrderSplitting(orderData.items, zipCode);
     
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
@@ -326,7 +364,10 @@ const verifyPayment = async (req, res) => {
     res.status(201).json({ success: true, order: masterOrder });
 
   } catch (error) {
-    await session.abortTransaction();
+    console.error("Payment Verification Error:", error);
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     res.status(400).json({ success: false, message: error.message });
   } finally {
     session.endSession();

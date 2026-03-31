@@ -23,6 +23,7 @@ const subOrderSchema = new mongoose.Schema({
     price: Number,
     color: String,
     size: String,
+    category: String,
   }],
   subTotal: Number,
   shippingCost: Number,

@@ -10,21 +10,31 @@ const DbConnection = require("./Inits/DbConnection");
 const mainRoutes = require("./Routes/Main.Routes");
 const initSocket = require("./Inits/SocketIo");
 
-DbConnection();
+const startServer = async () => {
+  await DbConnection();
 
-const app = express();
-const PORT = process.env.PORT || 4000;
+  const initTopSellerCron = require("./cron/topSellerCron");
+  initTopSellerCron();
+
+  const startDealCron = require("./cron/dealCron");
+  startDealCron();
+
+  const app = express();
+  const PORT = process.env.PORT || 4000;
 
 const corsOptions = {
   origin: [
     "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:5176",
     "https://wonder-cart-three.vercel.app",
     "https://wonder-cart-p6ep8tntl-kaushik-ladumors-projects.vercel.app",
     "https://wonder-cart-gc1pbvdds-kaushik-ladumors-projects.vercel.app",
     "https://wonder-cart-git-main-kaushik-ladumors-projects.vercel.app",
   ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
@@ -47,19 +57,25 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "http://localhost:5176",
       "https://wonder-cart-three.vercel.app",
       "https://wonder-cart-p6ep8tntl-kaushik-ladumors-projects.vercel.app",
       "https://wonder-cart-gc1pbvdds-kaushik-ladumors-projects.vercel.app",
       "https://wonder-cart-git-main-kaushik-ladumors-projects.vercel.app",
     ],
     credentials: true,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   },
 });
 
 global.io = io;
 initSocket(io);
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+};
+
+startServer();
