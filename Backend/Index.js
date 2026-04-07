@@ -28,7 +28,7 @@ const corsOptions = {
     "http://localhost:5174",
     "http://localhost:5175",
     "http://localhost:5176",
-    "https://wondercart-customer.netlify.app/",
+    "https://wondercart-customer.netlify.app",
     "https://wonder-cart-three.vercel.app",
     "https://wonder-cart-p6ep8tntl-kaushik-ladumors-projects.vercel.app",
     "https://wonder-cart-gc1pbvdds-kaushik-ladumors-projects.vercel.app",
