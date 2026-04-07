@@ -31,7 +31,7 @@ const DealCard = ({ deal, onAddToCart }) => {
                 />
                 
                 {/* Discount Badge */}
-                <div className="absolute top-3 left-3 bg-[#e63946] text-white text-[10px] font-black px-2 py-1 rounded-md shadow-sm">
+                <div className="absolute top-3 left-3 bg-[#e63946] text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm">
                     -{deal.discountPercent}%
                 </div>
 
@@ -43,19 +43,19 @@ const DealCard = ({ deal, onAddToCart }) => {
 
             {/* Info Section */}
             <div className="space-y-2">
-                <span className="text-[10px] font-bold text-[#0f49d7] uppercase tracking-[0.1em]">
+                <span className="text-[10px] font-semibold text-[#0f49d7] uppercase tracking-[0.1em]">
                     {deal.category || 'General'}
                 </span>
                 
-                <h3 className="text-sm font-semibold text-[#11182d] line-clamp-1">
+                <h3 className="text-[0.82rem] font-semibold text-[#11182d] line-clamp-1">
                     {deal.productId?.name}
                 </h3>
 
                 <div className="flex items-center gap-2">
-                    <span className="text-[#b0b8cb] text-xs line-through">
+                    <span className="text-[#b0b8cb] text-[0.76rem] line-through">
                         {formatCurrency(deal.originalPrice)}
                     </span>
-                    <span className="text-sm font-black text-[#11182d]">
+                    <span className="text-[0.82rem] font-semibold text-[#11182d]">
                         {formatCurrency(deal.dealPrice)}
                     </span>
                 </div>
@@ -74,7 +74,7 @@ const DealCard = ({ deal, onAddToCart }) => {
                 <button
                     disabled={isDisabled}
                     onClick={onAddToCart}
-                    className={`w-full mt-4 py-2.5 rounded-xl font-bold text-[0.8rem] flex items-center justify-center gap-2 ${
+                    className={`w-full mt-4 py-2.5 rounded-xl font-semibold text-[0.8rem] flex items-center justify-center gap-2 ${
                         isDisabled 
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                         : 'bg-[#eef2ff] text-[#0f49d7] hover:bg-[#0f49d7] hover:text-white'

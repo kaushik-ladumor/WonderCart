@@ -59,6 +59,28 @@ const TrackOrder = () => {
     }
   };
 
+  useEffect(() => {
+    if (!socket || !order) return undefined;
+
+    const handleUpdate = (data) => {
+        // If the current order visualization includes this subOrderId, refresh
+        const isCurrentSubOrder = order.subOrders?.some(s => s.subOrderId === data.subOrderId);
+        if (isCurrentSubOrder || order.orderId === data.subOrderId.split('-')[0] + '-' + data.subOrderId.split('-')[1]) {
+            console.log("📍 Real-time track update received:", data);
+            toast.success(data.message || "Order status updated!");
+            fetchOrder();
+        }
+    };
+
+    socket.on("order-status-update", handleUpdate);
+    socket.on("delivery-update", handleUpdate);
+
+    return () => {
+      socket.off("order-status-update", handleUpdate);
+      socket.off("delivery-update", handleUpdate);
+    };
+  }, [socket, order]);
+
   const getStatusProgress = (status) => {
     const map = {
       PLACED: "10%",
@@ -91,9 +113,9 @@ const TrackOrder = () => {
                <div className="w-8 h-8 bg-[#0f49d7] rounded-xl flex items-center justify-center text-white shadow-sm">
                   <Target className="w-4 h-4" />
                </div>
-               <span className="text-[0.62rem] font-bold uppercase tracking-widest text-[#0f49d7]">Order Intelligence</span>
+               <span className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#0f49d7]">Order Intelligence</span>
             </div>
-            <h1 className="text-[1.6rem] md:text-[2rem] font-bold text-[#11182d] leading-tight tracking-tight">
+            <h1 className="text-[1.6rem] md:text-[2rem] font-semibold text-[#11182d] leading-tight tracking-tight">
               Track Your Package
             </h1>
             <p className="text-[0.8rem] text-[#42506d] leading-relaxed">
@@ -107,12 +129,12 @@ const TrackOrder = () => {
               placeholder="ENTER ORDER ID..."
               value={orderId}
               onChange={(e) => setOrderId(e.target.value.toUpperCase())}
-              className="px-4 py-2 bg-transparent outline-none text-[0.7rem] font-bold w-full md:w-64 placeholder:text-[#b0b8cb] uppercase tracking-widest"
+              className="px-4 py-2 bg-transparent outline-none text-[0.7rem] font-semibold w-full md:w-64 placeholder:text-[#b0b8cb] uppercase tracking-widest"
             />
             <button
               onClick={fetchOrder}
               disabled={loading}
-              className="bg-[#0f49d7] text-white px-6 h-10 rounded-xl text-[0.65rem] font-bold uppercase tracking-widest disabled:opacity-50 shadow-md border-none outline-none"
+              className="bg-[#0f49d7] text-white px-6 h-10 rounded-xl text-[0.65rem] font-semibold uppercase tracking-widest disabled:opacity-50 shadow-md border-none outline-none"
             >
               {loading ? "SEARCHING..." : "TRACK"}
             </button>
@@ -131,13 +153,13 @@ const TrackOrder = () => {
                         <Package className="w-5 h-5 text-[#0f49d7]" />
                       </div>
                       <div>
-                        <p className="text-[0.6rem] font-bold text-[#5d6a84] uppercase tracking-widest">Package {idx + 1}</p>
-                        <p className="text-[0.82rem] font-bold text-[#11182d]">{pkg.subOrderId} <span className="mx-1 opacity-20">|</span> <span className="text-[#0f49d7] font-bold uppercase text-[0.7rem] tracking-widest ml-1">{pkg.seller?.shopName}</span></p>
+                        <p className="text-[0.6rem] font-semibold text-[#5d6a84] uppercase tracking-widest">Package {idx + 1}</p>
+                        <p className="text-[0.82rem] font-semibold text-[#11182d]">{pkg.subOrderId} <span className="mx-1 opacity-20">|</span> <span className="text-[#0f49d7] font-semibold uppercase text-[0.7rem] tracking-widest ml-1">{pkg.seller?.shopName}</span></p>
                       </div>
                     </div>
                     <div className="md:text-right">
-                      <p className="text-[0.6rem] font-bold text-[#5d6a84] uppercase tracking-widest">Estimated Delivery</p>
-                      <p className="text-[0.82rem] font-bold text-[#11182d]">{formatDate(pkg.estimatedDeliveryDate)}</p>
+                      <p className="text-[0.6rem] font-semibold text-[#5d6a84] uppercase tracking-widest">Estimated Delivery</p>
+                      <p className="text-[0.82rem] font-semibold text-[#11182d]">{formatDate(pkg.estimatedDeliveryDate)}</p>
                     </div>
                   </div>
 
@@ -146,10 +168,10 @@ const TrackOrder = () => {
                     <div className="flex flex-wrap gap-2.5 mb-8">
                       {pkg.items.map((item, i) => (
                         <div key={i} className="flex items-center gap-2.5 bg-[#f8f9fc] pr-4 rounded-[14px] border border-[#eef2ff]">
-                           <div className="w-9 h-9 bg-white flex items-center justify-center rounded-[10px] border border-[#eef2ff] font-bold text-[0.65rem] text-[#0f49d7]">
+                           <div className="w-9 h-9 bg-white flex items-center justify-center rounded-[10px] border border-[#eef2ff] font-semibold text-[0.65rem] text-[#0f49d7]">
                              {item.quantity}x
                            </div>
-                           <p className="text-[0.7rem] font-bold text-[#42506d] uppercase tracking-wide">{item.name}</p>
+                           <p className="text-[0.7rem] font-semibold text-[#42506d] uppercase tracking-wide">{item.name}</p>
                         </div>
                       ))}
                     </div>
@@ -177,9 +199,9 @@ const TrackOrder = () => {
                                   <step.icon className="w-5 h-5" />
                                 </div>
                                 <div className="mt-4 text-center">
-                                  <p className={`text-[0.62rem] font-bold uppercase tracking-widest ${isCompleted ? 'text-[#11182d]' : 'text-[#b0b8cb]'}`}>{step.label}</p>
+                                  <p className={`text-[0.62rem] font-semibold uppercase tracking-widest ${isCompleted ? 'text-[#11182d]' : 'text-[#b0b8cb]'}`}>{step.label}</p>
                                   {isCompleted && step.key === pkg.status && (
-                                    <span className="inline-block mt-2 px-2 py-0.5 bg-[#0f49d7] text-white text-[0.5rem] font-bold uppercase tracking-widest rounded-full">ACTIVE</span>
+                                    <span className="inline-block mt-2 px-2 py-0.5 bg-[#0f49d7] text-white text-[0.5rem] font-semibold uppercase tracking-widest rounded-full">ACTIVE</span>
                                   )}
                                 </div>
                               </div>
@@ -193,9 +215,9 @@ const TrackOrder = () => {
                        <div className="mt-8 pt-6 border-t border-[#eef2ff] flex flex-col sm:flex-row items-center justify-between gap-4">
                           <div className="flex items-center gap-3 bg-[#f8f9fc] px-4 py-2 rounded-[14px] border border-[#eef2ff]">
                              <Hash className="w-3.5 h-3.5 text-[#0f49d7]" />
-                             <p className="text-[0.62rem] font-bold text-[#5d6a84] uppercase tracking-widest leading-none">Awb Number: <span className="text-[#11182d] ml-1">{pkg.trackingId}</span></p>
+                             <p className="text-[0.62rem] font-semibold text-[#5d6a84] uppercase tracking-widest leading-none">Awb Number: <span className="text-[#11182d] ml-1">{pkg.trackingId}</span></p>
                           </div>
-                          <button className="text-[0.62rem] font-bold uppercase tracking-widest text-[#0f49d7] hover:text-[#11182d] px-4 py-2 rounded-lg transition-all flex items-center gap-2 border-none outline-none">
+                          <button className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#0f49d7] hover:text-[#11182d] px-4 py-2 rounded-lg transition-all flex items-center gap-2 border-none outline-none">
                             Track via Carrier <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                        </div>
@@ -213,13 +235,13 @@ const TrackOrder = () => {
                       <MapPin className="w-4.5 h-4.5 text-[#0f49d7]" />
                     </div>
                     <div>
-                      <h3 className="text-[0.6rem] font-bold text-[#0f49d7] uppercase tracking-widest">Delivery Support</h3>
-                      <p className="text-[1.1rem] font-bold text-[#11182d]">Fulfillment Destination</p>
+                      <h3 className="text-[0.6rem] font-semibold text-[#0f49d7] uppercase tracking-widest">Delivery Support</h3>
+                      <p className="text-[1.1rem] font-semibold text-[#11182d]">Fulfillment Destination</p>
                     </div>
                   </div>
                   
                   <div className="bg-[#f8f9fc] p-5 rounded-[20px] border border-[#eef2ff]">
-                    <p className="text-[0.82rem] font-bold text-[#11182d] mb-1">{order.address?.fullName}</p>
+                    <p className="text-[0.82rem] font-semibold text-[#11182d] mb-1">{order.address?.fullName}</p>
                     <p className="text-[0.74rem] text-[#42506d] leading-relaxed uppercase tracking-widest font-medium opacity-80">
                       {order.address?.street}, {order.address?.city}<br />
                       {order.address?.state} - {order.address?.zipCode}
@@ -227,7 +249,7 @@ const TrackOrder = () => {
                     <div className="mt-4 flex items-center gap-4 border-t border-[#eef2ff] pt-4">
                       <div className="flex items-center gap-2">
                          <div className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-                         <span className="text-[0.6rem] font-bold uppercase tracking-widest text-[#5d6a84]">Verified Location</span>
+                         <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-[#5d6a84]">Verified Location</span>
                       </div>
                     </div>
                   </div>
@@ -236,30 +258,30 @@ const TrackOrder = () => {
                <div className="bg-[#11182d] p-8 rounded-[24px] text-white shadow-xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#0f49d7]/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                   
-                  <h3 className="text-[0.62rem] font-bold text-[#38bdf8] uppercase tracking-widest mb-8 flex items-center gap-3">
+                  <h3 className="text-[0.62rem] font-semibold text-[#38bdf8] uppercase tracking-widest mb-8 flex items-center gap-3">
                     <CreditCard className="w-4 h-4" /> Transaction summary
                   </h3>
                   
                   <div className="space-y-5">
                      <div className="flex justify-between items-center">
-                        <span className="text-[0.62rem] uppercase font-bold tracking-widest text-white/40">Settlement Total</span>
-                        <span className="text-[1.2rem] font-bold">₹{order.totalAmount?.toLocaleString()}</span>
+                        <span className="text-[0.62rem] uppercase font-semibold tracking-widest text-white/40">Settlement Total</span>
+                        <span className="text-[1.2rem] font-semibold">₹{order.totalAmount?.toLocaleString()}</span>
                      </div>
                      <div className="flex justify-between items-center">
-                        <span className="text-[0.62rem] uppercase font-bold tracking-widest text-white/40">Status</span>
-                        <span className="px-3 py-1 bg-white/5 border border-white/10 text-[0.6rem] font-bold uppercase tracking-widest rounded-lg">
+                        <span className="text-[0.62rem] uppercase font-semibold tracking-widest text-white/40">Status</span>
+                        <span className="px-3 py-1 bg-white/5 border border-white/10 text-[0.6rem] font-semibold uppercase tracking-widest rounded-lg">
                           {order.paymentStatus}
                         </span>
                      </div>
                      <div className="pt-5 border-t border-white/5 flex justify-between items-center">
-                        <span className="text-[0.62rem] uppercase font-bold tracking-widest text-white/40">Execution</span>
-                        <span className="text-[0.74rem] font-bold uppercase tracking-widest">{order.paymentMethod}</span>
+                        <span className="text-[0.62rem] uppercase font-semibold tracking-widest text-white/40">Execution</span>
+                        <span className="text-[0.74rem] font-semibold uppercase tracking-widest">{order.paymentMethod}</span>
                      </div>
                   </div>
 
                   <div className="mt-10 flex items-center gap-2 text-white/20">
                     <CheckCircle className="w-3.5 h-3.5" />
-                    <span className="text-[0.55rem] font-bold uppercase tracking-widest">Bank-Level Security Verified</span>
+                    <span className="text-[0.55rem] font-semibold uppercase tracking-widest">Bank-Level Security Verified</span>
                   </div>
                </div>
             </div>
@@ -269,7 +291,7 @@ const TrackOrder = () => {
             {loading ? (
               <div className="flex flex-col items-center gap-6">
                  <div className="w-12 h-12 border-4 border-[#0f49d7] border-t-transparent rounded-full animate-spin" />
-                 <p className="text-[0.65rem] font-bold text-[#b0b8cb] uppercase tracking-widest">Synchronizing coordinates...</p>
+                 <p className="text-[0.65rem] font-semibold text-[#b0b8cb] uppercase tracking-widest">Synchronizing coordinates...</p>
               </div>
             ) : (
               <div className="text-center space-y-6">
@@ -277,7 +299,7 @@ const TrackOrder = () => {
                    <Box className="w-12 h-12 text-[#eef2ff]" />
                 </div>
                 <div>
-                   <h3 className="text-2xl font-bold text-[#11182d] tracking-tight">Locate Your Goods</h3>
+                   <h3 className="text-[1.2rem] font-semibold text-[#11182d] tracking-tight">Locate Your Goods</h3>
                    <p className="text-[0.8rem] text-[#5c6880] max-w-sm mx-auto mt-2 leading-relaxed">
                      Precision fulfillment tracking. Enter your unique Order ID at the top to visualize movement analytics.
                    </p>

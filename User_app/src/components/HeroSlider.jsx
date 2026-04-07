@@ -45,13 +45,13 @@ function HeroSlider() {
               {/* Left Panel - Hero Content */}
               <div className="lg:col-span-2 bg-gradient-to-br from-[#004ac6] to-[#2563eb] rounded-3xl p-8 md:p-12 lg:p-16 flex flex-col justify-center text-white relative overflow-hidden">
                 <div className="relative z-10">
-                  <span className="font-body text-xs md:text-sm font-bold tracking-[0.2em] text-white/80 block mb-4 uppercase">
+                  <span className="font-body text-[0.76rem] md:text-sm font-semibold tracking-[0.2em] text-white/80 block mb-4 uppercase">
                     {slide.subtitle}
                   </span>
-                  <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 max-w-xl">
+                  <h1 className="font-display text-[1.75rem] md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 max-w-xl">
                     {slide.title}
                   </h1>
-                  <p className="font-body text-sm md:text-base text-white/80 mb-10 max-w-md leading-relaxed">
+                  <p className="font-body text-[0.82rem] md:text-base text-white/80 mb-10 max-w-md leading-relaxed">
                     {slide.description}
                   </p>
                   <Link to="/shop">
@@ -75,8 +75,8 @@ function HeroSlider() {
                     className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute bottom-6 left-6">
-                    <p className="font-display font-bold text-[#141b2d] text-lg">New Arrivals</p>
-                    <p className="font-body text-xs text-[#5c6880]">Shop the collection</p>
+                    <p className="font-display font-semibold text-[#141b2d] text-[0.9rem]">New Arrivals</p>
+                    <p className="font-body text-[0.76rem] text-[#5c6880]">Shop the collection</p>
                   </div>
                 </div>
                 <div className="flex-1 bg-[#e1e8fd] rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
@@ -86,8 +86,8 @@ function HeroSlider() {
                     className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute bottom-6 left-6">
-                    <p className="font-display font-bold text-[#141b2d] text-lg">Tech Deals</p>
-                    <p className="font-body text-xs text-[#5c6880]">Up to 40% Off</p>
+                    <p className="font-display font-semibold text-[#141b2d] text-[0.9rem]">Tech Deals</p>
+                    <p className="font-body text-[0.76rem] text-[#5c6880]">Up to 40% Off</p>
                   </div>
                 </div>
               </div>

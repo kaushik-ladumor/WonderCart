@@ -229,10 +229,10 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
             <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
               ACCOUNT SECURITY
             </span>
-            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+            <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
               Verify Email
             </h3>
-            <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+            <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5 leading-relaxed">
               We've sent a 4-digit verification code to help protect your account.
             </p>
           </div>
@@ -244,8 +244,8 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
                 <Mail className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-[#5c6880] font-bold uppercase tracking-wider">Recipient</p>
-                <p className="text-xs font-bold text-[#141b2d] truncate">
+                <p className="text-[10px] text-[#5c6880] font-semibold uppercase tracking-wider">Recipient</p>
+                <p className="text-[0.76rem] font-semibold text-[#141b2d] truncate">
                   {userEmail}
                 </p>
               </div>
@@ -266,7 +266,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
                       id={`digit${digit}`}
                       type="text"
                       maxLength="1"
-                      className={`w-12 h-12 text-center text-lg font-bold rounded-xl transition-all border-2 ${
+                      className={`w-12 h-12 text-center text-[0.9rem] font-semibold rounded-xl transition-all border-2 ${
                         errors[`digit${digit}`]
                           ? "border-red-500 bg-white"
                           : "border-transparent bg-[#f0f4ff] text-[#141b2d] focus:border-[#004ac6] focus:bg-white focus:ring-4 focus:ring-[#004ac6]/10"
@@ -287,12 +287,12 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
                   ))}
                 </div>
                 {(errors.digit1 || errors.digit2 || errors.digit3 || errors.digit4) && (
-                  <p className="text-red-500 text-[10px] font-bold mt-2 text-center">Please enter a valid 4-digit code</p>
+                  <p className="text-red-500 text-[10px] font-semibold mt-2 text-center">Please enter a valid 4-digit code</p>
                 )}
               </div>
 
               {/* Timer */}
-              <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#5c6880]">
+              <div className="flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[#5c6880]">
                 <Clock className="w-3.5 h-3.5 text-[#004ac6]" />
                 <span>Expires in</span>
                 <span className="text-[#141b2d]">{formatTime(timer)}</span>
@@ -302,7 +302,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl h-12 text-[0.76rem] uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50"
               >
                 {loading ? "VERIFYING..." : "CONFIRM VERIFICATION"}
               </button>

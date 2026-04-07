@@ -102,10 +102,10 @@ const VisualSearch = () => {
       
       {/* Header Container */}
       <div className="pt-12 pb-6 px-4 text-center max-w-2xl mx-auto">
-        <h1 className="font-display text-4xl md:text-[56px] font-extrabold text-[#141b2d] tracking-tight mb-4">
+        <h1 className="font-display text-[1.75rem] md:text-[56px] font-extrabold text-[#141b2d] tracking-tight mb-4">
           Visual Search
         </h1>
-        <p className="text-[#5c6880] text-sm md:text-[15px] leading-relaxed">
+        <p className="text-[#5c6880] text-[0.82rem] md:text-[15px] leading-relaxed">
           Find exactly what you're looking for with an image. Our AI-driven engine detects styles, patterns, and brands instantly.
         </p>
       </div>
@@ -123,13 +123,13 @@ const VisualSearch = () => {
                   onClick={() => fileInputRef.current.click()}
                   className="absolute inset-0 bg-[#141b2d]/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-sm"
                 >
-                  <span className="text-white font-display font-bold text-xs bg-[#141b2d]/50 px-5 py-2.5 rounded-full">Change Image</span>
+                  <span className="text-white font-display font-semibold text-[0.76rem] bg-[#141b2d]/50 px-5 py-2.5 rounded-full">Change Image</span>
                 </button>
               </div>
               <button
                 onClick={handleSearch}
                 disabled={loading}
-                className="w-full px-10 py-4 bg-[#004ac6] text-white rounded-xl font-display font-bold text-[13px] tracking-wide hover:bg-[#003da1] focus:ring-4 focus:ring-[#004ac6]/20 transition-all shadow-md shadow-[#004ac6]/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full px-10 py-4 bg-[#004ac6] text-white rounded-xl font-display font-semibold text-[0.78rem] tracking-wide hover:bg-[#003da1] focus:ring-4 focus:ring-[#004ac6]/20 transition-all shadow-md shadow-[#004ac6]/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -149,15 +149,15 @@ const VisualSearch = () => {
               <div className="w-16 h-16 bg-[#f0f4ff] rounded-full flex items-center justify-center mb-6">
                 <UploadCloud className="w-8 h-8 text-[#004ac6]" />
               </div>
-              <h3 className="font-display font-bold text-[#141b2d] text-xl mb-3 tracking-tight">
+              <h3 className="font-display font-semibold text-[#141b2d] text-[1.1rem] mb-3 tracking-tight">
                 Drag and drop an image here
               </h3>
-              <p className="text-[#5c6880] text-xs font-medium mb-8">
+              <p className="text-[#5c6880] text-[0.76rem] font-medium mb-8">
                 Supported formats: JPG, PNG, WEBP. Max size 5MB.
               </p>
               <button 
                 onClick={() => fileInputRef.current.click()}
-                className="px-8 py-3 bg-[#004ac6] text-white rounded-xl font-display font-bold text-[13px] hover:bg-[#003da1] transition-all shadow-md shadow-[#004ac6]/20"
+                className="px-8 py-3 bg-[#004ac6] text-white rounded-xl font-display font-semibold text-[0.78rem] hover:bg-[#003da1] transition-all shadow-md shadow-[#004ac6]/20"
               >
                 Upload Image
               </button>
@@ -177,7 +177,7 @@ const VisualSearch = () => {
       {!hasSearched && !loading && (
         <div className="max-w-4xl mx-auto px-4 mt-6">
           <div className="border-t border-gray-200/60 pt-6">
-            <h3 className="font-display font-extrabold text-[#141b2d] text-lg mb-6">
+            <h3 className="font-display font-extrabold text-[#141b2d] text-[0.9rem] mb-6">
               Try these examples
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
@@ -190,7 +190,7 @@ const VisualSearch = () => {
                   <div className="w-full aspect-square rounded-[1.25rem] overflow-hidden bg-white hover:bg-gray-50 transition-colors p-2 md:p-3 shadow-sm border border-transparent group-hover:border-gray-200">
                     <img src={ex.url} alt={ex.name} className="w-full h-full object-cover rounded-[0.85rem] group-hover:scale-[1.03] transition-transform duration-500 mix-blend-multiply" />
                   </div>
-                  <span className="text-[10px] font-bold text-[#5c6880] mt-4 tracking-wide text-center">{ex.name}</span>
+                  <span className="text-[10px] font-semibold text-[#5c6880] mt-4 tracking-wide text-center">{ex.name}</span>
                 </div>
               ))}
             </div>
@@ -207,8 +207,8 @@ const VisualSearch = () => {
                 <AlertCircle className="w-8 h-8 text-[#ef4444]" />
               </div>
               <div className="space-y-2 max-w-md">
-                <p className="text-xl font-display font-extrabold tracking-tight text-[#141b2d]">No Similar Products Found</p>
-                <p className="text-[#5c6880] text-[13px] leading-relaxed">
+                <p className="text-[1.1rem] font-display font-extrabold tracking-tight text-[#141b2d]">No Similar Products Found</p>
+                <p className="text-[#5c6880] text-[0.78rem] leading-relaxed">
                   {searchMessage || "We couldn't find a close match for this image in our catalog. Try uploading a different image or a product that's in our collection."}
                 </p>
               </div>
@@ -218,13 +218,13 @@ const VisualSearch = () => {
                     fileInputRef.current.click();
                     setHasSearched(false);
                   }}
-                  className="px-6 py-3 bg-white border border-gray-200 text-[#141b2d] rounded-xl font-display font-bold text-xs hover:bg-gray-50 transition-all shadow-sm"
+                  className="px-6 py-3 bg-white border border-gray-200 text-[#141b2d] rounded-xl font-display font-semibold text-[0.76rem] hover:bg-gray-50 transition-all shadow-sm"
                 >
                   Try Another Image
                 </button>
                 <Link
                   to="/shop"
-                  className="px-6 py-3 bg-[#141b2d] text-white rounded-xl font-display font-bold text-xs hover:bg-[#004ac6] transition-all shadow-md shadow-black/10"
+                  className="px-6 py-3 bg-[#141b2d] text-white rounded-xl font-display font-semibold text-[0.76rem] hover:bg-[#004ac6] transition-all shadow-md shadow-black/10"
                 >
                   Browse Catalog
                 </Link>
@@ -233,9 +233,9 @@ const VisualSearch = () => {
           ) : (
             <div className="space-y-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                <h2 className="text-2xl font-display font-extrabold tracking-tight text-[#141b2d]">Similar Matches</h2>
+                <h2 className="text-[1.2rem] font-display font-extrabold tracking-tight text-[#141b2d]">Similar Matches</h2>
                 <div className="px-4 py-1.5 bg-white border border-gray-200 rounded-full flex items-center shadow-sm">
-                  <span className="text-[10px] font-bold text-[#5c6880] uppercase tracking-widest">
+                  <span className="text-[10px] font-semibold text-[#5c6880] uppercase tracking-widest">
                     <span className="text-[#004ac6] mr-1">{results.length}</span> Results Found
                   </span>
                 </div>
@@ -260,18 +260,18 @@ const VisualSearch = () => {
                         {product.similarityScore && (
                           <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-2.5 py-1.5 rounded-lg shadow-sm">
                             <ShieldCheck className={`w-3.5 h-3.5 ${confidence.color.split(' ')[1]}`} />
-                            <span className="text-[10px] font-bold text-[#141b2d]">{Math.round(product.similarityScore * 100)}% Match</span>
+                            <span className="text-[10px] font-semibold text-[#141b2d]">{Math.round(product.similarityScore * 100)}% Match</span>
                           </div>
                         )}
                       </div>
                       
                       <div className="flex flex-col flex-1">
-                        <p className="text-[10px] font-bold text-[#004ac6] uppercase tracking-[0.15em] mb-1.5">{product.category}</p>
-                        <h3 className="text-[15px] font-display font-bold text-[#141b2d] leading-snug mb-3 line-clamp-2">
+                        <p className="text-[10px] font-semibold text-[#004ac6] uppercase tracking-[0.15em] mb-1.5">{product.category}</p>
+                        <h3 className="text-[0.88rem] font-display font-semibold text-[#141b2d] leading-snug mb-3 line-clamp-2">
                           {product.name}
                         </h3>
                         <div className="mt-auto flex items-end justify-between pt-4 border-t border-gray-100">
-                          <p className="text-lg font-bold text-[#141b2d]">
+                          <p className="text-[0.9rem] font-semibold text-[#141b2d]">
                             ₹{product.variants[0]?.sizes[0]?.sellingPrice?.toLocaleString()}
                           </p>
                           <div className="w-8 h-8 rounded-full bg-[#f9f9ff] flex items-center justify-center group-hover:bg-[#004ac6] transition-colors">

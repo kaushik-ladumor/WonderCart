@@ -203,7 +203,7 @@ const MyCoupons = () => {
                         {formatDescription(coupon)}
                       </p>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px]">
                         <span
                           className={`flex items-center gap-2 ${
                             expired ? "text-[#9aa3b5]" : "text-[#6a7690]"

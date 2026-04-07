@@ -73,8 +73,8 @@ function ChatBotPanel({ onClose }) {
             <Bot className="h-4.5 w-4.5" />
           </div>
           <div>
-            <p className="text-base font-semibold">ChatBot</p>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-white/75">
+            <p className="text-[0.88rem] font-semibold">ChatBot</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-white/75">
               WonderCart Assistant
             </p>
           </div>
@@ -120,7 +120,7 @@ function ChatBotPanel({ onClose }) {
                 </div>
 
                 <div
-                  className={`rounded-[18px] border px-4 py-3 text-sm leading-6 ${
+                  className={`rounded-[18px] border px-4 py-3 text-[0.82rem] leading-6 ${
                     msg.sender === "user"
                       ? "border-[#0f49d7] bg-[#0f49d7] text-white"
                       : "border-[#dfe5f2] bg-white text-[#11182d]"
@@ -155,10 +155,10 @@ function ChatBotPanel({ onClose }) {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-[#11182d]">
+                              <p className="truncate text-[0.82rem] font-medium text-[#11182d]">
                                 {product.name}
                               </p>
-                              <p className="text-[11px] uppercase tracking-[0.14em] text-[#6a7690]">
+                              <p className="text-[10px] uppercase tracking-[0.14em] text-[#6a7690]">
                                 {product.category || "WonderCart"}
                               </p>
                             </div>
@@ -174,7 +174,7 @@ function ChatBotPanel({ onClose }) {
                         <Link
                           key={`${category}-${index}`}
                           to={`/shop?category=${encodeURIComponent(category)}`}
-                          className="rounded-full bg-[#eef2ff] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#0f49d7]"
+                          className="rounded-full bg-[#eef2ff] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#0f49d7]"
                         >
                           {category}
                         </Link>
@@ -192,7 +192,7 @@ function ChatBotPanel({ onClose }) {
                 <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#dfe7ff] text-[#0f49d7]">
                   <Bot className="h-3.5 w-3.5" />
                 </div>
-                <div className="rounded-[18px] border border-[#dfe5f2] bg-white px-4 py-3 text-sm text-[#6a7690]">
+                <div className="rounded-[18px] border border-[#dfe5f2] bg-white px-4 py-3 text-[0.82rem] text-[#6a7690]">
                   Thinking...
                 </div>
               </div>
@@ -213,7 +213,7 @@ function ChatBotPanel({ onClose }) {
               onKeyDown={handleKeyDown}
               disabled={loading}
               placeholder="Write your message..."
-              className="h-12 w-full rounded-[16px] border border-[#dfe5f2] bg-[#f7f8fc] pl-11 pr-4 text-sm text-[#11182d] outline-none placeholder:text-[#7c88a2] disabled:opacity-60"
+              className="h-12 w-full rounded-[16px] border border-[#dfe5f2] bg-[#f7f8fc] pl-11 pr-4 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#7c88a2] disabled:opacity-60"
             />
           </div>
 

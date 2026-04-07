@@ -225,9 +225,11 @@ const placeOrder = async (req, res) => {
     // Verify COD serviceability
     if (paymentMethod === "COD") {
       if (!isCodServiceable(zipCode)) {
+        if (global.io) global.io.to(`buyer-${userId}`).emit("payment-fail", { message: "COD not serviceable for this pincode." });
         throw new Error("Cash on Delivery (COD) is not available for this pincode.");
       }
       if (subTotal + tax + shipping > 5000) {
+        if (global.io) global.io.to(`buyer-${userId}`).emit("payment-fail", { message: "COD limit exceeded." });
         throw new Error("COD is only available for orders below ₹5000.");
       }
     }
@@ -288,6 +290,14 @@ const placeOrder = async (req, res) => {
     const masterOrder = await createFinalOrders(session, masterData, subOrdersData);
 
     await session.commitTransaction();
+
+    if (global.io) {
+      global.io.to(`buyer-${userId}`).emit("payment-success", {
+        orderId: masterOrder.orderId,
+        message: "Your order has been placed successfully!"
+      });
+    }
+
     res.status(201).json({ success: true, order: masterOrder });
 
   } catch (error) {
@@ -315,6 +325,7 @@ const verifyPayment = async (req, res) => {
     .digest("hex");
 
   if (expectedSignature !== razorpay_signature) {
+    if (global.io) global.io.to(`buyer-${userId}`).emit("payment-fail", { message: "Signature verification failed." });
     return res.status(400).json({ success: false, message: "Payment verification failed" });
   }
 
@@ -361,6 +372,14 @@ const verifyPayment = async (req, res) => {
     const masterOrder = await createFinalOrders(session, masterData, subOrdersData);
 
     await session.commitTransaction();
+
+    if (global.io) {
+      global.io.to(`buyer-${userId}`).emit("payment-success", {
+        orderId: masterOrder.orderId,
+        message: "Payment verified successfully!"
+      });
+    }
+
     res.status(201).json({ success: true, order: masterOrder });
 
   } catch (error) {
@@ -447,6 +466,19 @@ const updateSubOrderStatus = async (req, res) => {
     }
 
     await subOrder.save();
+
+    // ✅ Emit socket update to customer
+    if (global.io) {
+      const master = await MasterOrder.findById(subOrder.masterOrder);
+      if (master) {
+        global.io.to(`buyer-${master.user}`).emit("order-status-update", {
+          subOrderId: subOrder.subOrderId,
+          status: subOrder.status,
+          message: `📦 Package ${subOrder.subOrderId} is now ${subOrder.status}`
+        });
+      }
+    }
+
     res.status(200).json({ success: true, message: "Status updated", subOrder });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

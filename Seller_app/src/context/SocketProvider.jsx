@@ -10,6 +10,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!authUser) return;
 
+    socket.auth = { token: localStorage.getItem("token") };
     socket.connect();
 
     socket.emit("joinRoom", {

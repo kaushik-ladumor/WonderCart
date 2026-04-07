@@ -1,27 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useSocket } from "../../context/SocketProvider";
 import Loader from "../../components/Loader";
-import { 
-  Package, 
-  MapPin, 
-  User, 
-  Clock, 
-  Truck, 
-  CheckCircle, 
+import {
+  Package,
+  MapPin,
+  User,
+  Clock,
+  Truck,
   AlertCircle,
-  Hash,
   ArrowLeft,
   DollarSign,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 import { API_URL } from "../../utils/constants";
 
+const RUPEE = "\u20B9";
+
 const OrderDetails = () => {
   const { id } = useParams();
-  const socket = useSocket();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,13 +28,13 @@ const OrderDetails = () => {
   const [trackingId, setTrackingId] = useState("");
 
   const statusOptions = [
-    { value: "PLACED", label: "Placed", color: "bg-gray-100 text-gray-700" },
-    { value: "CONFIRMED", label: "Confirmed", color: "bg-blue-50 text-blue-700" },
-    { value: "PROCESSING", label: "Processing", color: "bg-yellow-50 text-yellow-700" },
-    { value: "READY_TO_SHIP", label: "Ready to Ship", color: "bg-orange-50 text-orange-700" },
-    { value: "SHIPPED", label: "Shipped", color: "bg-indigo-50 text-indigo-700" },
-    { value: "DELIVERED", label: "Delivered", color: "bg-green-50 text-green-700" },
-    { value: "CANCELLED", label: "Cancelled", color: "bg-red-50 text-red-700" },
+    { value: "PLACED", label: "Placed", color: "bg-[#f4f6fb] text-[#5f6b88]" },
+    { value: "CONFIRMED", label: "Confirmed", color: "bg-[#ebf2ff] text-[#2f5fe3]" },
+    { value: "PROCESSING", label: "Processing", color: "bg-[#fff7e8] text-[#c77719]" },
+    { value: "READY_TO_SHIP", label: "Ready to Ship", color: "bg-[#edf8ef] text-[#18794e]" },
+    { value: "SHIPPED", label: "Shipped", color: "bg-[#eef1ff] text-[#5162b5]" },
+    { value: "DELIVERED", label: "Delivered", color: "bg-[#e9f8ef] text-[#18794e]" },
+    { value: "CANCELLED", label: "Cancelled", color: "bg-[#fef0f0] text-[#d14343]" },
   ];
 
   const fetchOrder = async () => {
@@ -73,7 +71,7 @@ const OrderDetails = () => {
       const { data } = await axios.put(
         `${API_URL}/order/seller/id/${id}/status`,
         { status: newStatus, trackingId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } },
       );
 
       if (data.success) {
@@ -99,182 +97,279 @@ const OrderDetails = () => {
   };
 
   if (loading) return <Loader />;
-  if (!order) return <div className="p-20 text-center">Order Not Found</div>;
+
+  if (!order) {
+    return (
+      <div className="px-0 py-2">
+        <div className="mx-auto max-w-md rounded-[26px] border border-[#e3e8ff] bg-white px-5 py-7 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#fef0f0]">
+            <AlertCircle className="h-7 w-7 text-[#d14343]" />
+          </div>
+          <p className="text-[18px] font-semibold text-[#11182d]">Order Not Found</p>
+        </div>
+      </div>
+    );
+  }
+
+  const activeStatusClasses =
+    statusOptions.find((status) => status.value === order.status)?.color ||
+    "bg-[#f5f7ff] text-[#6f7b99]";
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <button 
+    <div className="space-y-3 px-0 pb-1">
+      <div className="mx-auto max-w-6xl">
+        <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black mb-8 transition-colors"
+          className="mb-1 inline-flex items-center gap-2 px-1 text-[11px] font-semibold text-[#6d7894]"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Orders
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Orders
         </button>
 
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">{order.subOrderId}</h1>
-              <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusOptions.find(s => s.value === order.status)?.color}`}>
-                {order.status}
-              </span>
+        <div className="rounded-[26px] border border-[#e3e8ff] bg-white px-4 py-4 sm:px-5">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#9aa6c7]">
+                Seller Orders
+              </p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                <h1 className="text-[18px] font-semibold tracking-[-0.03em] text-[#11182d]">
+                  {order.subOrderId}
+                </h1>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${activeStatusClasses}`}
+                >
+                  {order.status.replaceAll("_", " ")}
+                </span>
+              </div>
+              <p className="mt-1 flex items-center gap-1.5 pb-1 text-[11px] text-[#6d7894]">
+                <Clock className="h-3.5 w-3.5" />
+                Ordered on {formatDate(order.createdAt)}
+              </p>
             </div>
-            <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
-              <Clock className="w-4 h-4" /> Ordered on {formatDate(order.createdAt)}
-            </p>
-          </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <div className="bg-white p-2 rounded-2xl border border-gray-200 flex flex-col sm:flex-row gap-2">
-               <select 
-                 value={newStatus}
-                 onChange={(e) => setNewStatus(e.target.value)}
-                 className="px-4 py-2 bg-transparent outline-none text-sm font-bold border-none"
-               >
-                 {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-               </select>
-               <button 
-                 onClick={handleStatusUpdate}
-                 disabled={updating || newStatus === order.status}
-                 className="bg-black text-white px-8 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-50"
-               >
-                 {updating ? "Updating..." : "Update Status"}
-               </button>
+            <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
+              <select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                className="rounded-2xl border border-[#d9e0f7] bg-[#f7f8ff] px-4 py-2.5 text-[12px] text-[#11182d] outline-none focus:border-[#2f5fe3]"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={handleStatusUpdate}
+                disabled={updating || newStatus === order.status}
+                className="rounded-2xl bg-[#2f5fe3] px-5 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
+              >
+                {updating ? "Updating..." : "Update Status"}
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Tracking ID Section */}
-            {newStatus === "SHIPPED" || order.trackingId ? (
-              <div className="bg-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-900/10">
-                 <div className="flex items-center gap-3 mb-6">
-                    <Truck className="w-6 h-6 text-indigo-200" />
-                    <h3 className="text-lg font-bold">Shipment Tracking</h3>
-                 </div>
-                 <div className="space-y-4">
-                    <p className="text-xs font-bold text-indigo-200 uppercase tracking-[0.2em]">Assignment AWB / Tracking ID</p>
-                    <input 
-                      type="text" 
-                      placeholder="Enter Tracking ID" 
-                      value={trackingId}
-                      onChange={(e) => setTrackingId(e.target.value)}
-                      readOnly={order.status === 'SHIPPED' || order.status === 'DELIVERED'}
-                      className="w-full bg-indigo-500/30 border border-white/20 rounded-2xl px-6 py-4 text-sm font-bold placeholder:text-indigo-200 outline-none focus:bg-indigo-500/50"
-                    />
-                    <p className="text-[10px] text-indigo-200 font-medium">Verify tracking ID with your courier partner before updating.</p>
-                 </div>
-              </div>
-            ) : null}
-
-            {/* Items Card */}
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-               <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
-                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-blue-500" /> Items Summary
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)]">
+          <div className="space-y-3">
+            {(newStatus === "SHIPPED" || order.trackingId) && (
+              <section className="rounded-[26px] border border-[#e3e8ff] bg-white px-4 py-4 sm:px-5">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="rounded-2xl bg-[#eef2ff] p-2">
+                    <Truck className="h-[18px] w-[18px] text-[#2f5fe3]" />
+                  </div>
+                  <h3 className="text-[16px] font-semibold text-[#141b2d]">
+                    Shipment Tracking
                   </h3>
-                  <span className="text-xs font-bold text-gray-400 capitalize">{order.items.length} Products</span>
-               </div>
-               <div className="p-8">
-                  <div className="space-y-6">
-                    {order.items.map((item, i) => (
-                      <div key={i} className="flex gap-6 group">
-                        <div className="w-24 h-24 bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-100 overflow-hidden">
-                          {item.product?.image ? (
-                            <img src={item.product.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <Package className="w-8 h-8 text-gray-200" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{item.name}</h4>
-                          <div className="flex flex-wrap gap-4 mt-2">
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">Color: {item.color}</span>
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">Size: {item.size}</span>
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">Qty: {item.quantity}</span>
-                          </div>
-                          <p className="text-sm font-bold text-gray-900 mt-4">₹{item.price?.toLocaleString()} <span className="text-xs text-gray-400 font-medium ml-1">/ unit</span></p>
-                        </div>
-                        <div className="text-right">
-                           <p className="text-sm font-black text-gray-900">₹{(item.price * item.quantity).toLocaleString()}</p>
-                        </div>
+                </div>
+
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
+                  Assignment AWB / Tracking ID
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Tracking ID"
+                  value={trackingId}
+                  onChange={(e) => setTrackingId(e.target.value)}
+                  readOnly={order.status === "SHIPPED" || order.status === "DELIVERED"}
+                  className="w-full rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] px-3.5 py-2.5 text-[12px] text-[#11182d] outline-none placeholder:text-[#91a0c5] focus:border-[#2f5fe3]"
+                />
+                <p className="mt-2 text-[11px] text-[#6d7894]">
+                  Verify the tracking ID with your courier partner before updating.
+                </p>
+              </section>
+            )}
+
+            <section className="overflow-hidden rounded-[26px] border border-[#e3e8ff] bg-white">
+              <div className="flex items-center justify-between border-b border-[#edf1ff] px-4 py-4 sm:px-5">
+                <h3 className="flex items-center gap-2 text-[16px] font-semibold text-[#141b2d]">
+                  <Package className="h-4 w-4 text-[#2f5fe3]" />
+                  Items Summary
+                </h3>
+                <span className="text-[11px] font-semibold text-[#98a4c4]">
+                  {order.items.length} products
+                </span>
+              </div>
+
+              <div className="space-y-4 px-4 py-4 sm:px-5">
+                {order.items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col gap-3 rounded-[22px] border border-[#e7ebff] bg-[#fbfcff] p-4 sm:flex-row"
+                  >
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#e4e9fb] bg-[#f5f7ff]">
+                      {item.product?.image ? (
+                        <img
+                          src={item.product.image}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Package className="h-7 w-7 text-[#c4cee8]" />
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <h4 className="text-[14px] font-semibold text-[#11182d]">
+                        {item.name}
+                      </h4>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-[#f5f7ff] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6f7b99]">
+                          Color: {item.color}
+                        </span>
+                        <span className="rounded-full bg-[#f5f7ff] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6f7b99]">
+                          Size: {item.size}
+                        </span>
+                        <span className="rounded-full bg-[#f5f7ff] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6f7b99]">
+                          Qty: {item.quantity}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-               </div>
-            </div>
-          </div>
+                      <p className="mt-3 text-[13px] font-semibold text-[#11182d]">
+                        {RUPEE}
+                        {Number(item.price || 0).toLocaleString("en-IN")}
+                        <span className="ml-1 text-[11px] font-medium text-[#98a4c4]">
+                          / unit
+                        </span>
+                      </p>
+                    </div>
 
-          {/* Sidebar */}
-          <div className="space-y-8">
-            {/* Customer & Address */}
-            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-8">
-               <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <User className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <h3 className="font-bold text-gray-900">Customer Details</h3>
-               </div>
-               
-               <div className="space-y-6">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Buyer</label>
-                    <p className="text-sm font-bold text-gray-900 mt-1">{order.masterOrder?.user?.name}</p>
-                    <p className="text-xs text-gray-500">{order.masterOrder?.user?.email}</p>
-                  </div>
-                  <div className="pt-6 border-t border-gray-50">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                      <MapPin className="w-3 h-3" /> Shipping To
-                    </label>
-                    <p className="text-sm font-bold text-gray-900 mt-2">{order.masterOrder?.address?.fullName}</p>
-                    <p className="text-xs text-gray-500 leading-relaxed mt-1 uppercase tracking-tight">
-                      {order.masterOrder?.address?.street}, {order.masterOrder?.address?.city}<br />
-                      {order.masterOrder?.address?.state} - {order.masterOrder?.address?.zipCode}
-                    </p>
-                  </div>
-               </div>
-            </div>
-
-            {/* Payout Breakdown */}
-            <div className="bg-gray-900 rounded-[2rem] text-white p-8 shadow-xl shadow-blue-900/10">
-               <div className="flex items-center gap-3 mb-8">
-                  <DollarSign className="w-5 h-5 text-green-400" />
-                  <h3 className="font-bold">Earnings Breakdown</h3>
-               </div>
-               
-               <div className="space-y-5">
-                  <div className="flex justify-between items-center opacity-60">
-                    <span className="text-xs uppercase font-bold tracking-widest">Subtotal</span>
-                    <span className="text-sm font-bold">₹{order.subTotal?.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-red-400">
-                    <span className="text-xs uppercase font-bold tracking-widest">Commission</span>
-                    <span className="text-sm font-bold">-₹{order.platformCommission?.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center opacity-60">
-                    <span className="text-xs uppercase font-bold tracking-widest">Shipping</span>
-                    <span className="text-sm font-bold">₹{order.shippingCost?.toLocaleString()}</span>
-                  </div>
-                  
-                  <div className="pt-6 border-t border-white/10">
-                    <div className="flex justify-between items-center">
-                       <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Seller Payout</p>
-                          <p className="text-[9px] text-white/40 mt-0.5 italic">Released after delivery</p>
-                       </div>
-                       <p className="text-2xl font-black text-green-400 tracking-tighter">₹{order.sellerPayout?.toLocaleString()}</p>
+                    <div className="text-left sm:text-right">
+                      <p className="text-[14px] font-semibold text-[#11182d]">
+                        {RUPEE}
+                        {Number((item.price || 0) * (item.quantity || 0)).toLocaleString("en-IN")}
+                      </p>
                     </div>
                   </div>
+                ))}
+              </div>
+            </section>
+          </div>
 
-                  <div className="mt-6 bg-white/5 rounded-2xl p-4 flex items-center gap-3">
-                     <ShieldCheck className="w-5 h-5 text-blue-400" />
-                     <p className="text-[11px] font-medium text-white/60">Payment via <span className="text-white font-bold">{order.masterOrder?.paymentMethod}</span> ({order.paymentStatus})</p>
+          <div className="space-y-3">
+            <section className="rounded-[26px] border border-[#e3e8ff] bg-white px-4 py-4 sm:px-5">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef2ff]">
+                  <User className="h-4 w-4 text-[#2f5fe3]" />
+                </div>
+                <h3 className="text-[16px] font-semibold text-[#141b2d]">
+                  Customer Details
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
+                    Buyer
+                  </label>
+                  <p className="mt-1 text-[13px] font-semibold text-[#11182d]">
+                    {order.masterOrder?.user?.name}
+                  </p>
+                  <p className="text-[12px] text-[#6d7894]">
+                    {order.masterOrder?.user?.email}
+                  </p>
+                </div>
+
+                <div className="border-t border-[#edf1ff] pt-4">
+                  <label className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
+                    <MapPin className="h-3.5 w-3.5" />
+                    Shipping To
+                  </label>
+                  <p className="mt-2 text-[13px] font-semibold text-[#11182d]">
+                    {order.masterOrder?.address?.fullName}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-5 text-[#6d7894]">
+                    {order.masterOrder?.address?.street}, {order.masterOrder?.address?.city}
+                    <br />
+                    {order.masterOrder?.address?.state} - {order.masterOrder?.address?.zipCode}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[26px] border border-[#e3e8ff] bg-white px-4 py-4 sm:px-5">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#e9f8ef]">
+                  <DollarSign className="h-4 w-4 text-[#18794e]" />
+                </div>
+                <h3 className="text-[16px] font-semibold text-[#141b2d]">
+                  Earnings Breakdown
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className="text-[#6d7894]">Subtotal</span>
+                  <span className="font-semibold text-[#11182d]">
+                    {RUPEE}
+                    {Number(order.subTotal || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className="text-[#6d7894]">Commission</span>
+                  <span className="font-semibold text-[#d14343]">
+                    -{RUPEE}
+                    {Number(order.platformCommission || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className="text-[#6d7894]">Shipping</span>
+                  <span className="font-semibold text-[#11182d]">
+                    {RUPEE}
+                    {Number(order.shippingCost || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                <div className="border-t border-[#edf1ff] pt-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#99a5c5]">
+                        Seller Payout
+                      </p>
+                      <p className="mt-1 text-[11px] text-[#6d7894]">
+                        Released after delivery
+                      </p>
+                    </div>
+                    <p className="text-[20px] font-semibold text-[#18794e]">
+                      {RUPEE}
+                      {Number(order.sellerPayout || 0).toLocaleString("en-IN")}
+                    </p>
                   </div>
-               </div>
-            </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-3 rounded-[20px] border border-[#e7ebff] bg-[#f8f9ff] px-4 py-3">
+                  <ShieldCheck className="h-4 w-4 text-[#2f5fe3]" />
+                  <p className="text-[11px] text-[#6d7894]">
+                    Payment via{" "}
+                    <span className="font-semibold text-[#11182d]">
+                      {order.masterOrder?.paymentMethod}
+                    </span>{" "}
+                    ({order.paymentStatus})
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>

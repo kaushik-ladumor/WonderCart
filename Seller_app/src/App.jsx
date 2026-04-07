@@ -148,7 +148,7 @@ function App() {
         <Route path="/" element={
           <div className="h-screen bg-gray-50 flex flex-col items-center justify-center space-y-4">
             <h1 className="text-3xl font-bold text-gray-900">WonderCart Seller Portal</h1>
-            <button 
+            <button
               onClick={() => document.getElementById('login_modal')?.showModal()}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >

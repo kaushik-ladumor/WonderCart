@@ -235,15 +235,15 @@ function Signup() {
           
           {/* Top Brand */}
           <div className="relative z-10">
-            <h2 className="font-display font-black text-[11px] tracking-[0.25em] uppercase text-white/90">WonderCart</h2>
+            <h2 className="font-display font-black text-[10px] tracking-[0.25em] uppercase text-white/90">WonderCart</h2>
           </div>
 
           {/* Middle Editorial */}
           <div className="relative z-10 mt-auto mb-8 max-w-md space-y-4">
-            <h1 className="font-display text-3xl xl:text-[36px] font-extrabold leading-[1.1] tracking-tight">
+            <h1 className="font-display text-[1.5rem] xl:text-[36px] font-extrabold leading-[1.1] tracking-tight">
               Refined style<br />for the modern<br />home.
             </h1>
-            <p className="font-medium text-white/80 text-[12px] leading-relaxed max-w-[260px]">
+            <p className="font-medium text-white/80 text-[0.74rem] leading-relaxed max-w-[260px]">
               Experience a collection of curated objects designed to elevate your everyday living.
             </p>
             
@@ -253,15 +253,15 @@ function Signup() {
                 <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=150&auto=format&fit=crop" alt="Minimalist Objects" className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-white/50 uppercase tracking-[0.2em] mb-0.5">Featured Collection</span>
-                <span className="font-bold text-[11px] text-white">The Minimalist Series</span>
+                <span className="text-[7px] font-semibold text-white/50 uppercase tracking-[0.2em] mb-0.5">Featured Collection</span>
+                <span className="font-semibold text-[10px] text-white">The Minimalist Series</span>
               </div>
             </div>
           </div>
 
           {/* Bottom Footer */}
           <div className="relative z-10">
-            <span className="text-[7px] font-bold text-white/50 uppercase tracking-[0.25em]">Curated Excellence 2024</span>
+            <span className="text-[7px] font-semibold text-white/50 uppercase tracking-[0.25em]">Curated Excellence 2024</span>
           </div>
         </div>
 
@@ -273,7 +273,7 @@ function Signup() {
               <h2 className="font-display text-[22px] font-extrabold text-[#141b2d] tracking-tight mb-1">
                 Create Account
               </h2>
-              <p className="font-body text-[#5c6880] text-[11px] font-medium">
+              <p className="font-body text-[#5c6880] text-[10px] font-medium">
                 Your aesthetic journey begins here.
               </p>
             </div>
@@ -283,50 +283,50 @@ function Signup() {
 
               {/* Username Input */}
               <div className="space-y-1">
-                <label className="font-body text-[8px] font-bold text-[#5c6880] uppercase tracking-[0.15em] ml-1">
+                <label className="font-body text-[8px] font-semibold text-[#5c6880] uppercase tracking-[0.15em] ml-1">
                   Full Name
                 </label>
                 <input
                   type="text"
                   placeholder="Jane Cooper"
-                  className={`w-full px-4 py-2 bg-[#f0f4ff] border border-transparent rounded-lg font-body text-[12px] font-medium text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all placeholder:text-[#a1abbd] ${errors.username ? "focus:ring-red-500/20 focus:border-red-500/30 ring-1 ring-red-500/50 bg-[#fff5f5]" : ""}`}
+                  className={`w-full px-4 py-2 bg-[#f0f4ff] border border-transparent rounded-lg font-body text-[0.74rem] font-medium text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all placeholder:text-[#a1abbd] ${errors.username ? "focus:ring-red-500/20 focus:border-red-500/30 ring-1 ring-red-500/50 bg-[#fff5f5]" : ""}`}
                   disabled={disabled}
                   {...register("username", {
                     required: "Username is required",
                     minLength: { value: 3, message: "Too short" },
                   })}
                 />
-                {errors.username && <p className="text-red-500 text-[9px] mt-0.5 ml-1 font-bold">{errors.username.message}</p>}
+                {errors.username && <p className="text-red-500 text-[9px] mt-0.5 ml-1 font-semibold">{errors.username.message}</p>}
               </div>
 
               {/* Email Input */}
               <div className="space-y-1">
-                <label className="font-body text-[8px] font-bold text-[#5c6880] uppercase tracking-[0.15em] ml-1">
+                <label className="font-body text-[8px] font-semibold text-[#5c6880] uppercase tracking-[0.15em] ml-1">
                   Email Address
                 </label>
                 <input
                   type="email"
                   placeholder="hello@wondercart.com"
-                  className={`w-full px-4 py-2 bg-[#f0f4ff] border border-transparent rounded-lg font-body text-[12px] font-medium text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all placeholder:text-[#a1abbd] ${errors.email ? "focus:ring-red-500/20 focus:border-red-500/30 ring-1 ring-red-500/50 bg-[#fff5f5]" : ""}`}
+                  className={`w-full px-4 py-2 bg-[#f0f4ff] border border-transparent rounded-lg font-body text-[0.74rem] font-medium text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all placeholder:text-[#a1abbd] ${errors.email ? "focus:ring-red-500/20 focus:border-red-500/30 ring-1 ring-red-500/50 bg-[#fff5f5]" : ""}`}
                   disabled={disabled}
                   {...register("email", {
                     required: "Email is required",
                     pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Invalid email" },
                   })}
                 />
-                {errors.email && <p className="text-red-500 text-[9px] mt-0.5 ml-1 font-bold">{errors.email.message}</p>}
+                {errors.email && <p className="text-red-500 text-[9px] mt-0.5 ml-1 font-semibold">{errors.email.message}</p>}
               </div>
 
               {/* Password Input */}
               <div className="space-y-1">
-                <label className="font-body text-[8px] font-bold text-[#5c6880] uppercase tracking-[0.15em] ml-1">
+                <label className="font-body text-[8px] font-semibold text-[#5c6880] uppercase tracking-[0.15em] ml-1">
                   Password
                 </label>
                 <div className="relative group">
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`w-full pl-4 pr-10 py-2 bg-[#f0f4ff] border border-transparent rounded-lg font-body text-[12px] font-medium text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all tracking-[0.2em] placeholder:tracking-normal placeholder:text-[#a1abbd] ${errors.password ? "focus:ring-red-500/20 focus:border-red-500/30 ring-1 ring-red-500/50 bg-[#fff5f5]" : ""}`}
+                    className={`w-full pl-4 pr-10 py-2 bg-[#f0f4ff] border border-transparent rounded-lg font-body text-[0.74rem] font-medium text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all tracking-[0.2em] placeholder:tracking-normal placeholder:text-[#a1abbd] ${errors.password ? "focus:ring-red-500/20 focus:border-red-500/30 ring-1 ring-red-500/50 bg-[#fff5f5]" : ""}`}
                     disabled={disabled}
                     {...register("password", {
                       required: "Password is required",
@@ -349,7 +349,7 @@ function Signup() {
                   <div className="h-1 flex-1 bg-[#e1e8fd] rounded-full"></div>
                 </div>
 
-                {errors.password && <p className="text-red-500 text-[9px] mt-0.5 ml-1 font-bold">{errors.password.message}</p>}
+                {errors.password && <p className="text-red-500 text-[9px] mt-0.5 ml-1 font-semibold">{errors.password.message}</p>}
               </div>
 
               {/* Checkbox */}
@@ -361,7 +361,7 @@ function Signup() {
                   required 
                 />
                 <label htmlFor="terms" className="text-[9px] font-medium text-[#5c6880] cursor-pointer leading-tight">
-                  I agree to the <span className="text-[#004ac6] font-bold hover:underline">Terms & Privacy Policy</span>
+                  I agree to the <span className="text-[#004ac6] font-semibold hover:underline">Terms & Privacy Policy</span>
                 </label>
               </div>
 
@@ -369,7 +369,7 @@ function Signup() {
               <button
                 type="submit"
                 disabled={disabled}
-                className="w-full h-10 bg-[#185ee0] text-white rounded-lg font-display font-bold text-[12px] hover:bg-[#144fbc] focus:ring-4 focus:ring-[#185ee0]/20 transition-all shadow-md shadow-[#185ee0]/20 disabled:opacity-70 disabled:cursor-not-allowed mt-3 flex items-center justify-center gap-2"
+                className="w-full h-10 bg-[#185ee0] text-white rounded-lg font-display font-semibold text-[0.74rem] hover:bg-[#144fbc] focus:ring-4 focus:ring-[#185ee0]/20 transition-all shadow-md shadow-[#185ee0]/20 disabled:opacity-70 disabled:cursor-not-allowed mt-3 flex items-center justify-center gap-2"
               >
                 {disabled ? (
                   <>
@@ -385,7 +385,7 @@ function Signup() {
             {/* Separator */}
             <div className="flex items-center mt-4 mb-3">
               <div className="flex-grow h-[1px] bg-gray-100"></div>
-              <span className="px-3 font-body text-[8px] text-[#9ca3af] uppercase tracking-[0.2em] font-bold">Or</span>
+              <span className="px-3 font-body text-[8px] text-[#9ca3af] uppercase tracking-[0.2em] font-semibold">Or</span>
               <div className="flex-grow h-[1px] bg-gray-100"></div>
             </div>
 
@@ -393,7 +393,7 @@ function Signup() {
               type="button"
               onClick={signUpWithGoogle}
               disabled={disabled}
-              className="w-full flex items-center justify-center gap-2 h-10 bg-white border border-gray-100 rounded-lg font-body text-[12px] font-bold text-[#141b2d] hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.03)]"
+              className="w-full flex items-center justify-center gap-2 h-10 bg-white border border-gray-100 rounded-lg font-body text-[0.74rem] font-semibold text-[#141b2d] hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.03)]"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -410,7 +410,7 @@ function Signup() {
                 <button
                   type="button"
                   onClick={() => document.getElementById("login_modal")?.showModal()}
-                  className="font-bold text-[#004ac6] hover:underline transition-all ml-1"
+                  className="font-semibold text-[#004ac6] hover:underline transition-all ml-1"
                 >
                   Log in
                 </button>
@@ -418,9 +418,9 @@ function Signup() {
             </div>
 
             <div className="mt-auto pt-3 flex justify-center gap-6">
-              <a href="#" className="text-[7px] font-bold text-[#b0b8c9] uppercase tracking-[0.2em] hover:text-[#5c6880] transition-colors">Privacy</a>
-              <a href="#" className="text-[7px] font-bold text-[#b0b8c9] uppercase tracking-[0.2em] hover:text-[#5c6880] transition-colors">Terms</a>
-              <a href="#" className="text-[7px] font-bold text-[#b0b8c9] uppercase tracking-[0.2em] hover:text-[#5c6880] transition-colors">Support</a>
+              <a href="#" className="text-[7px] font-semibold text-[#b0b8c9] uppercase tracking-[0.2em] hover:text-[#5c6880] transition-colors">Privacy</a>
+              <a href="#" className="text-[7px] font-semibold text-[#b0b8c9] uppercase tracking-[0.2em] hover:text-[#5c6880] transition-colors">Terms</a>
+              <a href="#" className="text-[7px] font-semibold text-[#b0b8c9] uppercase tracking-[0.2em] hover:text-[#5c6880] transition-colors">Support</a>
             </div>
 
           </div>

@@ -97,10 +97,42 @@ const Cart = () => {
         handleTokenExpiration(navigate, setAuthUser);
         return;
       }
-      setError(err.message || "Failed to load cart");
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!socket || !token) return;
+
+    const handleStockLow = (data) => {
+      console.log("⚠️ Stock low alert:", data);
+      toast(data.message, { icon: "⚠️", duration: 5000 });
+      fetchCart();
+    };
+
+    const handleItemReserved = (data) => {
+      console.log("🔒 Item reserved:", data);
+      toast.success(`${data.productName} is reserved for you for ${data.expiresIn}!`, { icon: "🔒" });
+    };
+
+    const handleCartUpdate = (data) => {
+      console.log("🛒 Cart update received:", data);
+      fetchCart();
+    };
+
+    socket.on("stock-low", handleStockLow);
+    socket.on("item-reserved", handleItemReserved);
+    socket.on("cart-update", handleCartUpdate);
+
+    return () => {
+      socket.off("stock-low", handleStockLow);
+      socket.off("item-reserved", handleItemReserved);
+      socket.off("cart-update", handleCartUpdate);
+    };
+  }, [socket, token]);
+
+  useEffect(() => {
+    fetchCart();
+  }, [token]);
 
   const updateQuantity = async (productId, color, size, newQuantity) => {
     if (newQuantity < 1) return;
@@ -251,7 +283,7 @@ const Cart = () => {
       <div className="flex min-h-screen items-center justify-center bg-[#f6f7fb] px-4">
         <div className="max-w-sm rounded-[18px] border border-[#e1e5f1] bg-white p-6 text-center">
           <AlertCircle className="mx-auto h-10 w-10 text-[#d12828]" />
-          <h3 className="mt-3 text-base font-semibold text-[#11182d]">{error}</h3>
+          <h3 className="mt-3 text-[0.88rem] font-semibold text-[#11182d]">{error}</h3>
           <div className="mt-4 flex justify-center gap-2">
             <button
               onClick={fetchCart}
@@ -310,19 +342,17 @@ const Cart = () => {
 
         {stockNotice && (
           <div
-            className={`mb-4 flex items-center justify-between rounded-[14px] border px-4 py-3 ${
-              stockNotice.type === "removed"
+            className={`mb-4 flex items-center justify-between rounded-[14px] border px-4 py-3 ${stockNotice.type === "removed"
                 ? "border-[#f0c6c6] bg-[#fff5f5]"
                 : "border-[#f1ddb0] bg-[#fffaf0]"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2.5">
               <Info
-                className={`h-4.5 w-4.5 ${
-                  stockNotice.type === "removed"
+                className={`h-4.5 w-4.5 ${stockNotice.type === "removed"
                     ? "text-[#d12828]"
                     : "text-[#ba7a00]"
-                }`}
+                  }`}
               />
               <p className="text-[0.76rem] font-medium text-[#33415e]">
                 {stockNotice.message}
@@ -347,9 +377,8 @@ const Cart = () => {
               return (
                 <div
                   key={item._id || updateKey}
-                  className={`rounded-[18px] border border-[#e1e5f1] bg-white p-3.5 ${
-                    isUpdating ? "opacity-60" : ""
-                  }`}
+                  className={`rounded-[18px] border border-[#e1e5f1] bg-white p-3.5 ${isUpdating ? "opacity-60" : ""
+                    }`}
                 >
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-[118px_minmax(0,1fr)]">
                     <div className="flex h-24 items-center justify-center overflow-hidden rounded-[14px] bg-[#eef2f7]">
@@ -367,10 +396,10 @@ const Cart = () => {
                     <div className="flex min-h-full flex-col justify-between">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div>
-                          <h3 className="text-[1rem] font-semibold text-[#11182d]">
+                          <h3 className="text-[0.82rem] font-semibold text-[#11182d]">
                             {productName}
                           </h3>
-                          <p className="mt-1 text-[0.78rem] text-[#33415e]">
+                          <p className="mt-1 text-[0.74rem] text-[#6d7892]">
                             {item.size ? `Size: ${item.size}` : "Variant"}{" "}
                             {item.color
                               ? `• Color: ${formatColorName(item.color)}`
@@ -379,11 +408,11 @@ const Cart = () => {
                         </div>
 
                         <div className="text-left sm:text-right">
-                          <p className="text-[1rem] font-semibold text-[#11182d]">
+                          <p className="text-[0.78rem] font-semibold text-[#11182d]">
                             Rs {getItemPrice(item).toLocaleString("en-IN")}
                           </p>
                           {getItemOriginalPrice(item) > getItemPrice(item) && (
-                            <p className="mt-0.5 text-[0.74rem] text-[#7f8aa3] line-through">
+                            <p className="mt-0.5 text-[0.74rem] text-[#7f8aa3] line-through font-medium">
                               Rs{" "}
                               {getItemOriginalPrice(item).toLocaleString("en-IN")}
                             </p>
@@ -407,7 +436,7 @@ const Cart = () => {
                           >
                             <Minus className="h-3.5 w-3.5" />
                           </button>
-                          <span className="min-w-[34px] text-center text-[0.82rem] font-semibold text-[#11182d]">
+                          <span className="min-w-[34px] text-center text-[0.74rem] font-semibold text-[#11182d]">
                             {item.quantity}
                           </span>
                           <button
@@ -481,18 +510,18 @@ const Cart = () => {
               </div>
 
               <div className="mt-4 border-t border-[#edf1f8] pt-4">
-                <div className="flex items-center justify-between">
+                 <div className="flex items-center justify-between">
                   <span className="text-[0.9rem] font-semibold text-[#11182d]">
                     Total Amount
                   </span>
-                  <span className="text-[1.2rem] font-semibold text-[#11182d]">
+                  <span className="text-[1.2rem] font-semibold text-[#0f49d7]">
                     Rs {total.toLocaleString("en-IN")}
                   </span>
                 </div>
 
-                <button
+                 <button
                   onClick={proceedToCheckout}
-                  className="mt-4 h-11 w-full rounded-[14px] bg-[#0f49d7] text-[0.78rem] font-semibold text-white"
+                  className="mt-4 h-11 w-full rounded-[14px] bg-[#0f49d7] text-[0.78rem] font-semibold text-white uppercase tracking-widest"
                 >
                   Proceed to Checkout
                 </button>

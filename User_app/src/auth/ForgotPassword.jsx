@@ -62,10 +62,10 @@ function ForgotPassword() {
         
         {/* Minimal Auth Header */}
         <div className="absolute top-0 left-0 w-full p-6 sm:p-10 flex justify-between items-center z-10">
-          <Link to="/" className="font-display text-2xl font-extrabold tracking-tight text-[#141b2d] hover:opacity-80 transition-opacity">
+          <Link to="/" className="font-display text-[1.2rem] font-extrabold tracking-tight text-[#141b2d] hover:opacity-80 transition-opacity">
             WonderCart
           </Link>
-          <button onClick={() => toast.info("Support coming soon")} className="flex items-center gap-2 text-[11px] font-bold text-[#004ac6] bg-white border border-[#e1e8fd] shadow-sm px-4 py-2.5 rounded-full hover:bg-[#f0f4ff] transition-colors tracking-wide">
+          <button onClick={() => toast.info("Support coming soon")} className="flex items-center gap-2 text-[10px] font-semibold text-[#004ac6] bg-white border border-[#e1e8fd] shadow-sm px-4 py-2.5 rounded-full hover:bg-[#f0f4ff] transition-colors tracking-wide">
             <div className="w-[14px] h-[14px] rounded-full bg-[#004ac6] text-white flex items-center justify-center font-black text-[9px] pt-[1px]">?</div>
             Support
           </button>
@@ -86,17 +86,17 @@ function ForgotPassword() {
               </div>
 
               {/* Title & Subtitle */}
-              <h1 className="font-display text-2xl font-extrabold text-[#141b2d] mb-2 tracking-tight">
+              <h1 className="font-display text-[1.2rem] font-extrabold text-[#141b2d] mb-2 tracking-tight">
                 Forgot Password?
               </h1>
-              <p className="text-[#5c6880] text-[13px] mb-6 leading-relaxed">
+              <p className="text-[#5c6880] text-[0.78rem] mb-6 leading-relaxed">
                 Enter your email to reset your password.
               </p>
 
               <form onSubmit={handleSubmit(onSubmit)} className="w-full text-left space-y-5">
                 {/* Email Input */}
                 <div>
-                  <label className="block text-[10px] font-bold text-[#5c6880] uppercase tracking-[0.15em] mb-2 ml-1">
+                  <label className="block text-[10px] font-semibold text-[#5c6880] uppercase tracking-[0.15em] mb-2 ml-1">
                     Email Address
                   </label>
                   <div className="relative">
@@ -104,7 +104,7 @@ function ForgotPassword() {
                     <input
                       type="email"
                       placeholder="Enter your email address"
-                      className={`w-full pl-11 pr-4 py-3.5 bg-[#f0f4ff] border border-transparent rounded-xl text-[#141b2d] text-[13px] font-medium placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all ${
+                      className={`w-full pl-11 pr-4 py-3.5 bg-[#f0f4ff] border border-transparent rounded-xl text-[#141b2d] text-[0.78rem] font-medium placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/20 focus:border-[#004ac6]/30 transition-all ${
                         errors.email ? "focus:ring-red-500/20 focus:border-red-500/30 ring-1 ring-red-500/50 bg-[#fff5f5]" : ""
                       } ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
                       disabled={loading}
@@ -118,7 +118,7 @@ function ForgotPassword() {
                     />
                   </div>
                   {errors.email && (
-                    <p className="text-red-500 text-[11px] mt-1.5 ml-1 font-medium">
+                    <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-medium">
                       {errors.email.message}
                     </p>
                   )}
@@ -128,7 +128,7 @@ function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#185EE0] text-white py-4 rounded-xl font-display font-bold text-[13px] hover:bg-[#144fbc] focus:ring-4 focus:ring-[#185EE0]/20 transition-all outline-none shadow-md shadow-[#185EE0]/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                  className="w-full bg-[#185EE0] text-white py-4 rounded-xl font-display font-semibold text-[0.78rem] hover:bg-[#144fbc] focus:ring-4 focus:ring-[#185EE0]/20 transition-all outline-none shadow-md shadow-[#185EE0]/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
                 >
                   {loading ? (
                     <>
@@ -143,7 +143,7 @@ function ForgotPassword() {
 
               {/* Login Link */}
               <div className="mt-6">
-                <p className="text-[#5c6880] text-[12px] font-medium">
+                <p className="text-[#5c6880] text-[0.74rem] font-medium">
                   Remember your password?{" "}
                   <button
                     type="button"
@@ -151,7 +151,7 @@ function ForgotPassword() {
                       const m = document.getElementById("login_modal");
                       if (m) m.showModal();
                     }}
-                    className="text-[#185EE0] font-bold hover:underline"
+                    className="text-[#185EE0] font-semibold hover:underline"
                   >
                     Login here
                   </button>
@@ -160,7 +160,7 @@ function ForgotPassword() {
 
               {/* Security Note */}
               <div className="mt-6">
-                <div className="inline-flex items-center gap-2 bg-[#f0fdf4] text-[#166534] px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest">
+                <div className="inline-flex items-center gap-2 bg-[#f0fdf4] text-[#166534] px-4 py-2 rounded-full text-[9px] font-semibold uppercase tracking-widest">
                   <div className="w-1.5 h-1.5 bg-[#16a34a] rounded-full opacity-80" />
                   Secure Process
                 </div>
@@ -171,7 +171,7 @@ function ForgotPassword() {
 
         {/* Minimal Auth Footer */}
         <div className="w-full text-center pb-8 z-10 pt-4">
-          <p className="text-[10px] font-bold text-[#b0b8c9] uppercase tracking-[0.2em]">
+          <p className="text-[10px] font-semibold text-[#b0b8c9] uppercase tracking-[0.2em]">
             © WONDERCART CURATED COMMERCE 2024
           </p>
         </div>

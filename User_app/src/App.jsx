@@ -43,6 +43,7 @@ import TrackOrder from "./pages/TrackOrder";
 import VisualSearch from "./pages/VisualSearch";
 
 import MyCoupons from "./pages/MyCoupons";
+import MyReviews from "./pages/MyReviews";
 import TopSellers from "./pages/TopSellers";
 import Deals from "./pages/Deals";
 
@@ -198,6 +199,7 @@ function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/address" element={<AddressPage />} />
           <Route path="/my-coupons" element={<MyCoupons />} />
+          <Route path="/my-reviews" element={<MyReviews />} />
           <Route path="/visual-search" element={<VisualSearch />} />
           <Route path="/loader" element={<Loader />} />
           {/* Page Not Found */}

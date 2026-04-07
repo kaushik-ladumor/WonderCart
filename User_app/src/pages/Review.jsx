@@ -136,13 +136,13 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
   return (
     <dialog id="my_modal_8" className="modal font-body shadow-none">
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
-        <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
+        <div className="bg-white rounded-2xl w-full max-w-sm mx-auto border border-[#d7dcea] relative max-h-[90vh] overflow-y-auto">
           
           {/* Close Button */}
           <button
             onClick={closeModal}
             disabled={isSubmitting}
-            className="absolute top-4 right-4 p-1.5 rounded-full text-[#5c6880] hover:bg-[#f0f4ff] transition-colors z-10"
+            className="absolute top-4 right-4 p-1.5 rounded-full text-[#5c6880] z-10"
           >
             <X className="w-4 h-4" />
           </button>
@@ -152,10 +152,10 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
             <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
               PRODUCT EXPERIENCE
             </span>
-            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+            <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
               Review Item
             </h3>
-            <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+            <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5 leading-relaxed">
               Share your thoughts and help others make better choices.
             </p>
           </div>
@@ -169,8 +169,8 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <p className="text-[10px] font-bold text-[#141b2d] uppercase tracking-tight line-clamp-2 leading-tight">
-              {productName || "Product Name"}
+            <p className="text-[10px] font-semibold text-[#141b2d] uppercase tracking-tight line-clamp-2 leading-tight">
+              {productName}
             </p>
           </div>
 
@@ -190,25 +190,25 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
                         setRating(star);
                         setShowError(false);
                       }}
-                      className="transition-all transform active:scale-95"
+                      className=""
                     >
                       <Star
                         className={`w-9 h-9 ${
                           star <= (hoverRating || rating)
                             ? "text-[#ffc107] fill-[#ffc107]"
                             : "text-[#f0f4ff] fill-[#f0f4ff]"
-                        } transition-colors`}
+                        }`}
                       />
                     </button>
                   ))}
                 </div>
                 {rating > 0 && (
-                  <p className="text-[10px] font-black text-[#004ac6] uppercase tracking-[0.2em] animate-in fade-in slide-in-from-top-1">
+                  <p className="text-[10px] font-black text-[#004ac6] uppercase tracking-[0.2em]">
                     {ratingLabels[rating]}
                   </p>
                 )}
                 {showError && (
-                  <p className="text-red-500 text-[10px] font-bold mt-2">Please select a star rating</p>
+                  <p className="text-red-500 text-[10px] font-semibold mt-2">Please select a star rating</p>
                 )}
               </div>
 
@@ -216,11 +216,11 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
               <div>
                 <div className="flex justify-between items-end mb-1.5">
                   <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Your Comments</label>
-                  <span className={`text-[9px] font-bold ${comment.length > 500 ? "text-red-500" : "text-[#5c6880]/40"}`}>
+                  <span className={`text-[9px] font-semibold ${comment.length > 500 ? "text-red-500" : "text-[#5c6880]/40"}`}>
                     {comment.length} / 500
                   </span>
                 </div>
-                <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
+                <div className="bg-[#f0f4ff] rounded-xl px-3 py-2.5 border border-transparent">
                   <textarea
                     {...register("comment", {
                       minLength: { value: 10, message: "Review must be at least 10 characters" },
@@ -228,11 +228,11 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
                     })}
                     placeholder="Tell us about the quality, fit, and overall value..."
                     rows="3"
-                    className="bg-transparent w-full text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60 resize-none"
+                    className="bg-transparent w-full text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60 resize-none"
                   />
                 </div>
                 {errors.comment && (
-                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.comment.message}</p>
+                  <p className="text-red-500 text-[10px] font-semibold mt-1 ml-1">{errors.comment.message}</p>
                 )}
               </div>
 
@@ -243,19 +243,19 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
                 </label>
                 <div className="flex flex-wrap gap-2.5">
                   {imagePreviews.map((preview, idx) => (
-                    <div key={idx} className="relative w-14 h-14 rounded-xl overflow-hidden border border-[#f0f4ff] shadow-sm animate-in zoom-in-50">
+                    <div key={idx} className="relative w-14 h-14 rounded-xl overflow-hidden border border-[#f0f4ff]">
                       <img src={preview} alt="preview" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
-                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 hover:bg-black transition-colors"
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5"
                       >
                         <X className="w-2.5 h-2.5" />
                       </button>
                     </div>
                   ))}
                   {images.length < 5 && (
-                    <label className="w-14 h-14 flex flex-col items-center justify-center bg-[#f0f4ff] rounded-xl cursor-pointer hover:bg-[#e1e8fd] transition-all border border-transparent active:scale-95">
+                    <label className="w-14 h-14 flex flex-col items-center justify-center bg-[#f0f4ff] rounded-xl cursor-pointer border border-transparent">
                       <Upload className="w-4 h-4 text-[#004ac6]" />
                       <input 
                         type="file" 
@@ -274,7 +274,7 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
                 <button
                   type="submit"
                   disabled={rating === 0 || isSubmitting}
-                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50"
+                  className="w-full bg-[#004ac6] text-white font-semibold rounded-xl h-12 text-[0.76rem] uppercase tracking-widest disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-5 h-5 animate-spin mx-auto text-white/80" />
@@ -286,7 +286,7 @@ const Review = ({ id, productName, productImage, orderItemId, onSuccess }) => {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="w-full h-10 bg-transparent text-[#5c6880] rounded-xl text-[10px] font-bold uppercase tracking-widest hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-all"
+                  className="w-full h-10 bg-transparent text-[#5c6880] rounded-xl text-[10px] font-semibold uppercase tracking-widest"
                 >
                   NOT NOW
                 </button>

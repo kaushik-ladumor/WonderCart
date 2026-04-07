@@ -158,7 +158,12 @@ export default function Navbar() {
     };
 
     socket.on("notification", handleNotification);
-    return () => socket.off("notification", handleNotification);
+    socket.on("notification:new", handleNotification);
+
+    return () => {
+      socket.off("notification", handleNotification);
+      socket.off("notification:new", handleNotification);
+    };
   }, [socket, authUser]);
 
   const markAllRead = async () => {
@@ -231,7 +236,7 @@ export default function Navbar() {
                     href={link.to}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-[#42506d] hover:text-[#0f49d7] transition-colors"
+                    className="text-[0.82rem] font-medium text-[#42506d] hover:text-[#0f49d7] transition-colors"
                   >
                     {link.label}
                   </a>
@@ -239,15 +244,14 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     to={link.to}
-                    className={`text-sm font-medium ${
-                      isPathActive(location.pathname, link.to)
-                        ? "text-[#0f49d7]"
-                        : "text-[#42506d]"
-                    }`}
+                    className={`text-[0.82rem] font-medium ${isPathActive(location.pathname, link.to)
+                      ? "text-[#0f49d7]"
+                      : "text-[#42506d]"
+                      }`}
                   >
                     {link.label}
                   </Link>
-                )
+                ),
               )}
             </div>
           </div>
@@ -258,7 +262,7 @@ export default function Navbar() {
               <input
                 type="text"
                 placeholder="Search curated deals..."
-                className="w-full bg-transparent text-sm text-[#11182d] outline-none font-medium placeholder:text-[#94a3b8]"
+                className="w-full bg-transparent text-[0.82rem] text-[#11182d] outline-none font-medium placeholder:text-[#94a3b8]"
               />
             </div>
           </div>
@@ -280,10 +284,10 @@ export default function Navbar() {
                 {showNotifications && (
                   <div className="absolute right-0 top-full mt-3 w-[320px] overflow-hidden rounded-[18px] border border-[#e2e7f2] bg-white shadow-[0_18px_40px_rgba(17,24,45,0.08)]">
                     <div className="flex items-center justify-between border-b border-[#edf1f8] px-4 py-3">
-                      <p className="text-sm font-semibold text-[#11182d]">
+                      <p className="text-[0.82rem] font-semibold text-[#11182d]">
                         Notifications
                       </p>
-                      <div className="flex items-center gap-3 text-[11px] font-medium">
+                      <div className="flex items-center gap-3 text-[10px] font-medium">
                         <button
                           onClick={markAllRead}
                           className="text-[#0f49d7]"
@@ -298,7 +302,7 @@ export default function Navbar() {
 
                     <div className="max-h-80 overflow-y-auto">
                       {notifications.length === 0 ? (
-                        <div className="px-4 py-10 text-center text-sm text-[#6a7690]">
+                        <div className="px-4 py-10 text-center text-[0.82rem] text-[#6a7690]">
                           No notifications yet
                         </div>
                       ) : (
@@ -312,10 +316,10 @@ export default function Navbar() {
                                 }`}
                             />
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm leading-6 text-[#11182d]">
+                              <p className="text-[0.82rem] leading-6 text-[#11182d]">
                                 {item.message}
                               </p>
-                              <p className="mt-1 text-[11px] text-[#7c88a2]">
+                              <p className="mt-1 text-[10px] text-[#7c88a2]">
                                 {item.time}
                               </p>
                             </div>
@@ -379,24 +383,24 @@ export default function Navbar() {
                 {showDropdown && (
                   <div className="absolute right-0 top-full mt-3 w-60 rounded-[18px] border border-[#e2e7f2] bg-white p-2 shadow-[0_18px_40px_rgba(17,24,45,0.08)]">
                     <div className="border-b border-[#edf1f8] px-3 py-3">
-                      <p className="text-sm font-semibold text-[#11182d]">
+                      <p className="text-[0.82rem] font-semibold text-[#11182d]">
                         {userName}
                       </p>
-                      <p className="mt-1 text-[12px] text-[#6d7892]">
+                      <p className="mt-1 text-[0.74rem] text-[#6d7892]">
                         {userEmail}
                       </p>
                     </div>
                     <div className="py-2">
                       <Link
                         to="/profile"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#25324d]"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.82rem] text-[#25324d]"
                       >
                         <User className="h-4 w-4" />
                         Profile
                       </Link>
                       <Link
                         to="/my-orders"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#25324d]"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.82rem] text-[#25324d]"
                       >
                         <ShoppingBag className="h-4 w-4" />
                         My Orders
@@ -405,7 +409,7 @@ export default function Navbar() {
                     <div className="border-t border-[#edf1f8] pt-2">
                       <button
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#cf2b2b]"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[0.82rem] font-medium text-[#cf2b2b]"
                       >
                         <LogOut className="h-4 w-4" />
                         Logout
@@ -416,8 +420,10 @@ export default function Navbar() {
               </div>
             ) : (
               <button
-                onClick={() => document.getElementById("login_modal")?.showModal()}
-                className="hidden rounded-xl bg-[#0f49d7] px-4 py-2.5 text-sm font-medium text-white lg:block"
+                onClick={() =>
+                  document.getElementById("login_modal")?.showModal()
+                }
+                className="hidden rounded-xl bg-[#0f49d7] px-4 py-2.5 text-[0.82rem] font-medium text-white lg:block"
               >
                 Sign In
               </button>
@@ -436,10 +442,7 @@ export default function Navbar() {
 
       {isMenuOpen && (
         <div className="fixed inset-0 z-[60] bg-white lg:hidden">
-          <div
-            ref={menuRef}
-            className="flex h-full flex-col bg-white"
-          >
+          <div ref={menuRef} className="flex h-full flex-col bg-white">
             <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-4">
               <Link
                 to="/"
@@ -462,7 +465,7 @@ export default function Navbar() {
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-full bg-transparent text-sm text-[#11182d] outline-none placeholder:text-[#7c88a2]"
+                  className="w-full bg-transparent text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#7c88a2]"
                 />
               </div>
             </div>
@@ -476,7 +479,7 @@ export default function Navbar() {
                       href={link.to}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block rounded-2xl px-4 py-3 text-base font-medium text-[#25324d] hover:bg-[#eef2ff] hover:text-[#0f49d7] transition-colors"
+                      className="block rounded-2xl px-4 py-3 text-[0.88rem] font-medium text-[#25324d] hover:bg-[#eef2ff] hover:text-[#0f49d7] transition-colors"
                     >
                       {link.label}
                     </a>
@@ -484,15 +487,14 @@ export default function Navbar() {
                     <Link
                       key={link.label}
                       to={link.to}
-                      className={`block rounded-2xl px-4 py-3 text-base font-medium ${
-                        isPathActive(location.pathname, link.to)
-                          ? "bg-[#eef2ff] text-[#0f49d7]"
-                          : "text-[#25324d]"
-                      }`}
+                      className={`block rounded-2xl px-4 py-3 text-[0.88rem] font-medium ${isPathActive(location.pathname, link.to)
+                        ? "bg-[#eef2ff] text-[#0f49d7]"
+                        : "text-[#25324d]"
+                        }`}
                     >
                       {link.label}
                     </Link>
-                  )
+                  ),
                 )}
               </div>
 
@@ -500,13 +502,13 @@ export default function Navbar() {
                 <div className="grid grid-cols-2 gap-3">
                   <Link
                     to="/wishlist"
-                    className="rounded-2xl bg-white px-4 py-4 text-sm font-medium text-[#25324d]"
+                    className="rounded-2xl bg-white px-4 py-4 text-[0.82rem] font-medium text-[#25324d]"
                   >
                     Wishlist
                   </Link>
                   <Link
                     to="/cart"
-                    className="rounded-2xl bg-white px-4 py-4 text-sm font-medium text-[#25324d]"
+                    className="rounded-2xl bg-white px-4 py-4 text-[0.82rem] font-medium text-[#25324d]"
                   >
                     Bag ({cartCount})
                   </Link>
@@ -514,13 +516,13 @@ export default function Navbar() {
                     <>
                       <Link
                         to="/profile"
-                        className="rounded-2xl bg-white px-4 py-4 text-sm font-medium text-[#25324d]"
+                        className="rounded-2xl bg-white px-4 py-4 text-[0.82rem] font-medium text-[#25324d]"
                       >
                         Profile
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="rounded-2xl bg-white px-4 py-4 text-left text-sm font-medium text-[#cf2b2b]"
+                        className="rounded-2xl bg-white px-4 py-4 text-left text-[0.82rem] font-medium text-[#cf2b2b]"
                       >
                         Logout
                       </button>
@@ -531,7 +533,7 @@ export default function Navbar() {
                         document.getElementById("login_modal")?.showModal();
                         setIsMenuOpen(false);
                       }}
-                      className="col-span-2 rounded-2xl bg-[#0f49d7] px-4 py-4 text-sm font-medium text-white"
+                      className="col-span-2 rounded-2xl bg-[#0f49d7] px-4 py-4 text-[0.82rem] font-medium text-white"
                     >
                       Sign In
                     </button>
@@ -543,41 +545,6 @@ export default function Navbar() {
         </div>
       )}
 
-      <div className="fixed inset-x-3 bottom-3 z-40 rounded-[28px] border border-[#dde3f0] bg-white px-3 py-2 shadow-[0_18px_40px_rgba(17,24,45,0.12)] lg:hidden">
-        <div className="grid grid-cols-4 gap-1">
-          {mobileTabs.map((tab) => {
-            const Icon = tab.icon;
-            const active = isPathActive(location.pathname, tab.to);
-
-            return (
-              <button
-                key={tab.label}
-                onClick={() => {
-                  if (tab.label === "Profile" && !authUser) {
-                    document.getElementById("login_modal")?.showModal();
-                    return;
-                  }
-                  navigate(tab.to);
-                }}
-                className={`flex flex-col items-center gap-1 rounded-[20px] px-2 py-2 ${active ? "bg-[#eef2ff] text-[#0f49d7]" : "text-[#6d7892]"
-                  }`}
-              >
-                <div className="relative">
-                  <Icon className="h-4.5 w-4.5" />
-                  {tab.label === "Cart" && cartCount > 0 && (
-                    <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0f49d7] px-1 text-[10px] font-semibold text-white">
-                      {cartCount > 99 ? "99+" : cartCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] font-semibold uppercase tracking-[0.16em]">
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </>
   );
 }

@@ -78,16 +78,16 @@ const Address = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#141b2d]">
+            <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#141b2d]">
               Manage Addresses
             </h1>
-            <p className="mt-2 text-sm text-[#5c6880]">
+            <p className="mt-2 text-[0.82rem] text-[#5c6880]">
               Add, edit, or remove your shipping coordinates for precise fulfillment.
             </p>
           </div>
           <button
             onClick={() => document.getElementById("add_address_modal").showModal()}
-            className="flex items-center gap-2 bg-[#004ac6] text-white px-5 py-2.5 rounded-xl font-bold text-sm tracking-widest uppercase hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/10"
+            className="flex items-center gap-2 bg-[#004ac6] text-white px-5 py-2.5 rounded-xl font-semibold text-[0.82rem] tracking-widest uppercase hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/10"
           >
             <Plus className="w-4 h-4" />
             Add New
@@ -119,7 +119,7 @@ const Address = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest text-[#5c6880]">
                       {address.addressType || "Home"}
                     </span>
-                    <h3 className="font-bold text-[#141b2d]">{address.fullName}</h3>
+                    <h3 className="font-semibold text-[#141b2d]">{address.fullName}</h3>
                   </div>
                 </div>
                 {address.isDefault && (
@@ -129,7 +129,7 @@ const Address = () => {
                 )}
               </div>
 
-              <div className="space-y-2 text-sm text-[#5c6880] mb-6 min-h-[80px]">
+              <div className="space-y-2 text-[0.82rem] text-[#5c6880] mb-6 min-h-[80px]">
                 <p className="leading-relaxed">{address.street}</p>
                 <p>{address.city}, {address.state} - {address.zipCode}</p>
                 <p className="flex items-center gap-2 font-semibold text-[#141b2d]">
@@ -173,11 +173,11 @@ const Address = () => {
               <div className="w-16 h-16 rounded-full bg-[#f0f4ff] flex items-center justify-center mb-4">
                 <MapPin className="w-8 h-8 text-[#004ac6]" />
               </div>
-              <h3 className="font-bold text-lg text-[#141b2d]">No address saved yet</h3>
-              <p className="text-sm mt-1 mb-6">Add your first address to start ordering.</p>
+              <h3 className="font-semibold text-[0.9rem] text-[#141b2d]">No address saved yet</h3>
+              <p className="text-[0.82rem] mt-1 mb-6">Add your first address to start ordering.</p>
               <button
                 onClick={() => document.getElementById("add_address_modal").showModal()}
-                className="bg-[#004ac6] text-white px-8 py-3 rounded-xl font-bold text-xs tracking-widest uppercase hover:scale-[1.05] transition-all"
+                className="bg-[#004ac6] text-white px-8 py-3 rounded-xl font-semibold text-[0.76rem] tracking-widest uppercase hover:scale-[1.05] transition-all"
               >
                 Add New Address
               </button>

@@ -56,6 +56,13 @@ const verifyWalletTopUp = async (req, res) => {
     user.walletBalance = (user.walletBalance || 0) + amount;
     await user.save();
 
+    if (global.io) {
+      global.io.to(`buyer-${userId}`).emit("wallet-update", {
+        balance: user.walletBalance,
+        message: `₹${amount} added successfully to your wallet.`
+      });
+    }
+
     await WalletTransaction.create({
       user: userId,
       amount,

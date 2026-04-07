@@ -203,9 +203,9 @@ function Wishlist() {
                  <div className="w-8 h-8 bg-[#0f49d7] rounded-xl flex items-center justify-center text-white shadow-sm">
                     <Heart className="w-4 h-4" />
                  </div>
-                 <span className="text-[0.62rem] font-bold uppercase tracking-widest text-[#0f49d7]">Your Private Collection</span>
+                 <span className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#0f49d7]">Your Private Collection</span>
               </div>
-              <h1 className="text-[1.6rem] md:text-[2rem] font-bold text-[#11182d] leading-tight tracking-tight">
+              <h1 className="text-[1.6rem] md:text-[2rem] font-semibold text-[#11182d] leading-tight tracking-tight">
                 Curated Wishlist
               </h1>
               <p className="text-[0.8rem] text-[#42506d] leading-relaxed">
@@ -216,14 +216,14 @@ function Wishlist() {
            <div className="flex gap-2">
               <button
                 onClick={() => navigate("/")}
-                className="h-10 px-6 border border-[#eef2ff] bg-white text-[#42506d] text-[0.65rem] font-bold uppercase tracking-widest rounded-xl hover:text-[#0f49d7] shadow-sm flex items-center gap-2"
+                className="h-10 px-6 border border-[#eef2ff] bg-white text-[#42506d] text-[0.65rem] font-semibold uppercase tracking-widest rounded-xl hover:text-[#0f49d7] shadow-sm flex items-center gap-2"
               >
                 Continue Shopping
               </button>
               <button
                 onClick={addAllToCart}
                 disabled={inStockCount === 0 || addingAllToCart}
-                className="h-10 px-6 bg-[#0f49d7] text-white text-[0.65rem] font-bold uppercase tracking-widest rounded-xl disabled:opacity-50 shadow-md flex items-center gap-2"
+                className="h-10 px-6 bg-[#0f49d7] text-white text-[0.65rem] font-semibold uppercase tracking-widest rounded-xl disabled:opacity-50 shadow-md flex items-center gap-2"
               >
                 {addingAllToCart ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -249,8 +249,8 @@ function Wishlist() {
                        <stat.icon className="w-4.5 h-4.5" />
                     </div>
                     <div>
-                       <p className="text-[0.6rem] font-bold text-[#5d6a84] uppercase tracking-widest mb-0.5">{stat.label}</p>
-                       <p className="text-[0.9rem] font-bold text-[#11182d]">{stat.value}</p>
+                       <p className="text-[0.6rem] font-semibold text-[#5d6a84] uppercase tracking-widest mb-0.5">{stat.label}</p>
+                       <p className="text-[0.9rem] font-semibold text-[#11182d]">{stat.value}</p>
                     </div>
                  </div>
               </div>
@@ -261,7 +261,7 @@ function Wishlist() {
         {outOfStockItems.length > 0 && (
           <div className="mb-6 p-4 bg-[#fff1f2] border border-[#ffe4e6] rounded-[20px] flex items-center gap-3">
             <AlertCircle className="w-4.5 h-4.5 text-[#e11d48]" />
-            <p className="text-[0.72rem] font-bold text-[#e11d48] uppercase tracking-widest">
+            <p className="text-[0.72rem] font-semibold text-[#e11d48] uppercase tracking-widest">
               {outOfStockItems.length} items currently unavailable
             </p>
           </div>
@@ -272,13 +272,13 @@ function Wishlist() {
             <div className="w-28 h-28 bg-white rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-[#eef2ff]">
               <Heart className="w-12 h-12 text-[#eef2ff]" />
             </div>
-            <h3 className="text-2xl font-bold text-[#11182d] tracking-tight">Your wishlist is empty</h3>
+            <h3 className="text-[1.2rem] font-semibold text-[#11182d] tracking-tight">Your wishlist is empty</h3>
             <p className="text-[0.8rem] text-[#5c6880] max-w-sm mt-2 mb-8 leading-relaxed">
                Save items you love by clicking the heart icon on any product across our store.
             </p>
             <button
               onClick={() => navigate("/")}
-              className="h-11 px-8 bg-[#0f49d7] text-white text-[0.65rem] font-bold uppercase tracking-widest rounded-xl shadow-md border-none outline-none"
+              className="h-11 px-8 bg-[#0f49d7] text-white text-[0.65rem] font-semibold uppercase tracking-widest rounded-xl shadow-md border-none outline-none"
             >
               Discover Products
             </button>
@@ -295,7 +295,7 @@ function Wishlist() {
                 />
                 {isOutOfStock(product) && (
                   <div className="mt-2 text-center">
-                     <span className="text-[0.55rem] font-bold uppercase tracking-widest text-[#e11d48] bg-[#fff1f2] px-3 py-1 rounded-full border border-[#ffe4e6]">Unavailable</span>
+                     <span className="text-[0.55rem] font-semibold uppercase tracking-widest text-[#e11d48] bg-[#fff1f2] px-3 py-1 rounded-full border border-[#ffe4e6]">Unavailable</span>
                   </div>
                 )}
               </div>

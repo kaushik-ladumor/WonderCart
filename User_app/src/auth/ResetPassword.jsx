@@ -129,10 +129,10 @@ function ResetPassword({ email }) {
           {/* Header */}
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
             <div>
-              <h3 className="font-bold text-gray-900 text-lg">
+              <h3 className="font-semibold text-gray-900 text-[0.9rem]">
                 Reset Password
               </h3>
-              <p className="text-gray-600 text-xs mt-0.5">
+              <p className="text-gray-600 text-[0.76rem] mt-0.5">
                 Enter code and set new password
               </p>
             </div>
@@ -151,8 +151,8 @@ function ResetPassword({ email }) {
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-600" />
                 <div>
-                  <p className="text-xs text-gray-600">Reset password for</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-[0.76rem] text-gray-600">Reset password for</p>
+                  <p className="text-[0.82rem] font-medium text-gray-900 truncate">
                     {email}
                   </p>
                 </div>
@@ -163,7 +163,7 @@ function ResetPassword({ email }) {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Verification Code - Visual Boxes */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-[0.82rem] font-medium text-gray-900 mb-2">
                 Verification Code
               </label>
 
@@ -185,7 +185,7 @@ function ResetPassword({ email }) {
                   <div
                     key={index}
                     onClick={focusHiddenInput}
-                    className={`w-12 h-12 flex items-center justify-center border rounded-md text-xl font-bold cursor-text transition-all ${otp.length === index
+                    className={`w-12 h-12 flex items-center justify-center border rounded-md text-[1.1rem] font-semibold cursor-text transition-all ${otp.length === index
                       ? "border-black ring-2 ring-black ring-opacity-20 bg-gray-50"
                       : otpDigits[index]
                         ? "border-gray-300 bg-white"
@@ -203,18 +203,18 @@ function ResetPassword({ email }) {
               </div>
 
               {errors.otp && (
-                <p className="text-red-600 text-xs mt-2 text-center">
+                <p className="text-red-600 text-[0.76rem] mt-2 text-center">
                   Please enter all 4 digits correctly
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-[0.76rem] text-gray-500 mt-2 text-center">
                 Click on any box and type 4-digit code
               </p>
             </div>
 
             {/* New Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
+              <label className="block text-[0.82rem] font-medium text-gray-900 mb-1">
                 New Password
               </label>
               <div className="relative">
@@ -222,7 +222,7 @@ function ResetPassword({ email }) {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.newPassword ? "border-red-500" : "border-gray-300"
+                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-[0.82rem] text-gray-900 placeholder-gray-500 bg-white ${errors.newPassword ? "border-red-500" : "border-gray-300"
                     } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   disabled={loading}
                   {...register("newPassword", {
@@ -247,18 +247,18 @@ function ResetPassword({ email }) {
                 </button>
               </div>
               {errors.newPassword && (
-                <p className="text-red-600 text-xs mt-1">
+                <p className="text-red-600 text-[0.76rem] mt-1">
                   {errors.newPassword.message}
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[0.76rem] text-gray-500 mt-1">
                 Must be at least 8 characters long
               </p>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
+              <label className="block text-[0.82rem] font-medium text-gray-900 mb-1">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -266,7 +266,7 @@ function ResetPassword({ email }) {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm text-gray-900 placeholder-gray-500 bg-white ${errors.confirmPassword
+                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-[0.82rem] text-gray-900 placeholder-gray-500 bg-white ${errors.confirmPassword
                     ? "border-red-500"
                     : newPassword === confirmPassword && confirmPassword
                       ? "border-green-500"
@@ -293,7 +293,7 @@ function ResetPassword({ email }) {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-600 text-xs mt-1">
+                <p className="text-red-600 text-[0.76rem] mt-1">
                   {errors.confirmPassword.message}
                 </p>
               )}
@@ -301,7 +301,7 @@ function ResetPassword({ email }) {
                 newPassword &&
                 confirmPassword &&
                 newPassword === confirmPassword && (
-                  <div className="flex items-center gap-1 text-green-600 text-xs mt-1">
+                  <div className="flex items-center gap-1 text-green-600 text-[0.76rem] mt-1">
                     <CheckCircle2 className="w-3 h-3" />
                     Passwords match
                   </div>
@@ -312,7 +312,7 @@ function ResetPassword({ email }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm mt-2"
+              className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-[0.82rem] mt-2"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -327,7 +327,7 @@ function ResetPassword({ email }) {
 
           {/* Security Note */}
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="flex items-center gap-2 text-[0.76rem] text-gray-600">
               <div className="w-4 h-4 flex items-center justify-center">
                 <Lock className="w-3 h-3 text-green-600" />
               </div>
@@ -353,10 +353,10 @@ function ResetPassword({ email }) {
             </div>
 
             <div className="mb-4">
-              <h3 className="font-bold text-gray-900 text-lg mb-2">
+              <h3 className="font-semibold text-gray-900 text-[0.9rem] mb-2">
                 Password Reset Complete!
               </h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-[0.82rem]">
                 Your password has been successfully reset. You can now login
                 with your new password.
               </p>
@@ -368,7 +368,7 @@ function ResetPassword({ email }) {
                   document.getElementById("success_modal")?.close();
                   document.getElementById("login_modal")?.showModal();
                 }}
-                className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition text-sm"
+                className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition text-[0.82rem]"
               >
                 Go to Login
               </button>
@@ -377,7 +377,7 @@ function ResetPassword({ email }) {
                 onClick={() =>
                   document.getElementById("success_modal")?.close()
                 }
-                className="w-full py-2.5 border border-gray-300 rounded-md font-medium hover:bg-gray-50 transition text-sm text-gray-700"
+                className="w-full py-2.5 border border-gray-300 rounded-md font-medium hover:bg-gray-50 transition text-[0.82rem] text-gray-700"
               >
                 Close
               </button>

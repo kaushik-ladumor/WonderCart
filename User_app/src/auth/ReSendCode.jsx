@@ -33,10 +33,10 @@
 //   return (
 //     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 //       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-//         <h2 className="mt-6 text-center text-3xl font-extrabold text-black">
+//         <h2 className="mt-6 text-center text-[1.5rem] font-extrabold text-black">
 //           Resend Verification Code
 //         </h2>
-//         <p className="mt-2 text-center text-sm text-gray-600">
+//         <p className="mt-2 text-center text-[0.82rem] text-gray-600">
 //           Enter your email to receive a new verification code
 //         </p>
 //       </div>
@@ -47,7 +47,7 @@
 //             <div>
 //               <label
 //                 htmlFor="email"
-//                 className="block text-sm font-medium text-gray-700"
+//                 className="block text-[0.82rem] font-medium text-gray-700"
 //               >
 //                 Email Address
 //               </label>
@@ -71,7 +71,7 @@
 //               <button
 //                 type="submit"
 //                 disabled={mutation.isPending}
-//                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+//                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-[0.82rem] font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
 //               >
 //                 {mutation.isPending ? (
 //                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -85,7 +85,7 @@
 //           <div className="mt-6 text-center">
 //             <Link
 //               to="/login"
-//               className="inline-flex items-center text-sm font-medium text-black hover:text-gray-800"
+//               className="inline-flex items-center text-[0.82rem] font-medium text-black hover:text-gray-800"
 //             >
 //               <ArrowLeft className="h-4 w-4 mr-1" />
 //               Back to login

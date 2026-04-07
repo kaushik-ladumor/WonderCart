@@ -1,17 +1,19 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   BarChart3,
-  Package,
-  ShoppingCart,
-  DollarSign,
-  User,
   Bell,
+  DollarSign,
+  Lock,
   LogOut,
   Menu,
-  X,
-  Lock,
+  Package,
   Percent,
+  Search,
+  ShoppingCart,
+  Store,
+  User,
+  X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useSocket } from "../context/SocketProvider";
@@ -20,7 +22,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const SellerNavbar = () => {
-  const { setAuthUser } = useAuth();
+  const { authUser, setAuthUser } = useAuth();
   const socket = useSocket();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -50,6 +52,21 @@ const SellerNavbar = () => {
   };
 
   const isProfileActive = profileStatus === "active";
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const sellerName = useMemo(() => {
+    const rawName =
+      authUser?.username ||
+      authUser?.name ||
+      authUser?.fullName ||
+      authUser?.displayName ||
+      authUser?.email?.split("@")[0];
+
+    return rawName || "Seller";
+  }, [authUser]);
+
+  const sellerEmail = authUser?.email || "seller@wondercart.com";
+  const sellerInitial = sellerName.charAt(0).toUpperCase();
 
   const navItems = [
     { path: "/seller/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -82,7 +99,6 @@ const SellerNavbar = () => {
     fetchNotifications();
   }, [socket]);
 
-
   useEffect(() => {
     if (!socket) return;
 
@@ -112,7 +128,6 @@ const SellerNavbar = () => {
       socket.off("notification", handleNewNotification);
     };
   }, [socket]);
-
 
   const fetchNotifications = async () => {
     const token = localStorage.getItem("token");
@@ -217,265 +232,339 @@ const SellerNavbar = () => {
     }
   };
 
+  const handleNavClick = (event, isLocked, onSuccess) => {
+    if (isLocked) {
+      event.preventDefault();
+      toast.error("Complete your profile to unlock this feature");
+      return;
+    }
+
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
+
+  const notificationPanel = showDropdown ? (
+    <div className="absolute right-0 top-[calc(100%+14px)] z-[100] w-[min(92vw,380px)] overflow-hidden rounded-[24px] border border-[#e5e9f5] bg-white shadow-[0_28px_60px_rgba(18,36,84,0.14)]">
+      <div className="flex items-center justify-between border-b border-[#eef1f7] px-5 py-4">
+        <div>
+          <h3 className="text-sm font-semibold text-[#1a2238]">Notifications</h3>
+          <p className="mt-0.5 text-xs text-[#75819d]">
+            {unreadCount > 0 ? `${unreadCount} new update${unreadCount > 1 ? "s" : ""}` : "All caught up"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllRead}
+              className="text-xs font-medium text-[#2156d8] transition hover:text-[#173d99]"
+            >
+              Mark all read
+            </button>
+          )}
+          {notifications.length > 0 && (
+            <button
+              onClick={clearAll}
+              className="text-xs font-medium text-[#7a849b] transition hover:text-[#1a2238]"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="custom-scrollbar max-h-80 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="px-5 py-12 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#eef2ff]">
+              <Bell className="h-6 w-6 text-[#6c7896]" />
+            </div>
+            <p className="mt-4 text-sm font-semibold text-[#1a2238]">No new notifications</p>
+            <p className="mt-1 text-xs text-[#75819d]">Order updates will appear here.</p>
+          </div>
+        ) : (
+          notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`group border-b border-[#f0f2f8] px-5 py-4 last:border-b-0 ${
+                notification.read ? "bg-white" : "bg-[#f7f9ff]"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <span
+                  className={`mt-1.5 h-2.5 w-2.5 rounded-full ${
+                    notification.read ? "bg-[#d4daec]" : "bg-[#2156d8]"
+                  }`}
+                />
+                <div
+                  className="min-w-0 flex-1 cursor-pointer"
+                  onClick={() => markOneRead(notification.id)}
+                >
+                  <p className="text-sm leading-6 text-[#1a2238]">{notification.message}</p>
+                  <p className="mt-1 text-xs text-[#7b859d]">{notification.time}</p>
+                </div>
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    deleteNotification(notification.id);
+                  }}
+                  className="rounded-full p-1.5 text-[#9da6bb] opacity-0 transition group-hover:bg-[#eef2ff] group-hover:opacity-100 group-hover:text-[#4e5a77]"
+                  aria-label="Dismiss notification"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  ) : null;
+
   return (
     <>
-      <nav className="bg-black text-white sticky top-0 z-50 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            <div className="flex items-center flex-shrink-0">
-              <Link
-                to="/seller/dashboard"
-                className="text-lg sm:text-xl md:text-2xl font-bold tracking-wide hover:text-gray-300 transition flex items-center gap-2"
-              >
-                <div className="p-1.5 bg-white rounded-lg">
-                  <ShoppingCart className="w-4 h-4 text-black" />
-                </div>
-                <span>Seller Hub</span>
-              </Link>
-            </div>
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-[272px] lg:flex-col lg:border-r lg:border-[#e4e8f5] lg:bg-white lg:px-6 lg:py-6">
+        <Link
+          to="/seller/dashboard"
+          className="flex items-center gap-3 px-2 py-1"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#e8eeff]">
+            <Store className="h-[18px] w-[18px] text-[#2156d8]" />
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7c88a3]">
+              Seller
+            </p>
+            <p className="text-[16px] font-semibold leading-none text-[#1a2238]">
+              WonderCart
+            </p>
+            <p className="text-[18px] font-semibold leading-none text-[#2156d8]">
+              Hub
+            </p>
+          </div>
+        </Link>
 
-            <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPath === item.path;
-                const isLocked = !isProfileActive && item.path !== "/seller/dashboard" && item.path !== "/seller/profile";
+        <div className="mt-7 flex-1">
+          <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#99a3ba]">
+            Management
+          </p>
+          <nav className="mt-4 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPath === item.path;
+              const isLocked =
+                !isProfileActive &&
+                item.path !== "/seller/dashboard" &&
+                item.path !== "/seller/profile";
 
-                return (
-                  <div key={item.path} className="relative group">
-                    <Link
-                      to={isLocked ? "#" : item.path}
-                      onClick={(e) => {
-                        if (isLocked) {
-                          e.preventDefault();
-                          toast.error("Complete your profile to unlock this feature");
-                        }
-                      }}
-                      className={`text-sm flex items-center gap-2 transition-colors ${isActive ? "text-white font-bold underline underline-offset-8 decoration-2" : "text-gray-300 hover:text-white"
-                        } ${isLocked ? "opacity-50 cursor-not-allowed" : ""}`}
+              return (
+                <Link
+                  key={item.path}
+                  to={isLocked ? "#" : item.path}
+                  onClick={(event) => handleNavClick(event, isLocked)}
+                  className={`relative flex items-center justify-between rounded-[20px] px-4 py-3 ${
+                    isActive
+                      ? "bg-[#f7f9ff] text-[#2156d8]"
+                      : "text-[#62708c]"
+                  } ${isLocked ? "opacity-55" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-[18px] w-[18px]" />
+                    <span
+                      className={`text-[14px] font-medium ${
+                        isActive ? "underline underline-offset-[6px] decoration-2" : ""
+                      }`}
                     >
-                      <Icon className="w-4 h-4" />
                       {item.label}
-                      {isLocked && <Lock className="w-3 h-3 text-gray-500" />}
-                    </Link>
+                    </span>
                   </div>
-                );
-              })}
+                  {isLocked ? <Lock className="h-4 w-4 text-[#8f99b1]" /> : null}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="border-t border-[#edf0f7] px-2 pt-4">
+          <div className="flex items-center gap-3 rounded-[20px] border border-[#e8edf7] bg-white px-4 py-3.5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#2156d8] text-sm font-semibold text-white">
+              {sellerInitial}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-semibold text-[#1a2238]">{sellerName}</p>
+              <p className="truncate text-[11px] text-[#7c879e]">{sellerEmail}</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#d9e1f2] bg-white px-4 py-3 text-[14px] font-medium text-[#1a2238]"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <header className="fixed inset-x-0 top-0 z-30 lg:left-[272px]">
+        <div className="border-b border-[#e4e8f5] bg-[#f5f6ff]/95 backdrop-blur">
+          <div className="flex h-[76px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#dfe4f4] bg-white text-[#1a2238] transition hover:bg-[#f7f9ff] lg:hidden"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
+              <div className="hidden items-center gap-3 rounded-2xl border border-[#dfe4f4] bg-[#eef1ff] px-4 py-3 md:flex md:min-w-[300px] lg:min-w-[380px]">
+                <Search className="h-4 w-4 text-[#69758f]" />
+                <span className="text-sm text-[#69758f]">Search orders, products...</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => setShowDropdown(!showDropdown)}
-                  className="p-2 hover:bg-gray-900 rounded-lg transition-all duration-300 relative group"
+                  onClick={() => setShowDropdown((prev) => !prev)}
+                  className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-[#dfe4f4] bg-white text-[#55627e] transition hover:border-[#cbd4e8] hover:text-[#1a2238]"
                   aria-label="Notifications"
                 >
-                  <Bell className={`w-5 h-5 text-gray-400 group-hover:text-white transition-all duration-300 ${notifications.some(n => !n.read) ? 'animate-[pulse_2s_infinite]' : ''}`} />
-                  {notifications.filter((n) => !n.read).length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 min-w-[17px] h-[17px] px-1 bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-black">
-                      {notifications.filter((n) => !n.read).length > 9
-                        ? "9+"
-                        : notifications.filter((n) => !n.read).length}
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute right-2 top-2 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#cf2d2d] px-1 text-[10px] font-semibold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </button>
-
-                {showDropdown && (
-                  <div className="fixed sm:absolute top-16 sm:top-auto left-4 right-4 sm:left-auto sm:right-0 mt-2 sm:mt-4 w-auto sm:w-[380px] bg-white/95 backdrop-blur-xl text-black border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                    {/* Arrow Pointer - Hidden on Mobile */}
-                    <div className="hidden sm:block absolute -top-1.5 right-4 w-3 h-3 bg-white border-t border-l border-gray-100 transform rotate-45" />
-
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100/60 relative z-10">
-                      <div>
-                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">
-                          Notifications
-                        </h3>
-                        {notifications.some(n => !n.read) && (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="flex h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse"></span>
-                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">
-                              {notifications.filter(n => !n.read).length} New
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {notifications.filter((n) => !n.read).length > 0 && (
-                          <button
-                            onClick={markAllRead}
-                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            Mark all read
-                          </button>
-                        )}
-                        {notifications.length > 0 && (
-                          <button
-                            onClick={clearAll}
-                            className="text-xs text-gray-500 hover:text-gray-700"
-                          >
-                            Clear all
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="max-h-80 overflow-y-auto custom-scrollbar">
-                      {notifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center px-4 py-12">
-                          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <Bell className="w-8 h-8 text-gray-300" />
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900">
-                            Clear skies!
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            You're all up to date with your orders.
-                          </p>
-                        </div>
-                      ) : (
-                        notifications.map((n) => (
-                          <div
-                            key={n.id}
-                            className={`group relative px-5 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50 transition-all duration-200 ${n.read ? "bg-white" : "bg-blue-50/30"
-                              }`}
-                          >
-                            <div className="flex items-start gap-4">
-                              <div
-                                className={`mt-2 w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-transparent" : "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
-                                  }`}
-                              />
-                              <div
-                                className="flex-1 cursor-pointer"
-                                onClick={() => markOneRead(n.id)}
-                              >
-                                <p className={`text-sm leading-relaxed ${n.read ? "text-gray-600" : "text-gray-900 font-medium"}`}>
-                                  {n.message}
-                                </p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-[11px] text-gray-400 font-medium tracking-wide">
-                                    {n.time}
-                                  </span>
-                                  {!n.read && (
-                                    <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                                  )}
-                                  {!n.read && (
-                                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">
-                                      New
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteNotification(n.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-gray-200 rounded-md transition-all duration-200 text-gray-400 hover:text-gray-600"
-                                aria-label="Dismiss"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
+                {notificationPanel}
               </div>
 
-              <div className="hidden lg:flex items-center gap-3 border-l border-gray-800 pl-4">
-                <button
-                  onClick={handleLogout}
-                  className="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition"
-                >
-                  Logout
-                </button>
-              </div>
-
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 hover:bg-gray-900 rounded-lg transition"
-                aria-label="Menu"
+              <Link
+                to="/seller/profile"
+                className="hidden items-center gap-3 rounded-2xl border border-[#dfe4f4] bg-white px-4 py-2.5 text-[#1a2238] transition hover:border-[#cbd4e8] hover:bg-[#f7f9ff] sm:flex"
               >
-                <Menu className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Sidebar Overlay */}
-        <div
-          className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 lg:hidden ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-            }`}
-          onClick={() => setMobileMenuOpen(false)}
-        />
-
-        {/* Mobile Sidebar Content */}
-        <div
-          className={`fixed top-0 left-0 w-[280px] h-full bg-white z-[60] transform transition-transform duration-300 ease-in-out lg:hidden ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-        >
-          <div className="flex flex-col h-full text-black">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-black text-white">
-              <span className="text-xl font-bold tracking-tight">Seller Hub</span>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:bg-gray-900 rounded-lg">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto py-4 bg-white">
-              <div className="px-4 mb-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Management</p>
-                <div className="space-y-1">
-                    {navItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = currentPath === item.path;
-                      const isLocked = !isProfileActive && item.path !== "/seller/dashboard" && item.path !== "/seller/profile";
-                      
-                      return (
-                        <Link
-                          key={item.path}
-                          to={isLocked ? "#" : item.path}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition ${isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-50"
-                            } ${isLocked ? "opacity-50" : ""}`}
-                          onClick={(e) => {
-                            if (isLocked) {
-                              e.preventDefault();
-                              toast.error("Complete your profile to unlock this feature");
-                            } else {
-                              setMobileMenuOpen(false);
-                            }
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon className="w-5 h-5" />
-                            {item.label}
-                          </div>
-                          {isLocked && <Lock className="w-4 h-4 text-gray-400" />}
-                        </Link>
-                      )
-                    })}
+                <div className="text-right">
+                  <p className="text-sm font-medium">Merchant Dashboard</p>
+                  <p className="text-xs text-[#7b859d]">Manage your store</p>
                 </div>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-gray-100 bg-gray-50">
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eef2ff] text-sm font-semibold text-[#2156d8]">
+                  {sellerInitial}
+                </div>
+              </Link>
             </div>
           </div>
         </div>
-      </nav>
-      <div className="h-16" />
+      </header>
+
+      <div
+        className={`fixed inset-0 z-40 bg-[#121826]/30 lg:hidden ${
+          mobileMenuOpen ? "visible opacity-100" : "invisible opacity-0"
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      <div
+        className={`fixed inset-y-0 left-0 z-50 flex w-[288px] flex-col bg-white px-6 py-6 lg:hidden ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <Link
+            to="/seller/dashboard"
+            className="flex items-center gap-3"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#e8eeff]">
+              <Store className="h-[18px] w-[18px] text-[#2156d8]" />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7c88a3]">
+                Seller
+              </p>
+              <p className="text-[16px] font-semibold leading-none text-[#1a2238]">WonderCart</p>
+              <p className="text-[18px] font-semibold leading-none text-[#2156d8]">Hub</p>
+            </div>
+          </Link>
+
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#dfe4f4] bg-[#f7f8ff] text-[#1a2238]"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="mt-7">
+          <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#99a3ba]">
+            Management
+          </p>
+          <nav className="mt-4 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPath === item.path;
+              const isLocked =
+                !isProfileActive &&
+                item.path !== "/seller/dashboard" &&
+                item.path !== "/seller/profile";
+
+              return (
+                <Link
+                  key={item.path}
+                  to={isLocked ? "#" : item.path}
+                  onClick={(event) =>
+                    handleNavClick(event, isLocked, () => setMobileMenuOpen(false))
+                  }
+                  className={`flex items-center justify-between rounded-[20px] px-4 py-3 ${
+                    isActive
+                      ? "bg-[#f7f9ff] text-[#2156d8]"
+                      : "text-[#62708c]"
+                  } ${isLocked ? "opacity-55" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-[18px] w-[18px]" />
+                    <span
+                      className={`text-[14px] font-medium ${
+                        isActive ? "underline underline-offset-[6px] decoration-2" : ""
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                  {isLocked && <Lock className="h-4 w-4 text-[#8f99b1]" />}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="mt-auto border-t border-[#edf0f7] pt-4">
+          <div className="rounded-[20px] border border-[#e8edf7] bg-white px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#2156d8] text-sm font-semibold text-white">
+                {sellerInitial}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-semibold text-[#1a2238]">{sellerName}</p>
+                <p className="truncate text-[11px] text-[#7c879e]">{sellerEmail}</p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              handleLogout();
+            }}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#d9e1f2] bg-white px-4 py-3 text-[14px] font-medium text-[#1a2238]"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
+        </div>
+      </div>
     </>
   );
 };

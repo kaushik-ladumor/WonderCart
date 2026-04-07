@@ -160,10 +160,10 @@ function Login() {
             <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
               Welcome Back
             </span>
-            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+            <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
               Sign In
             </h3>
-            <p className="text-xs text-[#5c6880] mt-1 mb-5">
+            <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5">
               Access your curation and orders.
             </p>
           </div>
@@ -181,7 +181,7 @@ function Login() {
                   <input
                     type="email"
                     placeholder="name@example.com"
-                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
                     disabled={disabled}
                     {...register("email", {
                       required: "Email is required",
@@ -193,7 +193,7 @@ function Login() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.email.message}</p>
+                  <p className="text-red-500 text-[10px] font-semibold mt-1 ml-1">{errors.email.message}</p>
                 )}
               </div>
 
@@ -211,7 +211,7 @@ function Login() {
                         navigate("/forgot-password");
                       }
                     }}
-                    className="text-[10px] uppercase tracking-widest font-bold text-[#004ac6] hover:underline"
+                    className="text-[10px] uppercase tracking-widest font-semibold text-[#004ac6] hover:underline"
                   >
                     Forgot?
                   </button>
@@ -221,7 +221,7 @@ function Login() {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
                     disabled={disabled}
                     {...register("password", {
                       required: "Password is required",
@@ -237,7 +237,7 @@ function Login() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.password.message}</p>
+                  <p className="text-red-500 text-[10px] font-semibold mt-1 ml-1">{errors.password.message}</p>
                 )}
               </div>
 
@@ -245,7 +245,7 @@ function Login() {
               <button
                 type="submit"
                 disabled={disabled}
-                className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform mt-2 disabled:opacity-50 shadow-lg shadow-blue-500/10 active:scale-95"
+                className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl h-12 text-[0.76rem] uppercase tracking-widest hover:scale-[1.02] transition-transform mt-2 disabled:opacity-50 shadow-lg shadow-blue-500/10 active:scale-95"
               >
                 {disabled ? "Processing..." : "Sign In to Dashboard"}
               </button>
@@ -257,7 +257,7 @@ function Login() {
             {/* Divider */}
             <div className="flex items-center mb-6">
               <div className="flex-grow h-px bg-[#f0f4ff]"></div>
-              <span className="px-4 text-[10px] uppercase tracking-widest text-[#5c6880] font-bold opacity-60">Social Verification</span>
+              <span className="px-4 text-[10px] uppercase tracking-widest text-[#5c6880] font-semibold opacity-60">Social Verification</span>
               <div className="flex-grow h-px bg-[#f0f4ff]"></div>
             </div>
 
@@ -266,7 +266,7 @@ function Login() {
               type="button"
               onClick={signInWithGoogle}
               disabled={disabled}
-              className="w-full flex items-center justify-center gap-3 bg-white border border-[#e1e8fd] rounded-xl h-11 text-xs font-bold uppercase tracking-widest text-[#141b2d] hover:bg-[#f0f4ff] transition-all disabled:opacity-50 active:scale-95"
+              className="w-full flex items-center justify-center gap-3 bg-white border border-[#e1e8fd] rounded-xl h-11 text-[0.76rem] font-semibold uppercase tracking-widest text-[#141b2d] hover:bg-[#f0f4ff] transition-all disabled:opacity-50 active:scale-95"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -279,7 +279,7 @@ function Login() {
 
             {/* Signup Footer */}
             <div className="mt-6 text-center">
-              <p className="text-[10px] uppercase tracking-widest font-bold text-[#5c6880]">
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">
                 New curator?{" "}
                 <button
                   type="button"

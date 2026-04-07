@@ -58,7 +58,7 @@ const TopSellers = () => {
   if (error) {
     return (
        <div className="flex flex-col items-center justify-center min-h-[60vh] bg-[#f8f9fc]">
-         <p className="text-red-500 font-bold mb-4">Error loading top sellers.</p>
+         <p className="text-red-500 font-semibold mb-4">Error loading top sellers.</p>
          <button onClick={() => window.location.reload()} className="px-6 py-2 bg-[#0f49d7] text-white rounded-lg">Retry</button>
        </div>
     );
@@ -71,13 +71,13 @@ const TopSellers = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div>
-            <span className="text-[10px] font-bold text-[#0f49d7] uppercase tracking-[0.15em] block mb-3">
+            <span className="text-[10px] font-semibold text-[#0f49d7] uppercase tracking-[0.16em] block mb-3">
               Premium Marketplace
             </span>
-            <h1 className="text-[1.55rem] font-semibold tracking-tight sm:text-[1.8rem] text-[#11182d] mb-2">
+            <h1 className="text-[1.5rem] sm:text-[1.8rem] font-semibold tracking-tight text-[#11182d] mb-2">
               Top Sellers
             </h1>
-            <p className="text-[0.82rem] text-[#42506d] max-w-lg">
+            <p className="text-[0.82rem] text-[#42506d] max-w-lg leading-relaxed font-medium">
               A real-time curation of the highest-velocity products across our premium vendor network. Updated hourly based on global demand.
             </p>
           </div>
@@ -87,8 +87,8 @@ const TopSellers = () => {
               <Clock className="w-5 h-5" />
             </div>
             <div className="pr-4">
-              <p className="text-[9px] font-bold text-[#5c6880] uppercase tracking-[0.1em]">Refreshed In</p>
-              <p className="text-lg font-bold text-[#11182d] leading-none">
+              <p className="text-[9px] font-semibold text-[#5c6880] uppercase tracking-[0.1em]">Refreshed In</p>
+              <p className="text-[0.9rem] font-semibold text-[#11182d] leading-none">
                 {formatTime(nextRefresh)}
               </p>
             </div>
@@ -104,7 +104,7 @@ const TopSellers = () => {
                 <button
                   key={idx}
                   onClick={() => setActiveCategory(cat)}
-                  className={`whitespace-nowrap flex items-center gap-2 px-5 py-2.5 rounded-full text-[0.76rem] font-medium transition-colors ${
+                  className={`whitespace-nowrap flex items-center gap-2 px-5 py-2.5 rounded-full text-[0.76rem] font-semibold transition-colors uppercase tracking-wider ${
                     isActive 
                       ? "bg-[#0f49d7] text-white" 
                       : "bg-white text-[#42506d] border border-[#eef2ff] hover:bg-[#f6f8fd]"
@@ -119,7 +119,7 @@ const TopSellers = () => {
           
           <div className="flex items-center gap-2 text-[0.76rem] text-[#42506d] whitespace-nowrap">
             <span>Sort by:</span>
-            <span className="font-bold text-[#141b2d]">Trending Velocity</span>
+            <span className="font-semibold text-[#141b2d]">Trending Velocity</span>
             <TrendingUp className="w-3.5 h-3.5" />
           </div>
         </div>
@@ -167,7 +167,7 @@ const TopSellers = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold text-[#11182d] text-[0.88rem]">Recalculated Hourly</h4>
-                  <p className="text-[#5d6a84] text-[0.74rem]">Rankings are determined by sales volume, user ratings, and stock availability.</p>
+                  <p className="text-[#5d6a84] text-[0.74rem] font-medium uppercase tracking-tight">Rankings are determined by sales volume, user ratings, and stock availability.</p>
                 </div>
               </div>
               <button className="bg-white px-4 py-2 rounded-lg text-[0.74rem] font-semibold text-[#11182d] border border-white shadow-sm whitespace-nowrap">
@@ -185,7 +185,7 @@ const TopSellers = () => {
                    <TrendingUp className="w-5 h-5 text-white" />
                    <h3 className="font-semibold text-[1.1rem] text-white">Live Ranking</h3>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest bg-white/10 px-2.5 py-1 rounded-md text-white/70">Real-time</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest bg-white/10 px-2.5 py-1 rounded-md text-white/70">Real-time</span>
               </div>
               
               {/* Simplified Bar Chart visualization */}
@@ -202,12 +202,12 @@ const TopSellers = () => {
                 {rising.slice(0, 3).map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between">
                     <div>
-                      <p className="text-[0.76rem] font-bold">#{idx + 4} {item.productName}</p>
+                      <p className="text-[0.76rem] font-semibold">#{idx + 4} {item.productName}</p>
                       <p className="text-[10px] text-white/50 uppercase tracking-tight">{item.category}</p>
                     </div>
                     <div className="flex items-center gap-1 text-[#10b981]">
                       <TrendingUp className="w-3 h-3" />
-                      <span className="text-[10px] font-bold">+{Math.floor(Math.random() * 100) + 1}</span>
+                      <span className="text-[10px] font-semibold">+{Math.floor(Math.random() * 100) + 1}</span>
                     </div>
                   </div>
                 ))}
@@ -229,7 +229,7 @@ const TopSellers = () => {
                     className="w-full flex items-center justify-between p-3.5 bg-[#f8f9fd] hover:bg-[#f0f4ff] rounded-[16px] group transition-colors"
                   >
                     <div className="text-left">
-                      <p className="text-[0.82rem] font-bold text-[#141b2d]">{cat.category}</p>
+                      <p className="text-[0.82rem] font-semibold text-[#141b2d]">{cat.category}</p>
                       <p className="text-[10px] text-[#5c6880]">{Math.floor(Math.random() * 50) + 10} items for the season</p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-[#b0b8cb] group-hover:text-[#0f49d7]" />

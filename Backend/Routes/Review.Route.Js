@@ -8,7 +8,9 @@ const {
   deleteReview,
   checkEligibility,
   voteHelpful,
-  reportReview
+  reportReview,
+  getMyReviews,
+  updateReview
 } = require("../Controllers/Review.Controller");
 const Authorization = require("../Middlewares/Auth");
 
@@ -16,7 +18,9 @@ ReviewRouter.post("/add", Authorization, requireVerification, addReview);
 ReviewRouter.get("/check-eligibility", Authorization, checkEligibility);
 ReviewRouter.post("/helpful/:reviewId", Authorization, voteHelpful);
 ReviewRouter.post("/report/:reviewId", Authorization, reportReview);
+ReviewRouter.get("/my-reviews", Authorization, getMyReviews);
 ReviewRouter.get("/:id", getReview);
+ReviewRouter.put("/:reviewId", Authorization, updateReview);
 ReviewRouter.delete("/:reviewId", Authorization, deleteReview);
 
 module.exports = ReviewRouter;

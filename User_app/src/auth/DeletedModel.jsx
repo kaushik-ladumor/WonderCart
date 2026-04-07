@@ -159,10 +159,10 @@ const DeleteModal = ({ isOpen, onClose }) => {
           <span className="text-[10px] uppercase tracking-[0.15em] text-[#ef4444] font-semibold block mb-1">
             DANGER ZONE
           </span>
-          <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+          <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
             Delete Account
           </h3>
-          <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed px-4">
+          <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5 leading-relaxed px-4">
             This action is irreversible and all your data will be permanently removed.
           </p>
         </div>
@@ -179,7 +179,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                     <p className="text-[10px] font-black uppercase tracking-widest mb-1">
                       Active Orders Found
                     </p>
-                    <p className="text-[11px] leading-relaxed opacity-90">
+                    <p className="text-[10px] leading-relaxed opacity-90">
                       {getStatusText(orderDetails?.status)}
                     </p>
                   </div>
@@ -190,7 +190,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                 <p className="text-[10px] font-black text-[#141b2d] uppercase tracking-widest mb-3">
                   Next Steps:
                 </p>
-                <ul className="text-[11px] text-[#5c6880] space-y-2 leading-relaxed">
+                <ul className="text-[10px] text-[#5c6880] space-y-2 leading-relaxed">
                   {getActionSteps(orderDetails?.status).map((step, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5" />
@@ -207,7 +207,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                     setOrderDetails(null);
                     navigate("/orders");
                   }}
-                  className="w-full bg-[#141b2d] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-black/10 active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full bg-[#141b2d] text-white font-semibold rounded-xl h-12 text-[0.76rem] uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-black/10 active:scale-95 flex items-center justify-center gap-2"
                 >
                   <Package className="w-4 h-4" />
                   Manage Orders
@@ -218,7 +218,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                     setOrderDetails(null);
                     setDeleteConfirm("");
                   }}
-                  className="w-full h-10 bg-transparent text-[#5c6880] rounded-xl text-[10px] font-bold uppercase tracking-widest hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-all"
+                  className="w-full h-10 bg-transparent text-[#5c6880] rounded-xl text-[10px] font-semibold uppercase tracking-widest hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-all"
                 >
                   DISMISS
                 </button>
@@ -230,7 +230,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                 <p className="text-[10px] font-black text-[#ef4444] uppercase tracking-widest mb-3">
                   Affected Data:
                 </p>
-                <ul className="text-[11px] text-[#5c6880] space-y-2 leading-relaxed font-medium">
+                <ul className="text-[10px] text-[#5c6880] space-y-2 leading-relaxed font-medium">
                   {["Reviews & Ratings", "Cart & Wishlist", "Profile & Preferences", "Order History"].map((item, i) => (
                     <li key={i} className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
@@ -250,7 +250,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                     value={deleteConfirm}
                     onChange={(e) => setDeleteConfirm(e.target.value.toUpperCase())}
                     placeholder="TYPE HERE..."
-                    className="bg-transparent w-full text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold uppercase tracking-widest"
+                    className="bg-transparent w-full text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-semibold uppercase tracking-widest"
                     disabled={isDeleting}
                     autoComplete="off"
                   />
@@ -261,7 +261,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
                 <button
                   onClick={handleDeleteAccount}
                   disabled={isDeleting || deleteConfirm !== "DELETE"}
-                  className="w-full bg-[#ef4444] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-red-500/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-[#ef4444] text-white font-semibold rounded-xl h-12 text-[0.76rem] uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-red-500/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isDeleting ? "PROCESSING..." : "CONFIRM DELETION"}
                 </button>

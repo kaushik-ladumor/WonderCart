@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Star, Package, Edit, Eye, Trash2 } from "lucide-react";
+import { Star, Package, Edit, Eye, Trash2, Tag } from "lucide-react";
+
+const RUPEE = "\u20B9";
 
 const ProductCard = ({ product, onDelete, deleteLoading }) => {
   const getTotalStock = (variants) => {
@@ -13,149 +15,147 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
     );
   };
 
-  const getProductImage = (variants) => {
-    return (
-      variants?.[0]?.images?.[0] ||
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80"
-    );
-  };
+  const getProductImage = (variants) =>
+    variants?.[0]?.images?.[0] ||
+    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80";
 
   const getPriceRange = (variants) => {
-    if (!variants?.length) return "₹0";
+    if (!variants?.length) return `${RUPEE}0`;
 
     const allPrices = variants
-      .flatMap((v) => v.sizes?.map((s) => s.sellingPrice || 0) || [0])
-      .filter((p) => p > 0);
+      .flatMap((variant) => variant.sizes?.map((size) => size.sellingPrice || 0) || [0])
+      .filter((price) => price > 0);
 
-    if (allPrices.length === 0) return "₹0";
+    if (!allPrices.length) return `${RUPEE}0`;
 
     const minPrice = Math.min(...allPrices);
     const maxPrice = Math.max(...allPrices);
 
     return minPrice === maxPrice
-      ? `₹${minPrice.toLocaleString()}`
-      : `₹${minPrice.toLocaleString()} - ₹${maxPrice.toLocaleString()}`;
+      ? `${RUPEE}${minPrice.toLocaleString()}`
+      : `${RUPEE}${minPrice.toLocaleString()} - ${RUPEE}${maxPrice.toLocaleString()}`;
   };
 
   const stock = getTotalStock(product.variants);
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 5;
+  const hasMultipleColors = product.variants?.length > 1;
+
+  const statusClasses = isOutOfStock
+    ? "bg-[#fef0f0] text-[#d14343]"
+    : isLowStock
+      ? "bg-[#fff4e8] text-[#c77719]"
+      : "bg-[#ebf8ef] text-[#18794e]";
 
   return (
-    <div className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition duration-200">
-      {/* Image Section */}
-      <Link to={`/seller/products/${product._id}`} className="block relative">
-        <div className="aspect-square overflow-hidden">
-          <img
-            src={getProductImage(product.variants)}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+    <div className="overflow-hidden rounded-[24px] border border-[#e3e8ff] bg-white">
+      <Link
+        to={`/seller/products/${product._id}`}
+        className="relative block aspect-square overflow-hidden bg-[#f6f8ff]"
+      >
+        <img
+          src={getProductImage(product.variants)}
+          alt={product.name}
+          className="h-full w-full object-cover"
+        />
+
+        <div className="absolute left-3 top-3 flex flex-col gap-2">
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${statusClasses}`}
+          >
+            {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Active"}
+          </span>
         </div>
 
-        {/* Status & Stock Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
-          {isOutOfStock ? (
-            <span className="px-2 py-1 bg-gray-600 text-white text-[10px] font-bold uppercase rounded shadow-sm">
-              Out of Stock
-            </span>
-          ) : isLowStock ? (
-            <span className="px-2 py-1 bg-orange-500 text-white text-[10px] font-bold uppercase rounded shadow-sm">
-              Low Stock
-            </span>
-          ) : (
-            <span className="px-2 py-1 bg-green-600 text-white text-[10px] font-bold uppercase rounded shadow-sm">
-              Active
-            </span>
-          )}
-        </div>
-
-        {/* Variant Count Badge */}
-        {product.variants?.length > 0 && (
-          <div className="absolute top-2 right-2">
-            <span className="px-2 py-1 bg-black/70 text-white text-xs font-medium rounded backdrop-blur-sm">
+        {hasMultipleColors && (
+          <div className="absolute right-3 top-3">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/92 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#55617f]">
+              <Tag className="h-3 w-3" />
               {product.variants.length} colors
             </span>
           </div>
         )}
       </Link>
 
-      {/* Content Section */}
-      <div className="p-4">
-        {/* Category & Name */}
-        <div className="mb-3">
-          <p className="text-xs text-gray-500 uppercase tracking-wide truncate">
-            {product.category || "Uncategorized"}
-          </p>
+      <div className="space-y-3.5 p-4">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.26em] text-[#96a2c2]">
+              {product.category || "Uncategorized"}
+            </p>
+            <div className="inline-flex items-center gap-1 rounded-full bg-[#f5f7ff] px-2.5 py-1 text-[10px] font-semibold text-[#202a42]">
+              <Star className="h-3 w-3 fill-[#f2b63d] text-[#f2b63d]" />
+              {product.averageRating?.toFixed(1) || "0.0"}
+            </div>
+          </div>
+
           <Link to={`/seller/products/${product._id}`}>
-            <h3 className="text-sm font-medium text-gray-900 line-clamp-2 hover:text-gray-700 transition mt-1">
+            <h3 className="line-clamp-2 text-[14px] font-semibold leading-5 text-[#11182d]">
               {product.name}
             </h3>
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600 flex items-center gap-1">
-              <Package className="w-3 h-3" />
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="rounded-2xl border border-[#e7ebff] bg-[#f7f8ff] px-3 py-2.5">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#97a2c2]">
               Stock
-            </span>
-            <span
-              className={`font-medium ${isOutOfStock
-                ? "text-red-600"
-                : isLowStock
-                  ? "text-amber-600"
-                  : "text-green-600"
+            </p>
+            <div className="flex items-center gap-1.5">
+              <Package className="h-3.5 w-3.5 text-[#7481a2]" />
+              <p
+                className={`text-[13px] font-semibold ${
+                  isOutOfStock
+                    ? "text-[#d14343]"
+                    : isLowStock
+                      ? "text-[#c77719]"
+                      : "text-[#18794e]"
                 }`}
-            >
-              {stock} units
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Price Range</span>
-            <span className="font-medium text-gray-900">
-              {getPriceRange(product.variants)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Rating</span>
-            <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span className="font-medium text-gray-900">
-                {product.averageRating?.toFixed(1) || "0.0"}
-              </span>
+              >
+                {stock} units
+              </p>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#e7ebff] bg-[#f7f8ff] px-3 py-2.5">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#97a2c2]">
+              Price
+            </p>
+            <p className="truncate text-[13px] font-semibold text-[#11182d]">
+              {getPriceRange(product.variants)}
+            </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-3 border-t border-gray-100">
+        <div className="grid grid-cols-3 gap-2 border-t border-[#edf1ff] pt-3.5">
           <Link
             to={`/seller/products/edit/${product._id}`}
-            className="flex-1 px-3 py-1.5 bg-gray-900 text-white text-xs rounded hover:bg-gray-800 transition flex items-center justify-center gap-1"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-[#2f5fe3] px-3 py-2.5 text-[11px] font-semibold text-white"
           >
-            <Edit className="w-3 h-3" />
+            <Edit className="h-3.5 w-3.5" />
             Edit
           </Link>
+
           <Link
             to={`/seller/products/${product._id}`}
-            className="flex-1 px-3 py-1.5 border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50 transition flex items-center justify-center gap-1"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-[#d7def7] bg-white px-3 py-2.5 text-[11px] font-semibold text-[#4b587a]"
           >
-            <Eye className="w-3 h-3" />
+            <Eye className="h-3.5 w-3.5" />
             Details
           </Link>
+
           <button
             onClick={() => onDelete(product._id)}
             disabled={deleteLoading?.[product._id]}
-            className="px-3 py-1.5 border border-red-300 text-red-600 text-xs rounded hover:bg-red-50 transition flex items-center justify-center gap-1 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-[#f1c9c9] bg-white px-3 py-2.5 text-[11px] font-semibold text-[#d14343] disabled:opacity-60"
           >
             {deleteLoading?.[product._id] ? (
-              <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#d14343] border-t-transparent" />
             ) : (
-              <Trash2 className="w-3 h-3" />
+              <>
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </>
             )}
           </button>
         </div>

@@ -452,6 +452,25 @@ const updateProduct = async (req, res) => {
 
     await product.save();
 
+    // ✅ Emit real-time updates for stock and price
+    if (global.io) {
+      global.io.emit("stock-update", {
+        productId: product._id,
+        variants: product.variants.map(v => ({
+          color: v.color,
+          sizes: v.sizes.map(s => ({ size: s.size, stock: s.stock }))
+        }))
+      });
+
+      global.io.emit("price-change", {
+        productId: product._id,
+        variants: product.variants.map(v => ({
+          color: v.color,
+          sizes: v.sizes.map(s => ({ size: s.size, sellingPrice: s.sellingPrice, originalPrice: s.originalPrice }))
+        }))
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Product updated",

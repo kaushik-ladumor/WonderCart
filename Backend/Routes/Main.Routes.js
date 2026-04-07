@@ -12,6 +12,7 @@ const adminRouter = require("./Admin.Route");
 const ChatRouter = require("./Chat.Route");
 const visualSearchRouter = require("./ViesualSearch.Route");
 const emailRouter = require("./Email.Route");
+const dashboardRouter = require("./Dashboard.Route");
 
 const sellerReviewRouter = require("./SellerReview.Route");
 const topSellerRouter = require("./TopSeller.Route");
@@ -30,6 +31,7 @@ mainRouter.use("/review", ReviewRouter);
 mainRouter.use("/cart", cartRouter);
 mainRouter.use("/order", orderRouter);
 mainRouter.use("/seller", sellerRouter);
+mainRouter.use("/seller/dashboard", dashboardRouter);
 mainRouter.use("/seller-review", sellerReviewRouter);
 mainRouter.use("/admin", adminRouter);
 mainRouter.use("/email", emailRouter);

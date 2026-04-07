@@ -6,6 +6,7 @@ import {
   CreditCard,
   LogOut,
   Mail,
+  MessageSquare,
   Phone,
   Shield,
   Ticket,
@@ -17,6 +18,7 @@ import {
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
+import { useSocket } from "../context/SocketProvider";
 import UpdatePassword from "./UpdatePassword";
 import VerifyEmail from "./VerifyEmail";
 import DeleteModal from "./DeletedModel";
@@ -40,6 +42,7 @@ const Profile = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const navigate = useNavigate();
+  const socket = useSocket();
 
   const fetchProfile = async () => {
     try {
@@ -75,6 +78,19 @@ const Profile = () => {
     fetchProfile();
     fetchCoupons();
   }, [setAuthUser]);
+
+  useEffect(() => {
+    if (!socket || !authUser) return;
+
+    const handleWalletUpdate = (data) => {
+        console.log("💰 Wallet Update:", data);
+        fetchProfile();
+        if (data.message) toast.success(data.message);
+    };
+
+    socket.on("wallet-update", handleWalletUpdate);
+    return () => socket.off("wallet-update", handleWalletUpdate);
+  }, [socket, authUser]);
 
   const handleLogout = async () => {
     try {
@@ -154,13 +170,19 @@ const Profile = () => {
       icon: Ticket,
       action: () => navigate("/my-coupons"),
     },
+    {
+      title: "My Reviews",
+      description: "Manage your product feedback",
+      icon: MessageSquare,
+      action: () => navigate("/my-reviews"),
+    },
   ];
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] py-3 text-[#11182d]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-5">
-          <h1 className="text-[1.55rem] font-semibold tracking-tight sm:text-[1.8rem]">
+          <h1 className="text-[1.5rem] font-semibold tracking-tight sm:text-[1.75rem]">
             My Profile
           </h1>
           <p className="mt-1 text-[0.82rem] text-[#42506d]">
@@ -190,7 +212,7 @@ const Profile = () => {
                 )}
               </div>
 
-              <h2 className="mt-4 text-[1.2rem] font-semibold">{displayName}</h2>
+              <h2 className="mt-4 text-[1.1rem] font-semibold">{displayName}</h2>
               <p className="mt-1 text-[0.76rem] text-[#42506d]">
                 {authUser?.email || "wondercart@example.com"}
               </p>
@@ -215,7 +237,7 @@ const Profile = () => {
                   <Wallet className="h-4.5 w-4.5" />
                 </span>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6d7892]">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#6d7892]">
                     Wallet Balance
                   </p>
                   <p className="mt-1.5 text-[1.1rem] font-semibold text-[#11182d]">
@@ -229,7 +251,7 @@ const Profile = () => {
           <div className="rounded-[18px] border border-[#e1e5f1] bg-white p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-[1.2rem] font-semibold text-[#11182d]">
+                <h2 className="text-[1.1rem] font-semibold text-[#11182d]">
                   Default Address
                 </h2>
                 <p className="mt-1 text-[0.82rem] text-[#42506d]">
@@ -245,19 +267,19 @@ const Profile = () => {
 
             {defaultAddress ? (
               <div className="mt-5 space-y-2 text-[#11182d]">
-                <p className="text-[1rem] font-semibold">{defaultAddress.fullName}</p>
-                <div className="space-y-1.5 text-[0.82rem] leading-6 text-[#33415e]">
+                <p className="text-[0.9rem] font-semibold">{defaultAddress.fullName}</p>
+                <div className="space-y-1.5 text-[0.78rem] leading-6 text-[#33415e]">
                   <p>{defaultAddress.street}</p>
                   <p>
                     {defaultAddress.city}, {defaultAddress.state}{" "}
                     {defaultAddress.zipCode}
                   </p>
                 </div>
-                <p className="flex items-center gap-2 text-[0.82rem]">
+                <p className="flex items-center gap-2 text-[0.78rem]">
                   <Mail className="h-3.5 w-3.5 text-[#6d7892]" />
                   <span>{authUser?.email || "No email available"}</span>
                 </p>
-                <p className="flex items-center gap-2 text-[0.82rem]">
+                <p className="flex items-center gap-2 text-[0.78rem]">
                   <Phone className="h-3.5 w-3.5 text-[#6d7892]" />
                   <span>{defaultAddress.phone}</span>
                 </p>
@@ -297,7 +319,7 @@ const Profile = () => {
                     <Icon className="h-4.5 w-4.5" />
                   </span>
                   <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#5d6a84]">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-[#5d6a84]">
                       {tile.title}
                     </p>
                     <p className={`mt-1.5 text-[0.9rem] font-semibold ${tile.valueColor}`}>
@@ -324,7 +346,7 @@ const Profile = () => {
         <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
           <section>
             <div className="mb-3">
-              <h2 className="text-[1.2rem] font-semibold text-[#11182d]">
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d]">
                 Account Settings
               </h2>
               <div className="mt-2 h-1 w-10 rounded-full bg-[#0f49d7]" />
@@ -348,14 +370,14 @@ const Profile = () => {
                       <Icon className="h-4.5 w-4.5" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[0.88rem] font-semibold text-[#11182d]">
+                      <p className="text-[0.9rem] font-semibold text-[#11182d]">
                         {item.title}
                       </p>
-                      <p className="mt-0.5 text-[0.74rem] text-[#5d6a84]">
+                      <p className="mt-0.5 text-[0.76rem] text-[#5d6a84]">
                         {item.description}
                       </p>
                     </div>
-                    <span className="text-xl text-[#b0b8cb]">›</span>
+                    <span className="text-[1.1rem] text-[#b0b8cb]">›</span>
                   </button>
                 );
               })}
@@ -364,7 +386,7 @@ const Profile = () => {
 
           <section>
             <div className="mb-3">
-              <h2 className="text-[1.2rem] font-semibold text-[#11182d]">
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d]">
                 Account Actions
               </h2>
               <div className="mt-2 h-1 w-10 rounded-full bg-[#d12828]" />

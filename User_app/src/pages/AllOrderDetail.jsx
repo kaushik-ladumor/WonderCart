@@ -3,6 +3,7 @@ import axios from "axios";
 import { API_URL } from "../utils/constants";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
+import { useSocket } from "../context/SocketProvider";
 import { useNavigate } from "react-router-dom";
 import {
   Package,
@@ -25,6 +26,7 @@ function AllOrderDetail() {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { token } = useAuth();
+  const socket = useSocket();
   const [selectedReviewItem, setSelectedReviewItem] = useState(null);
   const [selectedSubOrderForReview, setSelectedSubOrderForReview] = useState(null);
 
@@ -39,7 +41,7 @@ function AllOrderDetail() {
           e.stopPropagation();
           setSelectedSubOrderForReview(subOrder);
         }}
-        className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors shadow-sm"
+        className="mt-3 flex items-center gap-2 text-[10px] font-semibold uppercase text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors shadow-sm"
       >
         <Star className="w-3.5 h-3.5 fill-emerald-600" />
         Rate Seller Performance
@@ -58,7 +60,7 @@ function AllOrderDetail() {
         className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-100 group hover:bg-amber-100 transition-all cursor-pointer animate-pulse-slow"
       >
         <Star className="w-3 h-3 fill-amber-700" />
-        <span className="text-[9px] font-bold uppercase tracking-wider">{pendingCount} Review{pendingCount > 1 ? 's' : ''} Pending</span>
+        <span className="text-[9px] font-semibold uppercase tracking-wider">{pendingCount} Review{pendingCount > 1 ? 's' : ''} Pending</span>
       </button>
     );
   };
@@ -96,7 +98,7 @@ function AllOrderDetail() {
           });
           document.getElementById("my_modal_8")?.showModal();
         }}
-        className="mt-2 flex items-center gap-1 text-[10px] font-bold uppercase text-[#004ac6] bg-[#004ac6]/10 px-2 py-1 rounded"
+        className="mt-2 flex items-center gap-1 text-[10px] font-semibold uppercase text-[#004ac6] bg-[#004ac6]/10 px-2 py-1 rounded"
       >
         <Star className="w-3 h-3 fill-[#004ac6]" />
         Write Review
@@ -106,7 +108,8 @@ function AllOrderDetail() {
 
   const fetchOrders = async () => {
     try {
-      setLoading(true);
+      // Only show loader if we don't have orders yet
+      if (orders.length === 0) setLoading(true);
       const response = await axios.get(`${API_URL}/order/my-orders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -121,6 +124,18 @@ function AllOrderDetail() {
   useEffect(() => {
     if (token) fetchOrders();
   }, [token]);
+
+  useEffect(() => {
+    if (!socket || !token) return;
+
+    socket.on("order-status-update", (data) => {
+      console.log("📦 Order status update:", data);
+      toast.success(data.message);
+      fetchOrders();
+    });
+
+    return () => socket.off("order-status-update");
+  }, [socket, token]);
 
   const toggleExpand = (id) => {
     setExpandedOrder(expandedOrder === id ? null : id);
@@ -208,13 +223,13 @@ function AllOrderDetail() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
           <div>
-            <span className="font-body text-[10px] uppercase tracking-[0.2em] font-bold text-[#004ac6] mb-2 block">
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] font-semibold text-[#004ac6] mb-2 block">
               Purchases
             </span>
-            <h1 className="font-display text-4xl font-extrabold text-[#141b2d] tracking-tight">
+            <h1 className="font-display text-[1.75rem] font-extrabold text-[#141b2d] tracking-tight">
               Order History
             </h1>
-            <p className="font-body text-[#5c6880] text-sm mt-2">
+            <p className="font-body text-[#5c6880] text-[0.82rem] mt-2">
               Showing {filteredOrders.length} {filteredOrders.length === 1 ? 'order' : 'orders'} in your account
             </p>
           </div>
@@ -226,7 +241,7 @@ function AllOrderDetail() {
               placeholder="Search by order ID or product name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-white border border-[#f0f4ff] rounded-[1.25rem] font-body text-sm text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/10 focus:border-[#004ac6] transition-all shadow-sm shadow-[#00000005]"
+              className="w-full pl-11 pr-4 py-3.5 bg-white border border-[#f0f4ff] rounded-[1.25rem] font-body text-[0.82rem] text-[#141b2d] focus:outline-none focus:ring-2 focus:ring-[#004ac6]/10 focus:border-[#004ac6] transition-all shadow-sm shadow-[#00000005]"
             />
           </div>
         </div>
@@ -237,14 +252,14 @@ function AllOrderDetail() {
             <div className="w-20 h-20 bg-[#f9f9ff] rounded-[2rem] flex items-center justify-center text-[#e1e8fd] mx-auto mb-6">
               <Package className="w-10 h-10" />
             </div>
-            <h2 className="font-display text-2xl font-bold text-[#141b2d] mb-2">No orders found</h2>
+            <h2 className="font-display text-[1.2rem] font-semibold text-[#141b2d] mb-2">No orders found</h2>
             <p className="font-body text-[#5c6880] mb-8 max-w-sm mx-auto">
               {searchTerm
                 ? "We couldn't find any orders matching your search. Try different keywords."
                 : "You haven't placed any orders yet. Start shopping to build your history."}
             </p>
             {!searchTerm && (
-              <button onClick={() => navigate('/shop')} className="bg-[#141b2d] text-white font-bold px-8 py-3.5 rounded-xl hover:scale-105 transition-transform text-sm shadow-xl shadow-black/10">
+              <button onClick={() => navigate('/shop')} className="bg-[#141b2d] text-white font-semibold px-8 py-3.5 rounded-xl hover:scale-105 transition-transform text-[0.82rem] shadow-xl shadow-black/10">
                 Explore Shop
               </button>
             )}
@@ -258,12 +273,12 @@ function AllOrderDetail() {
                 <div className="bg-[#f9f9ff] px-6 py-5 md:px-10 border-b border-[#f0f4ff] flex flex-wrap items-center justify-between gap-6">
                   <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
                     <div>
-                      <p className="font-body text-[10px] uppercase font-bold text-[#5c6880] tracking-widest mb-1">Order Identifier</p>
-                      <p className="font-body text-sm font-bold text-[#141b2d] font-mono">#{order._id.slice(-8).toUpperCase()}</p>
+                      <p className="font-body text-[10px] uppercase font-semibold text-[#5c6880] tracking-widest mb-1">Order Identifier</p>
+                      <p className="font-body text-[0.82rem] font-semibold text-[#141b2d] font-mono">#{order._id.slice(-8).toUpperCase()}</p>
                     </div>
                     <div>
-                      <p className="font-body text-[10px] uppercase font-bold text-[#5c6880] tracking-widest mb-1">Date Placed</p>
-                      <p className="font-body text-sm font-bold text-[#141b2d]">
+                      <p className="font-body text-[10px] uppercase font-semibold text-[#5c6880] tracking-widest mb-1">Date Placed</p>
+                      <p className="font-body text-[0.82rem] font-semibold text-[#141b2d]">
                         {new Date(order.createdAt).toLocaleDateString("en-US", {
                           day: "numeric",
                           month: "short",
@@ -272,8 +287,8 @@ function AllOrderDetail() {
                       </p>
                     </div>
                     <div>
-                      <p className="font-body text-[10px] uppercase font-bold text-[#5c6880] tracking-widest mb-1">Total Amount</p>
-                      <p className="font-body text-sm font-bold text-[#004ac6]">₹{Math.round(order.totalAmount || 0).toLocaleString()}</p>
+                      <p className="font-body text-[10px] uppercase font-semibold text-[#5c6880] tracking-widest mb-1">Total Amount</p>
+                      <p className="font-body text-[0.82rem] font-semibold text-[#004ac6]">₹{Math.round(order.totalAmount || 0).toLocaleString()}</p>
                     </div>
                   </div>
 
@@ -304,32 +319,32 @@ function AllOrderDetail() {
                       />
                     </div>
                     <div className="flex-1 py-2">
-                      <h3 className="font-display text-xl font-bold text-[#141b2d] mb-2 group-hover:text-[#004ac6] transition-colors">
+                      <h3 className="font-display text-[1.1rem] font-semibold text-[#141b2d] mb-2 group-hover:text-[#004ac6] transition-colors">
                         {getPrimaryItem(order)?.name || "Ordered item"}
                       </h3>
                       <div className="flex flex-wrap gap-4 items-center">
-                        <span className="font-body text-xs font-bold text-[#5c6880] bg-[#f9f9ff] px-3 py-1 rounded-lg border border-[#f0f4ff]">
+                        <span className="font-body text-[0.76rem] font-semibold text-[#5c6880] bg-[#f9f9ff] px-3 py-1 rounded-lg border border-[#f0f4ff]">
                           {getOrderItemCount(order)} {getOrderItemCount(order) === 1 ? 'item' : 'items'}
                         </span>
                         {getPrimaryItem(order)?.size && (
-                          <span className="font-body text-xs text-[#5c6880]">Size: <b className="text-[#141b2d]">{getPrimaryItem(order).size}</b></span>
+                          <span className="font-body text-[0.76rem] text-[#5c6880]">Size: <b className="text-[#141b2d]">{getPrimaryItem(order).size}</b></span>
                         )}
                         {getPrimaryItem(order)?.color && (
-                          <span className="font-body text-xs text-[#5c6880]">Color: <b className="text-[#141b2d]">{getPrimaryItem(order).color}</b></span>
+                          <span className="font-body text-[0.76rem] text-[#5c6880]">Color: <b className="text-[#141b2d]">{getPrimaryItem(order).color}</b></span>
                         )}
                       </div>
-                      <p className="font-body text-xs text-[#5c6880] mt-4 leading-relaxed line-clamp-2 md:line-clamp-none">
-                        Shipment to <span className="font-bold text-[#141b2d]">{order.address?.fullName}</span> at <span className="font-bold text-[#141b2d]">{order.address?.city}</span>. Payment via <span className="font-bold text-[#141b2d]">{order.paymentMethod}</span>.
+                      <p className="font-body text-[0.76rem] text-[#5c6880] mt-4 leading-relaxed line-clamp-2 md:line-clamp-none">
+                        Shipment to <span className="font-semibold text-[#141b2d]">{order.address?.fullName}</span> at <span className="font-semibold text-[#141b2d]">{order.address?.city}</span>. Payment via <span className="font-semibold text-[#141b2d]">{order.paymentMethod}</span>.
                       </p>
                     </div>
                   </div>
 
                   <div className="lg:w-48 flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center border-t lg:border-t-0 lg:border-l border-[#f0f4ff] pt-6 lg:pt-0 lg:pl-10">
                     <div className="text-left lg:text-right hidden sm:block">
-                      <p className="font-body text-[10px] uppercase font-bold text-[#5c6880] tracking-widest mb-1 text-nowrap">Order Status</p>
-                      <p className="font-body text-sm font-bold text-[#141b2d] capitalize">{order.status}</p>
+                      <p className="font-body text-[10px] uppercase font-semibold text-[#5c6880] tracking-widest mb-1 text-nowrap">Order Status</p>
+                      <p className="font-body text-[0.82rem] font-semibold text-[#141b2d] capitalize">{order.status}</p>
                     </div>
-                    <button onClick={() => navigate(`/orderConfirm/${order._id}`)} className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#004ac6] border border-[#004ac6]/20 px-6 py-2.5 rounded-xl hover:bg-[#004ac6] hover:text-white transition-all whitespace-nowrap">
+                    <button onClick={() => navigate(`/orderConfirm/${order._id}`)} className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#004ac6] border border-[#004ac6]/20 px-6 py-2.5 rounded-xl hover:bg-[#004ac6] hover:text-white transition-all whitespace-nowrap">
                       View details
                     </button>
                   </div>
@@ -344,11 +359,11 @@ function AllOrderDetail() {
                       <div>
                         <div className="flex items-center gap-3 mb-4">
                           <MapPin className="w-4 h-4 text-[#004ac6]" />
-                          <h4 className="font-body text-[10px] font-bold text-[#141b2d] uppercase tracking-widest">Delivery Address</h4>
+                          <h4 className="font-body text-[10px] font-semibold text-[#141b2d] uppercase tracking-widest">Delivery Address</h4>
                         </div>
                         <div className="bg-white p-6 rounded-2xl border border-[#f0f4ff] shadow-sm">
-                          <p className="font-body text-sm font-bold text-[#141b2d] mb-2">{order.address?.fullName}</p>
-                          <p className="font-body text-xs text-[#5c6880] leading-relaxed">
+                          <p className="font-body text-[0.82rem] font-semibold text-[#141b2d] mb-2">{order.address?.fullName}</p>
+                          <p className="font-body text-[0.76rem] text-[#5c6880] leading-relaxed">
                             {order.address?.street}<br />
                             {order.address?.city}, {order.address?.state} - {order.address?.zipcode}<br />
                             T: {order.address?.phone}
@@ -360,20 +375,20 @@ function AllOrderDetail() {
                       <div>
                         <div className="flex items-center gap-3 mb-4">
                           <IndianRupee className="w-4 h-4 text-[#004ac6]" />
-                          <h4 className="font-body text-[10px] font-bold text-[#141b2d] uppercase tracking-widest">Payment Breakdown</h4>
+                          <h4 className="font-body text-[10px] font-semibold text-[#141b2d] uppercase tracking-widest">Payment Breakdown</h4>
                         </div>
                         <div className="bg-white p-6 rounded-2xl border border-[#f0f4ff] shadow-sm space-y-3">
-                          <div className="flex justify-between font-body text-xs">
+                          <div className="flex justify-between font-body text-[0.76rem]">
                             <span className="text-[#5c6880]">Subtotal</span>
-                            <span className="font-bold text-[#141b2d]">₹{Math.round(order.totalAmount + (order.couponDiscount || 0)).toLocaleString()}</span>
+                            <span className="font-semibold text-[#141b2d]">₹{Math.round(order.totalAmount + (order.couponDiscount || 0)).toLocaleString()}</span>
                           </div>
                           {order.couponCode && (
-                            <div className="flex justify-between font-body text-xs">
-                              <span className="text-emerald-600 font-bold">Discount ({order.couponCode})</span>
-                              <span className="text-emerald-600 font-bold">-₹{Math.round(order.couponDiscount || 0).toLocaleString()}</span>
+                            <div className="flex justify-between font-body text-[0.76rem]">
+                              <span className="text-emerald-600 font-semibold">Discount ({order.couponCode})</span>
+                              <span className="text-emerald-600 font-semibold">-₹{Math.round(order.couponDiscount || 0).toLocaleString()}</span>
                             </div>
                           )}
-                          <div className="pt-3 border-t border-[#f0f4ff] flex justify-between font-body text-sm font-bold text-[#004ac6]">
+                          <div className="pt-3 border-t border-[#f0f4ff] flex justify-between font-body text-[0.82rem] font-semibold text-[#004ac6]">
                             <span>Grand Total</span>
                             <span>₹{Math.round(order.totalAmount || 0).toLocaleString()}</span>
                           </div>
@@ -383,13 +398,13 @@ function AllOrderDetail() {
                       <div className="lg:col-span-1">
                         <div className="flex items-center gap-3 mb-4">
                           <Package className="w-4 h-4 text-[#004ac6]" />
-                          <h4 className="font-body text-[10px] font-bold text-[#141b2d] uppercase tracking-widest">Package Contents</h4>
+                          <h4 className="font-body text-[10px] font-semibold text-[#141b2d] uppercase tracking-widest">Package Contents</h4>
                         </div>
                         <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
                           {order.subOrders?.map((subOrder, sIdx) => (
                             <div key={sIdx} className="bg-white rounded-2xl border border-[#f0f4ff] shadow-sm overflow-hidden">
                               <div className="bg-[#fcfcff] px-4 py-2 border-b border-[#f0f4ff] flex items-center justify-between">
-                                <p className="text-[10px] font-bold text-[#5c6880] uppercase tracking-wider">
+                                <p className="text-[10px] font-semibold text-[#5c6880] uppercase tracking-wider">
                                   Package {sIdx + 1} &bull; <span className="text-[#004ac6]">{subOrder.seller?.shopName || "Seller"}</span>
                                 </p>
                                 <StatusBadge status={subOrder.status} />
@@ -401,10 +416,10 @@ function AllOrderDetail() {
                                       <img src={getProductImage(item)} alt={item?.name || "Ordered product"} className="w-full h-full object-contain p-2" />
                                     </div>
                                     <div className="flex-1">
-                                      <p className="font-body text-xs font-bold text-[#141b2d] line-clamp-1 group-hover/item:text-[#004ac6] transition-colors">{item?.name || "Ordered item"}</p>
+                                      <p className="font-body text-[0.76rem] font-semibold text-[#141b2d] line-clamp-1 group-hover/item:text-[#004ac6] transition-colors">{item?.name || "Ordered item"}</p>
                                       <div className="flex justify-between mt-1">
                                         <span className="font-body text-[10px] text-[#5c6880] uppercase tracking-tighter">Qty: {item?.quantity || 0}</span>
-                                        <span className="font-body text-[10px] font-bold text-[#141b2d]">₹{Math.round((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</span>
+                                        <span className="font-body text-[10px] font-semibold text-[#141b2d]">₹{Math.round((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</span>
                                       </div>
                                       <ReviewButton 
                                         product={item?.product?._id || item?.product} 
@@ -432,8 +447,8 @@ function AllOrderDetail() {
 
         {/* Support Section */}
         <div className="mt-16 text-center">
-          <p className="font-body text-xs text-[#5c6880] mb-4 uppercase tracking-[0.2em]">Need assistance with an order?</p>
-          <button onClick={() => navigate('/contact')} className="font-display font-bold text-[#004ac6] hover:underline flex items-center gap-2 mx-auto justify-center">
+          <p className="font-body text-[0.76rem] text-[#5c6880] mb-4 uppercase tracking-[0.2em]">Need assistance with an order?</p>
+          <button onClick={() => navigate('/contact')} className="font-display font-semibold text-[#004ac6] hover:underline flex items-center gap-2 mx-auto justify-center">
             Contact our Concierge
             <ChevronRight className="w-4 h-4" />
           </button>

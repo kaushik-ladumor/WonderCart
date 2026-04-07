@@ -163,10 +163,10 @@ function UpdatePassword() {
             <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
               {isSettingNewPassword ? "SECURE ACCOUNT" : "SAFETY FIRST"}
             </span>
-            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+            <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
               {isSettingNewPassword ? "Set Password" : "Update Password"}
             </h3>
-            <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+            <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5 leading-relaxed">
               {isSettingNewPassword
                 ? "Set a password to enable multi-method login."
                 : "Regular password rotation is recommended."}
@@ -178,7 +178,7 @@ function UpdatePassword() {
             {checkingPassword ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
                 <div className="w-10 h-10 border-4 border-[#f0f4ff] border-t-[#004ac6] rounded-full animate-spin"></div>
-                <span className="font-body text-[10px] uppercase tracking-widest font-bold text-[#5c6880]">Synchronizing...</span>
+                <span className="font-body text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Synchronizing...</span>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -193,7 +193,7 @@ function UpdatePassword() {
                       <input
                         type={showCurrentPassword ? "text" : "password"}
                         placeholder="Current password"
-                        className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                        className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
                         disabled={loading}
                         {...register("currentPassword", {
                           required: needsCurrentPassword && "Required",
@@ -220,7 +220,7 @@ function UpdatePassword() {
                     <input
                       type={showNewPassword ? "text" : "password"}
                       placeholder="Min. 8 characters"
-                      className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                      className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
                       disabled={loading}
                       {...register("newPassword", {
                         required: "Required",
@@ -236,7 +236,7 @@ function UpdatePassword() {
                     </button>
                   </div>
                   {errors.newPassword && (
-                    <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.newPassword.message}</p>
+                    <p className="text-red-500 text-[10px] font-semibold mt-1 ml-1">{errors.newPassword.message}</p>
                   )}
                 </div>
 
@@ -250,7 +250,7 @@ function UpdatePassword() {
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Verify new password"
-                      className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                      className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
                       disabled={loading}
                       {...register("confirmPassword", {
                         required: "Required",
@@ -266,7 +266,7 @@ function UpdatePassword() {
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.confirmPassword.message}</p>
+                    <p className="text-red-500 text-[10px] font-semibold mt-1 ml-1">{errors.confirmPassword.message}</p>
                   )}
                 </div>
 
@@ -274,7 +274,7 @@ function UpdatePassword() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform mt-4 disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl py-3 text-[0.82rem] hover:scale-[1.02] transition-transform mt-4 disabled:opacity-50"
                 >
                   {loading ? "Processing..." : isSettingNewPassword ? "Set Secure Password" : "Save Changes"}
                 </button>

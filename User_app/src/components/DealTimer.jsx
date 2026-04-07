@@ -6,7 +6,7 @@ const DealTimer = ({ endTime, size = 'sm' }) => {
 
     if (isExpired) return <span className="text-gray-400">Deal Expired</span>;
 
-    const sizeClass = size === 'lg' ? 'text-2xl gap-2' : 'text-sm gap-1';
+    const sizeClass = size === 'lg' ? 'text-[1.2rem] gap-2' : 'text-[0.82rem] gap-1';
     const colorClass = isUrgent ? 'text-red-600' : 'text-gray-700';
 
     return (

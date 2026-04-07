@@ -119,6 +119,15 @@ const addCart = async (req, res) => {
     await cart.save();
     await cart.populate("items.product");
 
+    // ✅ Emit item-reserved event
+    if (global.io) {
+      global.io.to(`cart-${userId}`).emit("item-reserved", {
+        productId,
+        productName: product.name,
+        expiresIn: "30 minutes" // hypothetical
+      });
+    }
+
     // Emit real-time update
     emitCartUpdate(userId, cart, "item-added");
 
@@ -329,6 +338,18 @@ const updateCartItem = async (req, res) => {
 
     await cart.save();
     await cart.populate("items.product");
+
+    // ✅ Emit stock-low alert if stock is critical
+    if (global.io && sizeObj.stock < 5) {
+      global.io.to(`cart-${userId}`).emit("stock-low", {
+        productId,
+        productName: product.name,
+        color,
+        size,
+        stock: sizeObj.stock,
+        message: `Hurry! Only ${sizeObj.stock} left in stock for ${product.name}`
+      });
+    }
 
     emitCartUpdate(userId, cart, "quantity-updated");
 

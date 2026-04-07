@@ -134,9 +134,9 @@ const ContactUs = () => {
              <div className="w-8 h-8 bg-[#0f49d7] rounded-xl flex items-center justify-center text-white shadow-sm">
                 <Headphones className="w-4 h-4" />
              </div>
-             <span className="text-[0.62rem] font-bold uppercase tracking-widest text-[#0f49d7]">Customer Support</span>
+             <span className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#0f49d7]">Customer Support</span>
           </div>
-          <h1 className="text-[1.6rem] md:text-[2rem] font-bold text-[#11182d] leading-tight mb-2 tracking-tight">
+          <h1 className="text-[1.6rem] md:text-[2rem] font-semibold text-[#11182d] leading-tight mb-2 tracking-tight">
             How can we help you?
           </h1>
           <p className="text-[0.8rem] text-[#42506d] max-w-lg leading-relaxed">
@@ -159,15 +159,15 @@ const ContactUs = () => {
                       <item.icon className="w-4.5 h-4.5" />
                     </div>
                     <div>
-                      <h3 className="text-[0.62rem] font-bold uppercase tracking-widest text-[#5d6a84] mb-0.5">
+                      <h3 className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#5d6a84] mb-0.5">
                         {item.title}
                       </h3>
                       {item.href ? (
-                        <a href={item.href} className="text-[0.78rem] font-bold text-[#11182d] hover:text-[#0f49d7]">
+                        <a href={item.href} className="text-[0.78rem] font-semibold text-[#11182d] hover:text-[#0f49d7]">
                           {item.content}
                         </a>
                       ) : (
-                        <p className="text-[0.78rem] font-bold text-[#11182d]">{item.content}</p>
+                        <p className="text-[0.78rem] font-semibold text-[#11182d]">{item.content}</p>
                       )}
                       {item.sub && <p className="text-[0.68rem] text-[#5d6a84] mt-0.5 font-medium">{item.sub}</p>}
                     </div>
@@ -181,20 +181,20 @@ const ContactUs = () => {
                <div className="relative z-10">
                  <div className="flex items-center gap-3 mb-5">
                     <Clock className="w-4 h-4 text-[#0f49d7]" />
-                    <span className="text-[0.62rem] font-bold uppercase tracking-widest text-white/70">Operation Hours</span>
+                    <span className="text-[0.62rem] font-semibold uppercase tracking-widest text-white/70">Operation Hours</span>
                  </div>
                  <div className="space-y-3.5">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
                        <span className="text-[0.7rem] font-medium text-white/60 uppercase tracking-widest">Mon-Fri</span>
-                       <span className="text-[0.75rem] font-bold">09:00 - 18:00</span>
+                       <span className="text-[0.75rem] font-semibold">09:00 - 18:00</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
                        <span className="text-[0.7rem] font-medium text-white/60 uppercase tracking-widest">Saturday</span>
-                       <span className="text-[0.75rem] font-bold">10:00 - 16:00</span>
+                       <span className="text-[0.75rem] font-semibold">10:00 - 16:00</span>
                     </div>
                     <div className="flex justify-between items-center">
                        <span className="text-[0.7rem] font-medium text-white/60 uppercase tracking-widest">Sunday</span>
-                       <span className="text-[0.75rem] font-bold text-[#0f49d7]">Closed</span>
+                       <span className="text-[0.75rem] font-semibold text-[#0f49d7]">Closed</span>
                     </div>
                  </div>
                </div>
@@ -206,70 +206,70 @@ const ContactUs = () => {
             <div className="bg-white border border-[#eef2ff] rounded-[28px] p-7 md:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-5">
                  <MessageSquare className="w-4.5 h-4.5 text-[#0f49d7]" />
-                 <h2 className="text-[1.05rem] font-bold text-[#11182d]">Message our team</h2>
+                 <h2 className="text-[1.05rem] font-semibold text-[#11182d]">Message our team</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-1.5">
-                  <label className="text-[0.62rem] font-bold uppercase tracking-widest text-[#5d6a84] ml-1">Full Name</label>
+                  <label className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#5d6a84] ml-1">Full Name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => { setName(e.target.value); clearError("name"); }}
                     disabled={isSubmitting}
                     placeholder="Full Name"
-                    className="w-full h-10 bg-[#f8f9fc] border border-[#eef2ff] rounded-[12px] px-4 text-[0.78rem] font-bold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7]"
+                    className="w-full h-10 bg-[#f8f9fc] border border-[#eef2ff] rounded-[12px] px-4 text-[0.78rem] font-semibold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7]"
                   />
-                  {errors.name && <p className="text-red-500 text-[0.58rem] font-bold uppercase mt-1 ml-1">{errors.name}</p>}
+                  {errors.name && <p className="text-red-500 text-[0.58rem] font-semibold uppercase mt-1 ml-1">{errors.name}</p>}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[0.62rem] font-bold uppercase tracking-widest text-[#5d6a84] ml-1">Email Address</label>
+                  <label className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#5d6a84] ml-1">Email Address</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
                     disabled={isSubmitting}
                     placeholder="email@address.com"
-                    className="w-full h-10 bg-[#f8f9fc] border border-[#eef2ff] rounded-[12px] px-4 text-[0.78rem] font-bold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7]"
+                    className="w-full h-10 bg-[#f8f9fc] border border-[#eef2ff] rounded-[12px] px-4 text-[0.78rem] font-semibold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7]"
                   />
-                  {errors.email && <p className="text-red-500 text-[0.58rem] font-bold uppercase mt-1 ml-1">{errors.email}</p>}
+                  {errors.email && <p className="text-red-500 text-[0.58rem] font-semibold uppercase mt-1 ml-1">{errors.email}</p>}
                 </div>
               </div>
 
               <div className="space-y-1.5 mb-4">
-                <label className="text-[0.62rem] font-bold uppercase tracking-widest text-[#5d6a84] ml-1">Subject</label>
+                <label className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#5d6a84] ml-1">Subject</label>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => { setSubject(e.target.value); clearError("subject"); }}
                   disabled={isSubmitting}
                   placeholder="What is this regarding?"
-                  className="w-full h-10 bg-[#f8f9fc] border border-[#eef2ff] rounded-[12px] px-4 text-[0.78rem] font-bold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7]"
+                  className="w-full h-10 bg-[#f8f9fc] border border-[#eef2ff] rounded-[12px] px-4 text-[0.78rem] font-semibold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7]"
                 />
-                {errors.subject && <p className="text-red-500 text-[0.58rem] font-bold uppercase mt-1 ml-1">{errors.subject}</p>}
+                {errors.subject && <p className="text-red-500 text-[0.58rem] font-semibold uppercase mt-1 ml-1">{errors.subject}</p>}
               </div>
 
               <div className="space-y-1.5 mb-5">
-                <label className="text-[0.62rem] font-bold uppercase tracking-widest text-[#5d6a84] ml-1">Your Message</label>
+                <label className="text-[0.62rem] font-semibold uppercase tracking-widest text-[#5d6a84] ml-1">Your Message</label>
                 <textarea
                   value={message}
                   onChange={(e) => { setMessage(e.target.value); clearError("message"); }}
                   disabled={isSubmitting}
                   rows="4"
                   placeholder="Please describe your query in detail..."
-                  className="w-full bg-[#f8f9fc] border border-[#eef2ff] rounded-[14px] p-4 text-[0.78rem] font-bold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7] resize-none"
+                  className="w-full bg-[#f8f9fc] border border-[#eef2ff] rounded-[14px] p-4 text-[0.78rem] font-semibold text-[#11182d] outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7] resize-none"
                 />
                 <div className="flex justify-between items-center px-1 mt-1">
-                  {errors.message && <p className="text-red-500 text-[0.58rem] font-bold uppercase">{errors.message}</p>}
-                  <p className="text-[0.62rem] font-bold text-[#b0b8cb] ml-auto tracking-widest">{message.length}/1000</p>
+                  {errors.message && <p className="text-red-500 text-[0.58rem] font-semibold uppercase">{errors.message}</p>}
+                  <p className="text-[0.62rem] font-semibold text-[#b0b8cb] ml-auto tracking-widest">{message.length}/1000</p>
                 </div>
               </div>
 
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full lg:w-auto h-10 bg-[#0f49d7] text-white px-8 rounded-[12px] text-[0.68rem] font-bold uppercase tracking-widest hover:bg-[#11182d] disabled:opacity-50 flex items-center justify-center gap-2.5 shadow-sm border-none outline-none"
+                className="w-full lg:w-auto h-10 bg-[#0f49d7] text-white px-8 rounded-[12px] text-[0.68rem] font-semibold uppercase tracking-widest hover:bg-[#11182d] disabled:opacity-50 flex items-center justify-center gap-2.5 shadow-sm border-none outline-none"
               >
                 {isSubmitting ? (
                   <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -284,7 +284,7 @@ const ContactUs = () => {
         {/* Support Highlights */}
         <div className="mt-8 pt-6 border-t border-[#eef2ff]">
            <div className="text-center mb-8">
-             <h2 className="text-[1.3rem] font-bold text-[#11182d] mb-1.5">Elite Support Network</h2>
+             <h2 className="text-[1.3rem] font-semibold text-[#11182d] mb-1.5">Elite Support Network</h2>
              <p className="text-[0.78rem] text-[#42506d] max-w-xl mx-auto leading-relaxed">Dedicated to providing world-class assistance for our global community.</p>
            </div>
 
@@ -315,7 +315,7 @@ const ContactUs = () => {
                    <div className="w-9 h-9 bg-[#f8f9fc] border border-[#eef2ff] rounded-xl flex items-center justify-center mb-4">
                       {faq.icon}
                    </div>
-                   <h4 className="text-[0.78rem] font-bold text-[#11182d] mb-1.5">{faq.q}</h4>
+                   <h4 className="text-[0.78rem] font-semibold text-[#11182d] mb-1.5">{faq.q}</h4>
                    <p className="text-[0.68rem] text-[#5d6a84] leading-relaxed">{faq.a}</p>
                 </div>
               ))}

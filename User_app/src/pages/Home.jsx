@@ -207,12 +207,12 @@ function HomePage() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80">
                   Summer Editorial 2024
                 </p>
-                <h1 className="max-w-sm text-3xl font-semibold leading-tight sm:text-4xl">
+                <h1 className="max-w-sm text-[1.5rem] font-semibold leading-tight sm:text-[1.75rem]">
                   The Art of Modern Living.
                 </h1>
               </div>
 
-              <p className="max-w-md text-sm leading-6 text-white/85">
+              <p className="max-w-md text-[0.82rem] leading-6 text-white/85">
                 A meticulously curated collection of essentials designed for the
                 discerning individual.
               </p>
@@ -220,7 +220,7 @@ function HomePage() {
               <div>
                 <button
                   onClick={() => navigate("/shop")}
-                  className="rounded-xl bg-[#0f49d7] px-5 py-3 text-sm font-semibold text-white"
+                  className="rounded-xl bg-[#0f49d7] px-5 py-3 text-[0.82rem] font-semibold text-white"
                 >
                   Shop Collection
                 </button>
@@ -257,7 +257,7 @@ function HomePage() {
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#edf2ff] text-[#0f49d7]">
                   <Icon className="h-4 w-4" />
                 </span>
-                <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#3f4b67]">
+                <span className="text-[0.76rem] font-medium uppercase tracking-[0.18em] text-[#3f4b67]">
                   {category.label}
                 </span>
               </button>
@@ -269,16 +269,16 @@ function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-[#11182d] sm:text-2xl">
+            <h2 className="text-[1.1rem] font-semibold text-[#11182d] sm:text-[1.2rem]">
               Trending Now
             </h2>
-            <p className="mt-1 text-sm text-[#62708d]">
+            <p className="mt-1 text-[0.82rem] text-[#62708d]">
               Selected by our expert curators this week.
             </p>
           </div>
           <button
             onClick={() => navigate("/shop")}
-            className="text-sm font-semibold text-[#0f49d7]"
+            className="text-[0.82rem] font-semibold text-[#0f49d7]"
           >
             View All Trends
           </button>
@@ -312,7 +312,7 @@ function HomePage() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#0f49d7]">
                 Our Commitment
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-[#11182d]">
+              <h2 className="mt-2 text-[1.2rem] font-semibold text-[#11182d]">
                 Curating the exceptional, for every space.
               </h2>
             </div>
@@ -329,10 +329,10 @@ function HomePage() {
                       <Icon className="h-4 w-4" />
                     </span>
                     <div>
-                      <h3 className="text-sm font-semibold text-[#11182d]">
+                      <h3 className="text-[0.82rem] font-semibold text-[#11182d]">
                         {point.title}
                       </h3>
-                      <p className="mt-1 text-sm leading-6 text-[#62708d]">
+                      <p className="mt-1 text-[0.82rem] leading-6 text-[#62708d]">
                         {point.description}
                       </p>
                     </div>
@@ -346,10 +346,10 @@ function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-4 pb-10 sm:px-6 lg:px-8">
         <div className="mb-4">
-          <h2 className="text-xl font-semibold text-[#11182d] sm:text-2xl">
+          <h2 className="text-[1.1rem] font-semibold text-[#11182d] sm:text-[1.2rem]">
             Recommended Collections
           </h2>
-          <p className="mt-1 text-sm text-[#62708d]">
+          <p className="mt-1 text-[0.82rem] text-[#62708d]">
             Tailored specifically to your aesthetic profile.
           </p>
         </div>
@@ -365,13 +365,13 @@ function HomePage() {
               className="h-full min-h-[320px] w-full object-cover"
             />
             <div className="absolute inset-x-0 bottom-0 bg-[#11182d]/55 px-6 py-6 text-white">
-              <h3 className="text-2xl font-semibold">
+              <h3 className="text-[1.2rem] font-semibold">
                 {collectionCards[0].title}
               </h3>
-              <p className="mt-2 max-w-md text-sm text-white/85">
+              <p className="mt-2 max-w-md text-[0.82rem] text-white/85">
                 {collectionCards[0].subtitle}
               </p>
-              <span className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#11182d]">
+              <span className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-[0.82rem] font-semibold text-[#11182d]">
                 {collectionCards[0].action}
               </span>
             </div>
@@ -390,8 +390,8 @@ function HomePage() {
                   className="h-[198px] w-full object-cover"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-[#11182d]/55 px-5 py-4 text-white">
-                  <h3 className="text-xl font-semibold">{card.title}</h3>
-                  <p className="mt-1 text-sm text-white/85">{card.subtitle}</p>
+                  <h3 className="text-[1.1rem] font-semibold">{card.title}</h3>
+                  <p className="mt-1 text-[0.82rem] text-white/85">{card.subtitle}</p>
                 </div>
               </Link>
             ))}

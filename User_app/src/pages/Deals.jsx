@@ -119,47 +119,47 @@ const Deals = () => {
                         <div className="flex flex-col md:flex-row items-center min-h-[350px]">
                             {/* Text Info */}
                             <div className="flex-1 p-6 md:p-10 lg:p-12 space-y-4 z-10">
-                                <div className="inline-block bg-[#0f49d7] text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                <div className="inline-block bg-[#0f49d7] text-white text-[9px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider">
                                     DEAL OF THE DAY
                                 </div>
 
                                 <div className="space-y-2">
-                                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-[#11182d] leading-none">
+                                    <h2 className="text-[1.2rem] md:text-[1.5rem] lg:text-[1.75rem] font-semibold text-[#11182d] leading-none">
                                         {featuredDeal.productId?.name}
                                     </h2>
-                                    <p className="text-[#5c6880] text-xs md:text-sm max-w-sm line-clamp-2 leading-relaxed">
+                                    <p className="text-[#5c6880] text-[0.76rem] md:text-[0.82rem] max-w-sm line-clamp-2 leading-relaxed">
                                         Limited time curated selection of high-performance items. Don't miss out on this exclusive offer.
                                     </p>
                                 </div>
 
                                 <div className="flex items-center gap-4 py-2 border-b border-gray-50 max-w-sm">
                                     <div className="space-y-0.5">
-                                        <p className="text-[#b0b8cb] text-[10px] line-through font-bold">
+                                        <p className="text-[#b0b8cb] text-[10px] line-through font-semibold">
                                             {formatINR(featuredDeal.originalPrice)}
                                         </p>
-                                        <p className="text-3xl font-black text-[#11182d] leading-none">
+                                        <p className="text-[1.5rem] font-semibold text-[#11182d] leading-none">
                                             {formatINR(featuredDeal.dealPrice)}
                                         </p>
                                     </div>
-                                    <div className="bg-[#0f49d7] text-white px-3 py-1.5 rounded-xl text-[10px] font-black shadow-lg shadow-[#0f49d7]/10">
+                                    <div className="bg-[#0f49d7] text-white px-3 py-1.5 rounded-xl text-[10px] font-semibold shadow-lg shadow-[#0f49d7]/10">
                                         {featuredDeal.discountPercent}% OFF
                                     </div>
                                 </div>
 
                                 <div className="pt-2 flex flex-wrap items-center gap-8">
                                     <div className="space-y-1">
-                                        <p className="text-[9px] font-bold text-[#5c6880] uppercase tracking-wider">ENDS IN</p>
+                                        <p className="text-[9px] font-semibold text-[#5c6880] uppercase tracking-wider">ENDS IN</p>
                                         {new Date(featuredDeal.endTime) > new Date() ? (
                                             <DealTimer endTime={featuredDeal.endTime} />
                                         ) : (
-                                            <div className="text-[#e63946] font-black text-sm italic">Offer Expired</div>
+                                            <div className="text-[#e63946] font-semibold text-[0.82rem] italic">Offer Expired</div>
                                         )}
                                     </div>
 
                                     <button 
                                         onClick={() => handleAddToCart(featuredDeal)}
                                         disabled={addingToCart === featuredDeal._id}
-                                        className="bg-[#0f49d7] active:scale-95 text-white px-8 py-4 rounded-xl font-black text-xs shadow-lg shadow-[#0f49d7]/10 transition-transform disabled:opacity-50"
+                                        className="bg-[#0f49d7] active:scale-95 text-white px-8 py-4 rounded-xl font-semibold text-[0.76rem] shadow-lg shadow-[#0f49d7]/10 transition-transform disabled:opacity-50"
                                     >
                                         {addingToCart === featuredDeal._id ? 'Processing...' : 'Claim Deal Now'}
                                     </button>
@@ -180,7 +180,7 @@ const Deals = () => {
                 ) : (
                     <div className="h-[250px] w-full flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-[#eef2ff]">
                         <TicketPercent className="w-10 h-10 text-gray-200 mb-3" />
-                        <h4 className="font-black text-gray-300 uppercase tracking-tighter">No Active Deals Found</h4>
+                        <h4 className="font-semibold text-gray-300 uppercase tracking-tighter">No Active Deals Found</h4>
                     </div>
                 )}
             </div>
@@ -204,7 +204,7 @@ const Deals = () => {
                                     }`}>
                                     <Icon className="w-5 h-5 md:w-6 md:h-6" />
                                 </div>
-                                <span className={`text-[0.65rem] md:text-[0.75rem] font-bold tracking-tight ${isActive ? 'text-[#0f49d7]' : 'text-[#5c6880]'
+                                <span className={`text-[10px] md:text-[0.78rem] font-semibold tracking-tight ${isActive ? 'text-[#0f49d7]' : 'text-[#5c6880]'
                                     }`}>
                                     {catId}
                                 </span>
@@ -218,10 +218,10 @@ const Deals = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h3 className="text-lg font-black text-[#11182d] tracking-tight">Curated Picks</h3>
+                        <h3 className="text-[0.9rem] font-semibold text-[#11182d] tracking-tight">Curated Picks</h3>
                         <p className="text-[0.7rem] text-[#5c6880]">Handpicked and curated by experts.</p>
                     </div>
-                    <Link to="/shop" className="text-[0.7rem] font-bold text-[#0f49d7] flex items-center gap-1">
+                    <Link to="/shop" className="text-[0.7rem] font-semibold text-[#0f49d7] flex items-center gap-1">
                         View all <ChevronRight className="w-4 h-4" />
                     </Link>
                 </div>
@@ -240,7 +240,7 @@ const Deals = () => {
                 ) : filteredDeals.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-[24px] border border-[#eef2ff]">
                         <Zap className="w-8 h-8 text-gray-200 mx-auto mb-4" />
-                        <h4 className="text-[0.8rem] font-black text-gray-400 uppercase">No active deals in {activeCategory}</h4>
+                        <h4 className="text-[0.8rem] font-semibold text-gray-400 uppercase">No active deals in {activeCategory}</h4>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

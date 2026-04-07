@@ -121,10 +121,10 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
             <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
               SHIPPING LOGISTICS
             </span>
-            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+            <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
               Edit Address
             </h3>
-            <p className="text-xs text-[#5c6880] mt-1 mb-5 leading-relaxed">
+            <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5 leading-relaxed">
               Verifying your updated delivery coordinates.
             </p>
           </div>
@@ -141,7 +141,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                       value={formData.fullName}
                       onChange={handleChange}
                       placeholder="NAME..."
-                      className="bg-transparent w-full text-xs text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      className="bg-transparent w-full text-[0.76rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-semibold"
                       required
                     />
                   </div>
@@ -156,7 +156,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="10-DIGIT..."
-                      className="bg-transparent w-full text-xs text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      className="bg-transparent w-full text-[0.76rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-semibold"
                       required
                     />
                   </div>
@@ -192,7 +192,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                     onChange={handleChange}
                     placeholder="LOCALE DETAILS..."
                     rows="2"
-                    className="bg-transparent w-full text-xs text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold resize-none"
+                    className="bg-transparent w-full text-[0.76rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-semibold resize-none"
                     required
                   />
                 </div>
@@ -208,7 +208,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                       value={formData.city}
                       onChange={handleChange}
                       placeholder="CITY"
-                      className="bg-transparent w-full text-xs text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      className="bg-transparent w-full text-[0.76rem] text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-semibold"
                       required
                     />
                   </div>
@@ -222,7 +222,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                       value={formData.state}
                       onChange={handleChange}
                       placeholder="STATE"
-                      className="bg-transparent w-full text-xs text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      className="bg-transparent w-full text-[0.76rem] text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-semibold"
                       required
                     />
                   </div>
@@ -236,7 +236,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                       value={formData.zipCode}
                       onChange={handleChange}
                       placeholder="PIN"
-                      className="bg-transparent w-full text-xs text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-bold"
+                      className="bg-transparent w-full text-[0.76rem] text-center text-[#141b2d] outline-none placeholder:text-[#5c6880]/40 font-semibold"
                       required
                     />
                   </div>
@@ -251,7 +251,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                   onChange={handleChange}
                   className="w-4 h-4 rounded border-2 border-transparent bg-[#f0f4ff] text-[#004ac6] focus:ring-[#004ac6]/10"
                 />
-                <span className="text-[10px] font-bold text-[#5c6880] uppercase tracking-widest group-hover:text-[#141b2d] transition-colors">
+                <span className="text-[10px] font-semibold text-[#5c6880] uppercase tracking-widest group-hover:text-[#141b2d] transition-colors">
                   Set as default shipping address
                 </span>
               </label>
@@ -260,7 +260,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl h-12 text-[0.76rem] uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/10 active:scale-95 disabled:opacity-50"
                 >
                   {loading ? "SAVING..." : "UPDATE ADDRESS"}
                 </button>

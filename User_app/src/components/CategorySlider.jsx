@@ -15,14 +15,14 @@ function CategorySlider({ categories, onCategoryClick }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-12">
           <div>
-            <h2 className="font-display text-4xl font-bold text-[#141b2d] tracking-tight">
+            <h2 className="font-display text-[1.75rem] font-semibold text-[#141b2d] tracking-tight">
               Curated Categories
             </h2>
-            <p className="font-body text-sm text-[#5c6880] mt-2">
+            <p className="font-body text-[0.82rem] text-[#5c6880] mt-2">
               Explore our hand-picked selections by theme.
             </p>
           </div>
-          <button className="font-body text-sm font-semibold text-[#004ac6] hover:underline flex items-center gap-2">
+          <button className="font-body text-[0.82rem] font-semibold text-[#004ac6] hover:underline flex items-center gap-2">
             View All <ArrowUpRight className="w-4 h-4" />
           </button>
         </div>
@@ -42,10 +42,10 @@ function CategorySlider({ categories, onCategoryClick }) {
                 className="absolute inset-0 w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-700"
               />
               <div className="relative mt-auto p-8 z-10">
-                <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#5c6880] font-bold mb-2">
+                <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#5c6880] font-semibold mb-2">
                   Category
                 </p>
-                <h3 className={`font-display font-bold text-[#141b2d] ${index === 0 ? "text-3xl" : "text-xl"}`}>
+                <h3 className={`font-display font-semibold text-[#141b2d] ${index === 0 ? "text-[1.5rem]" : "text-[1.1rem]"}`}>
                   {category}
                 </h3>
               </div>

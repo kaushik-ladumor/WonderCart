@@ -26,19 +26,19 @@ function PrivacyPolicy() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <div className="bg-white rounded-2xl p-4 border border-[#eef2ff] shadow-sm text-center">
             <Shield className="w-6 h-6 text-[#0f49d7] mx-auto mb-3" />
-            <p className="text-[0.76rem] font-bold text-[#141b2d] uppercase tracking-tight">Secure Data</p>
+            <p className="text-[0.76rem] font-semibold text-[#141b2d] uppercase tracking-tight">Secure Data</p>
           </div>
           <div className="bg-white rounded-2xl p-4 border border-[#eef2ff] shadow-sm text-center">
             <Lock className="w-6 h-6 text-[#0f49d7] mx-auto mb-3" />
-            <p className="text-[0.76rem] font-bold text-[#141b2d] uppercase tracking-tight">Encrypted</p>
+            <p className="text-[0.76rem] font-semibold text-[#141b2d] uppercase tracking-tight">Encrypted</p>
           </div>
           <div className="bg-white rounded-2xl p-4 border border-[#eef2ff] shadow-sm text-center">
             <Eye className="w-6 h-6 text-[#0f49d7] mx-auto mb-3" />
-            <p className="text-[0.76rem] font-bold text-[#141b2d] uppercase tracking-tight">Transparent</p>
+            <p className="text-[0.76rem] font-semibold text-[#141b2d] uppercase tracking-tight">Transparent</p>
           </div>
           <div className="bg-white rounded-2xl p-4 border border-[#eef2ff] shadow-sm text-center">
             <FileText className="w-6 h-6 text-[#0f49d7] mx-auto mb-3" />
-            <p className="text-[0.76rem] font-bold text-[#141b2d] uppercase tracking-tight">Compliant</p>
+            <p className="text-[0.76rem] font-semibold text-[#141b2d] uppercase tracking-tight">Compliant</p>
           </div>
         </div>
 
@@ -66,7 +66,7 @@ function PrivacyPolicy() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-[#f8f9fc] rounded-[18px] p-5">
-                <h3 className="font-bold text-[#11182d] text-[0.88rem] mb-3">
+                <h3 className="font-semibold text-[#11182d] text-[0.88rem] mb-3">
                   Personal Information
                 </h3>
                 <ul className="list-disc list-inside text-[#42506d] space-y-2 text-[0.76rem]">
@@ -78,7 +78,7 @@ function PrivacyPolicy() {
               </div>
 
               <div className="bg-[#f8f9fc] rounded-[18px] p-5">
-                <h3 className="font-bold text-[#11182d] text-[0.88rem] mb-3">
+                <h3 className="font-semibold text-[#11182d] text-[0.88rem] mb-3">
                   Usage Information
                 </h3>
                 <ul className="list-disc list-inside text-[#42506d] space-y-2 text-[0.76rem]">
@@ -118,7 +118,7 @@ function PrivacyPolicy() {
                  <Lock className="w-4 h-4" />
                </div>
                <div>
-                  <p className="text-[0.74rem] font-bold text-[#11182d] mb-1">Security Measures</p>
+                  <p className="text-[0.74rem] font-semibold text-[#11182d] mb-1">Security Measures</p>
                   <p className="text-[0.74rem] text-[#5d6a84]">We use SSL encryption, secure servers, and regular security audits to protect your data integrity.</p>
                </div>
             </div>
@@ -130,19 +130,19 @@ function PrivacyPolicy() {
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="bg-[#f8f9fc] rounded-xl p-4 text-center">
-                <p className="text-[0.76rem] font-bold text-[#11182d] mb-1">Access</p>
+                <p className="text-[0.76rem] font-semibold text-[#11182d] mb-1">Access</p>
                 <p className="text-[0.68rem] text-[#5d6a84]">Request personal data</p>
               </div>
               <div className="bg-[#f8f9fc] rounded-xl p-4 text-center">
-                <p className="text-[0.76rem] font-bold text-[#11182d] mb-1">Correction</p>
+                <p className="text-[0.76rem] font-semibold text-[#11182d] mb-1">Correction</p>
                 <p className="text-[0.68rem] text-[#5d6a84]">Update inaccurate data</p>
               </div>
               <div className="bg-[#f8f9fc] rounded-xl p-4 text-center">
-                <p className="text-[0.76rem] font-bold text-[#11182d] mb-1">Deletion</p>
+                <p className="text-[0.76rem] font-semibold text-[#11182d] mb-1">Deletion</p>
                 <p className="text-[0.68rem] text-[#5d6a84]">Remove account data</p>
               </div>
               <div className="bg-[#f8f9fc] rounded-xl p-4 text-center">
-                <p className="text-[0.76rem] font-bold text-[#11182d] mb-1">Opt-out</p>
+                <p className="text-[0.76rem] font-semibold text-[#11182d] mb-1">Opt-out</p>
                 <p className="text-[0.68rem] text-[#5d6a84]">Unsubscribe anytime</p>
               </div>
             </div>
@@ -157,7 +157,7 @@ function PrivacyPolicy() {
                     <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[0.68rem] text-[#5d6a84] font-bold uppercase tracking-tight">Email</p>
+                    <p className="text-[0.68rem] text-[#5d6a84] font-semibold uppercase tracking-tight">Email</p>
                     <p className="text-[#141b2d] text-[0.76rem] font-medium">wondercarthelp@gmail.com</p>
                   </div>
                 </div>
@@ -166,7 +166,7 @@ function PrivacyPolicy() {
                     <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[0.68rem] text-[#5d6a84] font-bold uppercase tracking-tight">Call Us</p>
+                    <p className="text-[0.68rem] text-[#5d6a84] font-semibold uppercase tracking-tight">Call Us</p>
                     <p className="text-[#141b2d] text-[0.76rem] font-medium">+91 7226987466</p>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ function PrivacyPolicy() {
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[0.68rem] text-[#5d6a84] font-bold uppercase tracking-tight">Visit Us</p>
+                    <p className="text-[0.68rem] text-[#5d6a84] font-semibold uppercase tracking-tight">Visit Us</p>
                     <p className="text-[#141b2d] text-[0.76rem] font-medium">Surat, Gujarat, India</p>
                   </div>
                 </div>
@@ -189,13 +189,13 @@ function PrivacyPolicy() {
           <div className="bg-[#0f49d7] w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Shield className="w-6 h-6 text-white" />
           </div>
-          <h3 className="text-[1.2rem] font-bold mb-3">Your Privacy Matters</h3>
+          <h3 className="text-[1.2rem] font-semibold mb-3">Your Privacy Matters</h3>
           <p className="text-white/70 text-[0.82rem] mb-8 max-w-xs mx-auto leading-relaxed">
             We are fully committed to protecting your personal information and maintaining your trust.
           </p>
           <a
             href="/contact"
-            className="inline-block bg-[#0f49d7] text-white px-8 py-3 rounded-xl font-bold text-[0.88rem] transition-colors"
+            className="inline-block bg-[#0f49d7] text-white px-8 py-3 rounded-xl font-semibold text-[0.88rem] transition-colors"
           >
             Contact Privacy Team
           </a>

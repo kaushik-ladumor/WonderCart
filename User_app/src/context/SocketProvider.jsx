@@ -8,16 +8,39 @@ export const SocketProvider = ({ children }) => {
   const { authUser } = useAuth();
 
   useEffect(() => {
-    if (!authUser) return;
+    const token = localStorage.getItem("token");
+    if (!authUser || !token) {
+        if (socket.connected) socket.disconnect();
+        return;
+    }
 
+    // Set token dynamically before connecting
+    socket.auth.token = token;
     socket.connect();
 
-    socket.emit("joinRoom", {
-      userId: authUser._id,
-      role: authUser.role,
+    socket.on("connect", () => {
+        console.log("🟢 Socket connected:", socket.id);
+        
+        // Joined rooms are usually handled on the backend connection event, 
+        // but we can emit a join event if needed for specific logic.
+        socket.emit("join-user-rooms", {
+            userId: authUser._id,
+            role: authUser.role
+        });
+    });
+
+    socket.on("disconnect", () => {
+        console.log("🔴 Socket disconnected");
+    });
+
+    socket.on("connect_error", (err) => {
+        console.error("❌ Socket Connection Error:", err.message);
     });
 
     return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
       socket.disconnect();
     };
   }, [authUser]);

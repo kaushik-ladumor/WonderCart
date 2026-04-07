@@ -101,9 +101,9 @@ function FAQ() {
              <div className="w-9 h-9 bg-[#0f49d7] rounded-xl flex items-center justify-center text-white">
                 <Headphones className="w-5 h-5" />
              </div>
-             <span className="text-[0.65rem] font-bold uppercase tracking-widest text-[#0f49d7]">Help & Assistance</span>
+             <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-[#0f49d7]">Help & Assistance</span>
           </div>
-          <h1 className="text-[1.8rem] md:text-[2.2rem] font-bold text-[#11182d] leading-tight mb-2 tracking-tight">
+          <h1 className="text-[1.8rem] md:text-[2.2rem] font-semibold text-[#11182d] leading-tight mb-2 tracking-tight">
             How can we help?
           </h1>
           <p className="text-[0.82rem] text-[#42506d] leading-relaxed max-w-lg">
@@ -120,7 +120,7 @@ function FAQ() {
               placeholder="Search for answers (e.g. shipping, refund)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-6 py-3.5 bg-white border border-[#eef2ff] rounded-[16px] shadow-sm text-[0.82rem] font-bold outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7] transition-all"
+              className="w-full pl-11 pr-6 py-3.5 bg-white border border-[#eef2ff] rounded-[16px] shadow-sm text-[0.82rem] font-semibold outline-none placeholder:text-[#b0b8cb] focus:border-[#0f49d7] transition-all"
             />
           </div>
         </div>
@@ -137,10 +137,10 @@ function FAQ() {
                       className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-[#f8f9fc] border-none outline-none"
                     >
                       <div className="flex-1">
-                        <span className="text-[0.55rem] font-bold text-[#0f49d7] uppercase tracking-widest block mb-0.5">
+                        <span className="text-[0.55rem] font-semibold text-[#0f49d7] uppercase tracking-widest block mb-0.5">
                           {item.category}
                         </span>
-                        <span className="font-bold text-[#11182d] text-[0.82rem]">
+                        <span className="font-semibold text-[#11182d] text-[0.82rem]">
                           {item.q}
                         </span>
                       </div>
@@ -157,7 +157,7 @@ function FAQ() {
                 ))
               ) : (
                 <div className="px-6 py-10 text-center text-[#5d6a84] text-[0.82rem]">
-                  No results found for "<span className="text-[#11182d] font-bold">{searchTerm}</span>"
+                  No results found for "<span className="text-[#11182d] font-semibold">{searchTerm}</span>"
                 </div>
               )}
             </div>
@@ -166,7 +166,7 @@ function FAQ() {
               <div key={catIndex}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1 h-5 bg-[#0f49d7] rounded-full"></div>
-                  <h2 className="text-[0.95rem] font-bold text-[#11182d] uppercase tracking-widest">
+                  <h2 className="text-[0.95rem] font-semibold text-[#11182d] uppercase tracking-widest">
                     {category.category}
                   </h2>
                 </div>
@@ -179,7 +179,7 @@ function FAQ() {
                           onClick={() => toggleAccordion(globalIndex)}
                           className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-[#f8f9fc] border-none outline-none"
                         >
-                          <span className="font-bold text-[#11182d] text-[0.82rem]">
+                          <span className="font-semibold text-[#11182d] text-[0.82rem]">
                             {item.q}
                           </span>
                           <ChevronDown
@@ -210,14 +210,14 @@ function FAQ() {
                 <Mail className="w-4 h-4 text-white" />
              </div>
           </div>
-          <h3 className="text-[1.1rem] font-bold mb-2">Still have questions?</h3>
+          <h3 className="text-[1.1rem] font-semibold mb-2">Still have questions?</h3>
           <p className="text-white/60 text-[0.74rem] mb-6 max-w-xs mx-auto font-medium uppercase tracking-widest leading-relaxed">
             Our dedicated support team is available mon-sat to assist you.
           </p>
           <div className="flex justify-center">
              <a
                href="/contact"
-               className="bg-[#0f49d7] text-white px-8 py-3 rounded-xl font-bold text-[0.65rem] uppercase tracking-widest shadow-md"
+               className="bg-[#0f49d7] text-white px-8 py-3 rounded-xl font-semibold text-[0.65rem] uppercase tracking-widest shadow-md"
              >
                Contact Support
              </a>

@@ -74,9 +74,9 @@ function SellerReview({ subOrder, isOpen, onClose, onSuccess }) {
           </button>
           
           <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">Feedback Center</span>
-          <h2 className="font-display text-2xl font-bold text-[#141b2d]">Rate Performance</h2>
-          <p className="text-xs text-[#5c6880] mt-1 mb-6 leading-relaxed">
-            Help us maintain quality by rating your experience with <span className="font-bold text-[#141b2d]">{subOrder.seller?.shopName || "the Seller"}</span>.
+          <h2 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">Rate Performance</h2>
+          <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-6 leading-relaxed">
+            Help us maintain quality by rating your experience with <span className="font-semibold text-[#141b2d]">{subOrder.seller?.shopName || "the Seller"}</span>.
           </p>
         </div>
 
@@ -122,7 +122,7 @@ function SellerReview({ subOrder, isOpen, onClose, onSuccess }) {
               <div className="relative group">
                 <MessageSquare className="absolute left-3.5 top-3.5 w-4 h-4 text-[#5c6880]/40 group-focus-within:text-[#004ac6] transition-colors" />
                 <textarea
-                  className="w-full pl-10 pr-4 py-3 bg-[#f0f4ff] rounded-xl text-sm text-[#141b2d] focus:bg-white focus:ring-2 focus:ring-[#004ac6]/10 transition-all border border-transparent focus:border-[#004ac6]/20 resize-none h-28 placeholder:text-[#5c6880]/50"
+                  className="w-full pl-10 pr-4 py-3 bg-[#f0f4ff] rounded-xl text-[0.82rem] text-[#141b2d] focus:bg-white focus:ring-2 focus:ring-[#004ac6]/10 transition-all border border-transparent focus:border-[#004ac6]/20 resize-none h-28 placeholder:text-[#5c6880]/50"
                   placeholder="Share details about delivery or packaging..."
                   maxLength={500}
                   value={comment}
@@ -135,7 +135,7 @@ function SellerReview({ subOrder, isOpen, onClose, onSuccess }) {
               <button
                 onClick={handleSubmit}
                 disabled={submitting || rating === 0}
-                className="w-full h-12 bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-blue-500/10 active:scale-95"
+                className="w-full h-12 bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white rounded-xl text-[0.76rem] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-blue-500/10 active:scale-95"
               >
                 {submitting ? (
                   <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -149,7 +149,7 @@ function SellerReview({ subOrder, isOpen, onClose, onSuccess }) {
               <button
                 onClick={handleSkip}
                 disabled={submitting}
-                className="w-full h-10 bg-transparent text-[#5c6880] rounded-xl text-[10px] font-bold uppercase tracking-widest hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-all"
+                className="w-full h-10 bg-transparent text-[#5c6880] rounded-xl text-[10px] font-semibold uppercase tracking-widest hover:text-[#141b2d] hover:bg-[#f0f4ff] transition-all"
               >
                 Not now, maybe later
               </button>

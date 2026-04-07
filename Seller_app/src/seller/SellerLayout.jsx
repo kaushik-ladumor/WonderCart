@@ -1,15 +1,13 @@
 import { Outlet } from "react-router-dom";
 import SellerNavbar from "./SellerNavbar";
-import SellerFooter from "./SellerFooter";
 
 const SellerLayout = () => {
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+    <div className="min-h-screen bg-[#f5f6ff] text-[#141b2d]">
       <SellerNavbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="px-4 pb-8 pt-[92px] sm:px-6 lg:pl-[304px] lg:pr-8 lg:pt-[104px]">
         <Outlet />
       </main>
-      <SellerFooter />
     </div>
   );
 };

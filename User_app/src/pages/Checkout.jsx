@@ -19,6 +19,7 @@ import {
 import toast from "react-hot-toast";
 import Loader from "../components/Loader";
 import { useCart } from "../context/CartContext";
+import { useSocket } from "../context/SocketProvider";
 import { API_URL } from "../utils/constants";
 import AddAddressModal from "./AddAddressModal";
 import EditAddressModal from "./EditAddressModal";
@@ -61,6 +62,7 @@ const getItemImage = (item) =>
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const socket = useSocket();
   const { refreshCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +78,7 @@ const Checkout = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
   const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
@@ -155,6 +158,36 @@ const Checkout = () => {
   };
 
   useEffect(() => {
+    if (!socket) return;
+
+    const handlePaymentSuccess = (data) => {
+      console.log("💳 Payment Success:", data);
+      toast.success(data.message || "Payment successful!");
+      sessionStorage.removeItem("directOrder");
+      if (refreshCart) refreshCart();
+      if (data.orderId) {
+        navigate(`/orderConfirm/${data.orderId}`);
+      } else {
+        navigate("/my-orders");
+      }
+    };
+
+    const handlePaymentFail = (data) => {
+      console.log("❌ Payment Failed:", data);
+      setSubmitting(false);
+      toast.error(data.message || "Payment failed. Please try again.");
+    };
+
+    socket.on("payment-success", handlePaymentSuccess);
+    socket.on("payment-fail", handlePaymentFail);
+
+    return () => {
+      socket.off("payment-success", handlePaymentSuccess);
+      socket.off("payment-fail", handlePaymentFail);
+    };
+  }, [socket, navigate, refreshCart]);
+
+  useEffect(() => {
     const token = getToken();
     if (!token) {
       navigate("/");
@@ -163,6 +196,13 @@ const Checkout = () => {
     loadOrderItems(token);
     loadAddresses(token);
     fetchWallet();
+    
+    // Fetch available coupons
+    axios.get(`${API_URL}/user/coupons`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => {
+      setAvailableCoupons(res.data.coupons || []);
+    }).catch(err => console.error("Failed to fetch coupons", err));
   }, [navigate]);
 
   const subtotal = orderItems.reduce(
@@ -612,6 +652,34 @@ const Checkout = () => {
                     <p className="mt-2 text-[0.72rem] text-[#6d7892]">
                       Add a WonderCart reward code before placing the order.
                     </p>
+                    {availableCoupons.length > 0 && (
+                      <div className="mt-4 border-t border-[#d7dcea] pt-3">
+                        <p className="mb-2 text-[0.76rem] font-semibold text-[#11182d]">Available Coupons</p>
+                        <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                          {availableCoupons.map(c => (
+                            <div key={c._id} className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#e1e5f1] hover:border-[#0f49d7] cursor-pointer transition-colors"
+                                 onClick={() => {
+                                    setCouponCode(c.code);
+                                    // Let the user click Apply themselves, or we can apply it automatically
+                                 }}>
+                              <div>
+                                <span className="text-[0.7rem] font-bold uppercase tracking-wider text-[#0f49d7] bg-[#eef2ff] px-1.5 py-0.5 rounded">{c.code}</span>
+                                <p className="text-[0.7rem] mt-1 text-[#42506d]">{c.description || `${c.discount}${c.dealType === 'percentage' ? '%' : ' Rs'} off`}</p>
+                              </div>
+                              <button type="button" 
+                                      className="text-[0.7rem] font-semibold text-[#0f49d7]"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCouponCode(c.code);
+                                        // Wait a tick for state to update, passing the specific code is easier but handleApplyCoupon uses state
+                                      }}>
+                                Use
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div>

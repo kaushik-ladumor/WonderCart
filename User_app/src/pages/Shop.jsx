@@ -30,7 +30,7 @@ const getSellingPrice = (product) =>
 const getOriginalPrice = (product) =>
   Math.round(product?.variants?.[0]?.sizes?.[0]?.originalPrice || 0);
 
-const getRating = (product) => Number(product?.averageRating || 4.5);
+const getRating = (product) => Number(product?.average_rating || 0);
 
 const buildPagination = (page, totalPages) => {
   if (totalPages <= 1) return [1];
@@ -289,7 +289,7 @@ function Shop() {
     <div className="rounded-[18px] bg-[#dfe7ff] p-5 text-[#11182d]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[1.2rem] font-semibold">Filters</h3>
+          <h3 className="text-[1.1rem] font-semibold">Filters</h3>
           <p className="mt-1 text-[0.82rem] text-[#5c6880]">Refine selection</p>
         </div>
         <button
@@ -302,7 +302,7 @@ function Shop() {
 
       <div className="mt-6 space-y-7">
         <div>
-          <p className="text-[0.95rem] font-semibold uppercase tracking-[0.12em] text-[#33415e]">
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892]">
             Categories
           </p>
           <div className="mt-3 space-y-3">
@@ -315,15 +315,14 @@ function Shop() {
                   className="flex items-center gap-3 text-left"
                 >
                   <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-md border ${
-                      active
+                    className={`flex h-5 w-5 items-center justify-center rounded-md border ${active
                         ? "border-[#0f49d7] bg-[#0f49d7] text-white"
                         : "border-[#b6c1d7] bg-white"
-                    }`}
+                      }`}
                   >
                     {active && <Check className="h-3.5 w-3.5" />}
                   </span>
-                  <span className="text-[0.95rem] text-[#25324d]">{category}</span>
+                  <span className="text-[0.88rem] text-[#25324d] font-medium">{category}</span>
                 </button>
               );
             })}
@@ -331,7 +330,7 @@ function Shop() {
         </div>
 
         <div>
-          <p className="text-[0.95rem] font-semibold uppercase tracking-[0.12em] text-[#33415e]">
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892]">
             Price Range
           </p>
           <div className="mt-4 px-1">
@@ -355,7 +354,7 @@ function Shop() {
         </div>
 
         <div>
-          <p className="text-[0.95rem] font-semibold uppercase tracking-[0.12em] text-[#33415e]">
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892]">
             Ratings
           </p>
           <div className="mt-3 space-y-3">
@@ -369,13 +368,12 @@ function Shop() {
                 className="flex items-center gap-3 text-left"
               >
                 <span
-                  className={`h-5 w-5 rounded-full border ${
-                    minRating === rating
+                  className={`h-5 w-5 rounded-full border ${minRating === rating
                       ? "border-[#0f49d7] bg-[#0f49d7]"
                       : "border-[#b6c1d7] bg-white"
-                  }`}
+                    }`}
                 />
-                <span className="text-[0.9rem] text-[#25324d]">
+                <span className="text-[0.88rem] text-[#25324d] font-medium">
                   {"★".repeat(rating)} & Up
                 </span>
               </button>
@@ -434,13 +432,13 @@ function Shop() {
             <div className="rounded-[18px] bg-[#eef2ff] px-5 py-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <p className="text-[0.78rem] font-medium uppercase tracking-[0.2em] text-[#33415e]">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892]">
                     Home / Shop
                   </p>
-                  <h1 className="mt-2 text-[1.9rem] font-semibold tracking-tight text-[#11182d] sm:text-[2.2rem]">
+                  <h1 className="mt-2 text-[1.5rem] sm:text-[1.75rem] font-semibold tracking-tight text-[#11182d]">
                     The Collection
                   </h1>
-                  <p className="mt-2 text-[0.9rem] text-[#42506d]">
+                  <p className="mt-2 text-[0.82rem] text-[#42506d] font-medium uppercase tracking-wider">
                     {searchLoading
                       ? "Searching products..."
                       : `Showing ${startIndex}-${endIndex} of ${filteredProducts.length} results`}
@@ -460,7 +458,7 @@ function Shop() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-[0.78rem] font-medium uppercase tracking-[0.16em] text-[#33415e]">
+                    <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892]">
                       Sort By:
                     </span>
                     <select
@@ -533,11 +531,10 @@ function Shop() {
                           <button
                             key={item}
                             onClick={() => setPage(item)}
-                            className={`flex h-9 min-w-[36px] items-center justify-center rounded-[12px] px-2 text-[0.88rem] ${
-                              currentPage === item
+                            className={`flex h-9 min-w-[36px] items-center justify-center rounded-[12px] px-2 text-[0.88rem] ${currentPage === item
                                 ? "bg-[#0f49d7] text-white"
                                 : "bg-white text-[#11182d]"
-                            }`}
+                              }`}
                           >
                             {item}
                           </button>
