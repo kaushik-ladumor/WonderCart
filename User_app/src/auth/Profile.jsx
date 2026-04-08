@@ -41,6 +41,8 @@ const Profile = () => {
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showUpdatePassword, setShowUpdatePassword] = useState(false);
+  const [showVerifyEmail, setShowVerifyEmail] = useState(false);
   const navigate = useNavigate();
   const socket = useSocket();
 
@@ -148,7 +150,7 @@ const Profile = () => {
       title: "Update Password",
       description: "Ensure your account is secure",
       icon: Shield,
-      action: () => document.getElementById("update_password_modal")?.showModal(),
+      action: () => setShowUpdatePassword(true),
     },
     {
       title: "Track Order",
@@ -420,7 +422,10 @@ const Profile = () => {
         </div>
       </div>
 
-      <UpdatePassword />
+      <UpdatePassword 
+        isOpen={showUpdatePassword} 
+        onClose={() => setShowUpdatePassword(false)} 
+      />
       <VerifyEmail 
         isOpen={showVerifyEmail} 
         onClose={() => setShowVerifyEmail(false)} 
