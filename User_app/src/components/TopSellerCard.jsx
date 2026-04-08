@@ -59,11 +59,11 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
                Engineered for high-intensity performance with responsive cushioning and a breathable mesh upper for peak results.
             </p>
 
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                     <div className="flex text-[#ff9c07]">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-auto">
+                <div className="flex items-center gap-2 flex-wrap">
+                     <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(productId?.average_rating || rating) ? "fill-current" : "opacity-20"}`} />
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(productId?.average_rating || rating) ? "fill-[#ff9c07] text-[#ff9c07]" : "fill-[#f1f5fb] text-[#d9deeb]"}`} />
                         ))}
                     </div>
                     <span className="text-[0.76rem] text-[#6d7892] font-semibold uppercase tracking-wider">({productId?.total_reviews || reviewCount} reviews)</span>
@@ -71,7 +71,7 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
                 
                 <button 
                     onClick={handleAddToCart}
-                    className="bg-[#0f49d7] text-white px-8 py-3 rounded-xl font-semibold text-[0.88rem] flex items-center gap-2"
+                    className="bg-[#0f49d7] w-full sm:w-auto justify-center text-white px-8 py-3 rounded-xl font-semibold text-[0.88rem] flex items-center gap-2"
                 >
                     Buy Now <ChevronRight className="w-4 h-4" />
                 </button>

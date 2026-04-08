@@ -606,7 +606,7 @@ const Checkout = () => {
                         <img
                           src={item.productImg}
                           alt={item.productName}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain p-2 mix-blend-multiply"
                         />
                       ) : (
                         <MapPin className="h-3.5 w-3.5 text-[#8b96ad]" />
@@ -655,7 +655,7 @@ const Checkout = () => {
                     {availableCoupons.length > 0 && (
                       <div className="mt-4 border-t border-[#d7dcea] pt-3">
                         <p className="mb-2 text-[0.76rem] font-semibold text-[#11182d]">Available Coupons</p>
-                        <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                        <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
                           {availableCoupons.map(c => (
                             <div key={c._id} className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#e1e5f1] hover:border-[#0f49d7] cursor-pointer transition-colors"
                                  onClick={() => {

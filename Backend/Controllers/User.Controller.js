@@ -89,7 +89,7 @@ const signup = async (req, res) => {
 
     const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-    const expireCode = new Date(Date.now() + 10 * 60 * 1000);
+    const expireCode = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
 
     const newUser = await User.create({
       username,
@@ -375,7 +375,7 @@ const resendCode = async (req, res) => {
     }
 
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
 
     user.verificationCode = newCode;
     user.expireCode = expiry;
@@ -424,7 +424,7 @@ const forgatPassword = async (req, res) => {
     }
 
     const resetCode = Math.floor(1000 + Math.random() * 9000).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
 
     user.verificationCode = resetCode;
     user.expireCode = expiry;

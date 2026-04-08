@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Loader from "../components/Loader";
 import { API_URL } from "../utils/constants";
 
 const getCouponTypeIcon = (coupon) => {
@@ -146,9 +147,7 @@ const MyCoupons = () => {
         </div>
 
         {loading ? (
-          <div className="rounded-[16px] bg-white px-5 py-12 text-center text-[0.82rem] text-[#62708d]">
-            Loading your rewards...
-          </div>
+          <Loader />
         ) : filteredCoupons.length > 0 ? (
           <div className="mt-4 space-y-3">
             {filteredCoupons.map((coupon) => {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useCart } from "../context/CartContext";
+import Loader from "../components/Loader";
 import { API_URL } from "../utils/constants";
 
 function FackPage() {
@@ -90,7 +91,7 @@ function FackPage() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <Loader />;
   if (!cart || cart.items.length === 0) return <p>Cart is empty</p>;
 
   const totalPrice = cart.items.reduce(

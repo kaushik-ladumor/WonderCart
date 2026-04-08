@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 import useDeals from '../hooks/useDeals';
 import DealCard from '../components/DealCard';
 import DealTimer from '../components/DealTimer';
+import Loader from '../components/Loader';
 
 // Categories mapping for icons
 const CATEGORY_ICONS = {
@@ -187,7 +188,7 @@ const Deals = () => {
 
             {/* DYNAMIC CATEGORY SELECTOR */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="flex items-center justify-center gap-5 md:gap-10 overflow-x-auto no-scrollbar">
+                <div className="flex items-center justify-start md:justify-center gap-5 md:gap-10 overflow-x-auto scrollbar-hide pb-4 pt-1">
                     {/* Always show "All" */}
                     {[ 'All', ...availableCategories ].map((catId) => {
                         const Icon = CATEGORY_ICONS[catId] || Sparkles;
@@ -227,16 +228,7 @@ const Deals = () => {
                 </div>
 
                 {loading && filteredDeals.length === 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                       {[...Array(4)].map((_, i) => (
-                            <div key={i} className="animate-pulse bg-white p-4 rounded-[24px] border border-[#eef2ff]">
-                                <div className="bg-gray-100 aspect-square mb-4 rounded-[20px]"></div>
-                                <div className="bg-gray-100 h-4 w-3/4 mb-2 rounded"></div>
-                                <div className="bg-gray-100 h-3 w-1/2 mb-4 rounded"></div>
-                                <div className="bg-gray-100 h-10 w-full rounded-xl"></div>
-                            </div>
-                        ))}
-                    </div>
+                    <Loader />
                 ) : filteredDeals.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-[24px] border border-[#eef2ff]">
                         <Zap className="w-8 h-8 text-gray-200 mx-auto mb-4" />

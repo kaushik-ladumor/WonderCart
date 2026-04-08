@@ -12,10 +12,12 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
 import { useCart } from "../context/CartContext";
 import { useSocket } from "../context/SocketProvider";
 import { API_URL } from "../utils/constants";
+import Logo from "./Logo";
 
 const navLinks = [
   { label: "Shop", to: "/shop" },
@@ -40,6 +42,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isMobileSearchExpanded, setIsMobileSearchExpanded] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const { authUser, setAuthUser } = useAuth();
   const { cartCount } = useCart();
@@ -143,6 +146,13 @@ export default function Navbar() {
     if (!socket || !authUser) return undefined;
 
     const handleNotification = (notification) => {
+      // Show real-time toast
+      if (notification.type === 'order-status') {
+          toast.success(notification.message, { icon: '📦' });
+      } else {
+          toast(notification.message, { icon: '🔔' });
+      }
+
       setNotifications((prev) => [
         {
           id: notification.orderId || Date.now(),
@@ -216,17 +226,48 @@ export default function Navbar() {
   const userName = authUser?.username || authUser?.name || "My Account";
   const userEmail = authUser?.email || "WonderCart member";
 
+  const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+  const handleGlobalSearch = (e) => {
+    e.preventDefault();
+    if (globalSearchQuery.trim()) {
+      navigate(`/shop?q=${encodeURIComponent(globalSearchQuery.trim())}`);
+      setIsMenuOpen(false);
+    }
+  };
+
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-[#e4e8f2] bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-8">
-            <Link
-              to="/"
-              className="text-[1.75rem] font-semibold tracking-tight text-[#0f49d7]"
-            >
-              WonderCart
-            </Link>
+          <div className="flex items-center gap-4 flex-1 lg:flex-none">
+            <Logo className={isMobileSearchExpanded ? 'hidden sm:flex max-w-[200px] opacity-100' : 'max-w-[200px] opacity-100 transition-all duration-300'} />
+
+            {/* Mobile Expanded Search */}
+            {isMobileSearchExpanded && (
+              <div className="flex md:hidden flex-1 w-full animate-in fade-in zoom-in-95 duration-200">
+                <form onSubmit={handleGlobalSearch} className="flex h-10 w-full items-center gap-2 rounded-[20px] border border-[#e4e8f2] bg-[#f8f9fc] px-4 focus-within:ring-2 focus-within:ring-[#0f49d7]/10 focus-within:bg-white focus-within:border-[#c5d0e6] transition-all">
+                  <Search className="h-4.5 w-4.5 text-[#6d7892] shrink-0" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={globalSearchQuery}
+                    onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                    placeholder="Search for products..."
+                    className="w-full bg-transparent text-[0.85rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsMobileSearchExpanded(false);
+                      setGlobalSearchQuery("");
+                    }}
+                    className="p-1 rounded-full text-[#6d7892] hover:bg-[#e4e8f2] transition-colors shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
+            )}
 
             <div className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) =>
@@ -257,22 +298,26 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex flex-1 justify-center px-4 lg:px-8 max-w-2xl mx-auto">
-            <div className="flex w-full items-center gap-3 rounded-[24px] border border-[#f1f5fb] bg-[#f1f5fb] px-5 py-2.5 transition-all focus-within:ring-2 focus-within:ring-[#0f49d7]/10 focus-within:bg-white group">
-              <Search className="h-4.5 w-4.5 text-[#6d7892]" />
+            <form onSubmit={handleGlobalSearch} className="flex w-full items-center gap-3 rounded-[24px] border border-[#f1f5fb] bg-[#f1f5fb] px-5 py-2.5 transition-all focus-within:ring-2 focus-within:ring-[#0f49d7]/10 focus-within:bg-white group">
+              <button type="submit" aria-label="Search">
+                <Search className="h-4.5 w-4.5 text-[#6d7892]" />
+              </button>
               <input
                 type="text"
-                placeholder="Search curated deals..."
+                value={globalSearchQuery}
+                onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                placeholder="Search products, categories..."
                 className="w-full bg-transparent text-[0.82rem] text-[#11182d] outline-none font-medium placeholder:text-[#94a3b8]"
               />
-            </div>
+            </form>
           </div>
 
           <div className="flex items-center gap-2">
             {authUser && (
-              <div className="relative hidden lg:block" ref={notificationRef}>
+              <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => setShowNotifications((prev) => !prev)}
-                  className="relative rounded-xl p-2 text-[#25324d]"
+                  className="relative rounded-xl p-2 text-[#25324d] hover:bg-[#f8f9fc] transition-colors"
                   aria-label="Notifications"
                 >
                   <Bell className="h-5 w-5" />
@@ -282,7 +327,7 @@ export default function Navbar() {
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 top-full mt-3 w-[320px] overflow-hidden rounded-[18px] border border-[#e2e7f2] bg-white shadow-[0_18px_40px_rgba(17,24,45,0.08)]">
+                  <div className="absolute right-[-80px] sm:right-0 top-full mt-3 w-[280px] sm:w-[320px] overflow-hidden rounded-[18px] border border-[#e2e7f2] bg-white shadow-[0_18px_40px_rgba(17,24,45,0.08)]">
                     <div className="flex items-center justify-between border-b border-[#edf1f8] px-4 py-3">
                       <p className="text-[0.82rem] font-semibold text-[#11182d]">
                         Notifications
@@ -300,7 +345,7 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-80 overflow-y-auto scrollbar-hide">
                       {notifications.length === 0 ? (
                         <div className="px-4 py-10 text-center text-[0.82rem] text-[#6a7690]">
                           No notifications yet
@@ -429,9 +474,20 @@ export default function Navbar() {
               </button>
             )}
 
+            {/* Mobile Collapsed Search Icon (Moved to Right Side) */}
+            {!isMobileSearchExpanded && (
+              <button
+                onClick={() => setIsMobileSearchExpanded(true)}
+                className="rounded-xl p-2 text-[#25324d] md:hidden hover:bg-[#f8f9fc] transition-colors"
+                aria-label="Expand mobile search"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            )}
+
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="rounded-xl p-2 text-[#25324d] lg:hidden"
+              className="rounded-xl p-2 text-[#25324d] lg:hidden hover:bg-[#f8f9fc] transition-colors"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
@@ -440,37 +496,36 @@ export default function Navbar() {
         </div>
       </nav>
 
+      {/* Sidebar background overlay */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] bg-white lg:hidden">
-          <div ref={menuRef} className="flex h-full flex-col bg-white">
-            <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-4">
-              <Link
-                to="/"
-                className="text-[1.55rem] font-semibold tracking-tight text-[#0f49d7]"
-              >
-                WonderCart
-              </Link>
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl p-2 text-[#5c6880]"
-                aria-label="Close menu"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+        <div 
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden transition-opacity" 
+          onClick={() => setIsMenuOpen(false)} 
+        />
+      )}
 
-            <div className="border-b border-[#edf1f8] px-5 py-4">
-              <div className="flex items-center gap-2 rounded-[16px] border border-[#e3e7f3] bg-[#eef2ff] px-4 py-3">
-                <Search className="h-4 w-4 text-[#6d7892]" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full bg-transparent text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#7c88a2]"
-                />
-              </div>
-            </div>
+      {/* Sidebar panel */}
+      <div className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[70] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl ${
+        isMenuOpen ? "translate-x-0" : "-translate-x-full"
+      }`}>
+        <div className="flex h-full flex-col bg-white overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-5">
+            <Link
+              to="/"
+              className="text-[1.55rem] font-semibold tracking-tight text-[#0f49d7]"
+            >
+              WonderCart
+            </Link>
+            <button
+              onClick={() => setIsMenuOpen(false)}
+              className="rounded-xl p-2 text-[#5c6880] hover:bg-gray-100 transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-6">
+          <div className="flex-1 overflow-y-auto px-5 py-6">
               <div className="space-y-1">
                 {navLinks.map((link) =>
                   link.external ? (
@@ -498,52 +553,44 @@ export default function Navbar() {
                 )}
               </div>
 
-              <div className="mt-6 rounded-[24px] border border-[#e3e7f3] bg-[#f7f8fc] p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    to="/wishlist"
-                    className="rounded-2xl bg-white px-4 py-4 text-[0.82rem] font-medium text-[#25324d]"
-                  >
-                    Wishlist
+            </div>
+
+          <div className="pt-2 pb-6 px-5 mt-auto bg-white border-t border-[#f1f5fb]">
+            <div className="flex flex-col gap-1 mt-4">
+              <Link to="/wishlist" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3.5 text-[0.88rem] font-semibold text-[#11182d] hover:bg-[#f8f9fc] transition-colors">
+                <div className="flex items-center gap-3"><Heart className="w-4.5 h-4.5 text-[#6d7892]" /> Wishlist</div>
+              </Link>
+              <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3.5 text-[0.88rem] font-semibold text-[#11182d] hover:bg-[#f8f9fc] transition-colors">
+                <div className="flex items-center gap-3"><ShoppingBag className="w-4.5 h-4.5 text-[#6d7892]" /> Bag</div>
+                {cartCount > 0 && <span className="flex items-center justify-center bg-[#0f49d7] text-white text-[10px] min-w-[20px] h-5 rounded-full font-bold px-1.5">{cartCount}</span>}
+              </Link>
+              
+              {authUser ? (
+                <>
+                  <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3.5 text-[0.88rem] font-semibold text-[#11182d] hover:bg-[#f8f9fc] transition-colors">
+                    <div className="flex items-center gap-3"><User className="w-4.5 h-4.5 text-[#6d7892]" /> Profile</div>
                   </Link>
-                  <Link
-                    to="/cart"
-                    className="rounded-2xl bg-white px-4 py-4 text-[0.82rem] font-medium text-[#25324d]"
+                  <button onClick={handleLogout} className="w-full flex items-center justify-between rounded-xl px-4 py-3.5 text-[0.88rem] font-semibold text-[#d12828] hover:bg-red-50 transition-colors">
+                    <div className="flex items-center gap-3"><LogOut className="w-4.5 h-4.5 opacity-80" /> Logout</div>
+                  </button>
+                </>
+              ) : (
+                <div className="mt-4 pt-4 border-t border-[#f1f5fb]">
+                  <button
+                    onClick={() => {
+                      document.getElementById("login_modal")?.showModal();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 rounded-[16px] bg-[#0f49d7] px-4 py-4 text-[0.88rem] font-semibold text-white hover:bg-[#003da3] transition-colors"
                   >
-                    Bag ({cartCount})
-                  </Link>
-                  {authUser ? (
-                    <>
-                      <Link
-                        to="/profile"
-                        className="rounded-2xl bg-white px-4 py-4 text-[0.82rem] font-medium text-[#25324d]"
-                      >
-                        Profile
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="rounded-2xl bg-white px-4 py-4 text-left text-[0.82rem] font-medium text-[#cf2b2b]"
-                      >
-                        Logout
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        document.getElementById("login_modal")?.showModal();
-                        setIsMenuOpen(false);
-                      }}
-                      className="col-span-2 rounded-2xl bg-[#0f49d7] px-4 py-4 text-[0.82rem] font-medium text-white"
-                    >
-                      Sign In
-                    </button>
-                  )}
+                    <User className="w-4 h-4" /> Sign In securely
+                  </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
     </>
   );

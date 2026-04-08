@@ -289,10 +289,7 @@ const TrackOrder = () => {
         ) : (
           <div className="py-20 flex flex-col items-center justify-center">
             {loading ? (
-              <div className="flex flex-col items-center gap-6">
-                 <div className="w-12 h-12 border-4 border-[#0f49d7] border-t-transparent rounded-full animate-spin" />
-                 <p className="text-[0.65rem] font-semibold text-[#b0b8cb] uppercase tracking-widest">Synchronizing coordinates...</p>
-              </div>
+              <Loader />
             ) : (
               <div className="text-center space-y-6">
                 <div className="w-28 h-28 bg-white rounded-[32px] flex items-center justify-center mx-auto shadow-sm border border-[#eef2ff]">

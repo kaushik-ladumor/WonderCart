@@ -168,13 +168,13 @@ function App() {
         {/* Navbar and Footer shared layout */}
         <Route
           element={
-            <>
+            <div className="flex min-h-screen flex-col">
               <Navbar />
-              <div className="pb-24 lg:pb-0">
+              <main className="flex-1">
                 <Outlet />
-                <Footer />
-              </div>
-            </>
+              </main>
+              <Footer />
+            </div>
           }
         >
           <Route path="/" element={<Home />} />

@@ -332,32 +332,34 @@ const updateCartItem = async (req, res) => {
       item.originalPrice = sizeObj.originalPrice;
       item.sellingPrice = sizeObj.sellingPrice;
       item.discount = sizeObj.discount || 0;
-    }
 
-    item.quantity = quantity;
+      item.quantity = quantity;
 
-    await cart.save();
-    await cart.populate("items.product");
+      await cart.save();
+      await cart.populate("items.product");
 
-    // ✅ Emit stock-low alert if stock is critical
-    if (global.io && sizeObj.stock < 5) {
-      global.io.to(`cart-${userId}`).emit("stock-low", {
-        productId,
-        productName: product.name,
-        color,
-        size,
-        stock: sizeObj.stock,
-        message: `Hurry! Only ${sizeObj.stock} left in stock for ${product.name}`
+      // ✅ Emit stock-low alert if stock is critical
+      if (global.io && sizeObj.stock < 5) {
+        global.io.to(`cart-${userId}`).emit("stock-low", {
+          productId,
+          productName: product.name,
+          color,
+          size,
+          stock: sizeObj.stock,
+          message: `Hurry! Only ${sizeObj.stock} left in stock for ${product.name}`
+        });
+      }
+
+      emitCartUpdate(userId, cart, "quantity-updated");
+
+      return res.status(200).json({
+        success: true,
+        message: "Quantity updated",
+        cart,
       });
+    } else {
+      return res.status(404).json({ message: "Product not found" });
     }
-
-    emitCartUpdate(userId, cart, "quantity-updated");
-
-    res.status(200).json({
-      success: true,
-      message: "Quantity updated",
-      cart,
-    });
   } catch (err) {
     console.error("Update cart error:", err);
     res.status(500).json({ message: err.message });

@@ -99,7 +99,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
     const zone = getZone(group.sellerPin, customerPin);
     const edd = calculateEDD(new Date(), group.handlingDays, zone);
     const commission = Math.round((group.subTotal * group.commissionRate) / 100);
-    
+
     // SLA ship by date (roughly T0 + handling days)
     const mustShipBy = new Date();
     mustShipBy.setDate(mustShipBy.getDate() + group.handlingDays);
@@ -216,12 +216,12 @@ const placeOrder = async (req, res) => {
 
     // 1. Prepare and Split
     const subOrdersData = await prepareOrderSplitting(items, zipCode);
-    
+
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
     const tax = Math.round(subTotal * 0.18);
     const codFee = paymentMethod === "COD" ? 50 : 0;
-    
+
     // Verify COD serviceability
     if (paymentMethod === "COD") {
       if (!isCodServiceable(zipCode)) {
@@ -349,7 +349,7 @@ const verifyPayment = async (req, res) => {
     };
 
     const subOrdersData = await prepareOrderSplitting(orderData.items, zipCode);
-    
+
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
     const tax = Math.round(subTotal * 0.18);
@@ -448,7 +448,7 @@ const updateSubOrderStatus = async (req, res) => {
 
     if (status === "DELIVERED" && previousStatus !== "DELIVERED") {
       subOrder.deliveredAt = new Date();
-      
+
       // RELEASE PAYOUT TO SELLER WALLET
       const seller = await User.findById(sellerId);
       if (seller) {
@@ -498,7 +498,7 @@ const trackOrder = async (req, res) => {
         // It's a SubOrder ID like ORD-1001-A
         const subOrder = await SubOrder.findOne({ subOrderId: id }).populate("masterOrder");
         if (!subOrder) return res.status(404).json({ success: false, message: "Sub-order not found" });
-        
+
         // Return full MasterOrder so customer sees all packages
         const masterOrder = await MasterOrder.findById(subOrder.masterOrder).populate({
           path: "subOrders",

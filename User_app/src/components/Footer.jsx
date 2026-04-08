@@ -11,6 +11,7 @@ import {
   Star,
   MapPin
 } from "lucide-react";
+import Logo from "./Logo";
 
 function Footer() {
   const currentYear = new Date().getFullYear();
@@ -22,7 +23,7 @@ function Footer() {
       links: [
         { name: "Explore Shop", path: "/shop" },
         { name: "Top Sellers", path: "/top-sellers" },
-        { name: "New Arrivals", path: "/shop" },
+        { name: "Deals & Offers", path: "/deals" },
         { name: "My Wishlist", path: "/wishlist" },
       ]
     },
@@ -49,35 +50,18 @@ function Footer() {
   ];
 
   return (
-    <footer className="bg-[#f8f9fc] pt-10 pb-6 border-t border-[#eef2ff]">
+    <footer className="bg-[#f8f9fc] pt-6 pb-2 border-t border-[#eef2ff]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8 lg:gap-8 mb-6 mt-2">
 
           {/* Brand & Mission */}
-          <div className="lg:col-span-2">
-            <Link to="/" className="inline-block mb-4">
-              <span className="text-[1.5rem] font-semibold tracking-tighter text-[#11182d] uppercase">
-                WonderCart
-              </span>
-            </Link>
-            <p className="text-[0.78rem] text-[#42506d] max-w-xs leading-relaxed mb-6">
+          <div className="col-span-2 sm:col-span-3 lg:col-span-2">
+            <div className="inline-block mb-4">
+              <Logo />
+            </div>
+            <p className="text-[0.78rem] text-[#42506d] max-w-xs leading-relaxed">
               Experience curated editorial commerce. Premium essentials for the modern lifestyle, selected for the global collector.
             </p>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2.5 text-[#42506d]">
-                <div className="w-7 h-7 bg-white border border-[#eef2ff] rounded-lg flex items-center justify-center text-[#0f49d7] shadow-sm">
-                  <Mail className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[0.76rem] font-medium">support@wondercart.com</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-[#42506d]">
-                <div className="w-7 h-7 bg-white border border-[#eef2ff] rounded-lg flex items-center justify-center text-[#0f49d7] shadow-sm">
-                  <MapPin className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[0.76rem] font-medium">Global HQ • India</span>
-              </div>
-            </div>
           </div>
 
           {/* Dynamic Link Groups */}
@@ -106,7 +90,7 @@ function Footer() {
         </div>
 
         {/* Feature Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-y border-[#eef2ff] mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-[#eef2ff]">
           {[
             { icon: Globe, text: "Global Shipping" },
             { icon: Truck, text: "Fast Delivery" },
@@ -121,23 +105,14 @@ function Footer() {
         </div>
 
         {/* Legal & Copyright */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] text-[#5d6a84] font-semibold uppercase tracking-widest">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#eef2ff]">
+          <p className="text-[9px] text-[#8693a8] font-semibold uppercase tracking-[0.15em] text-center sm:text-left">
             © {currentYear} WonderCart. All Rights Reserved.
           </p>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-widest text-[#42506d]">
-              <Link to="/privacy" className="hover:text-[#0f49d7]">Privacy</Link>
-              <Link to="/terms" className="hover:text-[#0f49d7]">Terms</Link>
-              <Link to="/shipping" className="hover:text-[#0f49d7]">Shipping</Link>
-              <Link to="/returns" className="hover:text-[#0f49d7]">Returns</Link>
-            </div>
-            <div className="h-3 w-px bg-[#eef2ff] hidden md:block"></div>
-            <div className="flex items-center gap-2 text-[#0f49d7]">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#10b981]"></div>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#11182d]">Online</span>
-            </div>
+          <div className="flex items-center gap-2 p-1.5 px-3 bg-white rounded-full border border-[#eef2ff] shadow-sm">
+             <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></div>
+             <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#11182d]">Systems Operational</span>
           </div>
         </div>
       </div>

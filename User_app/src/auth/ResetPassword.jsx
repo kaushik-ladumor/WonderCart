@@ -1,27 +1,29 @@
-import { Lock, Eye, EyeOff, X, CheckCircle2, Mail } from "lucide-react";
+import { Lock, Eye, EyeOff, X, CheckCircle2, Mail, RefreshCw, Clock } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../utils/constants";
+import { sendEmail } from "../utils/emailService";
 
 function ResetPassword({ email }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [timer, setTimer] = useState(300); // 5 minutes
+  const [canResend, setCanResend] = useState(false);
   const navigate = useNavigate();
   const hiddenInputRef = useRef(null);
 
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      otp: "", // Hidden input for all 4 digits
       newPassword: "",
       confirmPassword: "",
     },
@@ -29,45 +31,69 @@ function ResetPassword({ email }) {
 
   const newPassword = watch("newPassword");
   const confirmPassword = watch("confirmPassword");
-  const otp = watch("otp");
 
-  // Split OTP into digits for display
-  const otpDigits = otp.split("").slice(0, 4);
-  while (otpDigits.length < 4) {
-    otpDigits.push("");
-  }
+  const [otp, setOtp] = useState(["", "", "", ""]);
+  const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
-  // Focus hidden input when clicking on any OTP box
-  const focusHiddenInput = () => {
-    if (hiddenInputRef.current) {
-      hiddenInputRef.current.focus();
+  // Timer countdown - 5 minutes
+  useEffect(() => {
+    if (timer > 0 && !canResend) {
+      const countdown = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(countdown);
+    }
+  }, [timer, canResend]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleOtpChange = (index, e) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (!value) {
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+      return;
+    }
+
+    const newOtp = [...otp];
+    newOtp[index] = value[value.length - 1]; // take the last character typed
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 3 && inputRefs[index + 1].current) {
+      inputRefs[index + 1].current.focus();
     }
   };
 
-  // Handle keydown on hidden input
-  const handleHiddenInputKeyDown = (e) => {
-    // Allow only numbers and control keys
-    if (
-      !/^\d$/.test(e.key) &&
-      !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)
-    ) {
-      e.preventDefault();
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0 && inputRefs[index - 1].current) {
+      inputRefs[index - 1].current.focus();
     }
   };
 
-  // Handle input change
-  const handleHiddenInputChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 4);
-    setValue("otp", value);
-  };
-
-  // Focus hidden input when modal opens
+  // Focus first input when modal opens
   useEffect(() => {
     const modal = document.getElementById("reset_modal");
     if (modal) {
       const handleOpen = () => {
         setTimeout(() => {
-          focusHiddenInput();
+          setTimer(300); // Reset to 5 minutes
+          setCanResend(false);
+          if (inputRefs[0].current) {
+            inputRefs[0].current.focus();
+          }
         }, 100);
       };
 
@@ -76,10 +102,47 @@ function ResetPassword({ email }) {
     }
   }, []);
 
+  const handleResendCode = async () => {
+    if (!email) return;
+    try {
+      setResending(true);
+      const response = await axios.post(`${API_URL}/user/forget-password`, {
+        email: email,
+      });
+
+      if (response.data.success) {
+        toast.success("Verification code resent successfully!");
+        setOtp(["", "", "", ""]);
+        setTimer(300);
+        setCanResend(false);
+
+        if (response.data.verificationCode) {
+          sendEmail({
+            to_email: email,
+            type: "forgotPassword",
+            data: { verificationCode: response.data.verificationCode },
+          }).catch((err) => console.error("EmailJS Error:", err));
+        }
+
+        if (inputRefs[0].current) {
+          inputRefs[0].current.focus();
+        }
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to resend verification code"
+      );
+    } finally {
+      setResending(false);
+    }
+  };
+
   const onSubmit = async (data) => {
-    if (data.otp.length !== 4) {
+    const otpString = otp.join("");
+    
+    if (otpString.length !== 4) {
       toast.error("Please enter all 4 digits of the verification code");
-      focusHiddenInput();
+      if (inputRefs[0].current) inputRefs[0].current.focus();
       return;
     }
 
@@ -94,7 +157,7 @@ function ResetPassword({ email }) {
         `${API_URL}/user/reset-password`,
         {
           email: email,
-          verificationCode: data.otp,
+          verificationCode: otpString,
           newPassword: data.newPassword,
         },
       );
@@ -125,118 +188,108 @@ function ResetPassword({ email }) {
     <>
       {/* Reset Password Modal */}
       <dialog id="reset_modal" className="modal">
-        <div className="modal-box max-w-md p-5 bg-white rounded-lg shadow-xl border border-gray-200">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-            <div>
-              <h3 className="font-semibold text-gray-900 text-[0.9rem]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+          <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-[0_20px_60px_-15px_rgba(20,27,45,0.06)] relative animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-2 text-center relative">
+              <button
+                onClick={closeModal}
+                disabled={loading}
+                className="absolute right-4 top-4 p-1.5 hover:bg-[#f8f9fc] rounded-full disabled:opacity-50 transition-colors"
+                title="Close"
+              >
+                <X className="w-4 h-4 text-[#6d7892]" />
+              </button>
+              <h3 className="text-[1.3rem] font-semibold text-[#11182d] tracking-tight">
                 Reset Password
               </h3>
-              <p className="text-gray-600 text-[0.76rem] mt-0.5">
+              <p className="text-[0.84rem] text-[#6d7892] mt-1 mb-2">
                 Enter code and set new password
               </p>
             </div>
-            <button
-              onClick={closeModal}
-              disabled={loading}
-              className="p-1 hover:bg-gray-100 rounded disabled:opacity-50"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
 
-          {/* Email Display */}
-          {email && (
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-blue-600" />
-                <div>
-                  <p className="text-[0.76rem] text-gray-600">Reset password for</p>
-                  <p className="text-[0.82rem] font-medium text-gray-900 truncate">
-                    {email}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+            <div className="px-6 py-2">
+
+
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Verification Code - Visual Boxes */}
             <div>
-              <label className="block text-[0.82rem] font-medium text-gray-900 mb-2">
+              <label className="block text-[0.84rem] font-semibold text-[#25324d] mb-2 text-center">
                 Verification Code
               </label>
 
-              {/* Hidden input for actual OTP entry */}
-              <input
-                ref={hiddenInputRef}
-                type="text"
-                inputMode="numeric"
-                className="absolute opacity-0 w-0 h-0 text-black"
-                value={otp}
-                onChange={handleHiddenInputChange}
-                onKeyDown={handleHiddenInputKeyDown}
-                maxLength={4}
-              />
-
-              {/* Visual OTP Boxes */}
-              <div className="flex justify-center gap-3 text-black">
+              <div className="flex justify-center gap-3">
                 {[0, 1, 2, 3].map((index) => (
-                  <div
+                  <input
                     key={index}
-                    onClick={focusHiddenInput}
-                    className={`w-12 h-12 flex items-center justify-center border rounded-md text-[1.1rem] font-semibold cursor-text transition-all ${otp.length === index
-                      ? "border-black ring-2 ring-black ring-opacity-20 bg-gray-50"
-                      : otpDigits[index]
-                        ? "border-gray-300 bg-white"
-                        : "border-gray-300 bg-white"
-                      } ${errors.otp ? "border-red-500" : ""
-                      } ${loading ? "bg-gray-100" : ""}`}
-                  >
-                    {otpDigits[index] || ""}
-                    {/* Cursor indicator */}
-                    {otp.length === index && (
-                      <div className="ml-0.5 w-0.5 h-6 bg-black animate-pulse"></div>
-                    )}
-                  </div>
+                    ref={inputRefs[index]}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={otp[index]}
+                    onChange={(e) => handleOtpChange(index, e)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className={`w-14 h-14 text-center border rounded-xl text-[1.2rem] font-bold transition-all outline-none ${
+                        otp[index]
+                          ? "border-[#0f49d7] ring-1 ring-[#0f49d7] bg-[#f8f9fc] text-[#0f49d7]"
+                          : "border-[#d9deeb] bg-white text-[#11182d]"
+                      } ${errors.otp ? "border-red-500" : ""} ${
+                        loading ? "bg-[#f8f9fc] cursor-not-allowed" : "focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7]"
+                      }`}
+                    disabled={loading}
+                  />
                 ))}
               </div>
 
-              {errors.otp && (
-                <p className="text-red-600 text-[0.76rem] mt-2 text-center">
-                  Please enter all 4 digits correctly
-                </p>
-              )}
-              <p className="text-[0.76rem] text-gray-500 mt-2 text-center">
-                Click on any box and type 4-digit code
-              </p>
+              <div className="flex flex-col items-center justify-between mt-4 gap-2 border-t border-[#f8f9fc] pt-4">
+                <div className="flex items-center gap-2 text-[0.76rem] font-semibold text-[#5c6880] uppercase tracking-widest">
+                  <Clock className="w-3.5 h-3.5 text-[#0f49d7]" />
+                  <span>Expires in:</span>
+                  <span className="text-[#11182d] font-bold">{formatTime(timer)}</span>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[0.76rem] font-medium text-[#6d7892]">
+                    Didn't receive code?
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={!canResend || resending || loading}
+                    className="text-[0.76rem] font-semibold text-[#0f49d7] hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1.5 transition-all outline-none"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${resending ? "animate-spin" : ""}`} />
+                    {resending ? "Sending..." : "Resend Code"}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* New Password */}
             <div>
-              <label className="block text-[0.82rem] font-medium text-gray-900 mb-1">
+              <label className="block text-[0.84rem] font-semibold text-[#25324d] mb-1.5 ml-1">
                 New Password
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+                <Lock className="w-4.5 h-4.5 text-[#6d7892]" />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-[0.82rem] text-gray-900 placeholder-gray-500 bg-white ${errors.newPassword ? "border-red-500" : "border-gray-300"
-                    } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
                   disabled={loading}
                   {...register("newPassword", {
                     required: "Password is required",
                     minLength: {
                       value: 8,
-                      message: "Password must be at least 8 characters",
+                      message: "Min 8 characters",
                     },
                   })}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+                  className="text-[#6d7892] hover:text-[#11182d] transition-colors"
                   disabled={loading}
                 >
                   {showPassword ? (
@@ -247,31 +300,23 @@ function ResetPassword({ email }) {
                 </button>
               </div>
               {errors.newPassword && (
-                <p className="text-red-600 text-[0.76rem] mt-1">
+                <p className="text-red-500 text-[0.76rem] mt-1.5 ml-1 font-semibold">
                   {errors.newPassword.message}
                 </p>
               )}
-              <p className="text-[0.76rem] text-gray-500 mt-1">
-                Must be at least 8 characters long
-              </p>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-[0.82rem] font-medium text-gray-900 mb-1">
-                Confirm New Password
+              <label className="block text-[0.84rem] font-semibold text-[#25324d] mb-1.5 ml-1">
+                Confirm Password
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+                <Lock className="w-4.5 h-4.5 text-[#6d7892]" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm new password"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-[0.82rem] text-gray-900 placeholder-gray-500 bg-white ${errors.confirmPassword
-                    ? "border-red-500"
-                    : newPassword === confirmPassword && confirmPassword
-                      ? "border-green-500"
-                      : "border-gray-300"
-                    } ${loading ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
                   disabled={loading}
                   {...register("confirmPassword", {
                     required: "Please confirm your password",
@@ -282,7 +327,7 @@ function ResetPassword({ email }) {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+                  className="text-[#6d7892] hover:text-[#11182d] transition-colors"
                   disabled={loading}
                 >
                   {showConfirmPassword ? (
@@ -293,7 +338,7 @@ function ResetPassword({ email }) {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-600 text-[0.76rem] mt-1">
+                <p className="text-red-500 text-[0.76rem] mt-1.5 ml-1 font-semibold">
                   {errors.confirmPassword.message}
                 </p>
               )}
@@ -301,8 +346,8 @@ function ResetPassword({ email }) {
                 newPassword &&
                 confirmPassword &&
                 newPassword === confirmPassword && (
-                  <div className="flex items-center gap-1 text-green-600 text-[0.76rem] mt-1">
-                    <CheckCircle2 className="w-3 h-3" />
+                  <div className="flex items-center gap-1.5 text-[#16a34a] text-[0.76rem] font-semibold mt-1.5 ml-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                     Passwords match
                   </div>
                 )}
@@ -312,12 +357,12 @@ function ResetPassword({ email }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-[0.82rem] mt-2"
+              className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#003da3] transition-colors mt-4 disabled:opacity-50 shadow-sm disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Resetting Password...
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Resetting...
                 </div>
               ) : (
                 "Reset Password"
@@ -326,72 +371,49 @@ function ResetPassword({ email }) {
           </form>
 
           {/* Security Note */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-2 text-[0.76rem] text-gray-600">
-              <div className="w-4 h-4 flex items-center justify-center">
-                <Lock className="w-3 h-3 text-green-600" />
-              </div>
-              <span>Your new password will be encrypted and secured</span>
+          <div className="mt-4 pb-2 text-center text-[0.76rem] font-semibold text-[#6d7892] flex items-center justify-center gap-1">
+            <Lock className="w-3 h-3" /> Encrypted & Secured
+          </div>
+          
             </div>
           </div>
         </div>
-
-        {/* Modal backdrop */}
-        <form method="dialog" className="modal-backdrop">
-          <button onClick={closeModal} disabled={loading}>
-            close
-          </button>
-        </form>
       </dialog>
 
       {/* Success Modal */}
       <dialog id="success_modal" className="modal">
-        <div className="modal-box max-w-sm p-5 bg-white rounded-lg shadow-xl border border-gray-200">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-black rounded-full mb-4">
-              <CheckCircle2 className="w-6 h-6 text-white" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+          <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-[0_20px_60px_-15px_rgba(20,27,45,0.06)] relative animate-in zoom-in-95 duration-300 p-8 text-center flex flex-col items-center">
+            
+            <div className="w-14 h-14 bg-[#e8f5e9] rounded-full flex items-center justify-center mb-5">
+              <CheckCircle2 className="w-7 h-7 text-[#16a34a]" />
             </div>
 
-            <div className="mb-4">
-              <h3 className="font-semibold text-gray-900 text-[0.9rem] mb-2">
-                Password Reset Complete!
-              </h3>
-              <p className="text-gray-600 text-[0.82rem]">
-                Your password has been successfully reset. You can now login
-                with your new password.
-              </p>
-            </div>
+            <h3 className="text-[1.3rem] font-semibold text-[#11182d] tracking-tight mb-2">
+              Password Reset Complete!
+            </h3>
+            <p className="text-[0.84rem] text-[#6d7892] mb-6">
+              Your password has been successfully reset. You can now login with your new profile details.
+            </p>
 
-            <div className="space-y-2">
-              <button
-                onClick={() => {
-                  document.getElementById("success_modal")?.close();
-                  document.getElementById("login_modal")?.showModal();
-                }}
-                className="w-full bg-black text-white py-2.5 rounded-md font-medium hover:bg-gray-800 transition text-[0.82rem]"
-              >
-                Go to Login
-              </button>
+            <button
+              onClick={() => {
+                document.getElementById("success_modal")?.close();
+                document.getElementById("login_modal")?.showModal();
+              }}
+              className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#003da3] transition-colors mb-2"
+            >
+              Go to Login
+            </button>
 
-              <button
-                onClick={() =>
-                  document.getElementById("success_modal")?.close()
-                }
-                className="w-full py-2.5 border border-gray-300 rounded-md font-medium hover:bg-gray-50 transition text-[0.82rem] text-gray-700"
-              >
-                Close
-              </button>
-            </div>
+            <button
+              onClick={() => document.getElementById("success_modal")?.close()}
+              className="w-full bg-[#f8f9fc] border border-[#d9deeb] text-[#25324d] font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#edf2ff] transition-colors"
+            >
+              Dismiss
+            </button>
           </div>
         </div>
-
-        <form method="dialog" className="modal-backdrop">
-          <button
-            onClick={() => document.getElementById("success_modal")?.close()}
-          >
-            close
-          </button>
-        </form>
       </dialog>
     </>
   );

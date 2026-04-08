@@ -386,7 +386,7 @@ const Cart = () => {
                         <img
                           src={productImg}
                           alt={productName}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain p-2 mix-blend-multiply"
                         />
                       ) : (
                         <ShoppingBag className="h-8 w-8 text-[#8fa0be]" />

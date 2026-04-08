@@ -28,10 +28,10 @@ import { API_URL } from "../utils/constants";
 const formatDate = (dateString) =>
   dateString
     ? new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
     : "N/A";
 
 const Profile = () => {
@@ -83,9 +83,9 @@ const Profile = () => {
     if (!socket || !authUser) return;
 
     const handleWalletUpdate = (data) => {
-        console.log("💰 Wallet Update:", data);
-        fetchProfile();
-        if (data.message) toast.success(data.message);
+      console.log("💰 Wallet Update:", data);
+      fetchProfile();
+      if (data.message) toast.success(data.message);
     };
 
     socket.on("wallet-update", handleWalletUpdate);
@@ -283,13 +283,7 @@ const Profile = () => {
                   <Phone className="h-3.5 w-3.5 text-[#6d7892]" />
                   <span>{defaultAddress.phone}</span>
                 </p>
-                <button
-                  type="button"
-                  onClick={() => navigate("/address")}
-                  className="mt-2 rounded-xl border border-[#d8ddea] px-3 py-1.5 text-[0.76rem] font-medium text-[#11182d]"
-                >
-                  Manage Addresses
-                </button>
+
               </div>
             ) : (
               <div className="mt-5 rounded-[16px] bg-[#f7f8fc] p-4">
@@ -328,9 +322,7 @@ const Profile = () => {
                     {tile.title === "Verification Status" && !authUser?.isVerified && (
                       <button
                         type="button"
-                        onClick={() =>
-                          document.getElementById("verify_email_modal")?.showModal()
-                        }
+                        onClick={() => setShowVerifyEmail(true)}
                         className="mt-1.5 text-[0.76rem] font-medium text-[#0f49d7]"
                       >
                         Verify now
@@ -360,11 +352,10 @@ const Profile = () => {
                     key={item.title}
                     type="button"
                     onClick={item.action}
-                    className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${
-                      index !== settingsItems.length - 1
+                    className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${index !== settingsItems.length - 1
                         ? "border-b border-[#edf1f8]"
                         : ""
-                    }`}
+                      }`}
                   >
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef2ff] text-[#0f49d7]">
                       <Icon className="h-4.5 w-4.5" />
@@ -430,7 +421,11 @@ const Profile = () => {
       </div>
 
       <UpdatePassword />
-      <VerifyEmail modalId="verify_email_modal" email={authUser?.email} />
+      <VerifyEmail 
+        isOpen={showVerifyEmail} 
+        onClose={() => setShowVerifyEmail(false)} 
+        email={authUser?.email} 
+      />
       <DeleteModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}

@@ -97,7 +97,7 @@ const TopSellers = () => {
 
         {/* CATEGORY TABS AND SORT */}
         <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide w-full sm:w-auto pb-1">
             {["All", ...categories.map(c => c.category)].map((cat, idx) => {
               const isActive = activeCategory === cat;
               return (
@@ -160,17 +160,17 @@ const TopSellers = () => {
             )}
 
             {/* INFO BANNER */}
-            <div className="bg-[#eef2ff] rounded-[18px] p-5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-white p-2.5 rounded-full text-[#11182d] shadow-sm">
+            <div className="bg-[#eef2ff] rounded-[18px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-4">
+                <div className="bg-white p-2.5 rounded-full text-[#11182d] shadow-sm shrink-0 mt-1 sm:mt-0">
                   <Clock className="w-4.5 h-4.5" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h4 className="font-semibold text-[#11182d] text-[0.88rem]">Recalculated Hourly</h4>
-                  <p className="text-[#5d6a84] text-[0.74rem] font-medium uppercase tracking-tight">Rankings are determined by sales volume, user ratings, and stock availability.</p>
+                  <p className="text-[#5d6a84] text-[0.74rem] font-medium uppercase tracking-tight mt-1 leading-relaxed">Rankings are determined by sales volume, user ratings, and stock availability.</p>
                 </div>
               </div>
-              <button className="bg-white px-4 py-2 rounded-lg text-[0.74rem] font-semibold text-[#11182d] border border-white shadow-sm whitespace-nowrap">
+              <button className="bg-white px-4 py-2 rounded-lg text-[0.74rem] font-semibold text-[#11182d] shadow-sm whitespace-nowrap self-start sm:self-auto shrink-0 transition-colors hover:bg-gray-50 border border-white">
                 Learn Methodology
               </button>
             </div>

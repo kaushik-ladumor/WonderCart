@@ -4,6 +4,7 @@ import { API_URL } from "../utils/constants";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import Loader from "../components/Loader";
 import { 
   Star, 
   Edit2, 
@@ -42,6 +43,8 @@ const MyReviews = () => {
   useEffect(() => {
     if (token) fetchMyReviews();
   }, [token]);
+
+  if (loading) return <Loader />;
 
   const handleDelete = async (reviewId) => {
     if (!window.confirm("Are you sure you want to delete this review?")) return;
@@ -86,80 +89,86 @@ const MyReviews = () => {
     };
 
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-        <div className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden relative shadow-2xl">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#11182d]/20 backdrop-blur-[4px]">
+        <div className="bg-white rounded-[24px] w-full max-w-lg overflow-hidden relative border border-[#e1e5f1] shadow-2xl animate-in fade-in zoom-in duration-200">
           <button 
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="absolute top-5 right-5 p-2 rounded-full hover:bg-[#f8f9fb] text-[#90a0be] hover:text-[#11182d] transition-all"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4" />
           </button>
 
-          <div className="p-8">
-            <h3 className="text-[1.1rem] font-semibold text-[#11182d] mb-2 uppercase tracking-tight">Edit Your Review</h3>
-            <p className="text-[0.76rem] text-[#6d7892] mb-8 font-medium">Update your experience with this product</p>
+          <div className="p-7">
+            <h3 className="font-display text-[1rem] font-semibold text-[#11182d] mb-1">Modify Review</h3>
+            <p className="font-body text-[0.76rem] text-[#6d7892] mb-6 font-medium">Your feedback helps the community shop better.</p>
 
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Product Info */}
-              <div className="flex items-center gap-4 p-4 bg-[#f8f9fc] rounded-2xl border border-[#edf1f8]">
-                <img 
-                  src={review.product?.images?.[0] || review.product?.variants?.[0]?.images?.[0] || "/placeholder.jpg"} 
-                  alt="" 
-                  className="w-16 h-16 object-contain bg-white rounded-lg p-2"
-                />
+              <div className="flex items-center gap-4 p-4 bg-[#f8f9fb] rounded-2xl border border-[#eef2ff]">
+                <div className="w-14 h-14 bg-white rounded-xl p-1.5 border border-[#eef2ff]">
+                  <img 
+                    src={review.product?.images?.[0] || review.product?.variants?.[0]?.images?.[0] || "/placeholder.jpg"} 
+                    alt="" 
+                    className="w-full h-full object-contain mix-blend-multiply"
+                  />
+                </div>
                 <div>
-                  <p className="text-[0.82rem] font-semibold text-[#11182d] line-clamp-1">{review.product?.name}</p>
+                  <p className="font-display text-[0.82rem] font-semibold text-[#11182d] line-clamp-1">{review.product?.name}</p>
                 </div>
               </div>
 
               {/* Star Rating */}
-              <div className="flex justify-center gap-2 py-4">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onMouseEnter={() => setHoverRating(s)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    onClick={() => setRating(s)}
-                  >
-                    <Star
-                      className={`w-10 h-10 ${
-                        s <= (hoverRating || rating)
-                          ? "text-[#ffb800] fill-[#ffb800]"
-                          : "text-[#e2e8f0] fill-[#e2e8f0]"
-                      }`}
-                    />
-                  </button>
-                ))}
+              <div className="flex flex-col items-center gap-3">
+                <span className="font-body text-[9px] font-bold text-[#6d7892] uppercase tracking-[0.14em]">Overall Satisfaction</span>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onMouseEnter={() => setHoverRating(s)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setRating(s)}
+                      className="transition-transform active:scale-90"
+                    >
+                      <Star
+                        className={`w-9 h-9 ${
+                          s <= (hoverRating || rating)
+                            ? "text-[#ffb800] fill-[#ffb800]"
+                            : "text-[#f1f4f9] fill-[#f1f4f9]"
+                        } transition-colors`}
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Comment */}
               <div>
-                <label className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-widest mb-2 block px-1">Your Thoughts</label>
+                <label className="font-body text-[9px] font-bold text-[#6d7892] uppercase tracking-widest mb-2 block px-1">Detailed Experience</label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="What did you like or dislike? How's the quality?"
+                  placeholder="Share your experience..."
                   rows="4"
-                  className="w-full px-5 py-4 bg-[#f8f9fc] border border-[#edf1f8] rounded-2xl text-[0.82rem] focus:outline-none focus:border-[#0f49d7] transition-all resize-none"
+                  className="w-full px-5 py-4 bg-[#f8f9fb] border border-[#e1e5f1] rounded-2xl font-body text-[0.82rem] text-[#11182d] focus:outline-none focus:border-[#0f49d7] focus:ring-4 focus:ring-[#0f49d7]/5 transition-all resize-none font-medium"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-8 py-4 border border-[#d8ddea] text-[#11182d] font-semibold rounded-2xl text-[0.76rem] uppercase tracking-widest hover:bg-gray-50"
+                  className="flex-1 px-8 py-3.5 border border-[#e1e5f1] text-[#11182d] font-semibold rounded-xl text-[10px] uppercase tracking-widest hover:bg-[#f8f9fb] transition-all"
                 >
-                  Cancel
+                  Discard
                 </button>
                 <button
                   onClick={handleUpdate}
                   disabled={isSubmitting}
-                  className="flex-1 px-8 py-4 bg-[#0f49d7] text-white font-semibold rounded-2xl text-[0.76rem] uppercase tracking-widest hover:bg-[#003da3] transition-all flex items-center justify-center gap-2"
+                  className="flex-1 px-8 py-3.5 bg-[#11182d] text-white font-semibold rounded-xl text-[10px] uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/10"
                 >
                   {isSubmitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : "Update Review"}
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -169,73 +178,68 @@ const MyReviews = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#11182d]"></div>
-      </div>
-    );
-  }
+
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] py-12 pb-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+    <div className="min-h-screen bg-[#f8f9fb] py-6 pb-20 font-body text-[#11182d]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
-            <h1 className="text-[1.5rem] font-semibold text-[#11182d] tracking-tight">Product Feedback</h1>
-            <p className="text-[0.82rem] text-[#5d6a84] mt-2">Manage all the reviews you've shared with the community</p>
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] font-semibold text-[#0f49d7] mb-1.5 block">Account Community</span>
+            <h1 className="font-display text-[1.5rem] sm:text-[1.75rem] font-semibold text-[#11182d] leading-none tracking-tight">Product Feedback</h1>
+            <p className="font-body text-[0.82rem] text-[#42506d] mt-2 font-medium">Manage all the reviews you've shared</p>
           </div>
-          <div className="bg-white px-8 py-5 rounded-[16px] flex flex-col items-center justify-center min-w-[140px] shadow-sm">
-            <p className="text-[1.8rem] font-semibold text-[#0f49d7] leading-none mb-1">{reviews.length || 1}</p>
-            <p className="text-[9px] font-bold text-[#5c6880] uppercase tracking-[0.16em]">Total Reviews</p>
+          <div className="bg-white px-6 py-4 rounded-[18px] border border-[#e1e5f1] flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+            <p className="text-[1.5rem] font-semibold text-[#0f49d7] leading-none mb-1">{reviews.length}</p>
+            <p className="text-[9px] font-bold text-[#6d7892] uppercase tracking-[0.14em]">Total Reviews</p>
           </div>
         </div>
 
         {reviews.length === 0 ? (
-          <div className="bg-white rounded-[32px] border border-[#edf1f8] p-20 text-center shadow-sm">
-            <div className="w-20 h-20 bg-[#eef2ff] rounded-full flex items-center justify-center mx-auto mb-6 text-[#0f49d7]">
-              <MessageSquare className="w-10 h-10" />
+          <div className="bg-white rounded-[24px] border border-[#e1e5f1] p-16 md:p-20 text-center shadow-sm">
+            <div className="w-16 h-16 bg-[#f8f9fb] rounded-[20px] flex items-center justify-center mx-auto mb-6 text-[#90a0be]">
+              <MessageSquare className="w-8 h-8" />
             </div>
-            <h3 className="text-[1.1rem] font-semibold text-[#11182d]">No reviews found</h3>
-            <p className="text-[0.82rem] text-[#5d6a84] mt-2 mb-8 max-w-xs mx-auto">
+            <h3 className="font-display text-[1.1rem] font-semibold text-[#11182d]">No reviews found</h3>
+            <p className="font-body text-[0.82rem] text-[#42506d] mt-2 mb-8 max-w-xs mx-auto font-medium leading-relaxed">
               You haven't shared your feedback on any products yet.
             </p>
             <button 
               onClick={() => navigate("/my-orders")}
-              className="px-8 py-4 bg-[#11182d] text-white font-semibold rounded-2xl text-[0.74rem] uppercase tracking-widest hover:scale-[1.02] transition-transform"
+              className="px-8 py-3 bg-[#11182d] text-white font-semibold rounded-xl text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg shadow-black/10"
             >
               Check My Orders
             </button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {reviews.map((rev) => (
               <div 
                 key={rev._id} 
-                className="bg-white rounded-[24px] border border-[#edf1f8] p-6 sm:p-8 shadow-sm group"
+                className="bg-white rounded-[20px] border border-[#e1e5f1] p-5 sm:p-6 shadow-sm group hover:border-[#0f49d7]/20 transition-all"
               >
-                <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="flex flex-col md:flex-row gap-6 items-start">
                   {/* Product Info */}
-                  <div className="flex-shrink-0 w-full sm:w-36 aspect-square rounded-[8px] overflow-hidden bg-[#11182d] flex items-center justify-center">
+                  <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-[14px] overflow-hidden bg-[#f8f9fb] border border-[#eef2ff] flex items-center justify-center p-2">
                     <img 
-                      src={rev.product?.images?.[0] || rev.product?.variants?.[0]?.images?.[0] || "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500&auto=format&fit=crop&q=80"} 
+                      src={rev.product?.images?.[0] || rev.product?.variants?.[0]?.images?.[0] || "/placeholder.jpg"} 
                       alt={rev.product?.name || "Product"} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain mix-blend-multiply"
                     />
                   </div>
 
                   {/* Review Content */}
                   <div className="flex-1 w-full pt-1">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
                       <div>
-                        <h4 className="text-[1.1rem] font-semibold text-[#11182d] mb-3 leading-none">
-                          {rev.product?.name || "Puma EvoSpeed Football"}
+                        <h4 className="font-display text-[0.88rem] font-semibold text-[#11182d] mb-1.5 leading-tight group-hover:text-[#0f49d7] transition-colors">
+                          {rev.product?.name || "Ordered Product"}
                         </h4>
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-1">
                           {[...Array(5)].map((_, i) => (
                             <Star 
                               key={i} 
-                              className={`w-4 h-4 ${i < (rev.rating || 5) ? "text-[#ffb800] fill-[#ffb800]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`}
+                              className={`w-3.5 h-3.5 ${i < (rev.rating || 5) ? "text-[#ffb800] fill-[#ffb800]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`}
                             />
                           ))}
                         </div>
@@ -243,33 +247,33 @@ const MyReviews = () => {
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => setEditingReview(rev)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e1e5f1] text-[#42506d] font-semibold text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#eef2ff] text-[#42506d] font-semibold text-[9px] uppercase tracking-widest hover:bg-gray-50 transition-colors"
                         >
-                          <Edit2 className="w-3.5 h-3.5" /> Edit
+                          <Edit2 className="w-3 h-3" /> Edit
                         </button>
                         <button 
                           onClick={() => handleDelete(rev._id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#f0c9c9] text-[#d12828] font-semibold text-[10px] uppercase tracking-widest hover:bg-[#fff5f5] transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#f0c9c9] text-[#d12828] font-semibold text-[9px] uppercase tracking-widest hover:bg-[#fff5f5] transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                          <Trash2 className="w-3 h-3" /> Delete
                         </button>
                       </div>
                     </div>
 
-                    <div className="bg-[#f0f3fa] rounded-xl p-4 mb-5">
-                      <p className="text-[0.82rem] text-[#42506d] italic leading-relaxed">
-                        "{rev.comment || "this Football is looking good and play to flexible"}"
+                    <div className="bg-[#f8f9fd] rounded-xl p-4 mb-4 border border-[#eef2ff]">
+                      <p className="font-body text-[0.82rem] text-[#42506d] italic leading-relaxed font-medium">
+                        "{rev.comment || "No comment provided."}"
                       </p>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
-                          rev.status === 'approved' || !rev.status ? 'bg-[#eaf8ef] text-[#15753a]' : 'bg-[#fff5f5] text-[#d12828]'
+                        <span className={`px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest border ${
+                          rev.status === 'approved' || !rev.status ? 'bg-[#e7f6ed] text-[#15753a] border-[#d1f2e0]' : 'bg-[#fff5f5] text-[#d12828] border-[#f0c9c9]'
                         }`}>
                           {rev.status || 'APPROVED'}
                         </span>
                         <span className="text-[9px] font-semibold text-[#6d7892] uppercase tracking-[0.1em]">
-                          Submitted: {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-US') : "6/4/2026"}
+                          {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ""}
                         </span>
                     </div>
                   </div>

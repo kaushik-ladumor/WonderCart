@@ -148,7 +148,7 @@ function UpdatePassword() {
     <dialog id="update_password_modal" className="modal font-body">
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
         <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
-          
+
           {/* Close Button */}
           <button
             onClick={closeModal}

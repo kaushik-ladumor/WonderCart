@@ -69,10 +69,16 @@ function Shop() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const categoryFromUrl = params.get("category");
+    const queryFromUrl = params.get("q");
+    
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
     } else {
       setSelectedCategory("all");
+    }
+
+    if (queryFromUrl !== null) {
+      setSearchQuery(queryFromUrl);
     }
   }, [location.search]);
 
@@ -395,17 +401,8 @@ function Shop() {
             <SlidersHorizontal className="h-4 w-4" />
             Filters
           </button>
-
-          <div className="relative w-full max-w-[220px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6d7892]" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-full rounded-[14px] border border-[#d9deeb] bg-white pl-10 pr-3 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#7c88a2]"
-            />
-          </div>
+          
+          {/* Mobile localized search bar removed */}
         </div>
 
         {mobileFiltersOpen && (
@@ -446,31 +443,24 @@ function Shop() {
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="relative hidden w-full min-w-[260px] lg:block">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6d7892]" />
-                    <input
-                      type="text"
-                      placeholder="Search curated collections..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-11 w-full rounded-[14px] border border-[#d9deeb] bg-white pl-10 pr-3 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#7c88a2]"
-                    />
-                  </div>
+                  {/* Desktop localized search bar removed */}
 
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892]">
+                    <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892] shrink-0">
                       Sort By:
                     </span>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="h-11 rounded-[14px] border border-[#d9deeb] bg-white px-4 text-[0.9rem] text-[#11182d] outline-none"
-                    >
-                      <option value="top-rated">Top Rated</option>
-                      <option value="price-low">Price: Low to High</option>
-                      <option value="price-high">Price: High to Low</option>
-                      <option value="name">Name</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="h-10 w-full min-w-[160px] appearance-none rounded-[16px] border border-[#d9deeb] bg-white pl-4 pr-10 text-[0.85rem] font-medium text-[#11182d] outline-none cursor-pointer hover:border-[#c5d0e6] focus:border-[#0f49d7] focus:ring-1 focus:ring-[#0f49d7] transition-all bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%20stroke%3D%22%236d7892%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat shadow-sm"
+                      >
+                        <option value="top-rated">Top Rated</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="name">Product Name (A-Z)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

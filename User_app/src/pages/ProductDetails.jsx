@@ -438,25 +438,9 @@ const ProductDetail = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-4 font-body text-on-surface bg-background">
-      {/* Breadcrumb */}
-      <nav className="text-[10px] text-[#6d7892] flex items-center gap-2 mb-8 font-medium uppercase tracking-[0.16em]">
-        <button onClick={() => navigate("/")} className="hover:text-[#11182d] transition-colors">
-          HOME
-        </button>
-        <ChevronRight className="w-3 h-3 text-[#d7dcea]" />
-        <button
-          onClick={() => navigate("/shop")}
-          className="hover:text-[#11182d] transition-colors"
-        >
-          {product.category?.toUpperCase() || "STORE"}
-        </button>
-        <ChevronRight className="w-3 h-3 text-outline-variant" />
-        <span className="text-[#11182d] font-semibold">
-          {product.name}
-        </span>
-      </nav>
+      {/* Breadcrumb Removed */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-10">
         {/* Left Column: Image Gallery */}
         <div className="flex flex-col-reverse md:flex-row gap-6">
           {/* Vertical Thumbnails */}
@@ -479,11 +463,8 @@ const ProductDetail = () => {
             <img
               src={images[activeImage] || "/placeholder.jpg"}
               alt={product.name}
-              className="w-full h-full object-contain p-12"
+              className="w-full h-full object-contain mix-blend-multiply p-4"
             />
-            <button className="absolute top-8 right-8 p-3 bg-white rounded-full border border-[#d7dcea] text-[#6d7892]">
-              <Share2 className="w-5 h-5" />
-            </button>
           </div>
         </div>
 
@@ -496,7 +477,10 @@ const ProductDetail = () => {
             <h1 className="text-[1.5rem] sm:text-[1.75rem] font-semibold leading-[1.2] mb-4 text-[#11182d] tracking-tight">
               {product.name}
             </h1>
-            <div className="flex items-center gap-3">
+            <button 
+              onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
+              className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -505,10 +489,10 @@ const ProductDetail = () => {
                   />
                 ))}
               </div>
-              <span className="text-[0.78rem] text-[#6d7892] font-semibold uppercase tracking-wider">
+              <span className="text-[0.78rem] text-[#6d7892] font-semibold uppercase tracking-wider group-hover:text-[#0f49d7] transition-colors">
                 ({product.total_reviews || 0} REVIEWS)
               </span>
-            </div>
+            </button>
           </div>
 
           <div className="mb-8">
@@ -590,19 +574,19 @@ const ProductDetail = () => {
               <p className="text-[10px] font-medium text-[#6d7892] mb-3 uppercase tracking-[0.16em] px-1">
                 SELECT QUANTITY
               </p>
-              <div className="flex items-center gap-4 bg-surface-low border border-[#d7dcea] rounded-2xl p-1.5 w-fit">
+              <div className="flex items-center border border-[#d7dcea] rounded-[14px] w-fit overflow-hidden bg-white shadow-sm mt-2">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-[#d7dcea] text-[#11182d] hover:bg-gray-50 transition-colors shadow-sm"
+                  className="w-11 h-11 flex items-center justify-center text-[#42506d] hover:bg-[#f8f9fc] hover:text-[#0f49d7] transition-colors"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="w-12 text-center text-[0.82rem] font-semibold text-[#11182d]">
+                <span className="w-12 text-center text-[0.85rem] font-semibold text-[#11182d]">
                   {quantity}
                 </span>
                 <button
                   onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-[#d7dcea] text-[#11182d] hover:bg-gray-50 transition-colors shadow-sm"
+                  className="w-11 h-11 flex items-center justify-center text-[#42506d] hover:bg-[#f8f9fc] hover:text-[#0f49d7] transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -619,7 +603,7 @@ const ProductDetail = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-4 mb-12">
+          <div className="flex flex-col gap-4 mb-4">
             <button
               onClick={addToCart}
               disabled={!selectedSize || stock <= 0}
@@ -641,22 +625,23 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      <div className="py-12 border-t border-[#d7dcea] mt-20">
-        <div className="w-full">
+      {reviews.length > 0 && (
+        <div id="reviews-section" className="py-16 border-t border-[#d7dcea] mt-10">
+          <div className="w-full">
             <div className="">
                <h3 className="text-[1.25rem] font-semibold mb-12 text-[#11182d] tracking-tight">Customer Feedbacks</h3>
               {/* Rating Summary & Breakdown */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 mb-16 items-start">
-                <div className="lg:col-span-4 bg-surface-low p-10 rounded-[40px] border border-[#d7dcea] text-center">
-                  <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant mb-4">
+                <div className="lg:col-span-4 bg-[#f8f9fc] p-10 rounded-[40px] border border-[#d7dcea] text-center">
+                  <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6d7892] mb-4">
                     OVERALL RATING
                   </h4>
                   <div className="flex flex-col items-center">
                     <div className="flex items-baseline gap-1">
-                        <span className="text-7xl font-semibold text-on-surface tracking-tighter">
+                        <span className="text-7xl font-semibold text-[#11182d] tracking-tighter">
                         {product.average_rating}
                         </span>
-                        <span className="text-[1.1rem] font-semibold text-on-surface-variant">/ 5.0</span>
+                        <span className="text-[1.1rem] font-semibold text-[#6d7892]">/ 5.0</span>
                     </div>
                     <div className="flex gap-1.5 my-5">
                       {[...Array(5)].map((_, i) => (
@@ -666,9 +651,9 @@ const ProductDetail = () => {
                         />
                       ))}
                     </div>
-                    <div className="mt-4 p-3 bg-tertiary-container rounded-xl flex items-center justify-center gap-2 border border-tertiary/20">
-                        <Check className="w-4 h-4 text-tertiary" />
-                        <span className="text-[10px] font-semibold text-tertiary uppercase tracking-wider">VERIFIED AUTHENTICITY GUARANTEE</span>
+                    <div className="mt-4 p-3 bg-[#10b981]/10 rounded-xl flex items-center justify-center gap-2 border border-[#10b981]/20">
+                        <Check className="w-4 h-4 text-[#10b981]" />
+                        <span className="text-[10px] font-semibold text-[#10b981] uppercase tracking-wider">VERIFIED AUTHENTICITY GUARANTEE</span>
                     </div>
                   </div>
                 </div>
@@ -683,16 +668,16 @@ const ProductDetail = () => {
                         className="flex items-center gap-6 group cursor-pointer"
                         onClick={() => setStarFilter(starFilter === star ? null : star)}
                       >
-                        <span className="text-[0.78rem] font-semibold text-on-surface w-6">
+                        <span className="text-[0.78rem] font-semibold text-[#11182d] w-6">
                           {star}
                         </span>
-                        <div className="flex-1 h-2.5 bg-surface-high rounded-full overflow-hidden">
+                        <div className="flex-1 h-2.5 bg-[#eef2ff] rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${starFilter === star ? "bg-primary" : "bg-primary/80"}`}
+                            className={`h-full rounded-full ${starFilter === star ? "bg-[#0f49d7]" : "bg-[#0f49d7]/80"}`}
                             style={{ width: `${percent}%` }}
                           />
                         </div>
-                        <span className="text-[0.78rem] font-semibold text-on-surface-variant w-8 text-right">
+                        <span className="text-[0.78rem] font-semibold text-[#6d7892] w-8 text-right">
                           {count}
                         </span>
                       </div>
@@ -702,7 +687,7 @@ const ProductDetail = () => {
               </div>
 
               {/* Filters & Sorting */}
-              <div className="flex flex-wrap justify-between items-center gap-6 mb-12 pb-6 border-b border-outline-variant">
+              <div className="flex flex-wrap justify-between items-center gap-6 mb-12 pb-6 border-b border-[#d7dcea]">
                 <div className="flex gap-3 overflow-x-auto scrollbar-hide">
                   <button
                     onClick={() => setStarFilter(null)}
@@ -714,7 +699,7 @@ const ProductDetail = () => {
                     <button
                       key={s}
                       onClick={() => setStarFilter(s)}
-                      className={`px-5 py-2.5 rounded-xl text-[0.74rem] font-semibold flex items-center gap-2 border-2 ${starFilter === s ? "bg-primary border-primary text-white" : "bg-white border-[#d7dcea] text-[#6d7892]"}`}
+                      className={`px-5 py-2.5 rounded-xl text-[0.74rem] font-semibold flex items-center gap-2 border-2 ${starFilter === s ? "bg-[#0f49d7] border-[#0f49d7] text-white" : "bg-white border-[#d7dcea] text-[#6d7892]"}`}
                     >
                       {s} <Star className={`w-3.5 h-3.5 ${starFilter === s ? "fill-white" : ""}`} />
                     </button>
@@ -722,11 +707,11 @@ const ProductDetail = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-widest">SORT BY:</span>
+                    <span className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-widest">SORT BY:</span>
                     <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-transparent text-[0.78rem] font-semibold text-on-surface focus:outline-none cursor-pointer border-b-2 border-primary pb-1"
+                    className="bg-transparent text-[0.78rem] font-semibold text-[#11182d] focus:outline-none cursor-pointer border-b-2 border-[#0f49d7] pb-1"
                     >
                     <option value="latest">Latest First</option>
                     <option value="highest">Highest Rating</option>
@@ -751,92 +736,82 @@ const ProductDetail = () => {
                     >
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-surface-low border border-[#d7dcea] flex items-center justify-center text-[0.9rem] font-semibold text-primary">
-                            {rev.user?.username?.[0]?.toUpperCase() || rev.user?.name?.[0]?.toUpperCase() || "U"}
-                          </div>
-                          <div>
-                            <p className="text-[0.88rem] font-semibold text-on-surface">
-                              {rev.user?.username || rev.user?.name || "Anonymous"}
-                            </p>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-[10px] font-semibold text-on-surface-variant uppercase">
-                                Verified Purchaser <span className="mx-2">•</span> {new Date(rev.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${i < rev.rating ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
+                        <div className="w-14 h-14 rounded-2xl bg-[#f8f9fc] border border-[#d7dcea] flex items-center justify-center text-[0.9rem] font-semibold text-[#0f49d7]">
+                             {rev.user?.username?.[0]?.toUpperCase() || rev.user?.name?.[0]?.toUpperCase() || "U"}
+                           </div>
+                           <div>
+                             <p className="text-[0.88rem] font-semibold text-[#11182d]">
+                               {rev.user?.username || rev.user?.name || "Anonymous"}
+                             </p>
+                             <div className="flex items-center gap-3 mt-1">
+                               <span className="text-[10px] font-semibold text-[#6d7892] uppercase">
+                                 Verified Purchaser <span className="mx-2">•</span> {new Date(rev.createdAt).toLocaleDateString()}
+                               </span>
+                             </div>
+                           </div>
+                         </div>
+                         <div className="flex gap-0.5">
+                           {[...Array(5)].map((_, i) => (
+                             <Star
+                               key={i}
+                               className={`w-4 h-4 ${i < rev.rating ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
+                             />
+                           ))}
+                         </div>
+                       </div>
 
-                      <div className="pl-18">
-                        <p className="text-[0.88rem] text-on-surface-variant leading-relaxed mb-6">
-                            {rev.comment}
-                        </p>
+                       <div className="pl-18">
+                         <p className="text-[0.88rem] text-[#6d7892] leading-relaxed mb-6">
+                             {rev.comment}
+                         </p>
 
-                        {rev.images && rev.images.length > 0 && (
-                            <div className="flex gap-4 mb-8">
-                            {rev.images.map((img, idx) => (
-                                <div
-                                key={idx}
-                                className="w-24 h-24 rounded-2xl overflow-hidden border border-[#d7dcea] cursor-zoom-in"
-                                onClick={() => setSelectedReviewImage(img)}
-                                >
-                                <img src={img} alt="Review" className="w-full h-full object-cover" />
-                                </div>
-                            ))}
-                            </div>
-                        )}
+                         {rev.images && rev.images.length > 0 && (
+                             <div className="flex gap-4 mb-8">
+                             {rev.images.map((img, idx) => (
+                                 <div
+                                 key={idx}
+                                 className="w-24 h-24 rounded-2xl overflow-hidden border border-[#d7dcea] cursor-zoom-in"
+                                 onClick={() => setSelectedReviewImage(img)}
+                                 >
+                                 <img src={img} alt="Review" className="w-full h-full object-cover" />
+                                 </div>
+                             ))}
+                             </div>
+                         )}
 
-                        <div className="flex items-center gap-8 pt-4 border-t border-outline-variant/30">
-                            <button onClick={() => handleHelpful(rev._id)} className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">
-                            <ThumbsUp className="w-4 h-4" /> HELPFUL ({rev.helpful_count || 0})
-                            </button>
-                            <button onClick={() => handleReport(rev._id)} className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">
-                            <Flag className="w-4 h-4" /> REPORT
-                            </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                         <div className="flex items-center gap-8 pt-4 border-t border-[#d7dcea]/30">
+                             <button onClick={() => handleHelpful(rev._id)} className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[#6d7892]">
+                             <ThumbsUp className="w-4 h-4" /> HELPFUL ({rev.helpful_count || 0})
+                             </button>
+                             <button onClick={() => handleReport(rev._id)} className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[#6d7892]">
+                             <Flag className="w-4 h-4" /> REPORT
+                             </button>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
 
-                {reviews.length === 0 && (
-                  <div className="py-24 text-center bg-surface-low rounded-[40px] border border-dashed border-outline-variant">
-                    <Star className="w-12 h-12 text-outline-variant mx-auto mb-6" />
-                    <p className="text-[0.9rem] font-semibold text-on-surface-variant">
-                      No customer feedbacks yet.
-                    </p>
-                    <p className="text-[0.78rem] text-on-surface-variant mt-2">Shared your experience with this product.</p>
-                  </div>
-                )}
             </div>
           </div>
         </div>
-      </div>
-
-
+        </div>
+      )}
 
       {/* Recommended Section */}
       {recommendedProducts.length > 0 && (
-        <section className="mt-20 sm:mt-32 pt-20 border-t border-outline-variant">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-[1.5rem] font-semibold text-on-surface tracking-tight font-display">
+        <section className="mt-10 sm:mt-16 pt-16 border-t border-[#d7dcea]">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-10">
+            <div className="flex-1 pr-4">
+              <h2 className="text-[1.5rem] font-semibold text-[#11182d] tracking-tight font-display leading-tight">
                 Recommended Products
               </h2>
-              <p className="text-[0.82rem] text-on-surface-variant mt-2">
+              <p className="text-[0.82rem] text-[#6d7892] mt-1.5 leading-relaxed">
                 Curated items from our collection you might love
               </p>
             </div>
             <button 
                 onClick={() => navigate("/shop")}
-                className="text-[0.78rem] font-semibold text-primary uppercase tracking-widest"
+                className="text-[0.78rem] font-semibold text-[#0f49d7] uppercase tracking-widest whitespace-nowrap shrink-0 self-start sm:self-auto"
             >
                 View All
             </button>

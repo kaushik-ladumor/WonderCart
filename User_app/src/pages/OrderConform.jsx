@@ -203,206 +203,193 @@ const OrderConfirmationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-12">
-      <div className="max-w-7xl mx-auto px-4 py-4 lg:py-6">
-        
+    <div className="min-h-screen bg-[#f8f9fb] pb-16 font-body text-[#11182d]">
+      <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
+
         {/* Success Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
-           <div className="space-y-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 shadow-sm">
-                 <CheckCircle className="w-5 h-5" />
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center gap-4">
+              <h1 className="font-display text-[1.5rem] sm:text-[1.75rem] font-semibold text-[#11182d] leading-none tracking-tight">
+                Order Confirmed
+              </h1>
+              <div className="w-8 h-8 md:w-9 md:h-9 bg-[#10b981] rounded-full flex items-center justify-center text-white shadow-lg shadow-[#10b981]/15 shrink-0">
+                <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
               </div>
-              <h1 className="font-display text-[1.75rem] font-extrabold text-[#141b2d] tracking-tight">Order Confirmed</h1>
-              <p className="font-body text-[0.78rem] text-[#5c6880] max-w-lg leading-relaxed">
-                Thank you for shopping! Your curator is preparing your selection. We'll send you an email as soon as your order is out for delivery.
-              </p>
-           </div>
-           
-           <div className="bg-[#f0f4ff]/70 border border-blue-50 rounded-2xl p-5 min-w-[180px] text-right shadow-sm">
-             <span className="font-display text-[9px] font-semibold uppercase tracking-widest text-[#5c6880] opacity-60 block mb-0.5">Total Amount</span>
-             <span className="font-display text-[1.2rem] font-extrabold text-[#004ac6] tracking-tighter italic">{formatPrice(order.totalAmount)}</span>
-           </div>
+            </div>
+            <p className="font-body text-[0.82rem] text-[#42506d] max-w-lg leading-relaxed font-medium">
+              Thank you for your trust! Your selection is now being processed for dispatch. A detailed confirmation has been dispatched to your registered email.
+            </p>
+          </div>
+
+          <div className="bg-white border border-[#e1e5f1] rounded-[20px] px-6 py-4 flex flex-col items-start lg:items-end shadow-sm min-w-[200px]">
+            <span className="font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6d7892] mb-1">Total Amount</span>
+            <span className="font-display text-[1.5rem] font-semibold text-[#0f49d7] tracking-tight">
+              {formatPrice(order.totalAmount)}
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Main Content (Left) */}
-          <div className="lg:col-span-8 space-y-6">
-             
-             {/* Delivery Status Card */}
-             <div className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm">
-                <div className="flex items-center gap-2.5 mb-6">
-                   <Truck className="w-4 h-4 text-[#004ac6]" />
-                   <span className="font-display text-[0.82rem] font-semibold text-[#141b2d]">Delivery Status</span>
-                </div>
-                
-                <div className="relative pt-2 pb-6">
-                  <div className="absolute top-[30px] left-8 right-8 h-1 bg-[#f0f4ff] rounded-full">
-                     <div className="h-full w-1/3 bg-[#004ac6] rounded-full shadow-md transition-all duration-1000"></div>
-                  </div>
-                  
-                  <div className="flex justify-between relative z-10">
-                    {[
-                      { label: 'Ordered', icon: CheckCircle, date: new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#004ac6] text-white shadow-md' },
-                      { label: 'Processing', icon: CheckCircle, date: 'Oct 12, 02:15 PM', color: 'bg-[#004ac6] text-white shadow-md' },
-                      { label: 'Shipped', icon: Truck, date: 'Oct 13, 09:00 AM', color: 'bg-white border-[#004ac6] text-[#004ac6]' },
-                      { label: 'Delivered', icon: Home, date: 'Pending', color: 'bg-[#f0f4ff] text-[#e1e8fd]' }
-                    ].map((step, i) => (
-                       <div key={i} className="flex flex-col items-center gap-2">
-                          <div className={`w-10 h-10 rounded-full border-4 border-white flex items-center justify-center ${step.color}`}>
-                             <step.icon className="w-4 h-4" />
-                          </div>
-                          <div className="text-center">
-                             <p className={`font-display text-[10px] font-semibold uppercase tracking-widest block ${step.color.includes('text-[#e1e8fd]') ? 'text-gray-300' : 'text-[#141b2d]'}`}>{step.label}</p>
-                             <p className="font-body text-[8px] text-gray-400 mt-0.5">{step.date}</p>
-                          </div>
-                       </div>
-                    ))}
-                  </div>
-                </div>
-             </div>
+          <div className="lg:col-span-12 space-y-6">
+            
+            {/* Delivery Progress Visualization */}
+            <div className="bg-white border border-[#e1e5f1] rounded-[24px] p-6 md:p-8 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6 opacity-[0.02] pointer-events-none">
+                 <Truck className="w-32 h-32 text-[#0f49d7] -rotate-12" />
+              </div>
 
-             {/* Order Packages */}
-             {order.subOrders?.map((sub, idx) => (
-               <div key={sub._id} className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm mb-6 overflow-hidden">
-                  <div className="flex justify-between items-center mb-6 border-b border-[#f9f9ff] pb-4">
-                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                           <Package className="w-5 h-5" />
+              <div className="flex items-center gap-2 mb-10 relative z-10">
+                 <span className="w-1.5 h-4 bg-[#0f49d7] rounded-full" />
+                 <span className="font-display text-[0.82rem] font-semibold text-[#11182d] uppercase tracking-wider">Fulfillment Status</span>
+              </div>
+
+              <div className="relative z-10 px-2 sm:px-10">
+                {/* Connecting Line */}
+                <div className="absolute top-[21px] left-[10%] right-[10%] h-[1.5px] bg-[#f0f2f8] rounded-full overflow-hidden">
+                   <div className="h-full w-[45%] bg-[#0f49d7] rounded-full shadow-[0_0_8px_rgba(15,73,215,0.3)] transition-all duration-1000" />
+                </div>
+
+                <div className="flex justify-between items-start">
+                  {[
+                    { label: 'Ordered', icon: CheckCircle, date: new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), active: true, done: true },
+                    { label: 'Processing', icon: Loader2, date: 'Oct 12, 02:15 PM', active: true, done: true },
+                    { label: 'Shipped', icon: Truck, date: 'Oct 13, 09:00 AM', active: false, done: false },
+                    { label: 'Delivered', icon: Home, date: 'Pending', active: false, done: false }
+                  ].map((step, i) => (
+                    <div key={i} className="flex flex-col items-center group w-auto">
+                      <div className={`relative w-11 h-11 rounded-full border-[3px] border-white flex items-center justify-center transition-all duration-500 shadow-sm z-20 ${
+                        step.done ? 'bg-[#0f49d7] text-white' : 
+                        step.active ? 'bg-white border-[#0f49d7] text-[#0f49d7]' : 'bg-[#f6f8fd] text-[#90a0be]'
+                      }`}>
+                        <step.icon className={`w-4.5 h-4.5 ${step.label === 'Processing' && step.active ? 'animate-spin' : ''}`} />
+                      </div>
+                      <div className="text-center mt-3">
+                        <p className={`font-display text-[10px] font-semibold uppercase tracking-wider block mb-0.5 whitespace-nowrap ${step.active || step.done ? 'text-[#11182d]' : 'text-[#90a0be]'}`}>{step.label}</p>
+                        <p className="font-body text-[9px] text-[#6d7892] font-medium">{step.date}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               {/* Package Cards */}
+               <div className="space-y-6">
+                 {order.subOrders?.map((sub, idx) => (
+                   <div key={sub._id} className="bg-white border border-[#e1e5f1] rounded-[20px] overflow-hidden shadow-sm transition-all hover:border-[#0f49d7]/20">
+                     <div className="bg-white px-6 py-4 flex justify-between items-center border-b border-[#f1f4f9]">
+                        <div className="flex items-center gap-3">
+                           <div className="w-9 h-9 bg-[#f6f8fd] rounded-xl flex items-center justify-center text-[#0f49d7] border border-[#eef2ff]">
+                              <Package className="w-4.5 h-4.5" />
+                           </div>
+                           <div>
+                              <p className="text-[9px] font-semibold text-[#6d7892] uppercase tracking-widest leading-none mb-1">Package {idx + 1}</p>
+                              <p className="text-[0.76rem] font-semibold text-[#11182d]">{sub.subOrderId}</p>
+                           </div>
                         </div>
-                        <div>
-                           <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-widest">Package {idx + 1}</p>
-                           <p className="text-[0.76rem] font-semibold text-[#141b2d]">{sub.subOrderId}</p>
+                        <button 
+                          onClick={() => navigate(`/track-order?id=${sub.subOrderId}`)}
+                          className="text-[#0f49d7] hover:bg-[#0f49d7] hover:text-white border border-[#0f49d7]/10 px-4 py-1.5 rounded-lg text-[9px] font-semibold uppercase tracking-wider transition-all"
+                        >
+                          Track
+                        </button>
+                     </div>
+                     <div className="p-6 space-y-4">
+                       {sub.items?.map((item, i) => (
+                         <div key={i} className="flex gap-4 items-center group">
+                            <div className="relative w-14 h-14 bg-[#f6f8fd] rounded-xl p-1.5 flex-shrink-0 border border-[#eef2ff] group-hover:bg-white transition-colors">
+                               <img src={getProductImage(item)} alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
+                               <div className="absolute -top-1.5 -right-1.5 bg-[#11182d] text-white w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-bold border-2 border-white shadow-sm">
+                                  {item.quantity}
+                               </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                               <p className="text-[0.78rem] font-semibold text-[#11182d] truncate mb-0.5 group-hover:text-[#0f49d7] transition-colors">{item.name}</p>
+                               <div className="flex items-center gap-2">
+                                  <span className="text-[9px] font-medium text-[#6d7892] uppercase tracking-wider">{item.color} / {item.size}</span>
+                                  <span className="w-1 h-1 rounded-full bg-[#cbd5e1]" />
+                                  <span className="text-[0.82rem] font-semibold text-[#0f49d7]">{formatPrice(item.price)}</span>
+                               </div>
+                            </div>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 ))}
+               </div>
+
+               {/* Right Sidebar Info */}
+               <div className="space-y-6">
+                  {/* Order Specifications */}
+                  <div className="bg-white rounded-[20px] p-6 border border-[#e1e5f1] shadow-sm">
+                     <h3 className="font-display text-[0.82rem] font-semibold text-[#11182d] mb-5 flex items-center gap-2">
+                        <SquareCheckBig className="w-4 h-4 text-[#0f49d7]" /> Order Summary
+                     </h3>
+                     <div className="space-y-4">
+                        {[
+                          { label: 'Order ID', val: `#WC-${order._id.slice(-8).toUpperCase()}`, icon: Hash },
+                          { label: 'Date', val: new Date(order.createdAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }), icon: Calendar },
+                          { label: 'Payment', val: order.paymentMethod || "Direct Payment", icon: PaymentIcon },
+                          { label: 'Payment State', val: order.paymentStatus?.toUpperCase() || 'VALIDATED', isBadge: true },
+                          { label: 'Tracking', val: order.paymentStatus === 'paid' ? 'READY TO SHIP' : 'PROCESSING', isTracking: true }
+                        ].map((row, i) => (
+                          <div key={i} className="flex justify-between items-center group">
+                             <span className="text-[9px] font-semibold text-[#6d7892] uppercase tracking-[0.1em]">{row.label}</span>
+                             {row.isBadge ? (
+                                <span className="bg-[#e7f6ed] text-[#15753a] font-semibold text-[9px] px-2.5 py-0.5 rounded-md tracking-wider border border-[#d1f2e0]">
+                                   {row.val}
+                                </span>
+                             ) : row.isTracking ? (
+                                <span className="text-[9px] font-semibold text-[#0f49d7] uppercase tracking-widest italic">{row.val}</span>
+                             ) : (
+                                <span className="text-[0.78rem] font-semibold text-[#11182d]">{row.val}</span>
+                             )}
+                          </div>
+                        ))}
+                     </div>
+                  </div>
+
+                  {/* Shipment Navigation */}
+                  <div className="bg-white border border-[#e1e5f1] rounded-[20px] p-6 shadow-sm">
+                     <h3 className="font-display text-[0.82rem] font-semibold text-[#11182d] mb-5 flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-[#0f49d7]" /> Shipping Details
+                     </h3>
+                     <div className="space-y-3">
+                        <p className="text-[0.82rem] font-semibold text-[#11182d]">{order.address?.fullName}</p>
+                        <p className="text-[0.74rem] font-medium text-[#42506d] leading-relaxed uppercase tracking-tight">
+                           {order.address?.street},<br />
+                           {order.address?.city}, {order.address?.state} - {order.address?.zipCode}
+                        </p>
+                        <div className="pt-3 border-t border-[#f1f4f9] flex items-center gap-2 text-[#42506d]">
+                           <Phone className="w-3.5 h-3.5 text-[#90a0be]" />
+                           <p className="text-[0.76rem] font-semibold text-[#11182d]">{order.address?.phone}</p>
                         </div>
                      </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-3">
                      <button 
-                       onClick={() => navigate(`/track-order?id=${sub.subOrderId}`)}
-                       className="text-[9px] font-semibold text-[#004ac6] uppercase tracking-[0.2em] bg-blue-50 px-4 py-2 rounded-lg hover:bg-[#004ac6] hover:text-white transition-all"
+                       onClick={() => navigate("/shop")}
+                       className="flex-1 h-11 bg-[#0f49d7] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#11182d] shadow-md shadow-[#0f49d7]/10 active:scale-95"
                      >
-                        Track Package
+                       Shop Again
+                     </button>
+                     <button 
+                       onClick={() => window.print()}
+                       className="w-11 h-11 bg-white text-[#11182d] border border-[#d8ddea] rounded-xl flex items-center justify-center transition-all hover:bg-[#f6f8fd] active:scale-95"
+                       title="Print Invoice"
+                     >
+                       <Printer className="w-4.5 h-4.5" />
                      </button>
                   </div>
-                  
-                  <div className="space-y-3">
-                     {sub.items?.map((item, i) => (
-                        <div key={i} className="flex gap-5 items-center group/item hover:bg-gray-50/50 p-2 -mx-2 rounded-2xl transition-all">
-                           <div className="relative w-16 h-16 bg-[#f9f9ff] rounded-xl overflow-hidden flex-shrink-0 border border-[#f0f4ff] shadow-sm transform group-hover/item:scale-105 transition-transform">
-                              <img 
-                                 src={getProductImage(item) || "https://cdn-icons-png.flaticon.com/512/3225/3225191.png"} 
-                                 alt={item.name} 
-                                 className="w-full h-full object-contain p-2 mix-blend-multiply"
-                              />
-                              <div className="absolute top-0 right-0 bg-[#004ac6] text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-bl-lg shadow-sm">
-                                 {item.quantity}x
-                              </div>
-                           </div>
-                           <div className="flex-1 min-w-0">
-                              <h3 className="font-display text-[0.78rem] font-semibold text-[#141b2d] mb-0.5 truncate group-hover/item:text-[#004ac6] transition-colors">{item.name}</h3>
-                              <div className="flex items-center gap-2">
-                                 <p className="font-body text-[9px] text-[#5c6880] uppercase tracking-widest font-semibold">
-                                    {item.color} · {item.size}
-                                 </p>
-                                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                                 <p className="font-body text-[10px] font-semibold text-[#141b2d] italic">{formatPrice(item.price)}</p>
-                              </div>
-                           </div>
-                        </div>
-                     ))}
-                  </div>
                </div>
-             ))}
+            </div>
           </div>
-
-          <div className="lg:col-span-4 space-y-5">
-             
-             {/* Order Info */}
-             <div className="bg-[#f0f4ff]/50 rounded-[1.5rem] p-6 border border-blue-50 shadow-sm">
-                <h2 className="font-display text-[0.82rem] font-semibold text-[#141b2d] mb-5 flex items-center gap-2">
-                   <Hash className="w-3.5 h-3.5 text-[#004ac6]" /> Order Information
-                </h2>
-                <div className="space-y-3.5">
-                   <div className="flex justify-between items-center group">
-                      <span className="font-display text-[9px] font-semibold uppercase tracking-widest text-[#5c6880] opacity-70">Order Number</span>
-                      <span className="font-display text-[10px] font-semibold text-[#141b2d]">#WC-{order._id.slice(-8).toUpperCase()}</span>
-                   </div>
-                   <div className="flex justify-between items-center group">
-                      <span className="font-display text-[9px] font-semibold uppercase tracking-widest text-[#5c6880] opacity-70">Order Date</span>
-                      <span className="font-display text-[10px] font-semibold text-[#141b2d]">{new Date(order.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}</span>
-                   </div>
-                   <div className="flex justify-between items-center group">
-                      <span className="font-display text-[9px] font-semibold uppercase tracking-widest text-[#5c6880] opacity-70">Payment</span>
-                      <div className="flex items-center gap-2">
-                         <div className="w-5 h-5 bg-[#004ac6] rounded flex items-center justify-center shadow-sm"><PaymentIcon className="w-3 h-3 text-white" /></div>
-                         <span className="font-display text-[10px] font-semibold text-[#141b2d] capitalize">{order.paymentMethod || "Razorpay"}</span>
-                      </div>
-                   </div>
-                    <div className="flex justify-between items-center group">
-                       <span className="font-display text-[9px] font-semibold uppercase tracking-widest text-[#5c6880] opacity-70">Status</span>
-                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded leading-none border tracking-widest ${
-                         order.paymentStatus === 'paid' 
-                           ? "bg-[#e7f6ed] text-[#006e2c] border-[#006e2c]/10" 
-                           : "bg-blue-50 text-[#004ac6] border-[#004ac6]/10"
-                       }`}>
-                         {order.paymentStatus === 'paid' ? 'PAID' : (order.paymentStatus?.replace('_', ' ') || 'CONFIRMED')}
-                       </span>
-                    </div>
-                    <div className="flex justify-between items-center group">
-                       <span className="font-display text-[9px] font-semibold uppercase tracking-widest text-[#5c6880] opacity-70">Track</span>
-                       <span className="font-display text-[10px] font-semibold text-[#004ac6] uppercase tracking-widest italic">{order.paymentStatus === 'paid' ? 'READY TO SHIP' : 'PROCESSING'}</span>
-                    </div>
-                </div>
-             </div>
-
-             {/* Shipping Address */}
-             <div className="bg-white border border-[#f0f4ff] rounded-[1.5rem] p-6 shadow-sm">
-                <h2 className="font-display text-[0.82rem] font-semibold text-[#141b2d] mb-4 flex items-center gap-2">
-                   <MapPin className="w-3.5 h-3.5 text-[#004ac6]" /> Shipping Address
-                </h2>
-                <div className="space-y-2.5">
-                   <p className="font-display text-[0.74rem] font-semibold text-[#141b2d] mb-0.5">{order.address?.fullName || "Aditya Sharma"}</p>
-                    <p className="font-body text-[10px] text-[#5c6880] leading-relaxed uppercase">
-                       {order.address?.street},<br />
-                       {order.address?.city}, {order.address?.state} {order.address?.zipcode || order.address?.zipCode}
-                    </p>
-                   <div className="pt-1.5 flex items-center gap-2 text-[#141b2d]">
-                      <Phone className="w-3 h-3 opacity-40" />
-                      <span className="font-body text-[10px] font-semibold">{order.address?.phone || "+91 98765 43210"}</span>
-                   </div>
-                </div>
-             </div>
-
-             {/* Help Card */}
-             <div className="bg-[#f0f4ff]/70 rounded-[1.5rem] p-6 border-l-[4px] border-l-[#004ac6] shadow-sm">
-                <h3 className="font-display text-[0.74rem] font-semibold text-[#141b2d] mb-2.5">Need Help?</h3>
-                <p className="font-body text-[10px] text-[#5c6880] mb-5 leading-relaxed">Our curators are available 24/7 to assist with your delivery.</p>
-                <div className="space-y-2.5">
-                   <a href="mailto:support@wondercart.com" className="flex items-center gap-2.5 group">
-                      <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-[#004ac6] shadow-sm"><Mail className="w-3 h-3" /></div>
-                      <span className="font-display text-[10px] font-semibold text-[#141b2d] group-hover:text-[#004ac6] transition-colors">support@wondercart.com</span>
-                   </a>
-                   <a href="tel:1800-99-WONDER" className="flex items-center gap-2.5 group">
-                      <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-[#004ac6] shadow-sm"><Phone className="w-3 h-3" /></div>
-                      <span className="font-display text-[10px] font-semibold text-[#141b2d] group-hover:text-[#004ac6] transition-colors">1800-99-WONDER</span>
-                   </a>
-                </div>
-             </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="mt-12 flex flex-wrap justify-center gap-4">
-           <button 
-             onClick={() => navigate("/shop")}
-             className="min-w-[220px] h-12 bg-[#004ac6] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] shadow-lg shadow-blue-500/10 hover:bg-[#141b2d] transition-all active:scale-95"
-           >
-             Continue Shopping
-           </button>
-           <button 
-             onClick={() => window.print()}
-             className="min-w-[180px] h-12 bg-[#f0f4ff] text-[#004ac6] rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] hover:bg-blue-100 transition-all active:scale-95"
-           >
-             Print Invoice
-           </button>
         </div>
       </div>
     </div>

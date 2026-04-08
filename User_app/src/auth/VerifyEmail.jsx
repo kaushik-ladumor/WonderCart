@@ -11,7 +11,7 @@ import { API_URL } from "../utils/constants";
 function VerifyEmail({ modalId = "verify_email_modal" }) {
   const navigate = useNavigate();
   const { authUser, setAuthUser, setToken, setRefreshToken } = useAuth();
-  const [timer, setTimer] = useState(600); // 10 minutes
+  const [timer, setTimer] = useState(300); // 5 minutes
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -55,7 +55,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
     getEmail();
   }, [authUser]);
 
-  // Timer countdown - 10 minutes
+  // Timer countdown - 5 minutes
   useEffect(() => {
     if (timer > 0 && !canResend) {
       const countdown = setInterval(() => {
@@ -77,7 +77,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
     const modal = document.getElementById(modalId);
     if (modal) {
       const handleOpen = () => {
-        setTimer(600); // Reset to 10 minutes
+        setTimer(300); // Reset to 5 minutes
         setCanResend(false);
         reset();
         setTimeout(() => {
@@ -175,7 +175,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
       const res = await axios.post(`${API_URL}/user/resend-code`, { email: userEmail }); // Correct endpoint & payload
 
       toast.success("New OTP sent to your email!");
-      setTimer(600); // Reset to 10 minutes
+      setTimer(300); // Reset to 5 minutes
       setCanResend(false);
       reset();
 
@@ -214,7 +214,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
     <dialog id={modalId} className="modal font-body shadow-none">
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
         <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
-          
+
           {/* Close Button */}
           <button
             onClick={closeModal}
@@ -266,11 +266,10 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
                       id={`digit${digit}`}
                       type="text"
                       maxLength="1"
-                      className={`w-12 h-12 text-center text-[0.9rem] font-semibold rounded-xl transition-all border-2 ${
-                        errors[`digit${digit}`]
+                      className={`w-12 h-12 text-center text-[0.9rem] font-semibold rounded-xl transition-all border-2 ${errors[`digit${digit}`]
                           ? "border-red-500 bg-white"
                           : "border-transparent bg-[#f0f4ff] text-[#141b2d] focus:border-[#004ac6] focus:bg-white focus:ring-4 focus:ring-[#004ac6]/10"
-                      } ${loading ? "opacity-50" : ""}`}
+                        } ${loading ? "opacity-50" : ""}`}
                       disabled={loading}
                       {...register(`digit${digit}`, {
                         required: true,
@@ -316,9 +315,8 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
                   type="button"
                   onClick={handleResend}
                   disabled={!canResend || loading}
-                  className={`text-[10px] font-black uppercase tracking-[0.15em] ${
-                    canResend ? "text-[#004ac6] hover:underline" : "text-[#5c6880]/30 cursor-not-allowed"
-                  } transition-colors`}
+                  className={`text-[10px] font-black uppercase tracking-[0.15em] ${canResend ? "text-[#004ac6] hover:underline" : "text-[#5c6880]/30 cursor-not-allowed"
+                    } transition-colors`}
                 >
                   {canResend
                     ? "Resend Code"

@@ -89,14 +89,14 @@ const getCategoryMeta = (category) => {
   const normalized = String(category || "")
     .trim()
     .toLowerCase();
+    
+  const configMatch = categoryConfig.find((item) => item.key === normalized);
 
-  return (
-    categoryConfig.find((item) => item.key === normalized) || {
-      key: normalized || "general",
-      label: category || "Collection",
-      icon: Sparkles,
-    }
-  );
+  return {
+    key: normalized || "general",
+    label: category || "Collection",
+    icon: configMatch ? configMatch.icon : Sparkles,
+  };
 };
 
 const getProductImage = (product) =>
@@ -189,11 +189,7 @@ function HomePage() {
 
   if (loading) return <Loader />;
 
-  const visibleCategories = (
-    categories.length ? categories : categoryConfig.map((item) => item.label)
-  )
-    .slice(0, 6)
-    .map((category) => getCategoryMeta(category));
+  const visibleCategories = categories.map((category) => getCategoryMeta(category));
 
   const featuredProducts = trendingProducts.slice(0, 4);
 
@@ -242,7 +238,7 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 rounded-[20px] border border-[#e2e6f3] bg-white p-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="flex overflow-x-auto gap-3 rounded-[20px] border border-[#e2e6f3] bg-white p-2 sm:p-3 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {visibleCategories.map((category) => {
             const Icon = category.icon;
 
@@ -252,12 +248,12 @@ function HomePage() {
                 onClick={() =>
                   navigate(`/shop?category=${encodeURIComponent(category.label)}`)
                 }
-                className="flex flex-col items-center justify-center gap-3 rounded-2xl px-3 py-4 text-center"
+                className="flex flex-col items-center justify-center gap-3 rounded-2xl px-2 py-4 sm:px-3 text-center min-w-[96px] sm:min-w-[110px] lg:min-w-0 lg:flex-1 shrink-0 snap-start hover:bg-[#f8f9fc] transition-colors"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#edf2ff] text-[#0f49d7]">
-                  <Icon className="h-4 w-4" />
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#edf2ff] text-[#0f49d7] shadow-sm">
+                  <Icon className="h-5 w-5" />
                 </span>
-                <span className="text-[0.76rem] font-medium uppercase tracking-[0.18em] text-[#3f4b67]">
+                <span className="text-[0.72rem] sm:text-[0.76rem] font-medium uppercase tracking-[0.18em] text-[#3f4b67]">
                   {category.label}
                 </span>
               </button>
