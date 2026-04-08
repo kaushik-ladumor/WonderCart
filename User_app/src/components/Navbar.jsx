@@ -23,7 +23,11 @@ const navLinks = [
   { label: "Shop", to: "/shop" },
   { label: "Top Sellers", to: "/top-sellers" },
   { label: "Deals", to: "/deals" },
-  { label: "Become a Seller", to: "http://localhost:5174", external: true },
+  {
+    label: "Become a Seller",
+    to: "https://wondercart-seller.netlify.app",
+    external: true,
+  },
 ];
 
 const mobileTabs = [
