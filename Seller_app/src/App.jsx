@@ -10,7 +10,6 @@ import Login from "./auth/Login";
 import Signup from "./auth/Signup";
 import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from "./auth/ResetPassword";
-import UpdatePassword from "./auth/UpdatePassword";
 
 import { Toaster } from "react-hot-toast";
 
@@ -30,13 +29,8 @@ import SellerProfile from "./seller/dashboard/SellerProfile";
 import SellerEarnings from "./seller/SellerEarnings";
 import SellerCreateDeal from "./seller/deals/SellerCreateDeal";
 
-import Loader from "./components/Loader";
-
-
-
-
 import { useEffect } from "react";
-
+import SellerLandingPage from "./seller/LandingPage";
 
 function App() {
   const { authUser, setToken, setAuthUser } = useAuth();
@@ -145,18 +139,7 @@ function App() {
       />
 
       <Routes>
-        <Route path="/" element={
-          <div className="h-screen bg-gray-50 flex flex-col items-center justify-center space-y-4">
-            <h1 className="text-3xl font-bold text-gray-900">WonderCart Seller Portal</h1>
-            <button
-              onClick={() => document.getElementById('login_modal')?.showModal()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Sign In to Continue
-            </button>
-            <p className="text-sm text-gray-500 mt-4">Don't have an account? <a href="/signup" className="text-blue-600 hover:underline">Apply Here</a></p>
-          </div>
-        } />
+        <Route path="/" element={<SellerLandingPage />} />
         {/* ================= AUTH ROUTES ================= */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
