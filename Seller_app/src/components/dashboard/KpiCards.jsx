@@ -66,7 +66,7 @@ const KpiCards = ({ kpis = {}, isLoading }) => {
       trend: parseTrend(revenueChange),
       Icon: IndianRupee,
       iconWrap: 'bg-[#dfe7ff] text-[#2156d8]',
-      bars: [34, 52, 50, 68, 79, 58],
+      bars: kpis.revenueBar?.length ? kpis.revenueBar : [34, 52, 50, 68, 79, 58],
       barColor: 'bg-[#9eb6f5]'
     },
     {
@@ -75,7 +75,7 @@ const KpiCards = ({ kpis = {}, isLoading }) => {
       trend: parseTrend(ordersChange),
       Icon: ClipboardList,
       iconWrap: 'bg-[#dfe4f0] text-[#56627d]',
-      bars: [45, 40, 58, 55, 49, 64],
+      bars: kpis.ordersBar?.length ? kpis.ordersBar : [45, 40, 58, 55, 49, 64],
       barColor: 'bg-[#b7beca]'
     },
     {
@@ -84,7 +84,7 @@ const KpiCards = ({ kpis = {}, isLoading }) => {
       trend: null,
       Icon: Boxes,
       iconWrap: 'bg-[#dff6e4] text-[#17803d]',
-      bars: [63, 56, 52, 49, 47, 43],
+      bars: kpis.revenueBar?.length ? kpis.revenueBar.map(v => v * 0.8) : [63, 56, 52, 49, 47, 43],
       barColor: 'bg-[#9dc4b2]'
     },
     {
@@ -93,7 +93,7 @@ const KpiCards = ({ kpis = {}, isLoading }) => {
       trend: null,
       Icon: Package,
       iconWrap: 'bg-[#dfe7ff] text-[#2156d8]',
-      bars: [18, 27, 35, 44, 56, 63],
+      bars: kpis.productsBar?.length ? kpis.productsBar : [18, 27, 35, 44, 56, 63],
       barColor: 'bg-[#8fabeb]'
     }
   ];

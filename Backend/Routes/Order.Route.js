@@ -10,12 +10,17 @@ const {
   getSellerOrders,
   getSellerSubOrderById,
   updateSubOrderStatus,
+  cancelSubOrder,
   trackOrder,
+  getAllOrders,
+  getAdminDashboardStats,
+  razorpayWebhook,
 } = require("../Controllers/OrderMaster.Controller");
+
 const {
-  getOrderById,
   cancelOrder,
 } = require("../Controllers/Order.Controller");
+
 const authenticate = require("../Middlewares/Auth");
 const authorizeRoles = require("../Middlewares/authorizeRoles");
 const Notification = require("../Models/Notification.Model");
@@ -24,9 +29,10 @@ const Notification = require("../Models/Notification.Model");
 router.post("/create", authenticate, requireVerification, placeOrder);
 router.get("/", authenticate, getMyOrders);
 router.get("/id/:orderId", authenticate, getMasterOrderById);
-router.patch("/id/:orderId/cancel", authenticate, cancelOrder);
+router.patch("/sub-id/:subOrderId/cancel", authenticate, cancelSubOrder);
 router.get("/track/:id", authenticate, trackOrder);
 router.get("/my-orders", authenticate, getMyOrders);
+
 // -------------------- SELLER ROUTES --------------------
 router.get(
   "/seller/orders",
@@ -50,7 +56,22 @@ router.put(
   updateSubOrderStatus
 );
 
+// -------------------- ADMIN ROUTES --------------------
+router.get(
+  "/admin/all",
+  authenticate,
+  authorizeRoles("admin"),
+  getAllOrders
+);
 
+router.get(
+  "/admin/dashboard-stats",
+  authenticate,
+  authorizeRoles("admin"),
+  getAdminDashboardStats
+);
+
+// -------------------- NOTIFICATIONS --------------------
 router.get("/notifications", authenticate, async (req, res) => {
   const notifications = await Notification.find({
     user: req.user.userId,
@@ -59,7 +80,6 @@ router.get("/notifications", authenticate, async (req, res) => {
   res.json({ success: true, notifications });
 });
 
-
 router.put("/notifications/:id/read", authenticate, async (req, res) => {
   await Notification.findByIdAndUpdate(req.params.id, {
     isRead: true,
@@ -67,16 +87,14 @@ router.put("/notifications/:id/read", authenticate, async (req, res) => {
 
   res.json({ success: true });
 });
+
 router.delete("/notifications/clear", authenticate, async (req, res) => {
   await Notification.deleteMany({ user: req.user.userId });
   res.json({ success: true });
 });
 
-
-
-// -------------------- ADMIN ROUTES --------------------
-// router.get("/admin/all", authenticate, authorizeRoles("admin"), getAllOrders);
-
+// -------------------- PAYMENT ROUTES --------------------
 router.post('/verify-payment', authenticate, verifyPayment);
+router.post('/webhook', express.raw({ type: 'application/json' }), razorpayWebhook);
 
 module.exports = router;

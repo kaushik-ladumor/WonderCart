@@ -6,6 +6,12 @@ const SellerProfile = require("../Models/SellerProfile.Model");
 const Notification = require("../Models/Notification.Model");
 const transporter = require("../Middlewares/EmailConfig");
 const cloudinary = require("../Utils/Cloudinary");
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 
 // ─── DASHBOARD ───
 const sellerDashboard = async (req, res) => {
@@ -523,11 +529,56 @@ const approveSeller = async (req, res) => {
     profile.approvedAt = new Date();
     profile.rejectionReason = null;
     profile.adminMessage = null;
+
+    // --- RAZORPAY LINKED ACCOUNT CREATION ---
+    if (!profile.razorpayAccountId) {
+       try {
+         const user = await User.findById(profile.user);
+         
+         // Map business type to Razorpay compatible string
+         const typeMap = {
+           "Individual / Sole Proprietor": "individual",
+           "Partnership Firm": "partnership",
+           "Private Limited": "private_limited",
+           "LLP": "llp",
+           "Trust/NGO": "ngo"
+         };
+         
+         const rzpAccount = await razorpay.accounts.create({
+           email: user.email,
+           type: "route",
+           profile: {
+             category: "ecommerce",
+             description: `WonderCart Seller: ${profile.shopName}`,
+             addresses: {
+               registered: {
+                 street1: profile.businessAddress?.addressLine1 || "Business Address",
+                 city: profile.businessAddress?.city || "City",
+                 state: profile.businessAddress?.state || "State",
+                 postal_code: profile.businessAddress?.pinCode || "000000",
+                 country: "IN"
+               }
+             }
+           },
+           legal_business_name: profile.shopName,
+           customer_facing_business_name: profile.shopName,
+           business_type: typeMap[profile.businessType] || "individual",
+           contact_name: user.username,
+         });
+
+         profile.razorpayAccountId = rzpAccount.id;
+         console.log(`✅ Created Razorpay Linked Account: ${rzpAccount.id} for ${profile.shopName}`);
+       } catch (rzpErr) {
+         console.error("❌ Razorpay Account Creation Failed:", rzpErr.message);
+         // We still approve the seller but log the error
+       }
+    }
+
     profile.actionLogs.push({
       admin: adminId,
       adminName: admin.username,
       action: "approve",
-      reason: "Application approved",
+      reason: "Application approved and Linked Account created",
     });
     await profile.save();
 

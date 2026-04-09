@@ -71,7 +71,8 @@ const SellerOrders = () => {
       buyerEmail.toLowerCase().includes(searchLower) ||
       pkg.subOrderId.toLowerCase().includes(searchLower);
 
-    const matchesStatus = selectedStatus === "All" || pkg.status === selectedStatus;
+    const matchesStatus =
+      selectedStatus === "All" || pkg.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
@@ -108,7 +109,9 @@ const SellerOrders = () => {
 
   if (loading) return <Loader />;
 
-  const activeOrders = orders.filter((order) => order.status !== "DELIVERED").length;
+  const activeOrders = orders.filter(
+    (order) => order.status !== "DELIVERED",
+  ).length;
   const dueOrders = orders.filter(
     (order) =>
       calculateDaysLeft(order.mustShipBy) <= 1 &&
@@ -118,7 +121,9 @@ const SellerOrders = () => {
     (sum, order) => sum + (order.sellerPayout || 0),
     0,
   );
-  const deliveredOrders = orders.filter((order) => order.status === "DELIVERED").length;
+  const deliveredOrders = orders.filter(
+    (order) => order.status === "DELIVERED",
+  ).length;
 
   const statCards = [
     {
@@ -179,7 +184,9 @@ const SellerOrders = () => {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#98a4c4]">
                       {card.label}
                     </p>
-                    <p className={`mt-2 text-[22px] font-semibold ${card.valueClasses}`}>
+                    <p
+                      className={`mt-2 text-[22px] font-semibold ${card.valueClasses}`}
+                    >
                       {card.value}
                     </p>
                   </div>
@@ -232,8 +239,14 @@ const SellerOrders = () => {
 
           <div className="mt-4 border-t border-[#edf1ff] pb-2.5 pt-3">
             <p className="text-[11px] text-[#7d88a8]">
-              Showing <span className="font-semibold text-[#11182d]">{filteredOrders.length}</span>{" "}
-              orders{selectedStatus !== "All" ? ` in ${selectedStatus.replaceAll("_", " ")}` : ""}
+              Showing{" "}
+              <span className="font-semibold text-[#11182d]">
+                {filteredOrders.length}
+              </span>{" "}
+              orders
+              {selectedStatus !== "All"
+                ? ` in ${selectedStatus.replaceAll("_", " ")}`
+                : ""}
             </p>
           </div>
         </section>
@@ -282,7 +295,9 @@ const SellerOrders = () => {
                         </div>
 
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[#7d88a8]">
-                          <span className="truncate">{pkg.masterOrder?.user?.email}</span>
+                          <span className="truncate">
+                            {pkg.masterOrder?.user?.email}
+                          </span>
                           <span className="text-[#c3cce2]">•</span>
                           <span className="inline-flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
@@ -299,7 +314,9 @@ const SellerOrders = () => {
                         {pkg.status.replaceAll("_", " ")}
                       </span>
 
-                      {!["SHIPPED", "DELIVERED", "CANCELLED"].includes(pkg.status) && (
+                      {!["SHIPPED", "DELIVERED", "CANCELLED"].includes(
+                        pkg.status,
+                      ) && (
                         <span
                           className={`rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${
                             isUrgent
@@ -307,7 +324,9 @@ const SellerOrders = () => {
                               : "bg-[#f5f7ff] text-[#6f7b99]"
                           }`}
                         >
-                          {daysLeft < 0 ? "Delayed" : `Ship in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`}
+                          {daysLeft < 0
+                            ? "Delayed"
+                            : `Ship in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`}
                         </span>
                       )}
 
@@ -317,7 +336,9 @@ const SellerOrders = () => {
                         </p>
                         <p className="mt-1 text-[14px] font-semibold text-[#18794e]">
                           {RUPEE}
-                          {Number(pkg.sellerPayout || 0).toLocaleString("en-IN")}
+                          {Number(pkg.sellerPayout || 0).toLocaleString(
+                            "en-IN",
+                          )}
                         </p>
                       </div>
 

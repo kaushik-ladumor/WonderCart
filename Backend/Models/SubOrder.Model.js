@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
 
+const statusHistorySchema = new mongoose.Schema({
+  from: String,
+  to: String,
+  timestamp: { type: Date, default: Date.now },
+  changed_by: { type: String, default: "system" },
+  reason: String
+}, { _id: false });
+
 const subOrderSchema = new mongoose.Schema({
   subOrderId: { // ORD-1001-A
     type: String,
@@ -27,44 +35,48 @@ const subOrderSchema = new mongoose.Schema({
   }],
   subTotal: Number,
   shippingCost: Number,
+  taxAmount: { type: Number, default: 0 },
   platformCommission: Number,
-  sellerPayout: Number, // subTotal - platformCommission
+  sellerPayout: Number, 
   status: {
     type: String,
     enum: [
-      "PLACED",
-      "CONFIRMED", // Payment verified
-      "PROCESSING", // Seller packing
-      "READY_TO_SHIP", // Seller marked ready
-      "SHIPPED", // Courier picked up
-      "OUT_FOR_DELIVERY",
-      "DELIVERED",
-      "CANCELLED",
-      "RETURNED",
-      "COD_COLLECTED", // For COD
-      "PAYOUT_RELEASED" // After delivery/confirmation
+      "pending",
+      "confirmed",
+      "processing",
+      "packed",
+      "shipped",
+      "delivered",
+      "cancelled",
+      "returned",
+      "refund_processed"
     ],
-    default: "PLACED",
+    default: "pending",
   },
+  statusHistory: [statusHistorySchema],
   paymentStatus: {
     type: String,
-    enum: ["pending", "paid", "COD_PENDING"],
+    enum: ["pending", "paid", "failed", "partially_refunded", "refunded"],
     default: "pending",
   },
   trackingId: String,
+  trackingUrl: String,
   estimatedDeliveryDate: Date,
   deliveredAt: Date,
+  cancelledAt: Date,
+  returnedAt: Date,
+  payoutStatus: { type: String, enum: ["pending", "released"], default: "pending" },
   payoutReleasedAt: Date,
   isSellerReviewed: { type: Boolean, default: false },
   isSellerReviewSkipped: { type: Boolean, default: false },
   
-  // Fulfillment SLA
-  handlingTimeDays: Number, // Copied from seller profile
+  handlingTimeDays: Number,
   mustShipBy: Date,
   isSlaBreach: { type: Boolean, default: false },
+  zone: String, 
   
-  // Delivery Zone (for EDD calculation)
-  zone: String, // Local, Zone A, Zone B, Zone C
+  // Razorpay Route Integration
+  razorpayTransferId: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model("SubOrder", subOrderSchema);

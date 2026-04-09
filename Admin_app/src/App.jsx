@@ -31,6 +31,10 @@ import AddCoupon from "./Admin/AddCoupon";
 import EditCoupon from "./Admin/EditCoupon";
 import AdminCoupon from "./Admin/AdminCoupon";
 import AdminSellerApplications from "./Admin/AdminSellerApplications";
+import AdminOrders from "./Admin/AdminOrders";
+import AdminWallet from "./Admin/AdminWallet";
+import SellerPayouts from "./Admin/SellerPayouts";
+import AdminRefunds from "./Admin/AdminRefunds";
 
 function App() {
   const { authUser, setToken, setAuthUser } = useAuth();
@@ -176,6 +180,10 @@ function App() {
           <Route path="coupon" element={<AdminCoupon />} />
           <Route path="seller-applications" element={<AdminSellerApplications />} />
           <Route path="deals" element={<AdminDeals />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="wallet" element={<AdminWallet />} />
+          <Route path="payouts" element={<SellerPayouts />} />
+          <Route path="refunds" element={<AdminRefunds />} />
         </Route>
           
           <Route path="/update-password" element={<UpdatePassword />} />

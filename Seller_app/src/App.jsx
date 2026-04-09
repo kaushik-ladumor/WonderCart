@@ -27,6 +27,8 @@ import SellerOrders from "./seller/orders/SellerOrders";
 import OrderDetails from "./seller/orders/OrderDetails";
 import SellerProfile from "./seller/dashboard/SellerProfile";
 import SellerEarnings from "./seller/SellerEarnings";
+import SellerWallet from "./seller/SellerWallet";
+import SellerBank from "./seller/SellerBank";
 import SellerCreateDeal from "./seller/deals/SellerCreateDeal";
 
 import { useEffect } from "react";
@@ -159,6 +161,8 @@ function App() {
           <Route index element={<SellerDashboard />} />
           <Route path="dashboard" element={<SellerDashboard />} />
           <Route path="earnings" element={<SellerEarnings />} />
+          <Route path="wallet" element={<SellerWallet />} />
+          <Route path="bank" element={<SellerBank />} />
           <Route path="products" element={<SellerProducts />} />
           <Route path="products/add" element={<AddProduct />} />
           <Route path="products/:id" element={<ProductDetails />} />

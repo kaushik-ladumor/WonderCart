@@ -14,6 +14,8 @@ import {
   Store,
   User,
   X,
+  Wallet,
+  Landmark,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useSocket } from "../context/SocketProvider";
@@ -73,6 +75,8 @@ const SellerNavbar = () => {
     { path: "/seller/products", label: "Products", icon: Package },
     { path: "/seller/orders", label: "Orders", icon: ShoppingCart },
     { path: "/seller/earnings", label: "Earnings", icon: DollarSign },
+    { path: "/seller/wallet", label: "My Wallet", icon: Wallet },
+    { path: "/seller/bank", label: "Bank Account", icon: Landmark },
     { path: "/seller/deals/create", label: "Create Deal", icon: Percent },
     { path: "/seller/profile", label: "Profile", icon: User },
   ];
@@ -407,9 +411,9 @@ const SellerNavbar = () => {
       </aside>
 
       <header className="fixed inset-x-0 top-0 z-30 lg:left-[272px]">
-        <div className="border-b border-[#e4e8f5] bg-[#f5f6ff]/95 backdrop-blur">
+        <div className="border-b border-[#e4e8f5] bg-white">
           <div className="flex h-[76px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-6">
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#dfe4f4] bg-white text-[#1a2238] transition hover:bg-[#f7f9ff] lg:hidden"
@@ -418,41 +422,41 @@ const SellerNavbar = () => {
                 <Menu className="h-5 w-5" />
               </button>
 
-              <div className="hidden items-center gap-3 rounded-2xl border border-[#dfe4f4] bg-[#eef1ff] px-4 py-3 md:flex md:min-w-[300px] lg:min-w-[380px]">
-                <Search className="h-4 w-4 text-[#69758f]" />
-                <span className="text-sm text-[#69758f]">Search orders, products...</span>
+              <div className="hidden items-center gap-3 relative md:flex md:w-[320px] lg:w-[400px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94a3b8]" />
+                <input 
+                   type="text"
+                   placeholder="Search transactions, products..."
+                   className="w-full rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] py-2.5 pl-11 pr-4 text-[13px] text-[#1a2238] outline-none transition-all focus:border-[#2156d8] focus:ring-1 focus:ring-[#2156d8]"
+                />
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-6">
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown((prev) => !prev)}
-                  className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-[#dfe4f4] bg-white text-[#55627e] transition hover:border-[#cbd4e8] hover:text-[#1a2238]"
+                  className="relative p-2 text-[#64748b] hover:bg-[#f1f5f9] rounded-full transition-colors"
                   aria-label="Notifications"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute right-2 top-2 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#cf2d2d] px-1 text-[10px] font-semibold text-white">
-                      {unreadCount > 9 ? "9+" : unreadCount}
+                    <span className="absolute top-2 right-2 flex h-2 w-2 items-center justify-center rounded-full bg-[#ef4444] border-2 border-white">
                     </span>
                   )}
                 </button>
                 {notificationPanel}
               </div>
 
-              <Link
-                to="/seller/profile"
-                className="hidden items-center gap-3 rounded-2xl border border-[#dfe4f4] bg-white px-4 py-2.5 text-[#1a2238] transition hover:border-[#cbd4e8] hover:bg-[#f7f9ff] sm:flex"
-              >
-                <div className="text-right">
-                  <p className="text-sm font-medium">Merchant Dashboard</p>
-                  <p className="text-xs text-[#7b859d]">Manage your store</p>
+              <div className="flex items-center gap-3 pl-6 border-l border-[#e2e8f0]">
+                <div className="hidden text-right sm:block">
+                  <p className="text-sm font-bold text-[#1a2238] uppercase tracking-tight">{sellerName}</p>
+                  <p className="text-[10px] font-medium text-[#94a3b8]">MERCHANT #{authUser?._id?.substring(0, 6).toUpperCase()}</p>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eef2ff] text-sm font-semibold text-[#2156d8]">
-                  {sellerInitial}
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2ff] text-sm font-semibold text-[#2156d8] overflow-hidden">
+                   <img src={`https://ui-avatars.com/api/?name=${sellerName}&background=0f172a&color=fff`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
-              </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -540,7 +544,13 @@ const SellerNavbar = () => {
           </nav>
         </div>
 
-        <div className="mt-auto border-t border-[#edf0f7] pt-4">
+        <div className="mt-auto border-t border-[#edf0f7] pt-4 space-y-3">
+          <button
+            className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-[#2156d8] py-3.5 text-[14px] font-bold text-white shadow-xl shadow-blue-100 hover:bg-[#1d4ed8] transition-all"
+          >
+            Withdraw Funds
+          </button>
+
           <div className="rounded-[20px] border border-[#e8edf7] bg-white px-4 py-3.5">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#2156d8] text-sm font-semibold text-white">
@@ -558,7 +568,7 @@ const SellerNavbar = () => {
               setMobileMenuOpen(false);
               handleLogout();
             }}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#d9e1f2] bg-white px-4 py-3 text-[14px] font-medium text-[#1a2238]"
+            className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#d9e1f2] bg-white px-4 py-3 text-[14px] font-medium text-[#1a2238] hover:bg-gray-50 transition-colors"
           >
             <LogOut className="h-4 w-4" />
             Logout

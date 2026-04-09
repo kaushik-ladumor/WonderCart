@@ -105,6 +105,9 @@ const sellerProfileSchema = new mongoose.Schema({
   average_rating: { type: Number, default: 0 },
   total_reviews: { type: Number, default: 0 },
 
+  // Razorpay Route Integration
+  razorpayAccountId: { type: String, default: null },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model("SellerProfile", sellerProfileSchema);

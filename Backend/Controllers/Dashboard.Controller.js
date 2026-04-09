@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Order = require("../Models/Order.Model");
+const SubOrder = require("../Models/SubOrder.Model");
 const Product = require("../Models/Product.Model");
 
 exports.getDashboardStats = async (req, res) => {
@@ -16,22 +16,21 @@ exports.getDashboardStats = async (req, res) => {
       case "7d":
         startDate.setDate(now.getDate() - 7);
         previousStartDate.setDate(startDate.getDate() - 7);
-        dateFormat = "%Y-%m-%d"; // Day format
+        dateFormat = "%Y-%m-%d";
         break;
       case "30d":
         startDate.setDate(now.getDate() - 30);
         previousStartDate.setDate(startDate.getDate() - 30);
-        dateFormat = "%Y-%U"; // Week format
+        dateFormat = "%Y-%U";
         break;
       case "90d":
         startDate.setDate(now.getDate() - 90);
         previousStartDate.setDate(startDate.getDate() - 90);
-        dateFormat = "%Y-%m"; // Month format
+        dateFormat = "%Y-%m";
         break;
       case "year":
         startDate.setFullYear(now.getFullYear() - 1);
         previousStartDate.setFullYear(startDate.getFullYear() - 1);
-        // Quarters usually need manual calculation from month
         dateFormat = "%Y-%m"; 
         break;
       default:
@@ -39,136 +38,86 @@ exports.getDashboardStats = async (req, res) => {
         previousStartDate.setDate(startDate.getDate() - 30);
     }
 
-    // Step 1: Get seller's product IDs
-    const sellerProducts = await Product.find({ owner: sellerId });
-    const productIds = sellerProducts.map((p) => p._id);
-    const totalProducts = sellerProducts.length;
+    // Step 1: Basic Seller Info
+    const totalProducts = await Product.countDocuments({ owner: sellerId });
 
-    if (productIds.length === 0) {
-      return res.status(200).json({
-        kpis: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, totalProducts: 0, revenueChange: "0%", ordersChange: "0%" },
-        pipeline: {
-          pending: { count: 0, revenue: 0 }, processing: { count: 0, revenue: 0 },
-          shipped: { count: 0, revenue: 0 }, delivered: { count: 0, revenue: 0 },
-          cancelled: { count: 0, revenue: 0 }
-        },
-        revenueChart: [],
-        topProducts: [],
-        storeHealth: { satisfactionRate: 0, monthlyGrowth: 0, returnRate: 0, avgDispatchDays: 0 }
-      });
-    }
-
-    // Step 2: Main Aggregation Pipeline with $facet
-    const statsResult = await Order.aggregate([
-      // First, get orders created after the previous start date for comparison
-      { $match: { createdAt: { $gte: previousStartDate, $lte: now } } },
+    // Step 2: Main Aggregation Pipeline on SubOrders
+    const statsResult = await SubOrder.aggregate([
+      { $match: { seller: sellerId, createdAt: { $gte: previousStartDate, $lte: now } } },
       
-      // Unwind items to filter only this seller's products
-      { $unwind: "$items" },
-      { $match: { "items.product": { $in: productIds } } },
-      
-      // Add helper fields for period categorization
       {
         $addFields: {
-          itemRevenue: { $multiply: ["$items.price", "$items.quantity"] },
           isCurrentPeriod: { $gte: ["$createdAt", startDate] },
           isPreviousPeriod: { $lt: ["$createdAt", startDate] }
         }
       },
 
-      // Use $facet to calculate multiple dimensions at once
       {
         $facet: {
-          
-          // --- Current Period Overall KPIs ---
+          // KPIs
           currentKPIs: [
             { $match: { isCurrentPeriod: true, status: { $ne: "cancelled" } } },
             {
               $group: {
-                _id: "$_id", // Group by order first to avoid duplicate order counting
-                orderRevenue: { $sum: "$itemRevenue" },
-                status: { $first: "$status" }
-              }
-            },
-            {
-              $group: {
                 _id: null,
-                totalRevenue: { $sum: "$orderRevenue" },
+                totalRevenue: { $sum: "$subTotal" },
                 totalOrders: { $sum: 1 },
                 deliveredCount: { $sum: { $cond: [{ $eq: ["$status", "delivered"] }, 1, 0] } }
               }
             }
           ],
 
-          // --- Previous Period Overall KPIs (for % change) ---
           previousKPIs: [
             { $match: { isPreviousPeriod: true, status: { $ne: "cancelled" } } },
             {
               $group: {
-                _id: "$_id",
-                orderRevenue: { $sum: "$itemRevenue" }
-              }
-            },
-            {
-              $group: {
                 _id: null,
-                totalRevenue: { $sum: "$orderRevenue" },
+                totalRevenue: { $sum: "$subTotal" },
                 totalOrders: { $sum: 1 }
               }
             }
           ],
 
-          // --- Order Pipeline Counts and Revenue (Current Period Only) ---
+          // Pipeline
           pipelineData: [
             { $match: { isCurrentPeriod: true } },
             {
               $group: {
-                _id: { orderId: "$_id", status: "$status" },
-                oRevenue: { $sum: "$itemRevenue" }
-              }
-            },
-            {
-              $group: {
-                _id: "$_id.status",
+                _id: "$status",
                 count: { $sum: 1 },
-                revenue: { $sum: "$oRevenue" }
+                revenue: { $sum: "$subTotal" }
               }
             }
           ],
 
-          // --- Revenue Chart Data (Current Period, grouped by formatted date) ---
+          // Charts
           chartData: [
             { $match: { isCurrentPeriod: true, status: { $ne: "cancelled" } } },
             {
               $group: {
-                _id: { orderId: "$_id", formattedDate: { $dateToString: { format: dateFormat, date: "$createdAt" } } },
-                ordRev: { $sum: "$itemRevenue" }
-              }
-            },
-            {
-              $group: {
-                _id: "$_id.formattedDate",
-                revenue: { $sum: "$ordRev" },
+                _id: { $dateToString: { format: dateFormat, date: "$createdAt" } },
+                revenue: { $sum: "$subTotal" },
                 orders: { $sum: 1 }
               }
             },
             { $sort: { "_id": 1 } }
           ],
 
-          // --- Top Products (Current Period) ---
+          // Top Products
           topProductsData: [
             { $match: { isCurrentPeriod: true, status: { $ne: "cancelled" } } },
+            { $unwind: "$items" },
             {
               $group: {
                 _id: "$items.product",
                 totalSold: { $sum: "$items.quantity" },
-                totalRevenue: { $sum: "$itemRevenue" },
-                name: { $first: "$items.name" } // Assuming items have name
+                totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
+                name: { $first: "$items.name" },
+                category: { $first: "$items.category" }
               }
             },
             { $sort: { totalRevenue: -1 } },
             { $limit: 5 },
-            // Lookup to get product image and stock
             {
               $lookup: {
                 from: "products",
@@ -177,33 +126,71 @@ exports.getDashboardStats = async (req, res) => {
                 as: "productDoc"
               }
             },
-            { $unwind: "$productDoc" },
+            { $unwind: { path: "$productDoc", preserveNullAndEmptyArrays: true } },
             {
               $project: {
                 name: 1,
                 totalSold: 1,
                 totalRevenue: 1,
                 currentStock: "$productDoc.stock",
-                image: { $arrayElemAt: ["$productDoc.images", 0] }
+                image: { $arrayElemAt: ["$productDoc.images", 0] },
+                category: 1
               }
             }
           ],
 
-          // --- Store Health (Cancelled Orders logic) ---
-          cancelledOrders: [
+          miniCharts: [
+            { $match: { isCurrentPeriod: true } },
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                revenue: { $sum: "$subTotal" },
+                orders: { $sum: 1 }
+              }
+            },
+            { $sort: { "_id": -1 } },
+            { $limit: 6 }
+          ],
+
+          healthStats: [
+            { $match: { isCurrentPeriod: true, status: "delivered", deliveredAt: { $exists: true } } },
+            {
+              $project: {
+                dispatchTime: { $divide: [{ $subtract: ["$deliveredAt", "$createdAt"] }, 1000 * 60 * 60 * 24] }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                avgDispatch: { $avg: "$dispatchTime" }
+              }
+            }
+          ],
+
+          cancelledCount: [
             { $match: { isCurrentPeriod: true, status: "cancelled" } },
-            { $group: { _id: "$_id" } },
             { $count: "count" }
           ]
-
         }
       }
     ]);
 
     const result = statsResult[0];
 
-    // --- Format Outcomes ---
-    // 1. KPIs
+    // Product Growth
+    const productGrowthTrend = await Product.aggregate([
+      { $match: { owner: sellerId } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": -1 } },
+      { $limit: 6 }
+    ]);
+
+    // Cleanup & Format
     const cKpis = result.currentKPIs[0] || { totalRevenue: 0, totalOrders: 0, deliveredCount: 0 };
     const pKpis = result.previousKPIs[0] || { totalRevenue: 0, totalOrders: 0 };
 
@@ -219,7 +206,16 @@ exports.getDashboardStats = async (req, res) => {
     const rChange = calcChange(tRev, pKpis.totalRevenue);
     const oChange = calcChange(tOrd, pKpis.totalOrders);
 
-    // 2. Pipeline
+    const revBars = result.miniCharts.map(d => d.revenue).reverse();
+    const ordBars = result.miniCharts.map(d => d.orders).reverse();
+    const prodBars = productGrowthTrend.map(d => d.count).reverse();
+    
+    const normalize = (arr) => {
+      if (arr.length === 0) return [0,0,0,0,0,0];
+      const max = Math.max(...arr, 1);
+      return arr.map(v => (v / max) * 100);
+    };
+
     const pipeline = {
       pending: { count: 0, revenue: 0 },
       processing: { count: 0, revenue: 0 },
@@ -230,20 +226,28 @@ exports.getDashboardStats = async (req, res) => {
 
     result.pipelineData.forEach(p => {
       let key = p._id.toLowerCase();
-      if (key === "placed" || key === "confirmed") key = "pending";
-      else if (key === "ready_to_ship" || key === "out_for_delivery") key = "shipped";
-      
-      if (pipeline[key]) {
-        pipeline[key].count += p.count;
-        pipeline[key].revenue += p.revenue;
+      // Strategy 1 status mapping for seller dashboard
+      if (key === "pending" || key === "confirmed") {
+        pipeline.pending.count += p.count;
+        pipeline.pending.revenue += p.revenue;
+      } else if (key === "processing" || key === "packed") {
+        pipeline.processing.count += p.count;
+        pipeline.processing.revenue += p.revenue;
+      } else if (key === "shipped") {
+        pipeline.shipped.count += p.count;
+        pipeline.shipped.revenue += p.revenue;
+      } else if (key === "delivered") {
+        pipeline.delivered.count += p.count;
+        pipeline.delivered.revenue += p.revenue;
+      } else if (key === "cancelled") {
+        pipeline.cancelled.count += p.count;
+        pipeline.cancelled.revenue += p.revenue;
       }
     });
 
-    // 3. Chart Data (Format labels nicely)
     const revenueChart = result.chartData.map(c => {
       let label = c._id;
-      // Make week labels human readable if possible, or keep as is.
-      if(period === '30d') label = `Week ${label.split('-')[1]}`;
+      if(period === '30d') label = `W${label.split('-')[1]}`;
       return {
         label,
         revenue: c.revenue,
@@ -251,36 +255,37 @@ exports.getDashboardStats = async (req, res) => {
       };
     });
 
-    // 4. Store Health Calculations
-    const cancelledCount = result.cancelledOrders[0]?.count || 0;
-    const totalOrdersInclCancelled = tOrd + cancelledCount;
-    const returnRate = totalOrdersInclCancelled > 0 ? (cancelledCount / totalOrdersInclCancelled) * 100 : 0;
-    const satisfactionRate = tOrd > 0 ? (cKpis.deliveredCount / tOrd) * 100 : (tOrd > 0 ? 100 : 0); // fallback if not tracked 
-    const monthlyGrowth = rChange; // using revenue change
+    const canCount = result.cancelledCount[0]?.count || 0;
+    const totalWithCan = tOrd + canCount;
+    const returnRate = totalWithCan > 0 ? (canCount / totalWithCan) * 100 : 0;
+    const satRate = tOrd > 0 ? (cKpis.deliveredCount / tOrd) * 100 : 0;
+    const realDispatch = result.healthStats[0]?.avgDispatch || 1.1;
 
-    const responseData = {
+    res.status(200).json({
+      success: true,
       kpis: {
         totalRevenue: tRev,
         totalOrders: tOrd,
         avgOrderValue: avgOrderValue,
         totalProducts: totalProducts,
         revenueChange: rChange > 0 ? `+${rChange.toFixed(1)}%` : `${rChange.toFixed(1)}%`,
-        ordersChange: oChange > 0 ? `+${oChange.toFixed(1)}%` : `${oChange.toFixed(1)}%`
+        ordersChange: oChange > 0 ? `+${oChange.toFixed(1)}%` : `${oChange.toFixed(1)}%`,
+        revenueBar: normalize(revBars),
+        ordersBar: normalize(ordBars),
+        productsBar: normalize(prodBars)
       },
       pipeline,
       revenueChart,
       topProducts: result.topProductsData.map(p => ({
-         name: p.name, totalSold: p.totalSold, totalRevenue: p.totalRevenue, currentStock: p.currentStock || 0, image: p.image || null
+         name: p.name, totalSold: p.totalSold, totalRevenue: p.totalRevenue, currentStock: p.currentStock || 0, image: p.image || null, category: p.category
       })),
       storeHealth: {
-        satisfactionRate: parseFloat(satisfactionRate.toFixed(1)),
-        monthlyGrowth: parseFloat(monthlyGrowth.toFixed(1)),
+        satisfactionRate: parseFloat(satRate.toFixed(1)),
+        monthlyGrowth: parseFloat(rChange.toFixed(1)),
         returnRate: parseFloat(returnRate.toFixed(1)),
-        avgDispatchDays: 1.4 // MongoDB grouping for dispatch days requires timestamps for exactly when status changed. Hardcoded as placeholder based on architecture.
+        avgDispatchDays: parseFloat(realDispatch.toFixed(1))
       }
-    };
-
-    res.status(200).json(responseData);
+    });
 
   } catch (error) {
     console.error("Dashboard Aggregation Error:", error);

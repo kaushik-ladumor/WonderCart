@@ -44,7 +44,12 @@ const Navbar = () => {
 
           {/* Buttons */}
           <div className="flex items-center gap-3 sm:gap-6 shrink-0">
-            <button className="text-xs sm:text-sm font-bold text-gray-700 hover:text-blue-600 whitespace-nowrap">Login</button>
+            <button 
+              onClick={() => document.getElementById("login_modal")?.showModal()}
+              className="text-xs sm:text-sm font-bold text-gray-700 hover:text-blue-600 whitespace-nowrap"
+            >
+              Login
+            </button>
             <Link 
               to="/signup"
               className="px-3 sm:px-6 py-2 bg-blue-600 text-white text-[11px] sm:text-sm font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap"
@@ -361,7 +366,10 @@ const FinalCTA = () => {
           >
             Start For Free
           </Link>
-          <button className="w-full sm:w-auto px-10 py-4 border-2 border-white/40 text-white font-bold rounded-md text-lg hover:bg-white/10 transition-all">
+          <button 
+            onClick={() => document.getElementById("login_modal")?.showModal()}
+            className="w-full sm:w-auto px-10 py-4 border-2 border-white/40 text-white font-bold rounded-md text-lg hover:bg-white/10 transition-all"
+          >
             Back to Login
           </button>
         </div>

@@ -30,11 +30,23 @@ const TrackOrder = () => {
   const [loading, setLoading] = useState(false);
 
   const statusSteps = [
-    { key: "PLACED", label: "Ordered", icon: ShoppingBag },
-    { key: "CONFIRMED", label: "Confirmed", icon: Clock },
-    { key: "SHIPPED", label: "Shipped", icon: TruckIcon },
-    { key: "DELIVERED", label: "Delivered", icon: CheckCircle2 },
+    { key: "pending", label: "Ordered", icon: ShoppingBag },
+    { key: "confirmed", label: "Confirmed", icon: Clock },
+    { key: "shipped", label: "Shipped", icon: TruckIcon },
+    { key: "delivered", label: "Delivered", icon: CheckCircle2 },
   ];
+
+  const getStatusProgress = (status) => {
+    const map = {
+      pending: "10%",
+      confirmed: "35%",
+      processing: "50%",
+      packed: "65%",
+      shipped: "80%",
+      delivered: "100%",
+    };
+    return map[status?.toLowerCase()] || "0%";
+  };
 
   const fetchOrder = async () => {
     if (!orderId || orderId.length < 5) {
@@ -57,17 +69,7 @@ const TrackOrder = () => {
     }
   };
 
-  const getStatusProgress = (status) => {
-    const map = {
-      PLACED: "10%",
-      CONFIRMED: "35%",
-      PROCESSING: "50%",
-      READY_TO_SHIP: "65%",
-      SHIPPED: "80%",
-      DELIVERED: "100%",
-    };
-    return map[status] || "0%";
-  };
+
 
   const formatDate = (dateString) => {
     if (!dateString) return "Processing...";
@@ -159,8 +161,8 @@ const TrackOrder = () => {
 
                         <div className="flex justify-between relative z-10 px-2">
                           {statusSteps.map((step) => {
-                            const statusOrder = ["PLACED", "CONFIRMED", "PROCESSING", "READY_TO_SHIP", "SHIPPED", "DELIVERED"];
-                            const currentIndex = statusOrder.indexOf(pkg.status);
+                            const statusOrder = ["pending", "confirmed", "processing", "packed", "shipped", "delivered"];
+                            const currentIndex = statusOrder.indexOf(pkg.status?.toLowerCase());
                             const stepIndex = statusOrder.indexOf(step.key);
                             const isCompleted = stepIndex <= currentIndex;
 

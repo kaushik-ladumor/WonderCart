@@ -29,12 +29,36 @@ const OrderDetails = () => {
 
   const statusOptions = [
     { value: "PLACED", label: "Placed", color: "bg-[#f4f6fb] text-[#5f6b88]" },
-    { value: "CONFIRMED", label: "Confirmed", color: "bg-[#ebf2ff] text-[#2f5fe3]" },
-    { value: "PROCESSING", label: "Processing", color: "bg-[#fff7e8] text-[#c77719]" },
-    { value: "READY_TO_SHIP", label: "Ready to Ship", color: "bg-[#edf8ef] text-[#18794e]" },
-    { value: "SHIPPED", label: "Shipped", color: "bg-[#eef1ff] text-[#5162b5]" },
-    { value: "DELIVERED", label: "Delivered", color: "bg-[#e9f8ef] text-[#18794e]" },
-    { value: "CANCELLED", label: "Cancelled", color: "bg-[#fef0f0] text-[#d14343]" },
+    {
+      value: "CONFIRMED",
+      label: "Confirmed",
+      color: "bg-[#ebf2ff] text-[#2f5fe3]",
+    },
+    {
+      value: "PROCESSING",
+      label: "Processing",
+      color: "bg-[#fff7e8] text-[#c77719]",
+    },
+    {
+      value: "READY_TO_SHIP",
+      label: "Ready to Ship",
+      color: "bg-[#edf8ef] text-[#18794e]",
+    },
+    {
+      value: "SHIPPED",
+      label: "Shipped",
+      color: "bg-[#eef1ff] text-[#5162b5]",
+    },
+    {
+      value: "DELIVERED",
+      label: "Delivered",
+      color: "bg-[#e9f8ef] text-[#18794e]",
+    },
+    {
+      value: "CANCELLED",
+      label: "Cancelled",
+      color: "bg-[#fef0f0] text-[#d14343]",
+    },
   ];
 
   const fetchOrder = async () => {
@@ -71,7 +95,9 @@ const OrderDetails = () => {
       const { data } = await axios.put(
         `${API_URL}/order/seller/id/${id}/status`,
         { status: newStatus, trackingId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
       );
 
       if (data.success) {
@@ -105,7 +131,9 @@ const OrderDetails = () => {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#fef0f0]">
             <AlertCircle className="h-7 w-7 text-[#d14343]" />
           </div>
-          <p className="text-[18px] font-semibold text-[#11182d]">Order Not Found</p>
+          <p className="text-[18px] font-semibold text-[#11182d]">
+            Order Not Found
+          </p>
         </div>
       </div>
     );
@@ -193,11 +221,14 @@ const OrderDetails = () => {
                   placeholder="Enter Tracking ID"
                   value={trackingId}
                   onChange={(e) => setTrackingId(e.target.value)}
-                  readOnly={order.status === "SHIPPED" || order.status === "DELIVERED"}
+                  readOnly={
+                    order.status === "SHIPPED" || order.status === "DELIVERED"
+                  }
                   className="w-full rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] px-3.5 py-2.5 text-[12px] text-[#11182d] outline-none placeholder:text-[#91a0c5] focus:border-[#2f5fe3]"
                 />
                 <p className="mt-2 text-[11px] text-[#6d7894]">
-                  Verify the tracking ID with your courier partner before updating.
+                  Verify the tracking ID with your courier partner before
+                  updating.
                 </p>
               </section>
             )}
@@ -258,7 +289,9 @@ const OrderDetails = () => {
                     <div className="text-left sm:text-right">
                       <p className="text-[14px] font-semibold text-[#11182d]">
                         {RUPEE}
-                        {Number((item.price || 0) * (item.quantity || 0)).toLocaleString("en-IN")}
+                        {Number(
+                          (item.price || 0) * (item.quantity || 0),
+                        ).toLocaleString("en-IN")}
                       </p>
                     </div>
                   </div>
@@ -300,9 +333,11 @@ const OrderDetails = () => {
                     {order.masterOrder?.address?.fullName}
                   </p>
                   <p className="mt-1 text-[12px] leading-5 text-[#6d7894]">
-                    {order.masterOrder?.address?.street}, {order.masterOrder?.address?.city}
+                    {order.masterOrder?.address?.street},{" "}
+                    {order.masterOrder?.address?.city}
                     <br />
-                    {order.masterOrder?.address?.state} - {order.masterOrder?.address?.zipCode}
+                    {order.masterOrder?.address?.state} -{" "}
+                    {order.masterOrder?.address?.zipCode}
                   </p>
                 </div>
               </div>
@@ -330,7 +365,9 @@ const OrderDetails = () => {
                   <span className="text-[#6d7894]">Commission</span>
                   <span className="font-semibold text-[#d14343]">
                     -{RUPEE}
-                    {Number(order.platformCommission || 0).toLocaleString("en-IN")}
+                    {Number(order.platformCommission || 0).toLocaleString(
+                      "en-IN",
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[12px]">

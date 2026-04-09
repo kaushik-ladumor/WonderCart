@@ -81,8 +81,8 @@ const OrderStatusChart = ({ pipeline = {}, isLoading }) => {
             </ResponsiveContainer>
 
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[2.3rem] font-semibold leading-none text-[#141b2d]">100%</span>
-              <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.28em] text-[#6e7891]">Total</span>
+              <span className="text-[2rem] font-semibold leading-none text-[#141b2d]">Live</span>
+              <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.28em] text-[#6e7891]">Status</span>
               <span className="mt-1 text-xs text-[#7d879d]">{totalOrders} orders</span>
             </div>
           </div>

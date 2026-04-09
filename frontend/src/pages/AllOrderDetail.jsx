@@ -172,18 +172,22 @@ function AllOrderDetail() {
   const StatusBadge = ({ status }) => {
     const config = {
       pending: "bg-gray-100 text-gray-900",
-      confirmed: "bg-gray-200 text-gray-900",
-      processing: "bg-gray-300 text-gray-900",
-      shipped: "bg-gray-400 text-white",
-      delivered: "bg-gray-900 text-white",
-      cancelled: "bg-gray-200 text-gray-900",
+      confirmed: "bg-emerald-100 text-emerald-800",
+      processing: "bg-amber-100 text-amber-800",
+      packed: "bg-blue-100 text-blue-800",
+      shipped: "bg-indigo-100 text-indigo-800",
+      partially_shipped: "bg-indigo-50 text-indigo-600 border border-indigo-200",
+      delivered: "bg-emerald-600 text-white",
+      cancelled: "bg-rose-100 text-rose-800",
+      partially_fulfilled: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+      return_in_progress: "bg-orange-100 text-orange-800",
     };
     const style = config[status?.toLowerCase()] || "bg-gray-100 text-gray-900";
     return (
       <span
         className={`inline-block px-2 py-1 text-[10px] font-medium uppercase tracking-wider ${style}`}
       >
-        {status}
+        {status?.replaceAll("_", " ")}
       </span>
     );
   };
