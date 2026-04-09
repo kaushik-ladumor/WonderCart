@@ -86,7 +86,7 @@ const createOrder = async (req, res) => {
     // 1. SHARED CALCULATION (Items, Stock, Coupons)
     // ---------------------------------------------------------
     let subTotal = 0;
-    let orderItemsData = []; 
+    let orderItemsData = [];
 
     if (productId && quantity) {
       const product = await Product.findById(productId);
@@ -364,7 +364,7 @@ const handleOrderCreation = async (req, res, data) => {
     const masterId = "ORD-" + Math.random().toString(36).substring(2, 10).toUpperCase();
     let subOrders = [];
     let combinedTotal = 0;
-    
+
     // Commission rate - default 10%
     const COMM_RATE = 0.10;
 
@@ -449,7 +449,7 @@ const handleOrderCreation = async (req, res, data) => {
         so.statusHistory.push({ from: "pending", to: "confirmed", reason: "Payment received", timestamp: new Date() });
       });
     }
-    
+
     order.status = order.computeStatus();
     await order.save();
 
@@ -472,7 +472,7 @@ const handleOrderCreation = async (req, res, data) => {
     // 6. NOTIFY SELLERS
     for (const sub of order.subOrders) {
       const sellerId = sub.vendor;
-      const msg = paymentMethod === "Razorpay" 
+      const msg = paymentMethod === "Razorpay"
         ? `Your sub-order ${sub.subOrderId} is CONFIRMED. Payment ₹${sub.subTotal} received.`
         : `New sub-order ${sub.subOrderId} received (COD). Please confirm.`;
 
@@ -493,7 +493,7 @@ const handleOrderCreation = async (req, res, data) => {
         });
       }
     }
-    
+
     if (global.io) global.io.emit("seller-dashboard-update");
 
     return res.status(201).json({

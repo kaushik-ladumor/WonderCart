@@ -80,6 +80,11 @@ router.get("/notifications", authenticate, async (req, res) => {
   res.json({ success: true, notifications });
 });
 
+router.put("/notifications/read-all", authenticate, async (req, res) => {
+  await Notification.updateMany({ user: req.user.userId }, { isRead: true });
+  res.json({ success: true });
+});
+
 router.put("/notifications/:id/read", authenticate, async (req, res) => {
   await Notification.findByIdAndUpdate(req.params.id, {
     isRead: true,
@@ -90,6 +95,11 @@ router.put("/notifications/:id/read", authenticate, async (req, res) => {
 
 router.delete("/notifications/clear", authenticate, async (req, res) => {
   await Notification.deleteMany({ user: req.user.userId });
+  res.json({ success: true });
+});
+
+router.delete("/notifications/:id", authenticate, async (req, res) => {
+  await Notification.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 });
 

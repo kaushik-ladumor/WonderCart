@@ -27,6 +27,7 @@ const subOrderSchema = new mongoose.Schema({
   items: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
     name: String,
+    image: String,
     quantity: Number,
     price: Number,
     color: String,

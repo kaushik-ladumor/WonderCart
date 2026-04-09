@@ -251,9 +251,9 @@ const OrderDetails = () => {
                     className="flex flex-col gap-3 rounded-[22px] border border-[#e7ebff] bg-[#fbfcff] p-4 sm:flex-row"
                   >
                     <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#e4e9fb] bg-[#f5f7ff]">
-                      {item.product?.image ? (
+                      {item.image || item.product?.variants?.[0]?.images?.[0] || item.product?.image ? (
                         <img
-                          src={item.product.image}
+                          src={item.image || item.product?.variants?.[0]?.images?.[0] || item.product?.image}
                           alt={item.name}
                           className="h-full w-full object-cover"
                         />

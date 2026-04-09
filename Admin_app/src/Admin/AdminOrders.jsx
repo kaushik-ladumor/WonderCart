@@ -239,8 +239,12 @@ const AdminOrders = () => {
                                     <div className="space-y-3">
                                        {sub.items?.map((item, iIdx) => (
                                           <div key={iIdx} className="flex gap-3">
-                                             <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100 shrink-0">
-                                                <img src={item.product?.image || item.product?.images?.[0]} alt="" className="w-full h-full object-contain p-1" />
+                                             <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100 shrink-0 overflow-hidden">
+                                                <img 
+                                                  src={item.image || item.product?.image || item.product?.variants?.[0]?.images?.[0]} 
+                                                  alt="" 
+                                                  className="w-full h-full object-contain p-1" 
+                                                />
                                              </div>
                                              <div className="min-w-0">
                                                 <p className="text-xs font-bold text-gray-800 truncate">{item.name}</p>

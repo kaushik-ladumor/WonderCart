@@ -274,11 +274,24 @@ const SellerOrders = () => {
                   className="rounded-[24px] border border-[#e3e8ff] bg-white px-4 py-4 sm:px-5"
                 >
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#f5f7ff] text-[12px] font-semibold text-[#7481a2]">
-                        {pkg.items.length}x
+                    <div className="flex items-start gap-4">
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[18px] border border-[#e3e8ff] bg-[#f5f7ff]">
+                        {pkg.items?.[0]?.image || pkg.items?.[0]?.product?.variants?.[0]?.images?.[0] ? (
+                          <img
+                            src={pkg.items[0].image || pkg.items[0].product.variants[0].images[0]}
+                            alt="pkg"
+                            className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-[#7481a2]">
+                             {pkg.items.length}x
+                          </div>
+                        )}
+                        <div className="absolute right-1 bottom-1 bg-[#11182d] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
+                           {pkg.items.length}x
+                        </div>
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 pt-0.5">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="text-[14px] font-semibold text-[#11182d]">
                             {pkg.subOrderId}

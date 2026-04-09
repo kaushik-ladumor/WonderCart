@@ -108,7 +108,7 @@ const SellerNavbar = () => {
 
     const handleNewNotification = (notification) => {
       const newNotification = {
-        id: notification.orderId || Date.now(),
+        id: notification._id || notification.orderId || Date.now(),
         message: notification.message,
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -116,6 +116,14 @@ const SellerNavbar = () => {
         }),
         read: false,
       };
+
+      // Show toast message
+      toast.info(newNotification.message, {
+        icon: '🔔',
+        style: {
+          borderRadius: '16px',
+        }
+      });
 
       setNotifications((prev) => {
         // prevent duplicate notification

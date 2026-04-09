@@ -38,64 +38,39 @@ import Loader from "../components/Loader";
 
 const RUPEE = "\u20B9";
 
-const chartData = [
-  { name: 'OCT 01', value: 400 },
-  { name: 'OCT 08', value: 600 },
-  { name: 'OCT 15', value: 1000 },
-  { name: 'OCT 22', value: 1200 },
-  { name: 'OCT 31', value: 800 },
-];
-
-const categories = [
-  { name: "Electronics", percentage: 48, color: "bg-[#2563eb]" },
-  { name: "Home & Decor", percentage: 32, color: "bg-[#10b981]" },
-  { name: "Fashion", percentage: 20, color: "bg-[#64748b]" },
-];
-
 const SellerEarnings = () => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("30d");
   const [stats, setStats] = useState({
-    totalEarnings: 1245800,
-    availableBalance: 85400,
-    pendingPayouts: 42000,
-    nextPayoutDate: "Oct 28, 2023",
-    transactions: [
-      { id: 1, date: "Oct 21, 2023", amount: 12400.00, refId: "TXN - 99812450", status: "SUCCESS" },
-      { id: 2, date: "Oct 14, 2023", amount: 31500.00, refId: "TXN - 99812421", status: "PROCESSING" },
-      { id: 3, date: "Oct 07, 2023", amount: 8900.50, refId: "TXN - 99812399", status: "FAILED" },
-      { id: 4, date: "Sep 30, 2023", amount: 45000.00, refId: "TXN - 99812200", status: "SUCCESS" },
-    ]
+    totalEarnings: 0,
+    availableBalance: 0,
+    pendingPayouts: 0,
+    nextPayoutDate: "Nov 05, 2026",
+    transactions: [],
+    chartData: [],
+    categories: []
   });
 
   useEffect(() => {
-    fetchEarnings();
-  }, [token]);
+    fetchEarnings(period);
+  }, [token, period]);
 
-  const fetchEarnings = async () => {
+  const fetchEarnings = async (selectedPeriod) => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${API_URL}/order/seller/orders`, {
+      const { data } = await axios.get(`${API_URL}/seller/dashboard/earnings?period=${selectedPeriod}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (data.success) {
-        const orders = data.orders;
-        const totalEarnings = orders.reduce((sum, o) => sum + (o.sellerPayout || 0), 0);
-        const pendingPayouts = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').reduce((sum, o) => sum + (o.sellerPayout || 0), 0);
-        const availableBalance = orders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.sellerPayout || 0), 0);
-        
         setStats({
-          totalEarnings,
-          availableBalance,
-          pendingPayouts,
-          nextPayoutDate: "Oct 28, 2023", // Keep as static if not in DB
-          transactions: orders.slice(0, 5).map(o => ({
-            id: o._id,
-            date: new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-            amount: o.sellerPayout || 0,
-            refId: `TXN-${o.subOrderId.slice(-8).toUpperCase()}`,
-            status: o.status === 'delivered' ? 'SUCCESS' : (o.status === 'cancelled' ? 'FAILED' : 'PROCESSING')
-          }))
+          totalEarnings: data.totalEarnings,
+          availableBalance: data.availableBalance,
+          pendingPayouts: data.pendingPayouts,
+          nextPayoutDate: data.nextPayoutDate,
+          transactions: data.transactions,
+          chartData: data.chartData,
+          categories: data.categories
         });
       }
     } catch (err) {
@@ -103,6 +78,31 @@ const SellerEarnings = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownload = () => {
+    if (!stats.transactions.length) return;
+    
+    // Create CSV content
+    const headers = ["Date", "Amount", "Reference ID", "Status"];
+    const rows = stats.transactions.map(t => [
+      `"${new Date(t.date).toLocaleDateString()}"`,
+      t.amount,
+      `"${t.refId}"`,
+      t.status
+    ]);
+    
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `seller_earnings_${period}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const getStatusBadge = (status) => {
@@ -130,7 +130,7 @@ const SellerEarnings = () => {
             <h1 className="text-xl font-bold text-[#0f172a]">Earnings Dashboard</h1>
          </div>
          <button 
-           onClick={fetchEarnings}
+           onClick={() => fetchEarnings(period)}
            className="p-2.5 bg-white border border-[#f1f5f9] rounded-xl text-[#2563eb] hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
          >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> SYNC
@@ -207,14 +207,20 @@ const SellerEarnings = () => {
                </div>
                <div className="flex gap-1 p-1 bg-slate-50 border border-slate-100 rounded-xl">
                   {['7d', '30d', 'Yr'].map(t => (
-                     <button key={t} className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${t === '30d' ? 'bg-white text-[#2563eb] shadow-sm' : 'text-[#94a3b8]'}`}>{t}</button>
+                     <button 
+                       key={t} 
+                       onClick={() => setPeriod(t)}
+                       className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${period === t ? 'bg-white text-[#2563eb] shadow-sm' : 'text-[#94a3b8]'}`}
+                     >
+                       {t}
+                     </button>
                   ))}
                </div>
             </div>
 
             <div className="h-[250px] w-full">
                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
+                  <AreaChart data={stats.chartData}>
                      <defs>
                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
@@ -228,6 +234,16 @@ const SellerEarnings = () => {
                         tickLine={false} 
                         tick={{fontSize: 9, fontWeight: 700, fill: '#94a3b8'}} 
                         dy={10}
+                        tickFormatter={(val) => {
+                          if (!val) return '';
+                          const parts = val.split('-');
+                          if (parts.length < 3) return val;
+                          const [y, m, d] = parts;
+                          if (period === '7d') return `${d}/${m}`;
+                          if (period === '30d') return d === '01' || d === '10' || d === '20' || d === '30' ? `${d}/${m}` : '';
+                          if (period === 'Yr') return d === '01' && (parseInt(m) % 3 === 1) ? `${m}/${y.slice(-2)}` : '';
+                          return val;
+                        }}
                      />
                      <YAxis hide />
                      <Tooltip 
@@ -252,7 +268,7 @@ const SellerEarnings = () => {
             <h3 className="text-[12px] font-bold text-[#0f172a] uppercase tracking-tight mb-8">Asset Breakdown</h3>
             
             <div className="space-y-8">
-               {categories.map((cat, idx) => (
+               {stats.categories.map((cat, idx) => (
                   <div key={idx}>
                      <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-black text-[#64748b] uppercase tracking-widest">{cat.name}</span>
@@ -311,7 +327,7 @@ const SellerEarnings = () => {
                            {getStatusBadge(tx.status)}
                         </td>
                         <td className="px-8 py-4 text-right flex justify-end gap-2 items-center">
-                            <button className="p-1.5 hover:bg-slate-100 rounded-lg"><Download className="w-4 h-4 text-blue-600" /></button>
+                            <button onClick={handleDownload} className="p-1.5 hover:bg-slate-100 rounded-lg"><Download className="w-4 h-4 text-blue-600" /></button>
                         </td>
                      </tr>
                   ))}

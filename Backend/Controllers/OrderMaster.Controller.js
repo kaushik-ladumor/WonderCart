@@ -58,6 +58,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
     sellerGroups[sellerId].items.push({
       product: product._id,
       name: product.name,
+      image: variant.images?.[0] || "",
       quantity: item.quantity,
       price: price,
       color: variant.color,
@@ -321,7 +322,10 @@ const cancelSubOrder = async (req, res) => {
 
 const updateSubOrderStatus = async (req, res) => {
   const { subOrderId } = req.params;
-  const { status, trackingNumber, trackingUrl, reason } = req.body;
+  let { status, trackingId, trackingNumber, trackingUrl, reason } = req.body;
+  if (status) status = status.toLowerCase();
+  if (status === "ready_to_ship") status = "packed";
+  if (status === "placed") status = "pending";
   const sellerId = req.user.userId;
 
   try {
@@ -332,23 +336,27 @@ const updateSubOrderStatus = async (req, res) => {
 
     // SLA Validations
     const transitions = {
-      "pending": ["confirmed", "cancelled"],
-      "confirmed": ["processing", "cancelled"],
-      "processing": ["packed", "cancelled"],
-      "packed": ["shipped"],
-      "shipped": ["delivered", "returned"],
-      "delivered": ["returned"]
+      "pending": ["pending", "confirmed", "cancelled"],
+      "confirmed": ["confirmed", "processing", "cancelled"],
+      "processing": ["processing", "packed", "cancelled"],
+      "packed": ["packed", "shipped"],
+      "shipped": ["shipped", "delivered", "returned"],
+      "delivered": ["delivered", "returned"]
     };
 
     if (!transitions[prevStatus] || !transitions[prevStatus].includes(status)) {
        return res.status(400).json({ success: false, message: `Invalid transition from ${prevStatus} to ${status}` });
     }
 
-    subOrder.status = status;
-    subOrder.statusHistory.push({ from: prevStatus, to: status, reason: reason || "Manual update", changed_by: `seller:${sellerId}` });
+    if (status !== prevStatus) {
+       subOrder.status = status;
+       subOrder.statusHistory.push({ from: prevStatus, to: status, reason: reason || "Manual update", changed_by: `seller:${sellerId}` });
+    }
+
+    const masterOrder = await MasterOrder.findById(subOrder.masterOrder);
 
     if (status === "shipped") {
-       subOrder.trackingId = trackingNumber;
+       subOrder.trackingId = trackingNumber || trackingId;
        subOrder.trackingUrl = trackingUrl;
     } else if (status === "delivered") {
        subOrder.deliveredAt = new Date();
@@ -368,7 +376,6 @@ const updateSubOrderStatus = async (req, res) => {
        });
 
        // 2. RELEASE RAZORPAY ROUTE TRANSFER (If Online Payment & Held)
-       const masterOrder = await MasterOrder.findById(subOrder.masterOrder);
        if (subOrder.razorpayTransferId) {
          try {
            // Release the hold (PATCH)
@@ -419,9 +426,9 @@ const updateSubOrderStatus = async (req, res) => {
     await masterOrderForCompute.save();
 
     // Notify Customer
-    const msgs = { processing: "Seller started preparing your items.", packed: "Items are packed.", shipped: `Items shipped! Track: ${trackingNumber}`, delivered: "Delivered!" };
+    const msgs = { processing: "Seller started preparing your items.", packed: "Items are packed.", shipped: `Items shipped! Track: ${subOrder.trackingId}`, delivered: "Delivered!" };
     if (msgs[status]) {
-      await Notification.create({ user: masterOrder.user, role: "customer", type: "order-update", message: msgs[status], orderId: masterOrder._id });
+      await Notification.create({ user: masterOrder.user, role: "buyer", type: "order-update", message: msgs[status], orderId: masterOrder._id });
       if (global.io) global.io.to(`user-${masterOrder.user}`).emit("notification", { message: msgs[status], status });
     }
 
@@ -515,13 +522,35 @@ const getMasterOrderById = async (req, res) => {
 const trackOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const order = await SubOrder.findOne({ subOrderId: id })
-      .populate("seller", "shopName")
-      .populate("items.product", "name image images");
+    if (!id) return res.status(400).json({ success: false, message: "Order Identifier is required" });
 
-    if (!order) return res.status(404).json({ success: false, message: "Tracking info not found" });
-    res.status(200).json({ success: true, order });
+    let masterOrder;
+
+    // 1. Try finding by Master Order ID (ORD-1001)
+    masterOrder = await MasterOrder.findOne({ orderId: id.toUpperCase() })
+      .populate(customerOrderPopulate);
+
+    // 2. If not found, try finding by Sub-Order ID (ORD-1001-A)
+    if (!masterOrder) {
+      const subOrder = await SubOrder.findOne({ subOrderId: id.toUpperCase() });
+      if (subOrder) {
+        masterOrder = await MasterOrder.findById(subOrder.masterOrder)
+          .populate(customerOrderPopulate);
+      }
+    }
+
+    // 3. Last fallback: Try Mongo ID
+    if (!masterOrder && mongoose.Types.ObjectId.isValid(id)) {
+      masterOrder = await MasterOrder.findById(id).populate(customerOrderPopulate);
+    }
+
+    if (!masterOrder) {
+      return res.status(404).json({ success: false, message: "No tracking data found for this identifier." });
+    }
+
+    res.status(200).json({ success: true, order: masterOrder });
   } catch (error) {
+    console.error("Track Order Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

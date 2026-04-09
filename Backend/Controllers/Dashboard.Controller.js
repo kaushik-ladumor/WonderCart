@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const SubOrder = require("../Models/SubOrder.Model");
 const Product = require("../Models/Product.Model");
+const User = require("../Models/User.Model");
+const WalletTransaction = require("../Models/WalletTransaction.Model");
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -21,17 +23,17 @@ exports.getDashboardStats = async (req, res) => {
       case "30d":
         startDate.setDate(now.getDate() - 30);
         previousStartDate.setDate(startDate.getDate() - 30);
-        dateFormat = "%Y-%U";
+        dateFormat = "%Y-%m-%d";
         break;
       case "90d":
         startDate.setDate(now.getDate() - 90);
         previousStartDate.setDate(startDate.getDate() - 90);
-        dateFormat = "%Y-%m";
+        dateFormat = "%Y-%m-%d";
         break;
       case "year":
         startDate.setFullYear(now.getFullYear() - 1);
         previousStartDate.setFullYear(startDate.getFullYear() - 1);
-        dateFormat = "%Y-%m"; 
+        dateFormat = "%Y-%m-%d"; 
         break;
       default:
         startDate.setDate(now.getDate() - 30);
@@ -113,6 +115,7 @@ exports.getDashboardStats = async (req, res) => {
                 totalSold: { $sum: "$items.quantity" },
                 totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
                 name: { $first: "$items.name" },
+                image: { $first: "$items.image" },
                 category: { $first: "$items.category" }
               }
             },
@@ -132,8 +135,8 @@ exports.getDashboardStats = async (req, res) => {
                 name: 1,
                 totalSold: 1,
                 totalRevenue: 1,
-                currentStock: "$productDoc.stock",
-                image: { $arrayElemAt: ["$productDoc.images", 0] },
+                currentStock: { $sum: { $map: { input: "$productDoc.variants", as: "v", in: { $sum: "$$v.sizes.stock" } } } },
+                image: { $ifNull: ["$image", { $arrayElemAt: [{ $arrayElemAt: ["$productDoc.variants.images", 0] }, 0] }] },
                 category: 1
               }
             }
@@ -149,7 +152,7 @@ exports.getDashboardStats = async (req, res) => {
               }
             },
             { $sort: { "_id": -1 } },
-            { $limit: 6 }
+            { $limit: 400 }
           ],
 
           healthStats: [
@@ -290,5 +293,102 @@ exports.getDashboardStats = async (req, res) => {
   } catch (error) {
     console.error("Dashboard Aggregation Error:", error);
     res.status(500).json({ success: false, message: "Server error generating dashboard stats", error: error.message });
+  }
+};
+
+exports.getSellerEarnings = async (req, res) => {
+  try {
+    const sellerId = new mongoose.Types.ObjectId(req.user.userId);
+    
+    // 1. Get Wallet Balance (Available)
+    const user = await User.findById(sellerId);
+    const availableBalance = user.walletBalance || 0;
+
+    // 2. Get SubOrders for Stats
+    const orders = await SubOrder.find({ seller: sellerId });
+    
+    const totalEarnings = orders
+      .filter(o => o.status === "delivered")
+      .reduce((sum, o) => sum + (o.sellerPayout || 0), 0);
+      
+    const pendingPayouts = orders
+      .filter(o => !["delivered", "cancelled", "returned"].includes(o.status))
+      .reduce((sum, o) => sum + (o.sellerPayout || 0), 0);
+
+    // 3. Get Recent Transactions
+    const transactions = await WalletTransaction.find({ user: sellerId })
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    // 4. Chart Data (Zero-filled based on period)
+    const { period = "30d" } = req.query;
+    let daysToFetch = 30;
+    if (period === "7d") daysToFetch = 7;
+    if (period === "Yr" || period === "year") daysToFetch = 365;
+    
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysToFetch);
+    
+    const dbData = await SubOrder.aggregate([
+      { $match: { seller: sellerId, status: "delivered", deliveredAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$deliveredAt" } },
+          value: { $sum: "$sellerPayout" }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    // Zero-filling logic
+    const dataMap = new Map(dbData.map(item => [item._id, item.value]));
+    const finalChartData = [];
+    for (let i = 0; i <= daysToFetch; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+        finalChartData.push({
+            name: dateStr,
+            value: dataMap.get(dateStr) || 0
+        });
+    }
+
+    // 5. Category Breakdown
+    const categories = await SubOrder.aggregate([
+      { $match: { seller: sellerId, status: "delivered" } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.category",
+          total: { $sum: "$items.price" }
+        }
+      }
+    ]);
+
+    const totalCatRevenue = categories.reduce((sum, c) => sum + c.total, 0);
+    const formattedCategories = categories.map(c => ({
+      name: c._id || "Other",
+      percentage: totalCatRevenue > 0 ? Math.round((c.total / totalCatRevenue) * 100) : 0,
+      color: c._id === "Electronics" ? "bg-[#2563eb]" : (c._id === "Footwear" ? "bg-[#10b981]" : "bg-[#64748b]")
+    })).sort((a,b) => b.percentage - a.percentage).slice(0, 3);
+
+    res.status(200).json({
+      success: true,
+      totalEarnings,
+      availableBalance,
+      pendingPayouts,
+      nextPayoutDate: "Nov 05, 2026",
+      transactions: transactions.map(t => ({
+        id: t._id,
+        date: t.createdAt,
+        amount: t.amount,
+        refId: t.refId || `TXN-${t._id.toString().slice(-8).toUpperCase()}`,
+        status: t.type === "credit" ? "SUCCESS" : "PROCESSING"
+      })),
+      chartData: finalChartData,
+      categories: formattedCategories
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
