@@ -42,17 +42,18 @@ const subOrderSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      "pending",
-      "confirmed",
-      "processing",
-      "packed",
-      "shipped",
-      "delivered",
-      "cancelled",
-      "returned",
-      "refund_processed"
+      "placed", 
+      "confirmed", 
+      "processing", 
+      "shipped", 
+      "out_for_delivery", 
+      "delivered", 
+      "cancelled", 
+      "return_requested", 
+      "returned", 
+      "refunded"
     ],
-    default: "pending",
+    default: "placed",
   },
   statusHistory: [statusHistorySchema],
   paymentStatus: {

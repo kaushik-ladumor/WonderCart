@@ -1,92 +1,83 @@
 import React from 'react';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, ChevronRight } from "lucide-react";
 import useCountdown from '../hooks/useCountdown';
+import { Link } from "react-router-dom";
 
 const DealCard = ({ deal, onAddToCart }) => {
-    const { isExpired } = useCountdown(deal.endTime);
+    const representativeProduct = deal.productIds?.[0] || {};
+    const { isExpired } = useCountdown(deal.endDateTime);
     
-    const isLightning = deal.dealType === 'lightning';
-    const isFullyClaimed = (deal.claimedCount / deal.stockLimit) * 100 >= 100;
-    const isDisabled = isExpired || isFullyClaimed;
+    // Formatting helper
+    const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 
-    // Format currency to Indian Rupees
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
+    const productName = representativeProduct.name || "Special Campaign";
+    const productImage = representativeProduct.variants?.[0]?.images?.[0] || representativeProduct.image || 'https://via.placeholder.com/300';
+    const originalPrice = representativeProduct.price || 0;
+    
+    // Calculate deal price if it's a percentage
+    const displayPrice = deal.discountType === 'percent' 
+        ? originalPrice * (1 - deal.discountValue / 100)
+        : Math.max(0, originalPrice - deal.discountValue);
 
     return (
-        <div className={`bg-white rounded-[24px] p-4 shadow-sm border border-[#eef2ff] ${isDisabled ? 'opacity-75' : ''}`}>
+        <div className={`bg-white rounded-[32px] p-5 shadow-sm border border-[#eef2ff] transition-all hover:shadow-xl hover:shadow-blue-50/50 group ${isExpired ? 'opacity-70' : ''}`}>
             
             {/* Image Container */}
-            <div className="relative aspect-square mb-4 bg-[#f8f9fd] rounded-[20px] overflow-hidden flex items-center justify-center p-6">
+            <div className="relative aspect-square mb-5 bg-[#f8f9fd] rounded-[24px] overflow-hidden flex items-center justify-center p-6 group-hover:scale-[1.02] transition-transform">
                 <img 
-                    src={deal.productId?.variants?.[0]?.images?.[0] || 'https://via.placeholder.com/300'} 
-                    alt={deal.productId?.name}
-                    className="max-w-full max-h-full object-contain"
+                    src={productImage} 
+                    alt={productName}
+                    className="max-w-full max-h-full object-contain mix-blend-multiply"
                     loading="lazy"
                 />
                 
                 {/* Discount Badge */}
-                <div className="absolute top-3 left-3 bg-[#e63946] text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm">
-                    -{deal.discountPercent}%
+                <div className="absolute top-4 left-4 bg-[#2156d8] text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-lg shadow-blue-100 uppercase tracking-widest">
+                    {deal.discountType === 'percent' ? `-${deal.discountValue}%` : `-${formatINR(deal.discountValue)}`}
                 </div>
 
-                {/* Wishlist Button */}
-                <button className="absolute top-3 right-3 p-2 bg-white/80 rounded-full text-[#42506d] shadow-sm">
+                <button className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm rounded-xl text-[#b0b8cb] hover:text-red-500 shadow-sm transition-colors">
                     <Heart className="w-4 h-4" />
                 </button>
             </div>
 
             {/* Info Section */}
-            <div className="space-y-2">
-                <span className="text-[10px] font-semibold text-[#0f49d7] uppercase tracking-[0.1em]">
-                    {deal.category || 'General'}
-                </span>
+            <div className="space-y-1.5">
+                <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-black text-[#2156d8] uppercase tracking-[0.2em]">
+                        {deal.dealType}
+                    </span>
+                </div>
                 
-                <h3 className="text-[0.82rem] font-semibold text-[#11182d] line-clamp-1">
-                    {deal.productId?.name}
+                <h3 className="text-[14px] font-bold text-[#11182d] line-clamp-1 uppercase tracking-tight">
+                    {deal.title || productName}
                 </h3>
 
-                <div className="flex items-center gap-2">
-                    <span className="text-[#b0b8cb] text-[0.76rem] line-through">
-                        {formatCurrency(deal.originalPrice)}
+                <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[15px] font-black text-[#11182d]">
+                        {formatINR(displayPrice)}
                     </span>
-                    <span className="text-[0.82rem] font-semibold text-[#11182d]">
-                        {formatCurrency(deal.dealPrice)}
+                    <span className="text-[#b0b8cb] text-[11px] line-through font-bold">
+                        {formatINR(originalPrice)}
                     </span>
                 </div>
 
-                {/* Progress Bar (Subtle) */}
-                <div className="pt-1">
-                    <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
-                        <div 
-                            className="h-full bg-[#0f49d7]" 
-                            style={{ width: `${Math.min((deal.claimedCount / deal.stockLimit) * 100, 100)}%` }}
-                        />
-                    </div>
-                </div>
-
-                {/* Action Button */}
-                <button
-                    disabled={isDisabled}
-                    onClick={onAddToCart}
-                    className={`w-full mt-4 py-2.5 rounded-xl font-semibold text-[0.8rem] flex items-center justify-center gap-2 ${
-                        isDisabled 
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                        : 'bg-[#eef2ff] text-[#0f49d7] hover:bg-[#0f49d7] hover:text-white'
+                {/* Status / Claim Button */}
+                <Link
+                    to={`/product-detail/${representativeProduct._id}`}
+                    className={`w-full mt-4 h-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] flex items-center justify-center gap-2 transition-all ${
+                        isExpired 
+                        ? 'bg-gray-50 text-gray-400 cursor-not-allowed' 
+                        : 'bg-[#eff4ff] text-[#2156d8] hover:bg-[#2156d8] hover:text-white active:scale-95 shadow-sm'
                     }`}
                 >
-                    {isFullyClaimed ? 'Out of Stock' : isExpired ? 'Deal Expired' : (
+                    {isExpired ? 'Expired' : (
                         <>
-                            Buy Now
-                            <ShoppingBag className="w-3.5 h-3.5" />
+                            Claim Deal
+                            <ChevronRight className="w-3.5 h-3.5" />
                         </>
                     )}
-                </button>
+                </Link>
             </div>
         </div>
     );

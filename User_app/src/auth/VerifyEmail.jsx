@@ -11,7 +11,7 @@ import { API_URL } from "../utils/constants";
 function VerifyEmail({ modalId = "verify_email_modal" }) {
   const navigate = useNavigate();
   const { authUser, setAuthUser, setToken, setRefreshToken } = useAuth();
-  const [timer, setTimer] = useState(300); // 5 minutes
+  const [timer, setTimer] = useState(600); // 10 minutes
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -77,7 +77,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
     const modal = document.getElementById(modalId);
     if (modal) {
       const handleOpen = () => {
-        setTimer(300); // Reset to 5 minutes
+        setTimer(600); // Reset to 10 minutes
         setCanResend(false);
         reset();
         setTimeout(() => {
@@ -175,7 +175,7 @@ function VerifyEmail({ modalId = "verify_email_modal" }) {
       const res = await axios.post(`${API_URL}/user/resend-code`, { email: userEmail }); // Correct endpoint & payload
 
       toast.success("New OTP sent to your email!");
-      setTimer(300); // Reset to 5 minutes
+      setTimer(600); // Reset to 10 minutes
       setCanResend(false);
       reset();
 

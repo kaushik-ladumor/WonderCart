@@ -80,7 +80,8 @@ const Deals = () => {
             if(!token) return alert('Please login to claim this deal');
 
             // Pick the first available variant and size for quick claim
-            const variant = deal.productId?.variants?.[0];
+            const representativeProduct = deal.productIds?.[0];
+            const variant = representativeProduct?.variants?.[0];
             const sizeObj = variant?.sizes?.[0];
 
             if(!variant || !sizeObj) {
@@ -88,7 +89,7 @@ const Deals = () => {
             }
 
             const response = await axios.post(`${API_URL}/cart/add`, {
-                productId: deal.productId._id,
+                productId: representativeProduct._id,
                 quantity: 1,
                 color: variant.color,
                 size: sizeObj.size
@@ -120,50 +121,46 @@ const Deals = () => {
                         <div className="flex flex-col md:flex-row items-center min-h-[350px]">
                             {/* Text Info */}
                             <div className="flex-1 p-6 md:p-10 lg:p-12 space-y-4 z-10">
-                                <div className="inline-block bg-[#0f49d7] text-white text-[9px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                <div className="inline-block bg-[#0f49d7] text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
                                     DEAL OF THE DAY
                                 </div>
 
                                 <div className="space-y-2">
-                                    <h2 className="text-[1.2rem] md:text-[1.5rem] lg:text-[1.75rem] font-semibold text-[#11182d] leading-none">
-                                        {featuredDeal.productId?.name}
+                                    <h2 className="text-[1.2rem] md:text-[1.5rem] lg:text-[1.75rem] font-black text-[#11182d] leading-none uppercase tracking-tight">
+                                        {featuredDeal.title || featuredDeal.productIds?.[0]?.name}
                                     </h2>
                                     <p className="text-[#5c6880] text-[0.76rem] md:text-[0.82rem] max-w-sm line-clamp-2 leading-relaxed">
-                                        Limited time curated selection of high-performance items. Don't miss out on this exclusive offer.
+                                        {featuredDeal.description || "Limited time curated selection of high-performance items. Don't miss out on this exclusive offer."}
                                     </p>
                                 </div>
 
                                 <div className="flex items-center gap-4 py-2 border-b border-gray-50 max-w-sm">
                                     <div className="space-y-0.5">
-                                        <p className="text-[#b0b8cb] text-[10px] line-through font-semibold">
-                                            {formatINR(featuredDeal.originalPrice)}
-                                        </p>
-                                        <p className="text-[1.5rem] font-semibold text-[#11182d] leading-none">
-                                            {formatINR(featuredDeal.dealPrice)}
+                                        <p className="text-[1.5rem] font-black text-[#11182d] leading-none">
+                                            {featuredDeal.discountType === 'percent' ? `${featuredDeal.discountValue}% OFF` : formatINR(featuredDeal.discountValue)}
                                         </p>
                                     </div>
-                                    <div className="bg-[#0f49d7] text-white px-3 py-1.5 rounded-xl text-[10px] font-semibold shadow-lg shadow-[#0f49d7]/10">
-                                        {featuredDeal.discountPercent}% OFF
+                                    <div className="bg-[#0f49d7] text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#0f49d7]/10">
+                                        PLATFORM DEAL
                                     </div>
                                 </div>
 
                                 <div className="pt-2 flex flex-wrap items-center gap-8">
                                     <div className="space-y-1">
-                                        <p className="text-[9px] font-semibold text-[#5c6880] uppercase tracking-wider">ENDS IN</p>
-                                        {new Date(featuredDeal.endTime) > new Date() ? (
-                                            <DealTimer endTime={featuredDeal.endTime} />
+                                        <p className="text-[9px] font-black text-[#5c6880] uppercase tracking-[0.2em]">ENDS IN</p>
+                                        {new Date(featuredDeal.endDateTime) > new Date() ? (
+                                            <DealTimer endTime={featuredDeal.endDateTime} />
                                         ) : (
-                                            <div className="text-[#e63946] font-semibold text-[0.82rem] italic">Offer Expired</div>
+                                            <div className="text-[#e63946] font-black text-[0.82rem] italic">Offer Expired</div>
                                         )}
                                     </div>
 
-                                    <button 
-                                        onClick={() => handleAddToCart(featuredDeal)}
-                                        disabled={addingToCart === featuredDeal._id}
-                                        className="bg-[#0f49d7] active:scale-95 text-white px-8 py-4 rounded-xl font-semibold text-[0.76rem] shadow-lg shadow-[#0f49d7]/10 transition-transform disabled:opacity-50"
+                                    <Link 
+                                        to={`/product-detail/${featuredDeal.productIds?.[0]?._id}`}
+                                        className="bg-[#0f49d7] active:scale-95 text-white px-8 py-4 rounded-xl font-black text-[0.76rem] uppercase tracking-widest shadow-lg shadow-[#0f49d7]/10 transition-transform"
                                     >
-                                        {addingToCart === featuredDeal._id ? 'Processing...' : 'Claim Deal Now'}
-                                    </button>
+                                        Claim Deal Now
+                                    </Link>
                                 </div>
                             </div>
 
@@ -171,8 +168,8 @@ const Deals = () => {
                             <div className="flex-1 relative w-full h-[300px] md:h-auto flex items-center justify-center p-8 overflow-hidden">
                                 <div className="absolute inset-0 bg-[#f8f9fd] z-0 transform rotate-6 scale-125 rounded-[80px]"></div>
                                 <img
-                                    src={featuredDeal.productId?.variants?.[0]?.images?.[0] || 'https://via.placeholder.com/600'}
-                                    alt={featuredDeal.productId?.name}
+                                    src={featuredDeal.productIds?.[0]?.variants?.[0]?.images?.[0] || 'https://via.placeholder.com/600'}
+                                    alt={featuredDeal.title}
                                     className="relative z-10 max-w-[80%] max-h-full object-contain drop-shadow-xl"
                                 />
                             </div>

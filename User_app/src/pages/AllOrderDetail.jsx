@@ -14,7 +14,8 @@ import {
   ChevronUp,
   Search,
   ChevronRight,
-  Star
+  Star,
+  FileText
 } from "lucide-react";
 import Review from "./Review";
 import SellerReview from "./SellerReview";
@@ -31,7 +32,7 @@ function AllOrderDetail() {
   const [selectedSubOrderForReview, setSelectedSubOrderForReview] = useState(null);
 
   const SellerReviewButton = ({ subOrder }) => {
-    if (subOrder.status !== "DELIVERED" || subOrder.isSellerReviewed) {
+    if (subOrder.status !== "delivered" || subOrder.isSellerReviewed) {
       return null;
     }
 
@@ -56,7 +57,7 @@ function AllOrderDetail() {
 
     const handleBadgeClick = (e) => {
       e.stopPropagation();
-      const firstPending = order.subOrders?.find(s => s.status === "DELIVERED" && !s.isSellerReviewed);
+      const firstPending = order.subOrders?.find(s => s.status === "delivered" && !s.isSellerReviewed);
       if (firstPending) {
         setSelectedSubOrderForReview(firstPending);
       }
@@ -77,7 +78,7 @@ function AllOrderDetail() {
     const [eligible, setEligible] = useState(false);
 
     useEffect(() => {
-      if (orderStatus !== "DELIVERED") return;
+      if (orderStatus !== "delivered") return;
       const check = async () => {
         try {
           const res = await axios.get(
@@ -191,12 +192,16 @@ function AllOrderDetail() {
 
   const StatusBadge = ({ status }) => {
     const config = {
-      pending: "bg-gray-100 text-gray-900",
-      confirmed: "bg-gray-200 text-gray-900",
-      processing: "bg-gray-300 text-gray-900",
-      shipped: "bg-gray-400 text-white",
-      delivered: "bg-gray-900 text-white",
-      cancelled: "bg-gray-200 text-gray-900",
+      placed: "bg-blue-50 text-blue-700 border border-blue-100",
+      confirmed: "bg-indigo-50 text-indigo-700 border border-indigo-100",
+      processing: "bg-amber-50 text-amber-700 border border-amber-100",
+      shipped: "bg-purple-50 text-purple-700 border border-purple-100",
+      out_for_delivery: "bg-sky-50 text-sky-700 border border-sky-100",
+      delivered: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+      cancelled: "bg-red-50 text-red-700 border border-red-100",
+      return_requested: "bg-orange-50 text-orange-700 border border-orange-100",
+      returned: "bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-100",
+      refunded: "bg-teal-50 text-teal-700 border border-teal-100",
     };
     const style = config[status?.toLowerCase()] || "bg-gray-100 text-gray-900";
     return (
@@ -215,9 +220,7 @@ function AllOrderDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8">
           <div>
-            <span className="font-body text-[10px] uppercase tracking-[0.2em] font-semibold text-[#0f49d7] mb-2 block">
-              Purchases
-            </span>
+
             <h1 className="font-display text-[1.5rem] sm:text-[1.75rem] font-semibold text-[#11182d] leading-none tracking-tight">
               Order History
             </h1>
@@ -337,9 +340,26 @@ function AllOrderDetail() {
                       <p className="font-body text-[9px] uppercase font-semibold text-[#6d7892] tracking-[0.12em] mb-1 text-nowrap">State</p>
                       <p className="font-body text-[0.78rem] font-semibold text-[#11182d] capitalize leading-none">{order.status}</p>
                     </div>
-                    <button onClick={() => navigate(`/orderConfirm/${order._id}`)} className="text-[9px] font-semibold uppercase tracking-widest text-[#0f49d7] border border-[#0f49d7]/10 px-5 py-2 rounded-lg hover:bg-[#0f49d7] hover:text-white transition-all shadow-sm">
-                      Details
-                    </button>
+                    <div className="flex flex-col gap-2.5 w-full sm:w-auto">
+                      {order.status?.toLowerCase() === "delivered" && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/orderConfirm/${order._id}?print=true`);
+                          }} 
+                          className="flex items-center justify-center gap-2 text-[9px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-100 px-5 py-2.5 rounded-xl hover:bg-emerald-100 transition-all shadow-sm active:scale-95"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          Invoice
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => navigate(`/orderConfirm/${order._id}`)} 
+                        className="text-[9px] font-bold uppercase tracking-widest text-[#0f49d7] border border-[#0f49d7]/10 px-5 py-2.5 rounded-xl hover:bg-[#0f49d7] hover:text-white transition-all shadow-sm active:scale-95"
+                      >
+                        Details
+                      </button>
+                    </div>
                   </div>
                 </div>
 

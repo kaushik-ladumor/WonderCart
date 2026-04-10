@@ -18,6 +18,8 @@ const sellerReviewRouter = require("./SellerReview.Route");
 const topSellerRouter = require("./TopSeller.Route");
 const dealRoutes = require("./deals");
 
+const notificationRouter = require("./Notification.Route");
+
 // Root API test
 mainRouter.get("/", (req, res) => {
     res.send("API Calling Successful");
@@ -31,6 +33,7 @@ mainRouter.use("/review", ReviewRouter);
 mainRouter.use("/cart", cartRouter);
 mainRouter.use("/order", orderRouter);
 mainRouter.use("/seller", sellerRouter);
+mainRouter.use("/notifications", notificationRouter);
 mainRouter.use("/seller/dashboard", dashboardRouter);
 mainRouter.use("/seller-review", sellerReviewRouter);
 mainRouter.use("/admin", adminRouter);

@@ -71,38 +71,6 @@ router.get(
   getAdminDashboardStats
 );
 
-// -------------------- NOTIFICATIONS --------------------
-router.get("/notifications", authenticate, async (req, res) => {
-  const notifications = await Notification.find({
-    user: req.user.userId,
-  }).sort({ createdAt: -1 });
-
-  res.json({ success: true, notifications });
-});
-
-router.put("/notifications/read-all", authenticate, async (req, res) => {
-  await Notification.updateMany({ user: req.user.userId }, { isRead: true });
-  res.json({ success: true });
-});
-
-router.put("/notifications/:id/read", authenticate, async (req, res) => {
-  await Notification.findByIdAndUpdate(req.params.id, {
-    isRead: true,
-  });
-
-  res.json({ success: true });
-});
-
-router.delete("/notifications/clear", authenticate, async (req, res) => {
-  await Notification.deleteMany({ user: req.user.userId });
-  res.json({ success: true });
-});
-
-router.delete("/notifications/:id", authenticate, async (req, res) => {
-  await Notification.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
-});
-
 // -------------------- PAYMENT ROUTES --------------------
 router.post('/verify-payment', authenticate, verifyPayment);
 router.post('/webhook', express.raw({ type: 'application/json' }), razorpayWebhook);

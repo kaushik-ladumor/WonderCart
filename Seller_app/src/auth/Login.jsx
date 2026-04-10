@@ -156,32 +156,29 @@ function Login() {
           </button>
 
           {/* Modal header */}
-          <div className="px-6 pt-6 pb-0 text-center">
-            <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
-              Welcome Back
-            </span>
-            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+          <div className="px-6 pt-6 pb-2 text-center">
+            <h3 className="text-[1.3rem] font-semibold text-[#11182d] tracking-tight">
               Sign In
             </h3>
-            <p className="text-xs text-[#5c6880] mt-1 mb-5">
-              Access your curation and orders.
+            <p className="text-[0.84rem] text-[#6d7892] mt-1 mb-2">
+              Access your curator portal and orders.
             </p>
           </div>
 
           {/* Modal body */}
-          <div className="px-6 py-4">
+          <div className="px-6 py-2">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Email Input */}
               <div>
-                <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
+                <label className="text-[0.84rem] font-semibold text-[#25324d] mb-1.5 block">
                   Email Address
                 </label>
-                <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
-                  <Mail className="w-4 h-4 text-[#5c6880]" />
+                <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+                  <Mail className="w-4.5 h-4.5 text-[#6d7892]" />
                   <input
                     type="email"
                     placeholder="name@example.com"
-                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
                     disabled={disabled}
                     {...register("email", {
                       required: "Email is required",
@@ -193,35 +190,21 @@ function Login() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.email.message}</p>
+                  <p className="text-red-500 text-[0.76rem] font-semibold mt-1.5 ml-1">{errors.email.message}</p>
                 )}
               </div>
 
               {/* Password Input */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!disabled) {
-                        document.getElementById("login_modal")?.close();
-                        navigate("/forgot-password");
-                      }
-                    }}
-                    className="text-[10px] uppercase tracking-widest font-bold text-[#004ac6] hover:underline"
-                  >
-                    Forgot?
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
-                  <Lock className="w-4 h-4 text-[#5c6880]" />
+                <label className="text-[0.84rem] font-semibold text-[#25324d] mb-1.5 block">
+                  Password
+                </label>
+                <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+                  <Lock className="w-4.5 h-4.5 text-[#6d7892]" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
                     disabled={disabled}
                     {...register("password", {
                       required: "Password is required",
@@ -230,22 +213,37 @@ function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-[#5c6880] hover:text-[#141b2d]"
+                    className="text-[#6d7892] hover:text-[#11182d] transition-colors"
                     disabled={disabled}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                   </button>
                 </div>
-                {errors.password && (
-                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.password.message}</p>
-                )}
+                
+                <div className="flex items-center justify-between mt-1.5 font-semibold">
+                  {errors.password ? (
+                    <p className="text-red-500 text-[0.76rem] ml-1">{errors.password.message}</p>
+                  ) : <span />}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!disabled) {
+                        document.getElementById("login_modal")?.close();
+                        navigate("/forgot-password");
+                      }
+                    }}
+                    className="text-[0.82rem] text-[#0f49d7] hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
 
               {/* Login Button */}
               <button
                 type="submit"
                 disabled={disabled}
-                className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform mt-2 disabled:opacity-50 shadow-lg shadow-blue-500/10 active:scale-95"
+                className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#003da3] transition-colors mt-[4px] disabled:opacity-50"
               >
                 {disabled ? "Processing..." : "Sign In to Dashboard"}
               </button>
@@ -254,11 +252,10 @@ function Login() {
 
           {/* Modal footer */}
           <div className="px-6 pb-6 pt-2">
-            {/* Divider */}
-            <div className="flex items-center mb-6">
-              <div className="flex-grow h-px bg-[#f0f4ff]"></div>
-              <span className="px-4 text-[10px] uppercase tracking-widest text-[#5c6880] font-bold opacity-60">Social Verification</span>
-              <div className="flex-grow h-px bg-[#f0f4ff]"></div>
+            <div className="flex items-center mb-5 mt-2">
+              <div className="flex-grow h-px bg-[#e4e8f2]"></div>
+              <span className="px-4 text-[0.82rem] font-semibold text-[#6d7892]">Or continue with</span>
+              <div className="flex-grow h-px bg-[#e4e8f2]"></div>
             </div>
 
             {/* Social Logins */}
@@ -266,9 +263,9 @@ function Login() {
               type="button"
               onClick={signInWithGoogle}
               disabled={disabled}
-              className="w-full flex items-center justify-center gap-3 bg-white border border-[#e1e8fd] rounded-xl h-11 text-xs font-bold uppercase tracking-widest text-[#141b2d] hover:bg-[#f0f4ff] transition-all disabled:opacity-50 active:scale-95"
+              className="w-full flex items-center justify-center gap-3 bg-white border border-[#d9deeb] rounded-[14px] h-11 text-[0.88rem] font-semibold text-[#25324d] hover:bg-[#f8f9fc] transition-all disabled:opacity-50"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -279,7 +276,7 @@ function Login() {
 
             {/* Signup Footer */}
             <div className="mt-6 text-center">
-              <p className="text-[10px] uppercase tracking-widest font-bold text-[#5c6880]">
+              <p className="text-[0.88rem] font-semibold text-[#6d7892]">
                 New curator?{" "}
                 <button
                   type="button"
@@ -289,7 +286,7 @@ function Login() {
                       navigate("/signup");
                     }
                   }}
-                  className="text-[#004ac6] hover:underline"
+                  className="text-[#0f49d7] hover:underline"
                   disabled={disabled}
                 >
                   Create account

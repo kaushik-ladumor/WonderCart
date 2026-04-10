@@ -42,8 +42,19 @@ const subOrderSchema = new mongoose.Schema({
   items: [subOrderItemSchema],
   status: {
     type: String,
-    enum: ["pending", "confirmed", "processing", "packed", "shipped", "delivered", "cancelled", "returned", "refund_processed"],
-    default: "pending",
+    enum: [
+      "placed", 
+      "confirmed", 
+      "processing", 
+      "shipped", 
+      "out_for_delivery", 
+      "delivered", 
+      "cancelled", 
+      "return_requested", 
+      "returned", 
+      "refunded"
+    ],
+    default: "placed",
   },
   subTotal: { type: Number, required: true },
   shippingAmount: { type: Number, default: 0 },
@@ -101,8 +112,19 @@ const orderSchema = new mongoose.Schema(
     // It must be recalculated whenever a sub-order changes.
     status: {
       type: String,
-      enum: ["pending", "confirmed", "processing", "partially_shipped", "shipped", "delivered", "cancelled", "partially_fulfilled", "return_in_progress"],
-      default: "pending",
+      enum: [
+        "placed", 
+        "confirmed", 
+        "processing", 
+        "shipped", 
+        "out_for_delivery", 
+        "delivered", 
+        "cancelled", 
+        "return_requested", 
+        "returned", 
+        "refunded"
+      ],
+      default: "placed",
     },
     razorpayOrderId: String,
     razorpayPaymentId: String,
@@ -118,38 +140,44 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Helper to compute Master Status from sub-orders
 orderSchema.methods.computeStatus = function() {
   const subs = this.subOrders;
-  if (!subs || subs.length === 0) return "pending";
+  if (!subs || subs.length === 0) return "placed";
 
-  const allPending = subs.every(s => s.status === "pending");
-  if (allPending) return "pending";
+  // Prioritize "most progressed" status but handle cancellations correctly
+  const statusesByWeight = {
+    "cancelled": -1,
+    "placed": 1,
+    "confirmed": 2,
+    "processing": 3,
+    "shipped": 4,
+    "out_for_delivery": 5,
+    "delivered": 6,
+    "return_requested": 7,
+    "returned": 8,
+    "refunded": 9
+  };
 
-  const allConfirmed = subs.every(s => s.status === "confirmed");
-  if (allConfirmed) return "confirmed";
+  const activeSubs = subs.filter(s => s.status !== "cancelled");
+  
+  if (activeSubs.length === 0) return "cancelled";
 
-  const allCancelled = subs.every(s => s.status === "cancelled");
-  if (allCancelled) return "cancelled";
+  // Find the minimum progress among non-cancelled orders to determine master state
+  // e.g., if one item is shipped and one is confirmed, master is "confirmed" or "processing"
+  // For simplicity in a multi-vendor app, we can use the "majority" or "minimum" logic.
+  // Using 'minimum' logic here to ensure user knows full order status.
+  let minWeight = Infinity;
+  let masterStatus = "placed";
 
-  const allDelivered = subs.every(s => s.status === "delivered");
-  if (allDelivered) return "delivered";
+  activeSubs.forEach(s => {
+    const weight = statusesByWeight[s.status] || 0;
+    if (weight < minWeight) {
+      minWeight = weight;
+      masterStatus = s.status;
+    }
+  });
 
-  const someCancelled = subs.some(s => s.status === "cancelled");
-  const othersDelivered = subs.filter(s => s.status !== "cancelled").every(s => s.status === "delivered");
-  if (someCancelled && othersDelivered) return "partially_fulfilled";
-
-  const someReturn = subs.some(s => s.status === "returned");
-  if (someReturn) return "return_in_progress";
-
-  const anyShipped = subs.some(s => s.status === "shipped");
-  const allShipped = subs.every(s => s.status === "shipped" || s.status === "delivered" || s.status === "cancelled");
-  if (anyShipped) return allShipped ? "shipped" : "partially_shipped";
-
-  const anyProcessing = subs.some(s => s.status === "processing" || s.status === "packed");
-  if (anyProcessing) return "processing";
-
-  return "pending"; // Default fallback
+  return masterStatus;
 };
 
 orderSchema.index({ user: 1, createdAt: -1 });

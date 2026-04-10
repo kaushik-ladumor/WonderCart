@@ -65,7 +65,7 @@ const Navbar = () => {
 
 const Hero = () => {
   return (
-    <section className="bg-white py-8 lg:py-16 overflow-hidden font-poppins">
+    <section className="bg-white pt-4 pb-12 lg:pt-8 lg:pb-24 overflow-hidden font-poppins">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="max-w-xl text-center lg:text-left">

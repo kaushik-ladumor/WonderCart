@@ -89,7 +89,7 @@ const signup = async (req, res) => {
 
     const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-    const expireCode = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+    const expireCode = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiration
 
     const newUser = await User.create({
       username,
@@ -375,7 +375,7 @@ const resendCode = async (req, res) => {
     }
 
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiration
 
     user.verificationCode = newCode;
     user.expireCode = expiry;
@@ -744,9 +744,12 @@ const deleteAccount = async (req, res) => {
     const userId = req.user.userId;
 
     const ACTIVE_ORDER_STATUS = [
-      /^pending$/i,
-      /^processing$/i,
-      /^shipped$/i,
+      "placed",
+      "confirmed",
+      "processing",
+      "shipped",
+      "out_for_delivery",
+      "return_requested"
     ];
 
     const user = await User.findById(userId);
@@ -774,31 +777,14 @@ const deleteAccount = async (req, res) => {
     }
 
     if (user.role === "seller") {
-      const orders = await Order.find({
-        status: { $in: ACTIVE_ORDER_STATUS },
-      }).populate({
-        path: "items.product",
-        select: "owner",
+      const activeSellerOrder = await Order.findOne({
+        "subOrders.vendor": userId,
+        "subOrders.status": { $in: ACTIVE_ORDER_STATUS },
       });
 
-      let sellerHasActiveOrder = false;
+      console.log("Active Seller Order:", activeSellerOrder);
 
-      for (const order of orders) {
-        const hasSellerProduct = order.items.some(
-          (item) =>
-            item.product &&
-            item.product.owner.toString() === userId.toString()
-        );
-
-        if (hasSellerProduct) {
-          sellerHasActiveOrder = true;
-          break;
-        }
-      }
-
-      console.log("Seller Has Active Order:", sellerHasActiveOrder);
-
-      if (sellerHasActiveOrder) {
+      if (activeSellerOrder) {
         return res.status(400).json({
           success: false,
           message:

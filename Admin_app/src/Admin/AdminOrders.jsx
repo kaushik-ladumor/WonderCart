@@ -10,6 +10,8 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   User,
   ShoppingBag,
   Clock,
@@ -28,6 +30,8 @@ const AdminOrders = () => {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   const { token } = useAuth();
 
   const fetchOrders = async () => {
@@ -80,6 +84,12 @@ const AdminOrders = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   if (loading) return <Loader />;
 
   return (
@@ -124,13 +134,13 @@ const AdminOrders = () => {
 
         {/* Orders Table */}
         <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
+          {paginatedOrders.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
                <Package className="w-12 h-12 text-gray-200 mx-auto mb-4" />
                <p className="text-gray-500 font-medium">No orders found matching your criteria</p>
             </div>
           ) : (
-            filteredOrders.map((order) => (
+            paginatedOrders.map((order) => (
               <div key={order._id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 {/* Master Row */}
                 <div 
@@ -148,9 +158,8 @@ const AdminOrders = () => {
                   </div>
 
                   <div className="hidden md:block">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Customer</p>
-                    <p className="text-sm font-semibold text-gray-900">{order.user?.name}</p>
-                    <p className="text-[11px] text-gray-500">{order.user?.email}</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-none mb-1 text-center">Customer</p>
+                    <p className="text-sm font-semibold text-gray-900">{order.user?.name || "Customer"}</p>
                   </div>
 
                   <div className="hidden lg:block">
@@ -283,6 +292,46 @@ const AdminOrders = () => {
             ))
           )}
         </div>
+
+        {/* Pagination Footer */}
+        {totalPages > 0 && (
+          <div className="mt-8 flex items-center justify-between bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
+            <p className="text-[13px] text-gray-500 font-medium">
+              Showing <span className="font-bold text-gray-900">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredOrders.length)}</span> to <span className="font-bold text-gray-900">{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> of <span className="font-bold text-gray-900">{filteredOrders.length}</span> master orders
+            </p>
+            <div className="flex items-center gap-2">
+               <button 
+                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                 disabled={currentPage === 1}
+                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 transition hover:bg-gray-50 disabled:opacity-40"
+               >
+                 <ChevronLeft className="h-4 w-4" />
+               </button>
+               
+               {[...Array(totalPages)].map((_, i) => (
+                 <button
+                   key={i + 1}
+                   onClick={() => setCurrentPage(i + 1)}
+                   className={`flex h-9 w-9 items-center justify-center rounded-xl font-bold text-sm transition-all ${
+                     currentPage === i + 1 
+                       ? "bg-black text-white shadow-xl shadow-black/10 scale-105" 
+                       : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
+                   }`}
+                 >
+                   {i + 1}
+                 </button>
+               )).slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))}
+
+               <button 
+                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                 disabled={currentPage === totalPages}
+                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 transition hover:bg-gray-50 disabled:opacity-40"
+               >
+                 <ChevronRight className="h-4 w-4" />
+               </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -75,17 +75,40 @@ const AdminNavbar = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/order/notifications`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (data.success) {
-        setNotifications(data.notifications.map((n) => ({
-          id: n._id,
+        setNotifications(data.data.map((n) => ({
+          _id: n._id,
           message: n.message,
           time: new Date(n.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           read: n.isRead,
         })));
       }
     } catch (error) { console.error(error); }
+  };
+
+  const handleMarkAsRead = async (id) => {
+    const token = localStorage.getItem("token");
+    try {
+      await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleClearAll = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      await fetch(`${API_URL}/notifications/clear`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications([]);
+      toast.success("Notifications cleared");
+    } catch (err) { console.error(err); }
   };
 
   const navItems = [
@@ -169,18 +192,25 @@ const AdminNavbar = () => {
 
   const notificationPanel = showDropdown && (
     <div className="absolute right-0 top-14 w-[320px] sm:w-[380px] bg-white border border-[#e2e8f0] rounded-2xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden text-[#1e293b]">
-       <div className="px-5 py-4 border-b border-[#f1f5f9] flex justify-between items-center">
-          <h3 className="text-xs font-black uppercase tracking-widest">Alert Center</h3>
-          <span className="text-[10px] font-bold text-[#2563eb]">{notifications.filter(n => !n.read).length} Unread</span>
+       <div className="px-5 py-4 border-b border-[#f1f5f9] flex justify-between items-center bg-gray-50/50">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Alert Center</h3>
+          <div className="flex items-center gap-4">
+            <span className="text-[10px] font-black text-[#2563eb] uppercase">{notifications.filter(n => !n.read).length} Unread</span>
+            <button onClick={handleClearAll} className="text-[10px] font-black text-red-500 uppercase hover:text-red-600">Clear All</button>
+          </div>
        </div>
-       <div className="max-h-80 overflow-y-auto">
+       <div className="max-h-80 overflow-y-auto scrollbar-hide">
           {notifications.length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#94a3b8]">No new notifications</div>
+            <div className="py-12 text-center text-[11px] font-bold text-[#94a3b8] uppercase tracking-tighter">No new alerts</div>
           ) : (
             notifications.map(n => (
-              <div key={n.id} className={`px-5 py-4 border-b border-[#f1f5f9] last:border-b-0 ${!n.read ? 'bg-blue-50/30' : ''}`}>
-                 <p className="text-xs leading-relaxed">{n.message}</p>
-                 <p className="text-[10px] text-[#94a3b8] mt-1 font-medium">{n.time}</p>
+              <div 
+                key={n._id} 
+                onClick={() => handleMarkAsRead(n._id)}
+                className={`px-5 py-4 border-b border-[#f1f5f9] last:border-b-0 cursor-pointer transition-colors ${!n.read ? 'bg-blue-50/20' : 'hover:bg-gray-50/50'}`}
+              >
+                 <p className={`text-[12px] leading-relaxed ${!n.read ? 'font-bold text-gray-900' : 'text-gray-500'}`}>{n.message}</p>
+                 <p className="text-[9px] text-[#94a3b8] mt-1.5 font-black uppercase tracking-widest">{n.time}</p>
               </div>
             ))
           )}

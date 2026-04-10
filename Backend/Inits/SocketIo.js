@@ -40,6 +40,15 @@ const initSocket = (io) => {
       console.log("📦 Seller/Admin joined room:", room);
     }
 
+    if (socket.user.role === "admin") {
+      socket.join("admin_room");
+      console.log("👮 Joined Admin Broadcast Room");
+    }
+
+    // ✅ PERSONAL NOTIFICATION ROOM
+    socket.join(socket.user.userId);
+    console.log("🔔 Personal room joined:", socket.user.userId);
+
     // ✅ ORDER ROOM
     socket.on("join-order", (orderId) => {
       socket.join(orderId);

@@ -390,13 +390,13 @@ const handleOrderCreation = async (req, res, data) => {
           size: vi.size,
           category: vi.category
         })),
-        status: "pending",
+        status: "placed",
         subTotal,
         taxAmount: tax,
         shippingAmount: shipping,
         commissionAmount: commission,
         vendorPayoutAmount: payout,
-        statusHistory: [{ from: "", to: "pending", reason: "Order created", timestamp: new Date() }]
+        statusHistory: [{ from: "", to: "placed", reason: "Order placed successfully", timestamp: new Date() }]
       });
 
       combinedTotal += (subTotal + tax + shipping);
@@ -446,7 +446,7 @@ const handleOrderCreation = async (req, res, data) => {
       order.paymentStatus = "paid";
       order.subOrders.forEach(so => {
         so.status = "confirmed";
-        so.statusHistory.push({ from: "pending", to: "confirmed", reason: "Payment received", timestamp: new Date() });
+        so.statusHistory.push({ from: "placed", to: "confirmed", reason: "Payment received", timestamp: new Date() });
       });
     }
 
@@ -474,7 +474,7 @@ const handleOrderCreation = async (req, res, data) => {
       const sellerId = sub.vendor;
       const msg = paymentMethod === "Razorpay"
         ? `Your sub-order ${sub.subOrderId} is CONFIRMED. Payment ₹${sub.subTotal} received.`
-        : `New sub-order ${sub.subOrderId} received (COD). Please confirm.`;
+        : `New sub-order ${sub.subOrderId} placed (COD). Please confirm.`;
 
       await Notification.create({
         user: sellerId,
@@ -712,17 +712,41 @@ const updateSubOrderStatus = async (req, res) => {
     const subOrder = order.subOrders.find(so => so.vendor.toString() === sellerId.toString());
     if (!subOrder) return res.status(403).json({ success: false, message: "Sub-order not found or unauthorized" });
 
-    // 1. LIFECYCLE VALIDATION
+    // 1. STRICT STATE MACHINE VALIDATION
     const validTransitions = {
-      "pending": ["confirmed", "cancelled"],
+      "placed": ["confirmed", "cancelled"],
       "confirmed": ["processing", "cancelled"],
-      "processing": ["packed", "cancelled"],
-      "packed": ["shipped"],
-      "shipped": ["delivered", "returned"],
-      "delivered": ["returned"]
+      "processing": ["shipped", "cancelled"],
+      "shipped": ["out_for_delivery"],
+      "out_for_delivery": ["delivered"],
+      "delivered": ["return_requested"],
+      "return_requested": ["returned"],
+      "returned": ["refunded"]
     };
 
     const currentStatus = subOrder.status;
+    
+    // Check if backward transition is attempted (using weights)
+    const statusWeights = {
+      "cancelled": -1,
+      "placed": 1,
+      "confirmed": 2,
+      "processing": 3,
+      "shipped": 4,
+      "out_for_delivery": 5,
+      "delivered": 6,
+      "return_requested": 7,
+      "returned": 8,
+      "refunded": 9
+    };
+
+    if (statusWeights[status] <= statusWeights[currentStatus] && status !== "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: `Status rollback is not allowed. Cannot move from ${currentStatus} to ${status}.`
+      });
+    }
+
     if (!validTransitions[currentStatus] || !validTransitions[currentStatus].includes(status)) {
       return res.status(400).json({
         success: false,
@@ -760,12 +784,15 @@ const updateSubOrderStatus = async (req, res) => {
 
     // 4. NOTIFICATIONS
     const notificationMessages = {
-      confirmed: `Your items from vendor are confirmed.`,
-      processing: `A vendor has started preparing your items.`,
-      packed: `Your items are packed and ready to ship.`,
-      shipped: `Your items have been shipped! Tracking ID: ${trackingNumber || "N/A"}`,
-      delivered: `Your items have been delivered. Thank you!`,
-      cancelled: `Sorry, a vendor could not fulfill your sub-order for some items.`
+      confirmed: `Your order has been confirmed by the seller.`,
+      processing: `The seller is now processing your order.`,
+      shipped: `Your package is on its way! Tracking ID: ${trackingNumber || "N/A"}`,
+      out_for_delivery: `Your order is out for delivery! Get ready.`,
+      delivered: `Your order has been delivered successfully.`,
+      cancelled: `Your order has been cancelled.`,
+      return_requested: `Return request received for your order.`,
+      returned: `Item has been picked up and returned to the seller.`,
+      refunded: `Refund has been processed for your returned order.`
     };
 
     const msg = notificationMessages[status] || `Your sub-order status is now ${status}`;
@@ -780,13 +807,17 @@ const updateSubOrderStatus = async (req, res) => {
     });
 
     if (global.io) {
-      global.io.to(`user-${order.user}`).emit("notification", {
+      const socketPayload = {
         type: "order-update",
         message: msg,
         orderId: order._id,
         subOrderId: subOrder.subOrderId,
-        status: status
-      });
+        status: status,
+        order: order // Send the updated order object
+      };
+
+      global.io.to(`user-${order.user}`).emit("notification", socketPayload);
+      global.io.to(order._id.toString()).emit("order-status-updated", socketPayload);
     }
 
     res.status(200).json({

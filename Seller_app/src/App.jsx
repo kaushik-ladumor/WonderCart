@@ -31,7 +31,9 @@ import SellerWallet from "./seller/SellerWallet";
 import SellerBank from "./seller/SellerBank";
 import SellerCreateDeal from "./seller/deals/SellerCreateDeal";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
+import SellerDeals from "./seller/deals/SellerDeals";
+import SellerDealDetails from "./seller/deals/SellerDealDetails";
 import SellerLandingPage from "./seller/LandingPage";
 
 function App() {
@@ -171,6 +173,8 @@ function App() {
           <Route path="products/edit/:id" element={<EditProduct />} />
           <Route path="orders" element={<SellerOrders />} />
           <Route path="orders/:id" element={<OrderDetails />} />
+          <Route path="deals" element={<SellerDeals />} />
+          <Route path="deals/:id" element={<SellerDealDetails />} />
           <Route path="deals/create" element={<SellerCreateDeal />} />
           <Route path="profile" element={<SellerProfile />} />
         </Route>

@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 const COLORS = {
-  pending: '#2d63e2',
-  processing: '#55627d',
-  shipped: '#d9e3ff',
-  delivered: '#15803d',
-  cancelled: '#c81e1e',
+  placed: '#2f5fe3',
+  confirmed: '#4f46e5',
+  processing: '#f59e0b',
+  shipped: '#6366f1',
+  out_for_delivery: '#0ea5e9',
+  delivered: '#10b981',
+  cancelled: '#ef4444',
+  return_requested: '#f97316',
+  returned: '#d946ef',
+  refunded: '#14b8a6',
 };
 
 const CustomTooltip = ({ active, payload }) => {
@@ -49,7 +54,7 @@ const OrderStatusChart = ({ pipeline = {}, isLoading }) => {
   const activeItem = activeIndex !== null ? data[activeIndex] : null;
 
   return (
-    <div className="flex h-full min-h-[350px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
+    <div className="flex h-[480px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
       <div>
         <h3 className="text-[18px] font-semibold text-[#141b2d]">Order Breakdown</h3>
         <p className="mt-1 text-sm text-[#66728d]">Current status distribution</p>

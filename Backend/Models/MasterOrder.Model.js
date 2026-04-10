@@ -49,17 +49,18 @@ const masterOrderSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      "pending",
-      "confirmed",
-      "processing",
-      "partially_shipped",
-      "shipped",
-      "delivered",
-      "cancelled",
-      "partially_fulfilled",
-      "return_in_progress"
+      "placed", 
+      "confirmed", 
+      "processing", 
+      "shipped", 
+      "out_for_delivery", 
+      "delivered", 
+      "cancelled", 
+      "return_requested", 
+      "returned", 
+      "refunded"
     ],
-    default: "pending",
+    default: "placed",
   },
   razorpayOrderId: String,
   razorpayPaymentId: String,
@@ -71,37 +72,41 @@ const masterOrderSchema = new mongoose.Schema({
   }],
 }, { timestamps: true });
 
-// Helper to compute Master Status from sub-orders (following the requested logic)
 masterOrderSchema.methods.computeStatus = async function() {
   const SubOrder = mongoose.model("SubOrder");
   const subs = await SubOrder.find({ _id: { $in: this.subOrders } });
   
-  if (!subs || subs.length === 0) return "pending";
+  if (!subs || subs.length === 0) return "placed";
 
-  const statuses = subs.map(s => s.status);
+  const statusesByWeight = {
+    "cancelled": -1,
+    "placed": 1,
+    "confirmed": 2,
+    "processing": 3,
+    "shipped": 4,
+    "out_for_delivery": 5,
+    "delivered": 6,
+    "return_requested": 7,
+    "returned": 8,
+    "refunded": 9
+  };
 
-  if (statuses.every(s => s === "pending")) return "pending";
-  if (statuses.every(s => s === "confirmed")) return "confirmed";
-  if (statuses.every(s => s === "cancelled")) return "cancelled";
-  if (statuses.every(s => s === "delivered")) return "delivered";
+  const activeSubs = subs.filter(s => s.status !== "cancelled");
+  
+  if (activeSubs.length === 0) return "cancelled";
 
-  if (statuses.some(s => s === "cancelled")) {
-    const others = statuses.filter(s => s !== "cancelled");
-    if (others.every(o => o === "delivered")) return "partially_fulfilled";
-  }
+  let minWeight = Infinity;
+  let masterStatus = "placed";
 
-  if (statuses.some(s => s === "returned")) return "return_in_progress";
+  activeSubs.forEach(s => {
+    const weight = statusesByWeight[s.status] || 0;
+    if (weight < minWeight) {
+      minWeight = weight;
+      masterStatus = s.status;
+    }
+  });
 
-  const anyShipped = statuses.some(s => s === "shipped");
-  const allDeliveredOrShippedOrCancelled = statuses.every(s => ["shipped", "delivered", "cancelled"].includes(s));
-  if (anyShipped) {
-    return allDeliveredOrShippedOrCancelled ? "shipped" : "partially_shipped";
-  }
-
-  const anyProcessing = statuses.some(s => ["processing", "packed"].includes(s));
-  if (anyProcessing) return "processing";
-
-  return "pending"; // Default
+  return masterStatus;
 };
 
 module.exports = mongoose.model("MasterOrder", masterOrderSchema);

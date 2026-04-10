@@ -1,100 +1,93 @@
 const mongoose = require('mongoose');
 
 const dealSchema = new mongoose.Schema({
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true
-  },
   sellerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
+  // Supporting 6 Deal Types: Single, Bundle, Category, Flash, BOGO, Coupon
   dealType: {
     type: String,
-    enum: ['lightning', 'day_deal', 'coupon'],
-    default: 'day_deal'
+    enum: ['single', 'bundle', 'category', 'flash', 'bogo', 'coupon'],
+    required: true
   },
-  discountPercent: {
+  title: { type: String, required: true },
+  description: { type: String },
+  
+  // product_ids for single/multi, category for category-wide
+  productIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
+  category: { type: String },
+  
+  // BOGO Fields: Buy N Get M
+  buyQuantity: { type: Number, default: 1 },
+  getQuantity: { type: Number, default: 1 },
+  
+  discountType: {
+    type: String,
+    enum: ['flat', 'percent'],
+    default: 'percent'
+  },
+  discountValue: {
     type: Number,
     required: true,
-    min: 5,
-    max: 80
+    min: 1,
+    max: 70 // Max 70% as per rule
   },
-  originalPrice: {
+  minOrderValue: { type: Number, default: 0 },
+  
+  startDateTime: {
+    type: Date,
+    required: true
+  },
+  endDateTime: {
+    type: Date,
+    required: true
+  },
+  
+  // Snapshot of stock at creation
+  maxUses: {
     type: Number,
     required: true
   },
-  dealPrice: {
-    type: Number,
-    required: true
-  },
-  costPrice: {
-    type: Number,
-    required: true
-  },
-  stockLimit: {
-    type: Number,
-    default: 100
-  },
-  claimedCount: {
+  currentUses: {
     type: Number,
     default: 0
   },
-  startTime: {
-    type: Date,
-    required: true
-  },
-  endTime: {
-    type: Date,
-    required: true
-  },
+  
+  couponCode: { type: String, sparse: true },
+  
   status: {
     type: String,
-    enum: ['pending', 'approved', 'live', 'expired', 'rejected'],
+    enum: ['draft', 'pending', 'approved', 'live', 'paused', 'expired', 'rejected'],
     default: 'pending'
   },
-  rejectionReason: {
-    type: String
-  },
-  category: {
-    type: String
-  },
-  commissionPercent: {
+  
+  adminNote: { type: String },
+  
+  // Commission Logic: Flat ₹50 (5000 paise)
+  commissionAmountPaise: {
     type: Number,
-    default: 10
+    default: 5000 
   },
-  createdBy: {
-    type: String,
-    enum: ['seller', 'admin'],
-    default: 'seller'
+  commissionPaid: {
+    type: Boolean,
+    default: false
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+  
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 }, {
+  timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
 dealSchema.index({ status: 1 });
-dealSchema.index({ endTime: 1 });
-dealSchema.index({ startTime: 1 });
-dealSchema.index({ category: 1 });
-dealSchema.index({ sellerId: 1 });
-
-dealSchema.virtual('sellerEarnings').get(function() {
-  return this.dealPrice - (this.dealPrice * this.commissionPercent / 100);
-});
-
-dealSchema.virtual('platformEarnings').get(function() {
-  return this.dealPrice * this.commissionPercent / 100;
-});
-
-dealSchema.virtual('claimedPercent').get(function() {
-  return (this.claimedCount / this.stockLimit) * 100;
-});
+dealSchema.index({ startDateTime: 1 });
+dealSchema.index({ endDateTime: 1 });
 
 module.exports = mongoose.model('Deal', dealSchema);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   CheckCircle,
   Package,
@@ -19,6 +19,8 @@ import {
   SquareCheckBig,
 } from "lucide-react";
 import { API_URL } from "../utils/constants";
+import { useSocket } from "../context/SocketProvider";
+import toast from "react-hot-toast";
 
 const OrderConfirmationPage = () => {
   const [order, setOrder] = useState(null);
@@ -26,6 +28,8 @@ const OrderConfirmationPage = () => {
   const [error, setError] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const socket = useSocket();
 
   const token = localStorage.getItem("token");
 
@@ -145,6 +149,156 @@ const OrderConfirmationPage = () => {
     }
   }, [id, token]);
 
+  useEffect(() => {
+    if (order && searchParams.get("print") === "true") {
+      const timer = setTimeout(() => {
+        window.print();
+        // Clear param to avoid printing again on refresh
+        navigate(`/orderConfirm/${id}`, { replace: true });
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [order, searchParams, id, navigate]);
+
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    // Join order room for real-time updates
+    socket.emit("join-order", id);
+
+    const handleStatusUpdate = (data) => {
+      console.log("Real-time order update received:", data);
+      if (data.orderId === id && data.order) {
+        setOrder(data.order);
+        toast.success(data.message || `Order status updated to ${data.status}`, {
+          icon: '📦',
+          style: {
+            borderRadius: '12px',
+            background: '#fff',
+            color: '#11182d',
+            border: '1px solid #e1e5f1',
+          },
+        });
+      }
+    };
+
+    socket.on("order-status-updated", handleStatusUpdate);
+
+    return () => {
+      socket.off("order-status-updated", handleStatusUpdate);
+    };
+  }, [socket, id]);
+
+  const getStatusSteps = () => {
+    if (!order) return [];
+
+    const steps = [
+      { 
+        label: 'Placed', 
+        status: 'placed',
+        icon: ShoppingBag, 
+        date: order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Pending', 
+        active: true, 
+        done: true 
+      },
+      { 
+        label: 'Confirmed', 
+        status: 'confirmed',
+        icon: CheckCircle, 
+        date: 'Pending', 
+        active: false, 
+        done: false 
+      },
+      { 
+        label: 'Processing', 
+        status: 'processing',
+        icon: Loader2, 
+        date: 'Pending', 
+        active: false, 
+        done: false 
+      },
+      { 
+        label: 'Shipped', 
+        status: 'shipped',
+        icon: Truck, 
+        date: 'Pending', 
+        active: false, 
+        done: false 
+      },
+      { 
+        label: 'Out for Delivery', 
+        status: 'out_for_delivery',
+        icon: MapPin, 
+        date: 'Pending', 
+        active: false, 
+        done: false 
+      },
+      { 
+        label: 'Delivered', 
+        status: 'delivered',
+        icon: Home, 
+        date: 'Pending', 
+        active: false, 
+        done: false 
+      }
+    ];
+
+    const currentStatus = order.status;
+    
+    // Status Weights for logic
+    const statusWeights = {
+      "placed": 1,
+      "confirmed": 2,
+      "processing": 3,
+      "shipped": 4,
+      "out_for_delivery": 5,
+      "delivered": 6,
+      "return_requested": 7,
+      "returned": 8,
+      "refunded": 9,
+      "cancelled": -1
+    };
+
+    const currentWeight = statusWeights[currentStatus] || 0;
+    
+    const getTimestamp = (statusName) => {
+      let latest = null;
+      order.subOrders?.forEach(sub => {
+        sub.statusHistory?.forEach(h => {
+          if (h.to === statusName) {
+            if (!latest || new Date(h.timestamp) > new Date(latest)) {
+              latest = h.timestamp;
+            }
+          }
+        });
+      });
+      return latest;
+    };
+
+    const formatTime = (date) => {
+      if (!date) return 'Pending';
+      return new Date(date).toLocaleString('en-IN', { 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    };
+
+    steps.forEach((step, index) => {
+      const stepWeight = statusWeights[step.status];
+      if (currentWeight >= stepWeight) {
+        step.active = true;
+        step.done = currentWeight > stepWeight;
+        const ts = getTimestamp(step.status) || (step.status === 'placed' ? order.createdAt : null);
+        step.date = ts ? formatTime(ts) : (step.active && !step.done ? 'In Progress' : 'Pending');
+      }
+    });
+
+    return steps;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -248,17 +402,21 @@ const OrderConfirmationPage = () => {
 
               <div className="relative z-10 px-2 sm:px-10">
                 {/* Connecting Line */}
-                <div className="absolute top-[21px] left-[10%] right-[10%] h-[1.5px] bg-[#f0f2f8] rounded-full overflow-hidden">
-                   <div className="h-full w-[45%] bg-[#0f49d7] rounded-full shadow-[0_0_8px_rgba(15,73,215,0.3)] transition-all duration-1000" />
+                <div className="absolute top-[21px] left-[8%] right-[8%] h-[1.5px] bg-[#f0f2f8] rounded-full overflow-hidden">
+                   <div 
+                     className="h-full bg-[#0f49d7] rounded-full shadow-[0_0_8px_rgba(15,73,215,0.3)] transition-all duration-1000" 
+                     style={{ 
+                       width: order.status === 'delivered' ? '100%' : 
+                              order.status === 'out_for_delivery' ? '80%' : 
+                              order.status === 'shipped' ? '60%' : 
+                              order.status === 'processing' ? '40%' : 
+                              order.status === 'confirmed' ? '20%' : '5%' 
+                     }}
+                   />
                 </div>
 
                 <div className="flex justify-between items-start">
-                  {[
-                    { label: 'Ordered', icon: CheckCircle, date: new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), active: true, done: true },
-                    { label: 'Processing', icon: Loader2, date: 'Oct 12, 02:15 PM', active: true, done: true },
-                    { label: 'Shipped', icon: Truck, date: 'Oct 13, 09:00 AM', active: false, done: false },
-                    { label: 'Delivered', icon: Home, date: 'Pending', active: false, done: false }
-                  ].map((step, i) => (
+                  {getStatusSteps().map((step, i) => (
                     <div key={i} className="flex flex-col items-center group w-auto">
                       <div className={`relative w-11 h-11 rounded-full border-[3px] border-white flex items-center justify-center transition-all duration-500 shadow-sm z-20 ${
                         step.done ? 'bg-[#0f49d7] text-white' : 
@@ -372,20 +530,81 @@ const OrderConfirmationPage = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3">
                      <button 
                        onClick={() => navigate("/shop")}
-                       className="flex-1 h-11 bg-[#0f49d7] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#11182d] shadow-md shadow-[#0f49d7]/10 active:scale-95"
+                       className="w-full h-11 bg-[#0f49d7] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#11182d] shadow-md shadow-[#0f49d7]/10 active:scale-95"
                      >
                        Shop Again
                      </button>
-                     <button 
-                       onClick={() => window.print()}
-                       className="w-11 h-11 bg-white text-[#11182d] border border-[#d8ddea] rounded-xl flex items-center justify-center transition-all hover:bg-[#f6f8fd] active:scale-95"
-                       title="Print Invoice"
-                     >
-                       <Printer className="w-4.5 h-4.5" />
-                     </button>
+                     
+                     {['placed', 'confirmed', 'processing'].includes(order.status) && (
+                        <button 
+                          onClick={async () => {
+                            const reason = prompt("Enter reason for cancellation:");
+                            if (!reason) return;
+                            try {
+                              const res = await fetch(`${API_URL}/order/cancel`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                body: JSON.stringify({ orderId: order._id, subOrderId: order.subOrders[0].subOrderId, reason })
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                toast.success("Order cancelled");
+                                window.location.reload();
+                              } else {
+                                toast.error(data.message);
+                              }
+                            } catch (e) {
+                              toast.error("Failed to cancel order");
+                            }
+                          }}
+                          className="w-full h-11 bg-white text-red-600 border border-red-100 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-red-50 active:scale-95"
+                        >
+                          Cancel Order
+                        </button>
+                     )}
+
+                     {order.status === 'delivered' && (
+                        <button 
+                          onClick={async () => {
+                            const reason = prompt("Why are you returning this order?");
+                            if (!reason) return;
+                            try {
+                              const res = await fetch(`${API_URL}/order/return`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                body: JSON.stringify({ orderId: order._id, subOrderId: order.subOrders[0].subOrderId, reason })
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                toast.success("Return request submitted");
+                                window.location.reload();
+                              } else {
+                                toast.error(data.message);
+                              }
+                            } catch (e) {
+                              toast.error("Failed to submit return request");
+                            }
+                          }}
+                          className="w-full h-11 bg-white text-[#0f49d7] border border-[#0f49d7]/10 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#f6f8fd] active:scale-95"
+                        >
+                          Return Order
+                        </button>
+                     )}
+
+                     {['shipped', 'out_for_delivery'].includes(order.status) && (
+                        <p className="text-[10px] text-center text-[#6d7892] italic font-medium">
+                          Order already shipped, cannot cancel.
+                        </p>
+                     )}
+                     
+                     {['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery'].includes(order.status) && (
+                        <p className="text-[10px] text-center text-[#6d7892] italic font-medium">
+                          Return available after delivery
+                        </p>
+                     )}
                   </div>
                </div>
             </div>

@@ -177,11 +177,10 @@ function Signup() {
 
         reset();
 
-        // Show verify modal after a short delay
-        // Navigate to home immediately, verification can happen later in profile
+        // SHOW VERIFY MODAL IMMEDIATELY
         setTimeout(() => {
-          navigate("/seller/dashboard");
-        }, 1500);
+           document.getElementById("verify_email_modal")?.showModal();
+        }, 500);
       } else {
         // Handle other errors
         toast.error(

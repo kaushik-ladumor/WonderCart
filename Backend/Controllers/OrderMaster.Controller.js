@@ -10,6 +10,7 @@ const mongoose = require("mongoose");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const { calculateEDD, getZone, isCodServiceable } = require("../Utils/Logistics");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
@@ -120,14 +121,14 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
       mustShipBy: data.mustShipBy,
       zone: data.zone,
       handlingTimeDays: data.handlingDays,
-      status: "pending",
-      statusHistory: [{ from: "", to: "pending", reason: "Order placed" }],
+      status: "placed",
+      statusHistory: [{ from: "", to: "placed", reason: "Order placed" }],
       paymentStatus: masterData.paymentStatus === "paid" ? "paid" : "pending",
     });
 
     if (masterData.paymentStatus === "paid") {
        subOrder.status = "confirmed";
-       subOrder.statusHistory.push({ from: "pending", to: "confirmed", reason: "Payment confirmed" });
+       subOrder.statusHistory.push({ from: "placed", to: "confirmed", reason: "Payment confirmed" });
 
        // --- 🚀 RAZORPAY ROUTE: CREATE HELD TRANSFER ---
        if (masterData.razorpayPaymentId) {
@@ -166,6 +167,14 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
     await subOrder.save({ session });
     subOrderIds.push(subOrder._id);
 
+    // NOTIFICATION: To Seller
+    sendNotification({
+        userId: data.seller,
+        role: 'seller',
+        type: 'NEW_ORDER',
+        message: `You have a new sub-order: ${subOrder.subOrderId}!`
+    });
+
     // Stock Management
     for (const item of data.items) {
       await Product.updateOne(
@@ -181,6 +190,12 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
   await masterOrder.save({ session });
 
   await Cart.updateOne({ user: masterData.user }, { $set: { items: [] } }, { session });
+
+  // NOTIFICATION: To Admin
+  notifyAdmins({
+      type: 'MASTER_ORDER_PLACED',
+      message: `Master order ${masterOrder.orderId} placed (Total: ₹${masterOrder.totalAmount})`
+  });
 
   return masterOrder;
 };
@@ -250,14 +265,17 @@ const cancelSubOrder = async (req, res) => {
     const subOrder = await SubOrder.findById(subOrderId);
     if (!subOrder) return res.status(404).json({ success: false, message: "Sub-order not found" });
 
-    // Permissions: Customer can cancel if pending/confirmed. Admin can cancel any. 
-    // Vendor can cancel if processing (mark out-of-stock).
-    const isCustomer = (role === "customer" && subOrder.masterOrder.user.toString() === userId);
-    const isSeller = (role === "seller" && subOrder.seller.toString() === userId);
-    const isAdmin = (role === "admin");
+    const statusWeights = {
+      "placed": 1,
+      "confirmed": 2,
+      "processing": 3,
+      "shipped": 4,
+      "out_for_delivery": 5,
+      "delivered": 6
+    };
 
-    if (!isAdmin && isCustomer && !["pending", "confirmed"].includes(subOrder.status)) {
-      return res.status(400).json({ success: false, message: "Cannot cancel after processing started." });
+    if (!isAdmin && isCustomer && statusWeights[subOrder.status] >= statusWeights["shipped"]) {
+      return res.status(400).json({ success: false, message: "Order already shipped, cannot cancel. Please refuse delivery at doorstep." });
     }
 
     if (subOrder.status === "cancelled") return res.status(400).json({ success: false, message: "Already cancelled" });
@@ -310,9 +328,22 @@ const cancelSubOrder = async (req, res) => {
     masterOrder.status = await masterOrder.computeStatus();
     await masterOrder.save();
 
-    // Notify Customer
-    await Notification.create({ user: masterOrder.user, role: "customer", type: "order-cancelled", message: `Your items from ${subOrder.subOrderId} were cancelled. Refund initiated.`, orderId: masterOrder._id });
-    if (global.io) global.io.to(`user-${masterOrder.user}`).emit("notification", { message: "Order section cancelled", status: "cancelled" });
+    // NOTIFICATIONS
+    sendNotification({
+        userId: masterOrder.user,
+        role: 'buyer',
+        type: 'ORDER_CANCELLED',
+        message: `Order part ${subOrder.subOrderId} has been cancelled.`,
+        orderId: masterOrder._id
+    });
+
+    sendNotification({
+        userId: subOrder.seller,
+        role: 'seller',
+        type: 'ORDER_CANCELLED',
+        message: `Order part ${subOrder.subOrderId} was cancelled by the user.`,
+        orderId: masterOrder._id
+    });
 
     res.status(200).json({ success: true, message: "Sub-order cancelled and refund initiated", subOrder });
   } catch (error) {
@@ -325,7 +356,8 @@ const updateSubOrderStatus = async (req, res) => {
   let { status, trackingId, trackingNumber, trackingUrl, reason } = req.body;
   if (status) status = status.toLowerCase();
   if (status === "ready_to_ship") status = "packed";
-  if (status === "placed") status = "pending";
+  if (status === "packed") status = "processing"; 
+  if (status === "shipped") status = "shipped";
   const sellerId = req.user.userId;
 
   try {
@@ -334,15 +366,34 @@ const updateSubOrderStatus = async (req, res) => {
 
     const prevStatus = subOrder.status;
 
-    // SLA Validations
+    // 1. STRICT STATE MACHINE VALIDATION
     const transitions = {
-      "pending": ["pending", "confirmed", "cancelled"],
-      "confirmed": ["confirmed", "processing", "cancelled"],
-      "processing": ["processing", "packed", "cancelled"],
-      "packed": ["packed", "shipped"],
-      "shipped": ["shipped", "delivered", "returned"],
-      "delivered": ["delivered", "returned"]
+      "placed": ["confirmed", "cancelled"],
+      "confirmed": ["processing", "cancelled"],
+      "processing": ["shipped", "cancelled"],
+      "shipped": ["out_for_delivery"],
+      "out_for_delivery": ["delivered"],
+      "delivered": ["return_requested"],
+      "return_requested": ["returned"],
+      "returned": ["refunded"]
     };
+
+    const statusWeights = {
+      "cancelled": -1,
+      "placed": 1,
+      "confirmed": 2,
+      "processing": 3,
+      "shipped": 4,
+      "out_for_delivery": 5,
+      "delivered": 6,
+      "return_requested": 7,
+      "returned": 8,
+      "refunded": 9
+    };
+
+    if (statusWeights[status] <= statusWeights[prevStatus] && status !== "cancelled") {
+       return res.status(400).json({ success: false, message: `Status rollback is not allowed. Cannot move from ${prevStatus} to ${status}.` });
+    }
 
     if (!transitions[prevStatus] || !transitions[prevStatus].includes(status)) {
        return res.status(400).json({ success: false, message: `Invalid transition from ${prevStatus} to ${status}` });
@@ -425,11 +476,21 @@ const updateSubOrderStatus = async (req, res) => {
     masterOrderForCompute.status = await masterOrderForCompute.computeStatus();
     await masterOrderForCompute.save();
 
-    // Notify Customer
-    const msgs = { processing: "Seller started preparing your items.", packed: "Items are packed.", shipped: `Items shipped! Track: ${subOrder.trackingId}`, delivered: "Delivered!" };
+    const msgs = { 
+        processing: "Seller started preparing your items.", 
+        packed: "Items are packed.", 
+        shipped: `Items shipped! Track: ${subOrder.trackingId}`, 
+        delivered: "Delivered!" 
+    };
+    
     if (msgs[status]) {
-      await Notification.create({ user: masterOrder.user, role: "buyer", type: "order-update", message: msgs[status], orderId: masterOrder._id });
-      if (global.io) global.io.to(`user-${masterOrder.user}`).emit("notification", { message: msgs[status], status });
+      sendNotification({
+          userId: masterOrder.user,
+          role: 'buyer',
+          type: 'ORDER_UPDATE',
+          message: msgs[status],
+          orderId: masterOrder._id
+      });
     }
 
     res.status(200).json({ success: true, message: "Status updated", subOrder });

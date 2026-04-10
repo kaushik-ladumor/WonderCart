@@ -9,17 +9,24 @@ import {
   Zap,
   Ticket,
   Info,
-  AlertCircle
+  AlertCircle,
+  Layers,
+  ShoppingBag,
+  Timer
 } from 'lucide-react';
 import { API_URL } from '../../utils/constants';
 import { useAuth } from "../../context/AuthProvider";
 
+
 const RUPEE = "₹";
 
 const dealTypeOptions = [
-  { value: 'lightning', label: 'Lightning Deal', Icon: Zap },
-  { value: 'day_deal', label: 'Day Deal', Icon: Calendar },
-  { value: 'coupon', label: 'Coupon', Icon: Ticket }
+  { value: 'single', label: 'Single Product', Icon: Package, desc: 'Discount on one high-focus product' },
+  { value: 'bundle', label: 'Bundle Deal', Icon: Layers, desc: 'Combo of 2-10 related products' },
+  { value: 'category', label: 'Category Sale', Icon: ShoppingBag, desc: '% Off on all products in a category' },
+  { value: 'flash', label: 'Flash Sale', Icon: Zap, desc: 'Deep discount with countdown' },
+  { value: 'bogo', label: 'Buy X Get Y', Icon: Timer, desc: 'Buy N, get M free/discounted' },
+  { value: 'coupon', label: 'Coupon Code', Icon: Ticket, desc: 'Shareable code with usage limits' }
 ];
 
 const SellerCreateDeal = () => {
@@ -31,14 +38,18 @@ const SellerCreateDeal = () => {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    productId: '',
-    dealType: 'lightning',
-    discountPercent: 25,
-    originalPrice: 0,
-    costPrice: 0,
-    startTime: '',
-    endTime: '',
-    stockLimit: 1,
+    productIds: [],
+    dealType: 'single',
+    discountType: 'percent',
+    discountValue: 25,
+    buyQuantity: 1,
+    getQuantity: 1,
+    title: '',
+    description: '',
+    startDateTime: '',
+    endDateTime: '',
+    category: '',
+    couponCode: ''
   });
 
   useEffect(() => {
@@ -59,51 +70,64 @@ const SellerCreateDeal = () => {
     }
   };
 
-  const selectedProduct = useMemo(() => 
-    products.find(p => p._id === formData.productId)
-  , [formData.productId, products]);
+  const selectedProductsData = useMemo(() => 
+    products.filter(p => formData.productIds.includes(p._id))
+  , [formData.productIds, products]);
 
-  const totalStock = useMemo(() => {
-    if (!selectedProduct) return 0;
-    return selectedProduct.variants?.[0]?.sizes?.reduce((sum, s) => sum + s.stock, 0) || 0;
-  }, [selectedProduct]);
+  const minStockAvailable = useMemo(() => {
+    if (selectedProductsData.length === 0) return 0;
+    return Math.min(...selectedProductsData.map(p => 
+        p.variants?.[0]?.sizes?.reduce((sum, s) => sum + s.stock, 0) || 0
+    ));
+  }, [selectedProductsData]);
 
-  useEffect(() => {
-    if (selectedProduct) {
-      setFormData(prev => ({
-        ...prev,
-        originalPrice: selectedProduct.variants?.[0]?.sizes?.[0]?.sellingPrice || 0,
-        category: selectedProduct.category,
-        stockLimit: Math.min(prev.stockLimit, totalStock) || 1
-      }));
-    }
-  }, [selectedProduct, totalStock]);
-
-  const dealPrice = Math.round(formData.originalPrice * (1 - formData.discountPercent / 100));
-  const marketplaceFee = Math.round(dealPrice * 0.12);
-  const logisticsEstimate = 149;
-  const estimatedEarnings = dealPrice - marketplaceFee - logisticsEstimate;
-  const profitMargin = dealPrice > 0 ? (estimatedEarnings / dealPrice) * 100 : 0;
-
-  const isStockInvalid = formData.stockLimit > totalStock;
+  // Frontend time validation buffer (10 mins)
+  const getMinStartTime = () => {
+    const d = new Date(Date.now() + 10 * 60 * 1000);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (isStockInvalid) {
-        setError(`Stock limit cannot exceed available stock (${totalStock})`);
-        return;
-    }
     
+    // Clear previous errors
+    setError(null);
+
+    // Business Logic Validations
+    if (formData.dealType === 'category' && !formData.category) {
+        return setError("Please specify a category.");
+    }
+    if (formData.productIds.length === 0 && formData.dealType !== 'category') {
+        return setError("Please select at least one product.");
+    }
+    if (formData.discountValue > 70 && formData.discountType === 'percent') {
+        return setError("Maximum allowed discount is 70%.");
+    }
+
     try {
       setSubmitting(true);
-      setError(null);
-      await axios.post(`${API_URL}/api/deals`, {
-          ...formData,
-          dealPrice
-      }, {
+      await axios.post(`${API_URL}/api/deals`, formData, {
           headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess(true);
+      
+      // Reset Form State
+      setFormData({
+        productIds: [],
+        dealType: 'single',
+        discountType: 'percent',
+        discountValue: 25,
+        buyQuantity: 1,
+        getQuantity: 1,
+        title: '',
+        description: '',
+        startDateTime: '',
+        endDateTime: '',
+        category: '',
+        couponCode: ''
+      });
+
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err.response?.data?.message || 'Submission failed');
@@ -116,9 +140,9 @@ const SellerCreateDeal = () => {
     <div className="mx-auto max-w-[1180px] space-y-5 pb-8">
       {/* Header Section */}
       <div className="mb-4 text-left">
-        <h1 className="text-[28px] font-semibold text-[#141b2d] tracking-tight">Propose a New Deal</h1>
-        <p className="text-[#66728d] mt-1 text-sm">
-          Set up your campaign to boost sales and visibility.
+        <h1 className="text-[28px] font-bold text-[#141b2d] tracking-tight">Create Merchant Deal</h1>
+        <p className="text-[#66728d] mt-1 text-sm font-medium">
+          Set up your campaign. A flat fee of <span className="text-[#2156d8] font-bold">₹50</span> will be charged upon admin approval.
         </p>
       </div>
 
@@ -127,237 +151,280 @@ const SellerCreateDeal = () => {
         {/* Main Content Area */}
         <div className="lg:col-span-8 space-y-4">
           
-          {/* Product Details Card */}
-          <div className="bg-white rounded-[24px] p-5 shadow-sm border border-[#e7ebf5]">
-            <div className="flex items-center gap-2.5 mb-5 px-1">
-               <div className="w-8 h-8 bg-[#f1f4fd] rounded-lg flex items-center justify-center text-[#2156d8]">
-                  <Package className="w-4 h-4" />
+          {/* Deal Type Selection */}
+          <div className="bg-white rounded-[32px] p-6 shadow-sm border border-[#e2e8f0]">
+            <div className="flex items-center gap-3 mb-6">
+               <div className="w-10 h-10 bg-[#eff4ff] rounded-2xl flex items-center justify-center text-[#2156d8]">
+                  <Layers className="w-5 h-5" />
                </div>
-               <h2 className="text-[17px] font-semibold text-[#141b2d]">Product Details</h2>
+               <div>
+                  <h2 className="text-[17px] font-bold text-[#141b2d]">Campaign Type</h2>
+                  <p className="text-[11px] text-[#7c87a2] font-medium">Choose how you want to promote your products</p>
+               </div>
             </div>
 
-            <div className="space-y-4">
-               <div>
-                  <label className="text-[11px] font-medium text-[#66728d] uppercase tracking-wider mb-2 block">Select Product</label>
-                  <div className="relative group">
-                    <select
-                      value={formData.productId}
-                      onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-                      className={`w-full h-14 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 appearance-none font-semibold outline-none focus:border-[#2156d8] transition-all cursor-pointer ${formData.productId ? 'text-transparent' : 'text-[#141b2d]'}`}
-                    >
-                      <option value="" className="text-[#141b2d]">{loading ? 'Loading...' : 'Select a product'}</option>
-                      {products.map(p => (
-                        <option key={p._id} value={p._id} className="text-[#141b2d]">
-                           {p.name} - {RUPEE}{p.variants?.[0]?.sizes?.[0]?.sellingPrice}
-                        </option>
-                      ))}
-                    </select>
-                    
-                    {selectedProduct && (
-                        <div className="absolute inset-y-0 left-0 flex items-center gap-3 pointer-events-none px-4 bg-transparent w-[calc(100%-40px)]">
-                           <div className="w-9 h-9 bg-white rounded-lg border border-[#e2e8f0] flex items-center justify-center overflow-hidden shrink-0">
-                              <img 
-                                src={selectedProduct.variants?.[0]?.images?.[0]} 
-                                alt="" 
-                                className="w-full h-full object-cover" 
-                              />
-                           </div>
-                           <div className="min-w-0">
-                              <p className="text-[13px] font-semibold text-[#141b2d] truncate">{selectedProduct.name}</p>
-                              <p className="text-[10px] text-[#66728d] font-medium mt-0.5 whitespace-nowrap">
-                                 Stock: {totalStock} units available
-                              </p>
-                           </div>
-                        </div>
-                    )}
-                    
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#94a3b8]">
-                       <ChevronDown className="w-4 h-4" />
-                    </div>
-                  </div>
-               </div>
-
-               <div>
-                  <label className="text-[11px] font-medium text-[#66728d] uppercase tracking-wider mb-2 block">Deal Type</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {dealTypeOptions.map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setFormData({ ...formData, dealType: opt.value })}
-                        className={`h-[48px] flex items-center justify-center gap-2 rounded-xl border font-semibold text-[13px] transition-all ${
-                          formData.dealType === opt.value
-                            ? 'bg-[#edf2ff] border-[#2156d8] text-[#2156d8]'
-                            : 'bg-white border-[#e2e8f0] text-[#66728d] hover:border-[#bfdbfe]'
-                        }`}
-                      >
-                        <opt.Icon className="w-4 h-4" />
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-               </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {dealTypeOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setFormData({ ...formData, dealType: opt.value })}
+                  className={`p-4 rounded-3xl border text-left transition-all ${
+                    formData.dealType === opt.value
+                      ? 'bg-[#f0f5ff] border-[#2156d8] ring-1 ring-[#2156d8]'
+                      : 'bg-white border-[#e2e8f0] hover:border-[#bfdbfe]'
+                  }`}
+                >
+                  <opt.Icon className={`w-6 h-6 mb-3 ${formData.dealType === opt.value ? 'text-[#2156d8]' : 'text-[#7c87a2]'}`} />
+                  <p className="text-[14px] font-bold text-[#141b2d] mb-1">{opt.label}</p>
+                  <p className="text-[10px] text-[#7c87a2] font-medium leading-tight">{opt.desc}</p>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Pricing Card */}
-          <div className="bg-white rounded-[24px] p-5 shadow-sm border border-[#e7ebf5]">
-             <div className="flex items-center gap-2.5 mb-5 px-1">
-                <div className="w-8 h-8 bg-[#f1f4fd] rounded-lg flex items-center justify-center text-[#2156d8]">
-                   <Percent className="w-4 h-4" />
+          {/* Campaign Metadata */}
+          <div className="bg-white rounded-[32px] p-6 shadow-sm border border-[#e2e8f0]">
+             <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-[#eff4ff] rounded-2xl flex items-center justify-center text-[#2156d8]">
+                   <Info className="w-5 h-5" />
                 </div>
-                <h2 className="text-[17px] font-semibold text-[#141b2d]">Pricing & Inventory</h2>
+                <div>
+                   <h2 className="text-[17px] font-bold text-[#141b2d]">Campaign Identity</h2>
+                   <p className="text-[11px] text-[#7c87a2] font-medium">Define how customers see your deal</p>
+                </div>
              </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-6">
-                   <div>
-                      <div className="flex justify-between items-center mb-3">
-                         <span className="text-[11px] font-medium text-[#66728d] uppercase tracking-wider">Discount</span>
-                         <span className="text-[16px] font-bold text-[#2156d8]">{formData.discountPercent}%</span>
-                      </div>
-                      <div className="relative h-1.5 bg-[#f1f4fd] rounded-full">
-                         <div className="absolute h-full bg-[#2156d8] rounded-full" style={{ width: `${formData.discountPercent}%` }}></div>
-                         <input 
-                            type="range"
-                            min="5"
-                            max="80"
-                            value={formData.discountPercent}
-                            onChange={(e) => setFormData({ ...formData, discountPercent: parseInt(e.target.value) })}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                         />
-                         <div 
-                           className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[4px] border-[#2156d8] rounded-full shadow-sm pointer-events-none"
-                           style={{ left: `calc(${formData.discountPercent}% - 8px)` }}
-                         ></div>
-                      </div>
-                   </div>
+             <div className="space-y-5">
+                <div>
+                   <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-2 block">Deal Title <span className="text-red-500">*</span></label>
+                   <input 
+                     type="text"
+                     placeholder="e.g. Summer Bonanza, Weekend Flash"
+                     required
+                     value={formData.title}
+                     onChange={(e) => setFormData({...formData, title: e.target.value})}
+                     className="w-full h-12 bg-[#f8faff] border border-[#e2e8f0] rounded-2xl px-4 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                   />
+                </div>
+                <div>
+                   <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-2 block">Description (Optional)</label>
+                   <textarea 
+                     placeholder="Share some details about this campaign..."
+                     rows="3"
+                     value={formData.description}
+                     onChange={(e) => setFormData({...formData, description: e.target.value})}
+                     className="w-full bg-[#f8faff] border border-[#e2e8f0] rounded-3xl p-4 text-[13px] font-medium text-[#141b2d] outline-none focus:border-[#2156d8] transition-all resize-none"
+                   />
+                </div>
+             </div>
+          </div>
 
-                   <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div>
-                        <div className="flex justify-between items-center mb-1.5">
-                           <label className="text-[11px] font-medium text-[#66728d] uppercase">Stock Limit</label>
-                           {formData.productId && (
-                              <span className={`text-[9px] font-bold ${isStockInvalid ? 'text-red-500' : 'text-green-600'}`}>
-                                 /{totalStock}
-                              </span>
-                           )}
-                        </div>
-                        <div className="relative">
-                           <input 
+          <div className="bg-white rounded-[32px] p-6 shadow-sm border border-[#e2e8f0]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Product Selection */}
+                <div className="md:col-span-2">
+                   <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.1em] mb-3 block">Selection Scope</label>
+                   
+                   {formData.dealType === 'category' ? (
+                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                         {Array.from(new Set(products.map(p => p.category))).map(cat => {
+                            const isSelected = formData.category === cat;
+                            const catProductCount = products.filter(p => p.category === cat).length;
+                            
+                            return (
+                               <button
+                                 key={cat}
+                                 onClick={() => setFormData({...formData, category: cat})}
+                                 className={`p-4 rounded-2xl border text-left transition-all ${
+                                    isSelected 
+                                    ? 'bg-[#eff4ff] border-[#2156d8] ring-1 ring-[#2156d8]' 
+                                    : 'bg-white border-[#e2e8f0] hover:border-[#cbd5e1]'
+                                 }`}
+                               >
+                                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 ${isSelected ? 'bg-[#2156d8] text-white' : 'bg-[#f1f5f9] text-[#7c87a2]'}`}>
+                                     <ShoppingBag className="w-4 h-4" />
+                                  </div>
+                                  <p className={`text-[13px] font-bold ${isSelected ? 'text-[#2156d8]' : 'text-[#141b2d]'}`}>{cat}</p>
+                                  <p className="text-[10px] font-medium text-[#7c87a2] mt-1">{catProductCount} Products in Shop</p>
+                               </button>
+                            );
+                         })}
+                         {products.length === 0 && <p className="text-[12px] font-medium text-[#7c87a2]">No categories found.</p>}
+                       </div>
+                   ) : (
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+                         {products.map(p => {
+                            const isSelected = formData.productIds.includes(p._id);
+                            const stock = p.variants?.[0]?.sizes?.reduce((sum, s) => sum + s.stock, 0) || 0;
+                            
+                            return (
+                               <button
+                                 key={p._id}
+                                 onClick={() => {
+                                    if (formData.dealType === 'single') {
+                                        setFormData({...formData, productIds: [p._id]});
+                                    } else {
+                                        const newIds = isSelected 
+                                            ? formData.productIds.filter(id => id !== p._id)
+                                            : [...formData.productIds, p._id].slice(0, 10);
+                                        setFormData({...formData, productIds: newIds});
+                                    }
+                                 }}
+                                 className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left ${
+                                    isSelected 
+                                    ? 'bg-[#eff4ff] border-[#2156d8] ring-1 ring-[#2156d8]' 
+                                    : 'bg-white border-[#e2e8f0] hover:border-[#cbd5e1]'
+                                 }`}
+                               >
+                                  <div className="w-12 h-12 rounded-xl border border-[#e2e8f0] overflow-hidden bg-white shrink-0">
+                                     <img src={p.variants?.[0]?.images?.[0]} alt="" className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="min-w-0">
+                                     <p className={`text-[13px] font-bold truncate ${isSelected ? 'text-[#2156d8]' : 'text-[#141b2d]'}`}>
+                                        {p.name}
+                                     </p>
+                                     <p className="text-[10px] font-medium text-[#7c87a2]">
+                                        Stock: <span className={stock > 0 ? 'text-green-600' : 'text-red-500'}>{stock} units</span>
+                                     </p>
+                                  </div>
+                                  {isSelected && (
+                                     <div className="ml-auto w-5 h-5 bg-[#2156d8] rounded-full flex items-center justify-center text-white">
+                                        <Package className="w-3 h-3" />
+                                     </div>
+                                  )}
+                               </button>
+                            );
+                         })}
+                         {products.length === 0 && (
+                            <div className="col-span-full py-10 text-center bg-[#f8faff] rounded-3xl border border-dashed border-[#e2e8f0]">
+                               <p className="text-[12px] font-medium text-[#7c87a2]">No active products found.</p>
+                            </div>
+                         )}
+                       </div>
+                   )}
+                   <p className="mt-3 text-[10px] font-bold text-[#7c87a2] uppercase tracking-[0.05em]">
+                       {formData.dealType === 'bundle' ? `Selected ${formData.productIds.length}/10 products` : 'Click to select your focus product'}
+                   </p>
+                </div>
+
+                {/* BOGO Extra Inputs */}
+                {formData.dealType === 'bogo' && (
+                    <div className="md:col-span-2 grid grid-cols-2 gap-4 bg-[#f8faff] p-5 rounded-3xl border border-[#e2e8f0]">
+                        <div>
+                            <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.1em] mb-2 block">Buy Quantity (N)</label>
+                            <input 
                               type="number"
                               min="1"
-                              max={totalStock}
-                              value={formData.stockLimit}
-                              onChange={(e) => setFormData({ ...formData, stockLimit: parseInt(e.target.value) || 0 })}
-                              className={`w-full h-12 bg-[#f8fafc] border rounded-xl px-4 text-[#141b2d] font-semibold outline-none transition-all text-sm ${isStockInvalid ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-[#e2e8f0] focus:border-[#2156d8]'}`}
-                           />
-                           {isStockInvalid && (
-                              <div className="absolute -bottom-5 left-0 flex items-center gap-1 text-[9px] text-red-500 font-bold whitespace-nowrap">
-                                 <AlertCircle className="w-2.5 h-2.5" />
-                                 Max available is {totalStock}
-                              </div>
-                           )}
+                              value={formData.buyQuantity}
+                              onChange={(e) => setFormData({...formData, buyQuantity: parseInt(e.target.value) || 1})}
+                              className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-4 font-bold outline-none focus:border-[#2156d8]"
+                            />
                         </div>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-[#66728d] uppercase mb-1.5 block">Cost</label>
+                        <div>
+                            <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.1em] mb-2 block">Get Quantity (M)</label>
+                            <input 
+                              type="number"
+                              min="1"
+                              value={formData.getQuantity}
+                              onChange={(e) => setFormData({...formData, getQuantity: parseInt(e.target.value) || 1})}
+                              className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-4 font-bold outline-none focus:border-[#2156d8]"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Timing */}
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-2 block">Start Date/Time</label>
                         <input 
-                           type="number"
-                           value={formData.costPrice}
-                           onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                           className="w-full h-12 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 text-[#141b2d] font-semibold outline-none focus:border-[#2156d8] transition-all text-sm"
+                          type="datetime-local"
+                          min={getMinStartTime()}
+                          value={formData.startDateTime}
+                          onChange={(e) => setFormData({...formData, startDateTime: e.target.value})}
+                          className="w-full h-12 bg-[#f8faff] border border-[#e2e8f0] rounded-2xl px-4 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
                         />
-                      </div>
-                   </div>
+                    </div>
+                    <div>
+                        <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-2 block">End Date/Time</label>
+                        <input 
+                          type="datetime-local"
+                          value={formData.endDateTime}
+                          onChange={(e) => setFormData({...formData, endDateTime: e.target.value})}
+                          className="w-full h-12 bg-[#f8faff] border border-[#e2e8f0] rounded-2xl px-4 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                        />
+                    </div>
                 </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                   <div>
-                      <label className="text-[11px] font-medium text-[#66728d] uppercase mb-1.5 block">Start Time</label>
-                      <input 
-                         type="datetime-local"
-                         value={formData.startTime}
-                         onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                         className="w-full h-12 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 text-[#141b2d] font-semibold outline-none focus:border-[#2156d8] transition-all text-sm"
-                      />
-                   </div>
-                   <div>
-                      <label className="text-[11px] font-medium text-[#66728d] uppercase mb-1.5 block">End Time</label>
-                      <input 
-                         type="datetime-local"
-                         value={formData.endTime}
-                         onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                         className="w-full h-12 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 text-[#141b2d] font-semibold outline-none focus:border-[#2156d8] transition-all text-sm"
-                      />
-                   </div>
-                </div>
-             </div>
+            </div>
           </div>
-
         </div>
 
         {/* Sidebar */}
-        <div className="lg:col-span-4 space-y-5">
+        <div className="lg:col-span-4 space-y-4">
           
-          <div className="bg-[#f3f6ff] rounded-[24px] p-6 border border-white shadow-lg shadow-blue-50/50">
-             <h3 className="text-[17px] font-semibold text-[#141b2d] mb-4 px-1">Earnings Review</h3>
+          <div className="bg-[#2156d8] rounded-[32px] p-7 text-white shadow-xl shadow-blue-100">
+             <h3 className="text-[18px] font-black tracking-tight mb-8">Terms & Payout</h3>
 
-             <div className="space-y-4">
-                <div className="flex justify-between items-center px-1 text-[13px]">
-                   <span className="text-[#66728d]">Original Price</span>
-                   <span className="font-semibold text-[#141b2d]">{RUPEE}{formData.originalPrice}</span>
+             <div className="space-y-6">
+                <div className="flex justify-between items-center text-[13px] font-bold opacity-80">
+                   <span className="uppercase tracking-widest text-[10px] font-black text-blue-100">Platform Fee</span>
+                   <span className="bg-white/20 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-widest leading-none">FLAT ₹50</span>
                 </div>
-                <div className="flex justify-between items-center px-1 text-[13px]">
-                   <span className="font-bold text-[#2156d8]">Deal Price</span>
-                   <span className="font-extrabold text-[#2156d8]">{RUPEE}{dealPrice}</span>
-                </div>
-                <div className="pt-3 border-t border-[#dce4f4] space-y-3">
-                   <div className="flex justify-between items-center px-1 text-[12px]">
-                      <span className="text-[#75819d]">Commission (12%)</span>
-                      <span className="font-medium text-[#b42318]">- {RUPEE}{marketplaceFee}</span>
+                
+                <div className="mt-8 pt-6 border-t border-white/20">
+                   <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-100">Potential Redemptions</span>
+                      <span className="font-black text-[22px] leading-none">{minStockAvailable}</span>
                    </div>
-                   <div className="flex justify-between items-center px-1 text-[12px]">
-                      <span className="text-[#75819d]">Logistics Fee</span>
-                      <span className="font-medium text-[#b42318]">- {RUPEE}{logisticsEstimate}</span>
-                   </div>
+                   <p className="text-[10px] text-blue-100/60 font-bold uppercase tracking-wider">Based on shop inventory</p>
                 </div>
 
-                <div className="bg-white rounded-2xl p-4 mt-6">
-                   <p className="text-[10px] font-bold text-[#75819d] uppercase mb-1 text-center">Net Earning</p>
-                   <p className="text-[26px] font-bold text-[#141b2d] text-center leading-tight">
-                     {RUPEE}{estimatedEarnings.toLocaleString()}
-                   </p>
-                   <div className="mt-3 h-1 w-full bg-[#f1f4fd] rounded-full">
-                      <div className={`h-full rounded-full ${profitMargin > 15 ? 'bg-[#15803d]' : 'bg-[#b42318]'}`} style={{ width: `${Math.min(profitMargin, 100)}%` }}></div>
+                <div className="bg-white/10 rounded-3xl p-5 mt-6 border border-white/10">
+                   <div className="flex items-center gap-2 mb-4">
+                      <Percent className="w-4 h-4 text-blue-100" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Discount Strategy</span>
                    </div>
-                   <p className="mt-1.5 text-center text-[10px] font-bold text-[#66728d]">PROFIT: {profitMargin.toFixed(1)}%</p>
+                   <input 
+                      type="range"
+                      min="1"
+                      max="70"
+                      value={formData.discountValue}
+                      onChange={(e) => setFormData({...formData, discountValue: parseInt(e.target.value)})}
+                      className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
+                   />
+                   <div className="flex justify-between mt-3 text-[18px] font-black">
+                      <span>{formData.discountValue}% OFF</span>
+                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-4">
                    {error && !success && (
-                      <p className="text-[10px] text-red-500 font-bold mb-3 px-1 flex items-center gap-1">
-                         <AlertCircle className="w-3 h-3" />
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-5 flex items-center gap-3 text-[11px] font-black uppercase tracking-wider text-red-100">
+                         <AlertCircle className="w-4 h-4 shrink-0" />
                          {error}
-                      </p>
+                      </div>
                    )}
                    <button 
                      onClick={handleSubmit}
-                     disabled={submitting || !formData.productId || isStockInvalid}
-                     className="w-full h-12 bg-[#2156d8] text-white rounded-xl font-bold text-[14px] hover:bg-[#173d99] transition-all disabled:opacity-50"
+                     disabled={submitting}
+                     className="w-full h-14 bg-white text-[#2156d8] rounded-2xl font-black text-[15px] hover:bg-blue-50 transition-all flex items-center justify-center gap-2 active:scale-95"
                    >
-                      {submitting ? 'Submitting...' : 'Propose Deal'}
+                      {submitting ? 'Processing...' : 'Submit Proposal'}
                    </button>
+                   <p className="mt-4 text-center text-[10px] text-blue-100/70 font-black uppercase tracking-[0.2em]">
+                       ₹50 Charged on approval
+                   </p>
                 </div>
              </div>
           </div>
 
-          <div className="bg-white rounded-[24px] p-5 shadow-sm border border-[#e7ebf5]">
-             <div className="flex items-center gap-2 mb-3 px-1 text-[11px] font-semibold text-[#66728d] uppercase tracking-wider">
-                <Info className="w-3.5 h-3.5" />
-                <h3>Requirement</h3>
+          <div className="bg-white rounded-[32px] p-6 shadow-sm border border-[#e2e8f0]">
+             <div className="flex items-center gap-2 mb-4 text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.2em]">
+                <Info className="w-4 h-4 text-[#2156d8]" />
+                <h3>Merchant Policy</h3>
              </div>
-             <p className="text-[12px] text-[#66728d] px-1 font-medium leading-relaxed">
-               Deals require a minimum 10% discount to be eligible for homepage placement.
+             <p className="text-[12px] text-[#5f6b88] font-bold leading-relaxed">
+               Approved deals auto-stop when stock hits zero and auto-resume on restock within the date range window.
              </p>
           </div>
 
@@ -366,8 +433,8 @@ const SellerCreateDeal = () => {
       </div>
 
       {success && (
-        <div className="fixed top-24 right-10 bg-[#15803d] text-white px-6 py-3 rounded-xl shadow-xl z-50 font-bold animate-in fade-in slide-in-from-top-4 duration-500">
-           ✅ Deal proposed successfully!
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-[#18794e] text-white px-8 py-4 rounded-3xl shadow-2xl z-50 font-black flex items-center gap-3 animate-in fade-in slide-in-from-top-10 duration-500">
+           ✅ DEAL SUBMITTED FOR REVIEW
         </div>
       )}
     </div>

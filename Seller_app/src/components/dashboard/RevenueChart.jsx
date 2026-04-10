@@ -84,7 +84,7 @@ const RevenueChart = ({ data = [], isLoading }) => {
   }
 
   return (
-    <div className="flex h-full min-h-[350px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
+    <div className="flex h-[400px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h3 className="text-[18px] font-semibold text-[#141b2d]">Revenue &amp; Orders Performance</h3>

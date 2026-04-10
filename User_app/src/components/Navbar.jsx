@@ -122,13 +122,13 @@ export default function Navbar() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/order/notifications`, {
+        const res = await fetch(`${API_URL}/notifications`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
         if (data.success) {
-          const formatted = (data.notifications || []).map((item) => ({
-            id: item._id,
+          const formatted = (data.data || []).map((item) => ({
+            _id: item._id,
             message: item.message,
             time: new Date(item.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
@@ -151,7 +151,7 @@ export default function Navbar() {
 
     const handleNotification = (notification) => {
       // Show real-time toast
-      if (notification.type === 'order-status') {
+      if (notification.type?.includes('ORDER')) {
           toast.success(notification.message, { icon: '📦' });
       } else {
           toast(notification.message, { icon: '🔔' });
@@ -159,7 +159,7 @@ export default function Navbar() {
 
       setNotifications((prev) => [
         {
-          id: notification.orderId || Date.now(),
+          _id: notification._id || Date.now().toString(),
           message: notification.message,
           time: new Date().toLocaleTimeString([], {
             hour: "2-digit",
@@ -172,11 +172,9 @@ export default function Navbar() {
     };
 
     socket.on("notification", handleNotification);
-    socket.on("notification:new", handleNotification);
 
     return () => {
       socket.off("notification", handleNotification);
-      socket.off("notification:new", handleNotification);
     };
   }, [socket, authUser]);
 
@@ -184,15 +182,9 @@ export default function Navbar() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    try {
-      await fetch(`${API_URL}/order/notifications/read-all`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
-    } catch (error) {
-      console.error("Error marking all as read:", error);
-    }
+    // Standardize to local update for UI snappiness
+    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+    toast.success("Read all");
   };
 
   const clearAll = async () => {
@@ -200,30 +192,36 @@ export default function Navbar() {
     if (!token) return;
 
     try {
-      await fetch(`${API_URL}/order/notifications/clear`, {
+      await fetch(`${API_URL}/notifications/clear`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotifications([]);
+      toast.success("Cleared");
     } catch (error) {
       console.error("Error clearing notifications:", error);
     }
   };
 
-  const deleteNotification = async (id) => {
-    setNotifications((prev) => prev.filter((item) => item.id !== id));
-
+  const handleMarkOneRead = async (id) => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
-      await fetch(`${API_URL}/order/notifications/${id}`, {
-        method: "DELETE",
+      await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
+      setNotifications((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, read: true } : item)),
+      );
     } catch (error) {
-      console.error("Error deleting notification:", error);
+      console.error("Error marking as read:", error);
     }
+  };
+
+  const deleteNotification = (id) => {
+    setNotifications((prev) => prev.filter((item) => item._id !== id));
   };
 
   const unreadCount = notifications.filter((item) => !item.read).length;
@@ -357,15 +355,16 @@ export default function Navbar() {
                       ) : (
                         notifications.map((item) => (
                           <div
-                            key={item.id}
-                            className="flex items-start gap-3 border-b border-[#f4f6fb] px-4 py-3 last:border-b-0"
+                            key={item._id}
+                            onClick={() => handleMarkOneRead(item._id)}
+                            className="flex items-start gap-3 border-b border-[#f4f6fb] px-4 py-3 last:border-b-0 cursor-pointer hover:bg-gray-50/50"
                           >
                             <span
                               className={`mt-1.5 h-2 w-2 rounded-full ${item.read ? "bg-[#d9deeb]" : "bg-[#0f49d7]"
                                 }`}
                             />
                             <div className="min-w-0 flex-1">
-                              <p className="text-[0.82rem] leading-6 text-[#11182d]">
+                              <p className={`text-[0.82rem] leading-6 ${item.read ? 'text-[#6a7690]' : 'text-[#11182d] font-medium'}`}>
                                 {item.message}
                               </p>
                               <p className="mt-1 text-[10px] text-[#7c88a2]">
@@ -373,8 +372,11 @@ export default function Navbar() {
                               </p>
                             </div>
                             <button
-                              onClick={() => deleteNotification(item.id)}
-                              className="rounded-lg p-1 text-[#7c88a2]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(item._id);
+                              }}
+                              className="rounded-lg p-1 text-[#7c88a2] hover:bg-gray-100"
                               aria-label="Delete notification"
                             >
                               <X className="h-4 w-4" />
