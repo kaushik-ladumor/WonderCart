@@ -200,13 +200,33 @@ router.patch('/:id/reject', authMiddleware, authorizeRoles('admin'), async (req,
 });
 
 /**
+ * GET /api/deals/admin/all
+ * Private (Admin) - Get all deals with status filter
+ */
+router.get('/admin/all', authMiddleware, authorizeRoles('admin'), async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = {};
+        if (status) query.status = status;
+
+        const deals = await Deal.find(query)
+            .populate('productId', 'name variants images')
+            .populate('sellerId', 'username email')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, data: deals });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+/**
  * GET /api/deals/admin/pending
  * Private (Admin) - Get all pending deals
  */
 router.get('/admin/pending', authMiddleware, authorizeRoles('admin'), async (req, res) => {
     try {
         const deals = await Deal.find({ status: 'pending' })
-            .populate('productId', 'name variants')
+            .populate('productId', 'name variants images')
             .populate('sellerId', 'username email')
             .sort({ createdAt: -1 });
         res.json({ success: true, data: deals });

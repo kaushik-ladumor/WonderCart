@@ -1,800 +1,375 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
-  BadgePercent,
-  CalendarRange,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  PackageCheck,
-  ShieldCheck,
-  Ticket,
-  TimerReset,
+  Calendar,
+  ChevronDown,
+  Clock,
+  Package,
+  Percent,
   Zap,
+  Ticket,
+  Info,
+  AlertCircle
 } from 'lucide-react';
 import { API_URL } from '../../utils/constants';
+import { useAuth } from "../../context/AuthProvider";
+
+const RUPEE = "₹";
 
 const dealTypeOptions = [
-  { value: 'lightning', label: 'Lightning', Icon: Zap },
-  { value: 'day_deal', label: 'Day Deal', Icon: CalendarRange },
+  { value: 'lightning', label: 'Lightning Deal', Icon: Zap },
+  { value: 'day_deal', label: 'Day Deal', Icon: Calendar },
   { value: 'coupon', label: 'Coupon', Icon: Ticket }
 ];
 
-const supportCards = [
-  {
-    title: 'Verified Offers',
-    copy: 'Deals with strong discounts get priority visibility during review.',
-    Icon: ShieldCheck,
-    iconWrap: 'bg-[#e8efff] text-[#2156d8]'
-  },
-  {
-    title: 'Inventory Lock',
-    copy: 'Approved campaign stock is reserved for the duration of the promotion.',
-    Icon: PackageCheck,
-    iconWrap: 'bg-[#e7f6ee] text-[#167c3b]'
-  },
-  {
-    title: 'Past Performance',
-    copy: 'Balanced discounts usually convert better than aggressive pricing.',
-    Icon: TimerReset,
-    iconWrap: 'bg-[#f2f4fb] text-[#5f6c89]'
-  }
-];
-
-const emptyForm = {
-  productId: '',
-  dealType: 'day_deal',
-  discountPercent: 10,
-  originalPrice: 0,
-  costPrice: '',
-  startTime: '',
-  endTime: '',
-  stockLimit: 100,
-  category: ''
-};
-
-const emptySchedule = {
-  startDate: '',
-  startClock: '',
-  endDate: '',
-  endClock: ''
-};
-
-const monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December'
-];
-
-const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
-const pad = (value) => String(value).padStart(2, '0');
-
-const defaultTimeParts = {
-  hour: '10',
-  minute: '00',
-  meridiem: 'AM'
-};
-
-const formatDisplayDateFromDate = (date) =>
-  `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
-
-const toDisplayDate = (isoValue) => {
-  if (!isoValue || !isoValue.includes('T')) return '';
-  const [year, month, day] = isoValue.split('T')[0].split('-');
-  if (!year || !month || !day) return '';
-  return `${day}/${month}/${year}`;
-};
-
-const toDisplayTime = (isoValue) => {
-  if (!isoValue || !isoValue.includes('T')) return '';
-  const rawTime = isoValue.split('T')[1] || '';
-  const [hourText, minuteText] = rawTime.split(':');
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-
-  if (Number.isNaN(hour) || Number.isNaN(minute)) return '';
-
-  const suffix = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${pad(displayHour)}:${pad(minute)} ${suffix}`;
-};
-
-const parseDisplayDate = (dateText) => {
-  const match = dateText.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return null;
-
-  const [, dayText, monthText, yearText] = match;
-  const day = Number(dayText);
-  const month = Number(monthText);
-  const year = Number(yearText);
-  const candidate = new Date(year, month - 1, day);
-
-  if (
-    candidate.getFullYear() !== year ||
-    candidate.getMonth() !== month - 1 ||
-    candidate.getDate() !== day
-  ) {
-    return null;
-  }
-
-  return candidate;
-};
-
-const parseTimeParts = (timeText) => {
-  const match = timeText.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if (!match) return null;
-
-  const [, hourText, minuteText, suffix] = match;
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-
-  if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
-
-  return {
-    hour: pad(hour),
-    minute: pad(minute),
-    meridiem: suffix.toUpperCase()
-  };
-};
-
-const formatDisplayTimeFromParts = ({ hour, minute, meridiem }) =>
-  `${pad(hour)}:${pad(minute)} ${meridiem}`;
-
-const buildCalendarDays = (viewMonth) => {
-  const year = viewMonth.getFullYear();
-  const month = viewMonth.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const firstWeekDay = firstDay.getDay();
-  const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPreviousMonth = new Date(year, month, 0).getDate();
-
-  const days = [];
-
-  for (let index = firstWeekDay - 1; index >= 0; index -= 1) {
-    days.push({
-      date: new Date(year, month - 1, daysInPreviousMonth - index),
-      inCurrentMonth: false
-    });
-  }
-
-  for (let day = 1; day <= daysInCurrentMonth; day += 1) {
-    days.push({
-      date: new Date(year, month, day),
-      inCurrentMonth: true
-    });
-  }
-
-  while (days.length < 42) {
-    const nextDay = days.length - (firstWeekDay + daysInCurrentMonth) + 1;
-    days.push({
-      date: new Date(year, month + 1, nextDay),
-      inCurrentMonth: false
-    });
-  }
-
-  return days;
-};
-
-const toIsoLocal = (dateText, timeText) => {
-  const dateMatch = dateText.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  const timeMatch = timeText.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-
-  if (!dateMatch || !timeMatch) return null;
-
-  const [, day, month, year] = dateMatch;
-  let [, hourText, minuteText, suffix] = timeMatch;
-  let hour = Number(hourText);
-
-  if (hour < 1 || hour > 12) return null;
-
-  suffix = suffix.toUpperCase();
-  if (suffix === 'PM' && hour !== 12) hour += 12;
-  if (suffix === 'AM' && hour === 12) hour = 0;
-
-  return `${year}-${month}-${day}T${pad(hour)}:${minuteText}`;
-};
-
-const DateTimePickerField = ({
-  label,
-  dateValue,
-  timeValue,
-  onDateChange,
-  onTimeChange,
-  align = 'left'
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const fieldRef = useRef(null);
-
-  const selectedDate = useMemo(() => parseDisplayDate(dateValue), [dateValue]);
-  const parsedTime = useMemo(() => parseTimeParts(timeValue) || defaultTimeParts, [timeValue]);
-  const [viewMonth, setViewMonth] = useState(selectedDate || new Date());
-
-  useEffect(() => {
-    if (selectedDate) {
-      setViewMonth(selectedDate);
-    }
-  }, [selectedDate]);
-
-  useEffect(() => {
-    const handleOutside = (event) => {
-      if (fieldRef.current && !fieldRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, []);
-
-  const calendarDays = useMemo(() => buildCalendarDays(viewMonth), [viewMonth]);
-  const alignmentClass = align === 'right' ? 'right-0' : 'left-0';
-
-  const applyTimeParts = (patch) => {
-    onTimeChange(formatDisplayTimeFromParts({ ...parsedTime, ...patch }));
-  };
-
-  const handleToday = () => {
-    const today = new Date();
-    onDateChange(formatDisplayDateFromDate(today));
-    setViewMonth(today);
-  };
-
-  return (
-    <div className="relative" ref={fieldRef}>
-      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6d7892]">
-        {label}
-      </label>
-
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex min-h-[56px] w-full items-center justify-between rounded-[18px] border border-[#dfe5f4] bg-[#f6f8ff] px-4 py-3 text-left"
-      >
-        <div className="min-w-0">
-          <p className="truncate text-[14px] text-[#1a2238]">
-            {dateValue || 'dd/mm/yyyy'}
-          </p>
-          <p className="mt-1 text-[12px] text-[#8d97ad]">
-            {timeValue || '10:00 AM'}
-          </p>
-        </div>
-        <CalendarDays className="h-4 w-4 shrink-0 text-[#7280a0]" />
-      </button>
-
-      {isOpen ? (
-        <div
-          className={`absolute ${alignmentClass} top-[calc(100%+14px)] z-30 w-[360px] max-w-[92vw] rounded-[24px] border border-[#e6ebf6] bg-white p-5 shadow-[0_22px_48px_rgba(18,36,84,0.16)]`}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-[15px] font-semibold text-[#141b2d]">
-              {monthNames[viewMonth.getMonth()]}, {viewMonth.getFullYear()}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setViewMonth(
-                    (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
-                  )
-                }
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f3f6ff] text-[#5e6a85]"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setViewMonth(
-                    (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
-                  )
-                }
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f3f6ff] text-[#5e6a85]"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-5 grid grid-cols-7 gap-2.5">
-            {weekDays.map((day) => (
-              <span
-                key={day}
-                className="text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a94aa]"
-              >
-                {day}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-4 grid grid-cols-7 gap-2.5">
-            {calendarDays.map(({ date, inCurrentMonth }) => {
-              const isSelected =
-                selectedDate &&
-                date.getFullYear() === selectedDate.getFullYear() &&
-                date.getMonth() === selectedDate.getMonth() &&
-                date.getDate() === selectedDate.getDate();
-
-              return (
-                <button
-                  key={date.toISOString()}
-                  type="button"
-                  onClick={() => onDateChange(formatDisplayDateFromDate(date))}
-                  className={`flex h-10 w-10 items-center justify-center rounded-[12px] text-[13px] ${
-                    isSelected
-                      ? 'bg-[#2156d8] text-white'
-                      : inCurrentMonth
-                        ? 'text-[#1a2238]'
-                        : 'text-[#b0b8cb]'
-                  }`}
-                >
-                  {date.getDate()}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-5 rounded-[18px] bg-[#f7f9ff] p-4">
-            <div className="mb-3 flex items-center gap-2 text-[12px] font-medium text-[#5f6c89]">
-              <Clock3 className="h-4 w-4" />
-              Select time
-            </div>
-
-            <div className="grid grid-cols-[1fr_1fr_86px] gap-2">
-              <select
-                value={parsedTime.hour}
-                onChange={(event) => applyTimeParts({ hour: event.target.value })}
-                className="rounded-[14px] border border-[#dde4f5] bg-white px-3 py-2 text-[13px] text-[#1a2238] outline-none"
-              >
-                {Array.from({ length: 12 }, (_, index) => pad(index + 1)).map((hour) => (
-                  <option key={hour} value={hour}>
-                    {hour}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={parsedTime.minute}
-                onChange={(event) => applyTimeParts({ minute: event.target.value })}
-                className="rounded-[14px] border border-[#dde4f5] bg-white px-3 py-2 text-[13px] text-[#1a2238] outline-none"
-              >
-                {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((minute) => (
-                  <option key={minute} value={minute}>
-                    {minute}
-                  </option>
-                ))}
-              </select>
-
-              <div className="grid grid-cols-2 gap-2">
-                {['AM', 'PM'].map((marker) => (
-                  <button
-                    key={marker}
-                    type="button"
-                    onClick={() => applyTimeParts({ meridiem: marker })}
-                    className={`rounded-[14px] px-2 py-2 text-[12px] font-medium ${
-                      parsedTime.meridiem === marker
-                        ? 'bg-[#2156d8] text-white'
-                        : 'border border-[#dde4f5] bg-white text-[#5f6c89]'
-                    }`}
-                  >
-                    {marker}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between px-1">
-            <button
-              type="button"
-              onClick={() => {
-                onDateChange('');
-                onTimeChange('');
-              }}
-              className="text-[12px] font-medium text-[#7a86a0]"
-            >
-              Clear
-            </button>
-            <button
-              type="button"
-              onClick={handleToday}
-              className="text-[12px] font-medium text-[#2156d8]"
-            >
-              Today
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-};
-
 const SellerCreateDeal = () => {
+  const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  const [formData, setFormData] = useState(emptyForm);
-  const [scheduleInputs, setScheduleInputs] = useState(emptySchedule);
+  const [formData, setFormData] = useState({
+    productId: '',
+    dealType: 'lightning',
+    discountPercent: 25,
+    originalPrice: 0,
+    costPrice: 0,
+    startTime: '',
+    endTime: '',
+    stockLimit: 1,
+  });
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_URL}/product/seller/product`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setProducts(response.data.products || []);
-      } catch (err) {
-        console.error('Fetch products error:', err.response?.data || err.message);
-        setError('Failed to load products. Check your connection or login again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
-  }, []);
+  }, [token]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/product/seller/product`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data.products || []);
+    } catch (err) {
+      setError('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectedProduct = useMemo(() => 
+    products.find(p => p._id === formData.productId)
+  , [formData.productId, products]);
+
+  const totalStock = useMemo(() => {
+    if (!selectedProduct) return 0;
+    return selectedProduct.variants?.[0]?.sizes?.reduce((sum, s) => sum + s.stock, 0) || 0;
+  }, [selectedProduct]);
 
   useEffect(() => {
-    const selectedProduct = products.find((product) => product._id === formData.productId);
     if (selectedProduct) {
-      const basePrice = selectedProduct.variants?.[0]?.sizes?.[0]?.sellingPrice || 0;
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        originalPrice: basePrice,
-        category: selectedProduct.category
+        originalPrice: selectedProduct.variants?.[0]?.sizes?.[0]?.sellingPrice || 0,
+        category: selectedProduct.category,
+        stockLimit: Math.min(prev.stockLimit, totalStock) || 1
       }));
     }
-  }, [formData.productId, products]);
-
-  useEffect(() => {
-    setScheduleInputs({
-      startDate: toDisplayDate(formData.startTime),
-      startClock: toDisplayTime(formData.startTime),
-      endDate: toDisplayDate(formData.endTime),
-      endClock: toDisplayTime(formData.endTime)
-    });
-  }, [formData.startTime, formData.endTime]);
+  }, [selectedProduct, totalStock]);
 
   const dealPrice = Math.round(formData.originalPrice * (1 - formData.discountPercent / 100));
-  const platformCommission = dealPrice * 0.1;
-  const sellerReceives = dealPrice - platformCommission;
-  const sellerProfit = sellerReceives - (formData.costPrice || 0);
-  const isNegativeMargin = sellerReceives <= (formData.costPrice || 0);
-  const showWarning = !isNegativeMargin && dealPrice > 0 && (sellerProfit / dealPrice) < 0.05;
+  const marketplaceFee = Math.round(dealPrice * 0.12);
+  const logisticsEstimate = 149;
+  const estimatedEarnings = dealPrice - marketplaceFee - logisticsEstimate;
+  const profitMargin = dealPrice > 0 ? (estimatedEarnings / dealPrice) * 100 : 0;
 
-  const formatINR = (num) =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(num);
+  const isStockInvalid = formData.stockLimit > totalStock;
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSuccess(false);
-    setError(null);
-
-    const startIso = toIsoLocal(scheduleInputs.startDate, scheduleInputs.startClock);
-    const endIso = toIsoLocal(scheduleInputs.endDate, scheduleInputs.endClock);
-
-    if (!startIso || !endIso) {
-      setError('Enter valid deal dates in DD/MM/YYYY format and time in HH:MM AM/PM format.');
-      return;
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (isStockInvalid) {
+        setError(`Stock limit cannot exceed available stock (${totalStock})`);
+        return;
     }
-
+    
     try {
       setSubmitting(true);
-
-      await axios.post(
-        `${API_URL}/api/deals`,
-        {
+      setError(null);
+      await axios.post(`${API_URL}/api/deals`, {
           ...formData,
-          startTime: startIso,
-          endTime: endIso,
           dealPrice
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }
-      );
-
+      }, {
+          headers: { Authorization: `Bearer ${token}` }
+      });
       setSuccess(true);
-      setFormData(emptyForm);
-      setScheduleInputs(emptySchedule);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit deal');
+      setError(err.response?.data?.message || 'Submission failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const selectedProduct = products.find((product) => product._id === formData.productId);
-
   return (
-    <div className="mx-auto max-w-[1120px] space-y-6 pb-8">
-      <div>
-        <h1 className="text-[28px] font-semibold leading-tight text-[#141b2d]">Propose a New Deal</h1>
-        <p className="mt-1 text-sm text-[#66728d]">Configure your product offer for admin approval.</p>
+    <div className="mx-auto max-w-[1180px] space-y-5 pb-8">
+      {/* Header Section */}
+      <div className="mb-4 text-left">
+        <h1 className="text-[28px] font-semibold text-[#141b2d] tracking-tight">Propose a New Deal</h1>
+        <p className="text-[#66728d] mt-1 text-sm">
+          Set up your campaign to boost sales and visibility.
+        </p>
       </div>
 
-      {success ? (
-        <div className="rounded-[18px] border border-[#cfe9d9] bg-[#f4fbf6] px-4 py-3 text-[#18703a]">
-          <p className="text-sm font-semibold">Deal submitted for review.</p>
-          <p className="mt-1 text-xs text-[#4f6b58]">Admin will review your proposal shortly.</p>
-        </div>
-      ) : null}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        {/* Main Content Area */}
+        <div className="lg:col-span-8 space-y-4">
+          
+          {/* Product Details Card */}
+          <div className="bg-white rounded-[24px] p-5 shadow-sm border border-[#e7ebf5]">
+            <div className="flex items-center gap-2.5 mb-5 px-1">
+               <div className="w-8 h-8 bg-[#f1f4fd] rounded-lg flex items-center justify-center text-[#2156d8]">
+                  <Package className="w-4 h-4" />
+               </div>
+               <h2 className="text-[17px] font-semibold text-[#141b2d]">Product Details</h2>
+            </div>
 
-      {error ? (
-        <div className="rounded-[18px] border border-[#f2c9c9] bg-[#fff4f4] px-4 py-3 text-[#b42318]">
-          <p className="text-sm font-semibold">Action Required</p>
-          <p className="mt-1 text-xs">{error}</p>
-        </div>
-      ) : null}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_340px]">
-          <div className="space-y-6">
-            <div className="rounded-[28px] border border-[#e6ebf6] bg-white p-6 md:p-7">
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]">
-                <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6d7892]">
-                    Select Product
-                  </label>
-                  {loading ? (
-                    <div className="h-[48px] w-full animate-pulse rounded-[18px] border border-[#e4e9f6] bg-[#f6f8ff]" />
-                  ) : (
+            <div className="space-y-4">
+               <div>
+                  <label className="text-[11px] font-medium text-[#66728d] uppercase tracking-wider mb-2 block">Select Product</label>
+                  <div className="relative group">
                     <select
-                      required
-                      className="min-h-[56px] w-full rounded-[18px] border border-[#dfe5f4] bg-[#f6f8ff] px-4 py-3 text-[14px] text-[#1a2238] outline-none"
                       value={formData.productId}
-                      onChange={(event) => setFormData({ ...formData, productId: event.target.value })}
+                      onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
+                      className={`w-full h-14 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 appearance-none font-semibold outline-none focus:border-[#2156d8] transition-all cursor-pointer ${formData.productId ? 'text-transparent' : 'text-[#141b2d]'}`}
                     >
-                      <option value="">-- {products.length === 0 ? 'No products found' : 'Choose one of your products'} --</option>
-                      {products.map((product) => (
-                        <option key={product._id} value={product._id}>
-                          {product.name} ({formatINR(product.variants?.[0]?.sizes?.[0]?.sellingPrice || 0)})
+                      <option value="" className="text-[#141b2d]">{loading ? 'Loading...' : 'Select a product'}</option>
+                      {products.map(p => (
+                        <option key={p._id} value={p._id} className="text-[#141b2d]">
+                           {p.name} - {RUPEE}{p.variants?.[0]?.sizes?.[0]?.sellingPrice}
                         </option>
                       ))}
                     </select>
-                  )}
-                </div>
-
-                <div>
-                  <DateTimePickerField
-                    label="Deal Start"
-                    dateValue={scheduleInputs.startDate}
-                    timeValue={scheduleInputs.startClock}
-                    onDateChange={(value) =>
-                      setScheduleInputs((prev) => ({ ...prev, startDate: value }))
-                    }
-                    onTimeChange={(value) =>
-                      setScheduleInputs((prev) => ({ ...prev, startClock: value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <DateTimePickerField
-                    label="Deal Ends"
-                    dateValue={scheduleInputs.endDate}
-                    timeValue={scheduleInputs.endClock}
-                    onDateChange={(value) =>
-                      setScheduleInputs((prev) => ({ ...prev, endDate: value }))
-                    }
-                    onTimeChange={(value) =>
-                      setScheduleInputs((prev) => ({ ...prev, endClock: value }))
-                    }
-                    align="right"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6d7892]">
-                  Deal Type
-                </label>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  {dealTypeOptions.map(({ value, label, Icon }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, dealType: value })}
-                      className={`flex min-h-[76px] items-center justify-center gap-2 rounded-[18px] border px-4 py-5 text-[14px] font-medium ${
-                        formData.dealType === value
-                          ? 'border-[#2156d8] bg-[#2156d8] text-white'
-                          : 'border-[#dfe5f4] bg-[#f6f8ff] text-[#4f5c78]'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-[22px] border border-[#e6ebf6] bg-[#fbfcff] p-5 md:p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6d7892]">
-                      Discount %
-                    </p>
-                    <p className="mt-1 text-[14px] text-[#66728d]">
-                      Keep the discount realistic for review approval.
-                    </p>
+                    
+                    {selectedProduct && (
+                        <div className="absolute inset-y-0 left-0 flex items-center gap-3 pointer-events-none px-4 bg-transparent w-[calc(100%-40px)]">
+                           <div className="w-9 h-9 bg-white rounded-lg border border-[#e2e8f0] flex items-center justify-center overflow-hidden shrink-0">
+                              <img 
+                                src={selectedProduct.variants?.[0]?.images?.[0]} 
+                                alt="" 
+                                className="w-full h-full object-cover" 
+                              />
+                           </div>
+                           <div className="min-w-0">
+                              <p className="text-[13px] font-semibold text-[#141b2d] truncate">{selectedProduct.name}</p>
+                              <p className="text-[10px] text-[#66728d] font-medium mt-0.5 whitespace-nowrap">
+                                 Stock: {totalStock} units available
+                              </p>
+                           </div>
+                        </div>
+                    )}
+                    
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#94a3b8]">
+                       <ChevronDown className="w-4 h-4" />
+                    </div>
                   </div>
-                  <p className="text-[18px] font-semibold text-[#2156d8]">{formData.discountPercent}%</p>
-                </div>
+               </div>
 
-                <div className="mt-5">
-                  <input
-                    type="range"
-                    min="5"
-                    max="80"
-                    step="5"
-                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#dfe7fb] accent-[#2156d8]"
-                    value={formData.discountPercent}
-                    onChange={(event) =>
-                      setFormData({ ...formData, discountPercent: parseInt(event.target.value, 10) })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6d7892]">
-                    Actual Cost (Per Item)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="0.00"
-                    className="min-h-[56px] w-full rounded-[16px] border border-[#dfe5f4] bg-[#f6f8ff] px-4 py-3 text-[14px] text-[#1a2238] outline-none placeholder:text-[#8d97ad]"
-                    value={formData.costPrice}
-                    onChange={(event) =>
-                      setFormData({
-                        ...formData,
-                        costPrice: parseFloat(event.target.value) || ''
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6d7892]">
-                    Stock Limit
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    className="min-h-[56px] w-full rounded-[16px] border border-[#dfe5f4] bg-[#f6f8ff] px-4 py-3 text-[14px] text-[#1a2238] outline-none"
-                    value={formData.stockLimit}
-                    onChange={(event) =>
-                      setFormData({
-                        ...formData,
-                        stockLimit: parseInt(event.target.value, 10) || ''
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-
-            {selectedProduct ? (
-              <div className="rounded-[20px] border border-[#e6ebf6] bg-white px-5 py-4 text-[13px] text-[#66728d]">
-                Selected product: <span className="font-semibold text-[#141b2d]">{selectedProduct.name}</span>
-                {formData.category ? (
-                  <>
-                    {' '}
-                    in <span className="font-semibold text-[#141b2d]">{formData.category}</span>
-                  </>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="h-fit rounded-[24px] border border-[#e6ebf6] bg-white p-6">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef2ff] text-[#2156d8]">
-                <BadgePercent className="h-4 w-4" />
-              </div>
-              <div>
-                <h2 className="text-[16px] font-semibold text-[#141b2d]">Financial Preview</h2>
-                <p className="text-[12px] text-[#66728d]">Auto-calculated before submission.</p>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-5">
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-[#66728d]">Selling Price</span>
-                <span className="font-semibold text-[#141b2d]">{formatINR(dealPrice)}</span>
-              </div>
-
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-[#66728d]">Admin Fees</span>
-                <span className="font-semibold text-[#c81e1e]">-{formatINR(platformCommission)}</span>
-              </div>
-
-              <div className="border-t border-[#edf1f7] pt-4">
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="font-semibold text-[#141b2d]">Your Earnings</span>
-                  <span className="text-[22px] font-semibold leading-none text-[#141b2d]">
-                    {formatINR(sellerReceives)}
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className={`rounded-[18px] px-4 py-4 ${
-                  isNegativeMargin ? 'bg-[#fff3f2] text-[#b42318]' : 'bg-[#fff3f1] text-[#d04a34]'
-                }`}
-              >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-70">
-                  Estimated Profit Margin
-                </p>
-                <p className="mt-2 text-[20px] font-semibold leading-none">
-                  {formatINR(sellerProfit)} ({dealPrice > 0 ? ((sellerProfit / dealPrice) * 100).toFixed(1) : 0}%)
-                </p>
-              </div>
-
-              {isNegativeMargin && formData.costPrice > 0 ? (
-                <div className="rounded-[16px] border border-[#f1cccc] bg-[#fff5f5] px-4 py-3 text-[12px] text-[#b42318]">
-                  This deal would go below your cost price. Reduce the discount before submitting.
-                </div>
-              ) : null}
-
-              {showWarning ? (
-                <div className="rounded-[16px] border border-[#f5dfb5] bg-[#fff9ef] px-4 py-3 text-[12px] text-[#996b00]">
-                  Margin is very low. Review the price carefully before approval.
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={submitting || isNegativeMargin || !formData.productId}
-                className={`mt-1 w-full rounded-[16px] px-4 py-3 text-[14px] font-medium ${
-                  submitting || isNegativeMargin || !formData.productId
-                    ? 'cursor-not-allowed bg-[#e7ebf4] text-[#9aa4b8]'
-                    : 'bg-[#dfe7fb] text-[#6d7892]'
-                }`}
-              >
-                {submitting ? 'Submitting...' : 'Submit Proposed Deal'}
-              </button>
-
-              <p className="text-[11px] leading-5 text-[#8d97ad]">
-                Deal proposals are reviewed within 24-48 hours. Enter date as DD/MM/YYYY and time as HH:MM AM/PM.
-              </p>
+               <div>
+                  <label className="text-[11px] font-medium text-[#66728d] uppercase tracking-wider mb-2 block">Deal Type</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {dealTypeOptions.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setFormData({ ...formData, dealType: opt.value })}
+                        className={`h-[48px] flex items-center justify-center gap-2 rounded-xl border font-semibold text-[13px] transition-all ${
+                          formData.dealType === opt.value
+                            ? 'bg-[#edf2ff] border-[#2156d8] text-[#2156d8]'
+                            : 'bg-white border-[#e2e8f0] text-[#66728d] hover:border-[#bfdbfe]'
+                        }`}
+                      >
+                        <opt.Icon className="w-4 h-4" />
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+               </div>
             </div>
           </div>
+
+          {/* Pricing Card */}
+          <div className="bg-white rounded-[24px] p-5 shadow-sm border border-[#e7ebf5]">
+             <div className="flex items-center gap-2.5 mb-5 px-1">
+                <div className="w-8 h-8 bg-[#f1f4fd] rounded-lg flex items-center justify-center text-[#2156d8]">
+                   <Percent className="w-4 h-4" />
+                </div>
+                <h2 className="text-[17px] font-semibold text-[#141b2d]">Pricing & Inventory</h2>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="space-y-6">
+                   <div>
+                      <div className="flex justify-between items-center mb-3">
+                         <span className="text-[11px] font-medium text-[#66728d] uppercase tracking-wider">Discount</span>
+                         <span className="text-[16px] font-bold text-[#2156d8]">{formData.discountPercent}%</span>
+                      </div>
+                      <div className="relative h-1.5 bg-[#f1f4fd] rounded-full">
+                         <div className="absolute h-full bg-[#2156d8] rounded-full" style={{ width: `${formData.discountPercent}%` }}></div>
+                         <input 
+                            type="range"
+                            min="5"
+                            max="80"
+                            value={formData.discountPercent}
+                            onChange={(e) => setFormData({ ...formData, discountPercent: parseInt(e.target.value) })}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                         />
+                         <div 
+                           className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[4px] border-[#2156d8] rounded-full shadow-sm pointer-events-none"
+                           style={{ left: `calc(${formData.discountPercent}% - 8px)` }}
+                         ></div>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                           <label className="text-[11px] font-medium text-[#66728d] uppercase">Stock Limit</label>
+                           {formData.productId && (
+                              <span className={`text-[9px] font-bold ${isStockInvalid ? 'text-red-500' : 'text-green-600'}`}>
+                                 /{totalStock}
+                              </span>
+                           )}
+                        </div>
+                        <div className="relative">
+                           <input 
+                              type="number"
+                              min="1"
+                              max={totalStock}
+                              value={formData.stockLimit}
+                              onChange={(e) => setFormData({ ...formData, stockLimit: parseInt(e.target.value) || 0 })}
+                              className={`w-full h-12 bg-[#f8fafc] border rounded-xl px-4 text-[#141b2d] font-semibold outline-none transition-all text-sm ${isStockInvalid ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-[#e2e8f0] focus:border-[#2156d8]'}`}
+                           />
+                           {isStockInvalid && (
+                              <div className="absolute -bottom-5 left-0 flex items-center gap-1 text-[9px] text-red-500 font-bold whitespace-nowrap">
+                                 <AlertCircle className="w-2.5 h-2.5" />
+                                 Max available is {totalStock}
+                              </div>
+                           )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-[#66728d] uppercase mb-1.5 block">Cost</label>
+                        <input 
+                           type="number"
+                           value={formData.costPrice}
+                           onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                           className="w-full h-12 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 text-[#141b2d] font-semibold outline-none focus:border-[#2156d8] transition-all text-sm"
+                        />
+                      </div>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                   <div>
+                      <label className="text-[11px] font-medium text-[#66728d] uppercase mb-1.5 block">Start Time</label>
+                      <input 
+                         type="datetime-local"
+                         value={formData.startTime}
+                         onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                         className="w-full h-12 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 text-[#141b2d] font-semibold outline-none focus:border-[#2156d8] transition-all text-sm"
+                      />
+                   </div>
+                   <div>
+                      <label className="text-[11px] font-medium text-[#66728d] uppercase mb-1.5 block">End Time</label>
+                      <input 
+                         type="datetime-local"
+                         value={formData.endTime}
+                         onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                         className="w-full h-12 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 text-[#141b2d] font-semibold outline-none focus:border-[#2156d8] transition-all text-sm"
+                      />
+                   </div>
+                </div>
+             </div>
+          </div>
+
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {supportCards.map(({ title, copy, Icon, iconWrap }) => (
-            <div key={title} className="rounded-[22px] border border-[#e6ebf6] bg-[#f7f9ff] p-5 md:p-6">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconWrap}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-              <h3 className="mt-4 text-[14px] font-semibold text-[#2156d8]">{title}</h3>
-              <p className="mt-2 text-[12px] leading-5 text-[#66728d]">{copy}</p>
-            </div>
-          ))}
+        {/* Sidebar */}
+        <div className="lg:col-span-4 space-y-5">
+          
+          <div className="bg-[#f3f6ff] rounded-[24px] p-6 border border-white shadow-lg shadow-blue-50/50">
+             <h3 className="text-[17px] font-semibold text-[#141b2d] mb-4 px-1">Earnings Review</h3>
+
+             <div className="space-y-4">
+                <div className="flex justify-between items-center px-1 text-[13px]">
+                   <span className="text-[#66728d]">Original Price</span>
+                   <span className="font-semibold text-[#141b2d]">{RUPEE}{formData.originalPrice}</span>
+                </div>
+                <div className="flex justify-between items-center px-1 text-[13px]">
+                   <span className="font-bold text-[#2156d8]">Deal Price</span>
+                   <span className="font-extrabold text-[#2156d8]">{RUPEE}{dealPrice}</span>
+                </div>
+                <div className="pt-3 border-t border-[#dce4f4] space-y-3">
+                   <div className="flex justify-between items-center px-1 text-[12px]">
+                      <span className="text-[#75819d]">Commission (12%)</span>
+                      <span className="font-medium text-[#b42318]">- {RUPEE}{marketplaceFee}</span>
+                   </div>
+                   <div className="flex justify-between items-center px-1 text-[12px]">
+                      <span className="text-[#75819d]">Logistics Fee</span>
+                      <span className="font-medium text-[#b42318]">- {RUPEE}{logisticsEstimate}</span>
+                   </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 mt-6">
+                   <p className="text-[10px] font-bold text-[#75819d] uppercase mb-1 text-center">Net Earning</p>
+                   <p className="text-[26px] font-bold text-[#141b2d] text-center leading-tight">
+                     {RUPEE}{estimatedEarnings.toLocaleString()}
+                   </p>
+                   <div className="mt-3 h-1 w-full bg-[#f1f4fd] rounded-full">
+                      <div className={`h-full rounded-full ${profitMargin > 15 ? 'bg-[#15803d]' : 'bg-[#b42318]'}`} style={{ width: `${Math.min(profitMargin, 100)}%` }}></div>
+                   </div>
+                   <p className="mt-1.5 text-center text-[10px] font-bold text-[#66728d]">PROFIT: {profitMargin.toFixed(1)}%</p>
+                </div>
+
+                <div className="pt-2">
+                   {error && !success && (
+                      <p className="text-[10px] text-red-500 font-bold mb-3 px-1 flex items-center gap-1">
+                         <AlertCircle className="w-3 h-3" />
+                         {error}
+                      </p>
+                   )}
+                   <button 
+                     onClick={handleSubmit}
+                     disabled={submitting || !formData.productId || isStockInvalid}
+                     className="w-full h-12 bg-[#2156d8] text-white rounded-xl font-bold text-[14px] hover:bg-[#173d99] transition-all disabled:opacity-50"
+                   >
+                      {submitting ? 'Submitting...' : 'Propose Deal'}
+                   </button>
+                </div>
+             </div>
+          </div>
+
+          <div className="bg-white rounded-[24px] p-5 shadow-sm border border-[#e7ebf5]">
+             <div className="flex items-center gap-2 mb-3 px-1 text-[11px] font-semibold text-[#66728d] uppercase tracking-wider">
+                <Info className="w-3.5 h-3.5" />
+                <h3>Requirement</h3>
+             </div>
+             <p className="text-[12px] text-[#66728d] px-1 font-medium leading-relaxed">
+               Deals require a minimum 10% discount to be eligible for homepage placement.
+             </p>
+          </div>
+
         </div>
-      </form>
+
+      </div>
+
+      {success && (
+        <div className="fixed top-24 right-10 bg-[#15803d] text-white px-6 py-3 rounded-xl shadow-xl z-50 font-bold animate-in fade-in slide-in-from-top-4 duration-500">
+           ✅ Deal proposed successfully!
+        </div>
+      )}
     </div>
   );
 };

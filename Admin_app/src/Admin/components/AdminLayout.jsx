@@ -4,14 +4,19 @@ import { Outlet } from "react-router-dom";
 
 const AdminLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#1e293b]">
       <AdminNavbar />
 
-      <main className="flex-1 p-6">
-        <Outlet />
+      <main className="flex-1 lg:pl-[280px] pt-[76px]">
+        <div className="p-4 sm:p-6 lg:p-8">
+           <Outlet />
+        </div>
       </main>
 
-      <AdminFooter />
+      {/* Optional: Adjust footer for sidebar if version tracking is needed at bottom */}
+      <div className="lg:pl-[280px]">
+         <AdminFooter />
+      </div>
     </div>
   );
 };

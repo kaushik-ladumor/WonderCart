@@ -73,6 +73,8 @@ function App() {
                 return axios(originalRequest);
               }
             }
+            // If No Refresh Token or Success is False
+            throw new Error("Refresh failed");
           } catch (err) {
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");
