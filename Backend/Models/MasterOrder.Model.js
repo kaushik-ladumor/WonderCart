@@ -71,6 +71,16 @@ const masterOrderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "SubOrder"
   }],
+  // --- Gamification System Fields ---
+  pointsAwarded: {
+    type: Boolean,
+    default: false,
+  },
+  pointsEarned: {
+    type: Number,
+    default: 0,
+  },
+  // ----------------------------------
 }, { timestamps: true });
 
 masterOrderSchema.methods.computeStatus = async function() {

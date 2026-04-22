@@ -52,6 +52,25 @@ const ProductCard = ({
           </div>
         )}
 
+        {/* Ranking Badges */}
+        <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+          {product.tags?.isTrending && (
+            <span className="bg-[#ef4444] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+              Trending
+            </span>
+          )}
+          {product.tags?.isBestSeller && (
+            <span className="bg-[#f59e0b] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+              Best Seller
+            </span>
+          )}
+          {product.tags?.isNewArrival && (
+            <span className="bg-[#10b981] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+              New
+            </span>
+          )}
+        </div>
+
         {/* Wishlist Button */}
         <button
           onClick={(e) => toggleWishlist(e, product)}
@@ -94,12 +113,12 @@ const ProductCard = ({
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-3.5 h-3.5 ${i < Math.round(product.average_rating || 0) ? "text-orange-400 fill-orange-400" : "text-[#d9deeb]"}`}
+                      className={`w-3.5 h-3.5 ${i < Math.round(product.ratingAverage || 0) ? "text-orange-400 fill-orange-400" : "text-[#d9deeb]"}`}
                     />
                   ))}
              </div>
              <span className="text-[0.68rem] font-bold text-[#6d7892] uppercase tracking-wider">
-               ({product.total_reviews || 0})
+               ({product.reviewCount || 0})
              </span>
           </div>
 

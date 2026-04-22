@@ -8,7 +8,10 @@ const {
   getSingleProduct,
   getSellerProducts,
   searchQuery,
-  getCategories
+  getCategories,
+  getTrendingProducts,
+  getTopRatedProducts,
+  getBestSellerProducts
 } = require("../Controllers/Product.Controller");
 const Authorization = require("../Middlewares/Auth");
 const authorizeRoles = require("../Middlewares/authorizeRoles");
@@ -20,6 +23,9 @@ const requireVerification = require("../Middlewares/RequireVerification");
 productRouter.get("/get", getProduct);
 productRouter.get("/query/search", searchQuery);
 productRouter.get("/categories", getCategories);
+productRouter.get("/trending", getTrendingProducts);
+productRouter.get("/top-rated", getTopRatedProducts);
+productRouter.get("/best-sellers", getBestSellerProducts);
 
 // ✅ SELLER / ADMIN ROUTES
 productRouter.get(

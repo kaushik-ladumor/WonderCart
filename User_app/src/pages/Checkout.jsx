@@ -79,6 +79,9 @@ const Checkout = () => {
   const [useWallet, setUseWallet] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [rewardPoints, setRewardPoints] = useState(0);
+  const [applyingReward, setApplyingReward] = useState(false);
+  const [appliedRewardCoupon, setAppliedRewardCoupon] = useState(null);
 
   const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
@@ -99,6 +102,7 @@ const Checkout = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setWalletBalance(res.data.user.walletBalance || 0);
+      setRewardPoints(res.data.user.rewardPoints || 0);
     } catch (error) {
       console.error("Failed to fetch wallet balance", error);
     }
@@ -233,8 +237,9 @@ const Checkout = () => {
     }
   }
 
+  const rewardDiscountAmount = appliedRewardCoupon === '25' ? 25 : (appliedRewardCoupon === '50' ? 50 : 0);
   const orderTotal = Math.round(
-    subtotal + shipping + gst + codFee - couponDiscountAmount,
+    subtotal + shipping + gst + codFee - couponDiscountAmount - rewardDiscountAmount,
   );
   const walletDeduction = useWallet ? Math.min(walletBalance, orderTotal) : 0;
   const netPayable = Math.max(orderTotal - walletDeduction, 0);
@@ -316,6 +321,7 @@ const Checkout = () => {
         paymentMethod: actualPaymentMethod,
         walletUsed: walletDeduction,
         couponCode: appliedCoupon?.code,
+        rewardCouponType: appliedRewardCoupon,
         totalAmount: orderTotal,
       };
 
@@ -649,9 +655,58 @@ const Checkout = () => {
                         {applyingCoupon ? "..." : "Apply"}
                       </button>
                     </div>
-                    <p className="mt-2 text-[0.72rem] text-[#6d7892]">
-                      Add a WonderCart reward code before placing the order.
-                    </p>
+
+                    <div className="mt-4 border-t border-[#d7dcea] pt-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <p className="text-[0.76rem] font-semibold text-[#11182d]">Wonder Points</p>
+                            <span className="text-[0.7rem] font-bold text-[#0f49d7]">{rewardPoints} Pts</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                            <button 
+                                type="button"
+                                onClick={() => {
+                                    if (rewardPoints >= 250) {
+                                        setAppliedRewardCoupon(appliedRewardCoupon === '25' ? null : '25');
+                                    } else {
+                                        toast.error("You need at least 250 points");
+                                    }
+                                }}
+                                className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all ${
+                                    appliedRewardCoupon === '25' 
+                                    ? 'bg-[#eef2ff] border-[#0f49d7] ring-1 ring-[#0f49d7]' 
+                                    : 'bg-white border-[#d7dcea] hover:border-[#0f49d7]'
+                                }`}
+                            >
+                                <span className={`text-[0.8rem] font-bold ${appliedRewardCoupon === '25' ? 'text-[#0f49d7]' : 'text-[#11182d]'}`}>₹25 Off</span>
+                                <span className="text-[0.6rem] text-[#6d7892]">250 Points</span>
+                            </button>
+                            
+                            <button 
+                                type="button"
+                                onClick={() => {
+                                    if (rewardPoints >= 500) {
+                                        setAppliedRewardCoupon(appliedRewardCoupon === '50' ? null : '50');
+                                    } else {
+                                        toast.error("You need at least 500 points");
+                                    }
+                                }}
+                                className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all ${
+                                    appliedRewardCoupon === '50' 
+                                    ? 'bg-[#eef2ff] border-[#0f49d7] ring-1 ring-[#0f49d7]' 
+                                    : 'bg-white border-[#d7dcea] hover:border-[#0f49d7]'
+                                }`}
+                            >
+                                <span className={`text-[0.8rem] font-bold ${appliedRewardCoupon === '50' ? 'text-[#0f49d7]' : 'text-[#11182d]'}`}>₹50 Off</span>
+                                <span className="text-[0.6rem] text-[#6d7892]">500 Points</span>
+                            </button>
+                        </div>
+                        {appliedRewardCoupon && (
+                            <p className="mt-2 text-[0.65rem] text-[#0f7a32] flex items-center gap-1">
+                                <Check className="w-3 h-3" /> Reward points will be deducted on order placement
+                            </p>
+                        )}
+                    </div>
                     {availableCoupons.length > 0 && (
                       <div className="mt-4 border-t border-[#d7dcea] pt-3">
                         <p className="mb-2 text-[0.76rem] font-semibold text-[#11182d]">Available Coupons</p>
@@ -737,6 +792,14 @@ const Checkout = () => {
                     <span className="text-[#42506d]">COD fee</span>
                     <span className="font-medium text-[#11182d]">
                       {formatPrice(codFee)}
+                    </span>
+                  </div>
+                )}
+                {rewardDiscountAmount > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#42506d]">Reward Discount</span>
+                    <span className="font-medium text-[#0369a1]">
+                      -{formatPrice(rewardDiscountAmount)}
                     </span>
                   </div>
                 )}

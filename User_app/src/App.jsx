@@ -50,6 +50,8 @@ import Deals from "./pages/Deals";
 
 import { useEffect } from "react";
 
+import SharedCart from "./pages/SharedCart";
+import MoodProducts from "./pages/MoodProducts";
 
 function App() {
   const { authUser, setToken, setAuthUser } = useAuth();
@@ -166,6 +168,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/cart/share/:shareId" element={<SharedCart />} />
+          <Route path="/mood/:moodName" element={<MoodProducts />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/my-orders" element={<AllOrder />} />
           <Route path="/shop" element={<Shop />} />

@@ -27,7 +27,8 @@ import AdminProducts from "./Admin/AdminProducts";
 import AdminUsers from "./Admin/AdminUsers"
 import AdminProfile from "./Admin/AdminProfile"
 import AdminDeals from "./Admin/AdminDeals";
-import AdminSuspension from "./Admin/AdminSuspension"; // Import new component
+import AdminSuspension from "./Admin/AdminSuspension";
+import AdminMoods from "./Admin/AdminMoods";
 
 
 import { useEffect } from "react";
@@ -138,7 +139,7 @@ function App() {
           <div className="min-h-screen bg-[#f1f4f9] flex flex-col items-center justify-center px-4 font-body">
             <div className="w-full max-w-sm">
               <div className="bg-white rounded-[24px] p-8 shadow-[0_10px_25px_rgba(0,0,0,0.03)] border border-[#e4e8f2] flex flex-col items-center text-center">
-                
+
                 {/* Brand Header */}
                 <div className="mb-8">
                   <Logo />
@@ -156,7 +157,7 @@ function App() {
 
                 {/* Single Login Button matching Login Page style */}
                 <div className="w-full">
-                  <button 
+                  <button
                     onClick={() => document.getElementById('login_modal')?.showModal()}
                     className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#003da3]"
                   >
@@ -190,6 +191,7 @@ function App() {
             )
           }
         >
+          <Route path="moods" element={<AdminMoods />} />
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProducts />} />

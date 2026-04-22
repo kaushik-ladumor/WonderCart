@@ -9,6 +9,7 @@ const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
 const cloudinary = require("../Utils/Cloudinary");
 const Coupon = require("../Models/Coupon.Model");
+const { addPoints } = require("../Services/GamificationService");
 
 
 
@@ -102,6 +103,10 @@ const signup = async (req, res) => {
 
     // Assign eligible coupons to new user
     await assignCouponsToNewUser(newUser._id, newUser.role);
+
+    // --- Gamification: Signup Points ---
+    await addPoints(newUser._id, 50, "Signup Reward");
+    // ------------------------------------
 
     // await sendVerificationCode(newUser.email, verificationCode);
 
@@ -276,6 +281,10 @@ const googleAuth = async (req, res) => {
 
       // Assign eligible coupons to new user
       await assignCouponsToNewUser(user._id, user.role);
+
+      // --- Gamification: Signup Points ---
+      await addPoints(user._id, 50, "Signup Reward (Google)");
+      // ------------------------------------
     }
 
     const { accessToken, refreshToken } = await generateTokens(user);

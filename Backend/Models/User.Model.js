@@ -94,6 +94,36 @@ const userSchema = new mongoose.Schema(
     // -------------------------------
 
     addresses: [addressSchema],
+    
+    // --- Gamification System Fields ---
+    rewardPoints: {
+      type: Number,
+      default: 0,
+    },
+    pointsHistory: [
+      {
+        points: Number,
+        earnedOn: { type: Date, default: Date.now },
+        expiresOn: Date,
+        reason: String,
+        status: {
+          type: String,
+          enum: ["active", "used", "expired"],
+          default: "active",
+        },
+      },
+    ],
+    // ----------------------------------
+    // --- Mood Based Shopping Fields ---
+    lastMood: { type: String },
+    moodHistory: [
+      {
+        mood: String,
+        selectedAt: { type: Date, default: Date.now },
+        productsSeen: { type: Number, default: 0 }
+      }
+    ]
+    // ----------------------------------
   },
   { timestamps: true }
 );

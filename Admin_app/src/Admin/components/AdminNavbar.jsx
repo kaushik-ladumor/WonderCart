@@ -21,7 +21,8 @@ import {
   CreditCard,
   RotateCcw,
   Search,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -129,7 +130,8 @@ const AdminNavbar = () => {
     { path: "/admin/payouts", label: "Settlements", icon: CreditCard },
     { path: "/admin/refunds", label: "Disputes", icon: RotateCcw },
     { path: "/admin/suspension", label: "Suspensions", icon: ShieldCheck },
-    { path: "/admin/deals", label: "Deals", icon: Percent },
+    { path: "/admin/deals", label: "Deals", icon: Ticket },
+    { path: "/admin/moods", label: "Moods", icon: Sparkles },
   ];
 
   const adminName = authUser?.name || "System Admin";
@@ -173,8 +175,8 @@ const AdminNavbar = () => {
                 to={item.path}
                 onClick={closeMenu}
                 className={`relative flex items-center justify-between rounded-[20px] px-4 py-3 transition-all ${isActive
-                    ? "bg-[#f7f9ff] text-[#2563eb]"
-                    : "text-[#62708c] hover:bg-gray-50"
+                  ? "bg-[#f7f9ff] text-[#2563eb]"
+                  : "text-[#62708c] hover:bg-gray-50"
                   }`}
               >
                 <div className="flex items-center gap-3">

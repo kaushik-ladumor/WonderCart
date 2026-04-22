@@ -233,18 +233,42 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="mt-5 rounded-[16px] bg-[#eef2ff] p-3.5">
-              <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-white text-[#0f49d7]">
-                  <Wallet className="h-4.5 w-4.5" />
-                </span>
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#6d7892]">
-                    Wallet Balance
-                  </p>
-                  <p className="mt-1.5 text-[1.1rem] font-semibold text-[#11182d]">
-                    Rs {Number(authUser?.walletBalance || 0).toLocaleString("en-IN")}
-                  </p>
+            <div className="mt-3 grid grid-cols-1 gap-3">
+              <div className="rounded-[16px] bg-[#eef2ff] p-3.5">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-white text-[#0f49d7]">
+                    <Wallet className="h-4.5 w-4.5" />
+                  </span>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#6d7892]">
+                      Wallet Balance
+                    </p>
+                    <p className="mt-1.5 text-[1.1rem] font-semibold text-[#11182d]">
+                      Rs {Number(authUser?.walletBalance || 0).toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[16px] bg-[#f0f9ff] p-3.5 border border-[#e0f2fe]">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-white text-[#0369a1]">
+                    <Ticket className="h-4.5 w-4.5" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#0369a1]">
+                      Reward Points
+                    </p>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="mt-1.5 text-[1.1rem] font-semibold text-[#11182d]">
+                        {Number(authUser?.rewardPoints || 0).toLocaleString()}
+                      </p>
+                      <span className="text-[0.7rem] text-[#64748b]">Pts</span>
+                    </div>
+                    <p className="mt-0.5 text-[0.65rem] text-[#64748b]">
+                      1 Point = ₹0.1 reward
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -419,6 +443,62 @@ const Profile = () => {
               </button>
             </div>
           </section>
+        </div>
+
+        <div className="mt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d]">
+                Reward Points History
+              </h2>
+              <div className="mt-2 h-1 w-10 rounded-full bg-[#0369a1]" />
+            </div>
+          </div>
+          
+          <div className="overflow-hidden rounded-[18px] border border-[#e1e5f1] bg-white">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[0.8rem]">
+                <thead className="bg-[#f8f9fd] uppercase tracking-wider text-[#6d7892]">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Points</th>
+                    <th className="px-4 py-3 font-semibold">Reason</th>
+                    <th className="px-4 py-3 font-semibold">Date</th>
+                    <th className="px-4 py-3 font-semibold">Expiry</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#edf1f8]">
+                  {authUser?.pointsHistory && authUser.pointsHistory.length > 0 ? (
+                    [...authUser.pointsHistory].reverse().map((entry, idx) => (
+                      <tr key={idx} className="hover:bg-[#fbfcfe]">
+                        <td className={`px-4 py-3 font-bold ${entry.points > 0 ? 'text-[#15753a]' : 'text-[#c0392b]'}`}>
+                          {entry.points > 0 ? '+' : ''}{entry.points}
+                        </td>
+                        <td className="px-4 py-3 text-[#42506d]">{entry.reason}</td>
+                        <td className="px-4 py-3 text-[#42506d] whitespace-nowrap">{formatDate(entry.earnedOn)}</td>
+                        <td className="px-4 py-3 text-[#42506d] whitespace-nowrap">{formatDate(entry.expiresOn)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider ${
+                            entry.status === 'active' ? 'bg-[#eef2ff] text-[#0f49d7]' :
+                            entry.status === 'used' ? 'bg-[#f0fdf4] text-[#15753a]' :
+                            'bg-[#fef2f2] text-[#c0392b]'
+                          }`}>
+                            {entry.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="px-4 py-8 text-center text-[#6d7892]">
+                        No reward points history found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 

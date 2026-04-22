@@ -780,6 +780,21 @@ const updateSubOrderStatus = async (req, res) => {
 
     // 3. RECOMPUTE MASTER STATUS
     order.status = order.computeStatus();
+
+    // --- Gamification Hooks ---
+    try {
+      const { onDeliveryConfirmed, onOrderReturned } = require("../Services/GamificationService");
+      if (order.status === "delivered") {
+        await onDeliveryConfirmed(order._id);
+      } else if (order.status === "returned") {
+        await onOrderReturned(order._id);
+      }
+    } catch (gamiError) {
+      console.error("Gamification Hook Error:", gamiError);
+      // Don't fail the order update if gamification fails
+    }
+    // ---------------------------
+
     await order.save();
 
     // 4. NOTIFICATIONS

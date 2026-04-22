@@ -532,14 +532,13 @@ const AddProduct = () => {
                                 )
                               }
                               placeholder="Selling Price"
-                              className={`w-full rounded-2xl py-2.5 pl-8 pr-3 text-[12px] outline-none focus:border-[#2f5fe3] ${
-                                size.sellingPrice &&
-                                size.originalPrice &&
-                                parseFloat(size.sellingPrice) >
+                              className={`w-full rounded-2xl py-2.5 pl-8 pr-3 text-[12px] outline-none focus:border-[#2f5fe3] ${size.sellingPrice &&
+                                  size.originalPrice &&
+                                  parseFloat(size.sellingPrice) >
                                   parseFloat(size.originalPrice)
                                   ? "border border-[#efb4b4] bg-[#fff3f3]"
                                   : "border border-[#d8dff3] bg-[#f7f8ff]"
-                              }`}
+                                }`}
                             />
                           </div>
                           <div className="flex items-center gap-2">

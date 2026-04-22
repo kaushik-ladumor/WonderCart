@@ -67,14 +67,6 @@ const productSchema = new mongoose.Schema(
         ref: "Review",
       },
     ],
-    average_rating: {
-      type: Number,
-      default: 0,
-    },
-    total_reviews: {
-      type: Number,
-      default: 0,
-    },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
@@ -84,6 +76,39 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // --- Ranking & Gamification Fields ---
+    salesCount: { 
+      type: Number, 
+      default: 0 
+    },
+    reviewCount: { 
+      type: Number, 
+      default: 0 
+    },
+    ratingAverage: { 
+      type: Number, 
+      default: 0 
+    },
+    rankScore: { 
+      type: Number, 
+      default: 0 
+    },
+    lastRankedAt: { 
+      type: Date 
+    },
+    tags: {
+      isTrending: { type: Boolean, default: false },
+      isTopRated: { type: Boolean, default: false },
+      isBestSeller: { type: Boolean, default: false },
+      isNewArrival: { type: Boolean, default: false }
+    },
+    // --- Mood Based Shopping Fields ---
+    moods: [{ type: String, lowercase: true }],
+    moodAssignedBy: { 
+      type: String, 
+      enum: ["admin", "auto", "both", "none"], 
+      default: "none" 
+    }
   },
   { timestamps: true }
 );

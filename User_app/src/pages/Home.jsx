@@ -114,7 +114,10 @@ function HomePage() {
   const [loading, setLoading] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [trendingProducts, setTrendingProducts] = useState([]);
+  const [topRatedProducts, setTopRatedProducts] = useState([]);
+  const [bestSellers, setBestSellers] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [moods, setMoods] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [addingToWishlist, setAddingToWishlist] = useState({});
 
@@ -123,11 +126,35 @@ function HomePage() {
       try {
         setLoading(true);
 
-        const productsRes = await axios.get(`${API_URL}/product/get?limit=8`);
-        setTrendingProducts(productsRes.data.data || []);
+        // Fetch sections with individual error handling to ensure resilience
+        const fetchSections = async () => {
+          try {
+            const trendingRes = await axios.get(`${API_URL}/product/trending`);
+            setTrendingProducts(trendingRes.data.data || []);
+          } catch (e) { console.error("Trending fetch failed", e); }
 
-        const categoriesRes = await axios.get(`${API_URL}/product/categories`);
-        setCategories(categoriesRes.data.categories || []);
+          try {
+            const topRatedRes = await axios.get(`${API_URL}/product/top-rated`);
+            setTopRatedProducts(topRatedRes.data.data || []);
+          } catch (e) { console.error("Top Rated fetch failed", e); }
+
+          try {
+            const bestRes = await axios.get(`${API_URL}/product/best-sellers`);
+            setBestSellers(bestRes.data.data || []);
+          } catch (e) { console.error("Best Sellers fetch failed", e); }
+
+          try {
+            const categoriesRes = await axios.get(`${API_URL}/product/categories`);
+            setCategories(categoriesRes.data.categories || []);
+          } catch (e) { console.error("Categories fetch failed", e); }
+
+          try {
+            const moodsRes = await axios.get(`${API_URL}/mood`);
+            setMoods(moodsRes.data.data || []);
+          } catch (e) { console.error("Moods fetch failed", e); }
+        };
+
+        await fetchSections();
 
         const token = localStorage.getItem("token");
         if (token) {
@@ -260,8 +287,39 @@ function HomePage() {
             );
           })}
         </div>
+
+        {/* --- Shop by Mood --- */}
+        {moods.length > 0 && (
+          <div className="py-2">
+             <div className="mb-4">
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d] sm:text-[1.2rem]">
+                Shop by Mood
+              </h2>
+              <p className="mt-1 text-[0.82rem] text-[#62708d]">
+                Find products that match your current vibe.
+              </p>
+            </div>
+            <div className="flex overflow-x-auto gap-3 pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {moods.map((mood) => (
+                <button
+                  key={mood._id}
+                  onClick={() => navigate(`/mood/${mood.name}`)}
+                  className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e2e6f3] bg-white p-4 min-w-[100px] shrink-0 snap-start hover:border-[#0f49d7] hover:bg-[#f8faff] transition-all group"
+                >
+                  <span className="text-3xl group-hover:scale-110 transition-transform">
+                    {mood.emoji}
+                  </span>
+                  <span className="text-[0.72rem] font-bold uppercase tracking-widest text-[#3f4b67]">
+                    {mood.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
+      {/* --- Trending Section --- */}
       <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
@@ -269,19 +327,13 @@ function HomePage() {
               Trending Now
             </h2>
             <p className="mt-1 text-[0.82rem] text-[#62708d]">
-              Selected by our expert curators this week.
+              High-ranking products based on recent interest.
             </p>
           </div>
-          <button
-            onClick={() => navigate("/shop")}
-            className="text-[0.82rem] font-semibold text-[#0f49d7]"
-          >
-            View All Trends
-          </button>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {featuredProducts.map((product) => (
+          {trendingProducts.slice(0, 4).map((product) => (
             <ProductCard
               key={product._id}
               product={product}
@@ -292,6 +344,62 @@ function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* --- Best Sellers Section --- */}
+      {bestSellers.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d] sm:text-[1.2rem]">
+                Best Sellers
+              </h2>
+              <p className="mt-1 text-[0.82rem] text-[#62708d]">
+                The most popular products by sales volume.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {bestSellers.slice(0, 4).map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                wishlist={wishlist}
+                addingToWishlist={addingToWishlist}
+                toggleWishlist={toggleWishlist}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* --- Top Rated Section --- */}
+      {topRatedProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d] sm:text-[1.2rem]">
+                Top Rated
+              </h2>
+              <p className="mt-1 text-[0.82rem] text-[#62708d]">
+                Quality picks highly praised by our community.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {topRatedProducts.slice(0, 4).map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                wishlist={wishlist}
+                addingToWishlist={addingToWishlist}
+                toggleWishlist={toggleWishlist}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="grid overflow-hidden rounded-[22px] border border-[#dde4f2] bg-white lg:grid-cols-[1.05fr_1fr]">

@@ -7,6 +7,7 @@ import {
   Minus,
   Plus,
   ShoppingBag,
+  Share2,
   Tag,
   Trash2,
   X,
@@ -37,9 +38,32 @@ const Cart = () => {
   const [updatingItems, setUpdatingItems] = useState({});
   const [stockNotice, setStockNotice] = useState(null);
   const navigate = useNavigate();
+  const [sharing, setSharing] = useState(false);
   const { setAuthUser } = useAuth();
   const { setCartCount } = useCart();
   const socket = useSocket();
+
+  const handleShareCart = async () => {
+    if (!token) return;
+    setSharing(true);
+    try {
+      const res = await fetch(`${API_URL}/cart/share`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        await navigator.clipboard.writeText(data.data.shareLink);
+        toast.success("Share link copied to clipboard!");
+      } else {
+        toast.error(data.message || "Failed to share cart");
+      }
+    } catch (err) {
+      toast.error("Failed to generate share link");
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const token = localStorage.getItem("token");
 
@@ -524,6 +548,15 @@ const Cart = () => {
                   className="mt-4 h-11 w-full rounded-[14px] bg-[#0f49d7] text-[0.78rem] font-semibold text-white uppercase tracking-widest"
                 >
                   Proceed to Checkout
+                </button>
+
+                <button
+                  onClick={handleShareCart}
+                  disabled={sharing}
+                  className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[#d7dcea] bg-white text-[0.78rem] font-semibold text-[#11182d] uppercase tracking-widest transition-all hover:bg-[#f6f7fb]"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  {sharing ? "Generatings..." : "Share Cart with Friends"}
                 </button>
 
                 <div className="mt-3 flex items-center justify-center gap-2 text-[9px] uppercase tracking-[0.14em] text-[#5d6a84]">

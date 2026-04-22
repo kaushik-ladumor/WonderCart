@@ -15,6 +15,7 @@ const {
   getAllOrders,
   getAdminDashboardStats,
   razorpayWebhook,
+  applyRewardCoupon,
 } = require("../Controllers/OrderMaster.Controller");
 
 const {
@@ -27,6 +28,7 @@ const Notification = require("../Models/Notification.Model");
 
 // -------------------- CUSTOMER ROUTES --------------------
 router.post("/create", authenticate, requireVerification, placeOrder);
+router.post("/apply-reward", authenticate, applyRewardCoupon);
 router.get("/", authenticate, getMyOrders);
 router.get("/id/:orderId", authenticate, getMasterOrderById);
 router.patch("/sub-id/:subOrderId/cancel", authenticate, cancelSubOrder);

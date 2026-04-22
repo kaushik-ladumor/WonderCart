@@ -20,6 +20,9 @@ const dealRoutes = require("./deals");
 
 const notificationRouter = require("./Notification.Route");
 const suspensionRouter = require("./Suspension.Route");
+const moodRouter = require("./Mood.Route");
+
+mainRouter.use("/mood", moodRouter);
 
 // Root API test
 mainRouter.get("/", (req, res) => {

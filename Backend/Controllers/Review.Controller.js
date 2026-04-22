@@ -7,15 +7,15 @@ const mongoose = require("mongoose");
 const updateProductStats = async (productId) => {
   const reviews = await Review.find({ product: productId, status: "approved" });
 
-  const total_reviews = reviews.length;
-  const average_rating =
-    total_reviews > 0
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / total_reviews
+  const reviewCount = reviews.length;
+  const ratingAverage =
+    reviewCount > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
       : 0;
 
   await Product.findByIdAndUpdate(productId, {
-    total_reviews,
-    average_rating: Math.round(average_rating * 10) / 10,
+    reviewCount,
+    ratingAverage: Math.round(ratingAverage * 10) / 10,
   });
 };
 
@@ -104,6 +104,12 @@ const addReview = async (req, res) => {
     }
 
     await updateProductStats(productId);
+
+    // --- Gamification: Review Points ---
+    const { addPoints } = require("../Services/GamificationService");
+    await addPoints(userId, 20, `Review for ${product.name}`);
+    // ------------------------------------
+
     res.status(201).json({
       success: true,
       message: "Thank you! Your review has been submitted.",
@@ -131,8 +137,8 @@ const getReview = async (req, res) => {
       success: true,
       data: {
         reviews,
-        total_reviews: product.total_reviews,
-        average_rating: product.average_rating,
+        reviewCount: product.reviewCount,
+        ratingAverage: product.ratingAverage,
       },
     });
   } catch (err) {

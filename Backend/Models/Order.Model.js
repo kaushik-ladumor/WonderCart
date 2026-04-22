@@ -136,6 +136,17 @@ const orderSchema = new mongoose.Schema(
     },
     couponCode: String,
     couponDiscount: { type: Number, default: 0 },
+    
+    // --- Gamification System Fields ---
+    pointsAwarded: {
+      type: Boolean,
+      default: false,
+    },
+    pointsEarned: {
+      type: Number,
+      default: 0,
+    },
+    // ----------------------------------
   },
   { timestamps: true }
 );

@@ -19,6 +19,11 @@ const startServer = async () => {
   const startDealCron = require("./cron/dealCron");
   startDealCron();
 
+  const startPointsCron = require("./cron/pointsCron");
+  const startRankingCron = require("./cron/rankingCron");
+  startPointsCron();
+  startRankingCron();
+
   const app = express();
   const PORT = process.env.PORT || 4000;
 
@@ -31,10 +36,6 @@ const corsOptions = {
     "https://wondercart-customer.netlify.app",
     "https://wondercart-seller.netlify.app",
     "https://wondercart-admin.netlify.app",
-    "https://wonder-cart-three.vercel.app",
-    "https://wonder-cart-p6ep8tntl-kaushik-ladumors-projects.vercel.app",
-    "https://wonder-cart-gc1pbvdds-kaushik-ladumors-projects.vercel.app",
-    "https://wonder-cart-git-main-kaushik-ladumors-projects.vercel.app",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -63,10 +64,9 @@ const io = new Server(server, {
       "http://localhost:5174",
       "http://localhost:5175",
       "http://localhost:5176",
-      "https://wonder-cart-three.vercel.app",
-      "https://wonder-cart-p6ep8tntl-kaushik-ladumors-projects.vercel.app",
-      "https://wonder-cart-gc1pbvdds-kaushik-ladumors-projects.vercel.app",
-      "https://wonder-cart-git-main-kaushik-ladumors-projects.vercel.app",
+      "https://wondercart-customer.netlify.app",
+      "https://wondercart-seller.netlify.app",
+      "https://wondercart-admin.netlify.app",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],

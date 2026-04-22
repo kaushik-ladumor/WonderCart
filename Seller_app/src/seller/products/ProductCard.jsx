@@ -104,13 +104,12 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
             <div className="flex items-center gap-1.5">
               <Package className="h-3.5 w-3.5 text-[#7481a2]" />
               <p
-                className={`text-[13px] font-semibold ${
-                  isOutOfStock
+                className={`text-[13px] font-semibold ${isOutOfStock
                     ? "text-[#d14343]"
                     : isLowStock
                       ? "text-[#c77719]"
                       : "text-[#18794e]"
-                }`}
+                  }`}
               >
                 {stock} units
               </p>

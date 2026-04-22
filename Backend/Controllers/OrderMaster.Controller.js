@@ -73,7 +73,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
   return Object.values(sellerGroups).map(group => {
     const zone = getZone(group.sellerPin, customerPin);
     const edd = calculateEDD(new Date(), group.handlingDays, zone);
-    const commission = Math.round((group.subTotal * group.commissionRate) / 100);
+    const commission = 0; // Fixed ₹50 per order handled at Master Level
     const tax = Math.round(group.subTotal * 0.18);
     
     const mustShipBy = new Date();
@@ -85,7 +85,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
       taxAmount: tax,
       estimatedDeliveryDate: edd,
       platformCommission: commission,
-      sellerPayout: group.subTotal - commission,
+      sellerPayout: group.subTotal, // Seller always receives full product amount
       mustShipBy,
       shippingCost: group.subTotal < 999 ? 50 : 0,
     };
@@ -201,7 +201,7 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
 };
 
 const placeOrder = async (req, res) => {
-  const { items, addressId, paymentMethod, walletUsed } = req.body;
+  const { items, addressId, paymentMethod, walletUsed, rewardCouponType } = req.body;
   const userId = req.user.userId;
 
   const session = await mongoose.startSession();
@@ -216,7 +216,22 @@ const placeOrder = async (req, res) => {
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
     const tax = subOrdersData.reduce((sum, s) => sum + s.taxAmount, 0);
-    const totalAmount = subTotal + tax + shipping;
+    const adminCommission = 50; // Fixed Admin Commission
+    
+    let rewardDiscount = 0;
+    if (rewardCouponType) {
+        const { redeemPoints } = require("../Services/GamificationService");
+        const pointsToRedeem = rewardCouponType === '25' ? 250 : (rewardCouponType === '50' ? 500 : 0);
+        if (pointsToRedeem > 0) {
+            if (userDoc.rewardPoints < pointsToRedeem) throw new Error("Insufficient reward points");
+            rewardDiscount = rewardCouponType === '25' ? 25 : 50;
+            // Note: redeemPoints saves user, so we do it outside transaction or within if it handles it.
+            // For simplicity, we'll let redeemPoints handle it.
+            await redeemPoints(userId, pointsToRedeem);
+        }
+    }
+
+    const totalAmount = subTotal + tax + shipping + adminCommission - rewardDiscount;
 
     let walletDeduction = 0;
     if (walletUsed) {
@@ -246,6 +261,14 @@ const placeOrder = async (req, res) => {
 
     const masterOrder = await createFinalOrders(session, masterData, subOrdersData);
     await session.commitTransaction();
+    // --- Social Shopping Hook: Mark shared carts as purchased ---
+    try {
+      const { markCartAsPurchased } = require("../Services/SharedCartService");
+      await markCartAsPurchased(userId);
+    } catch (shareErr) {
+      console.error("Shared cart update failed:", shareErr);
+    }
+
     res.status(201).json({ success: true, order: masterOrder });
   } catch (err) {
     if (session.inTransaction()) await session.abortTransaction();
@@ -474,6 +497,32 @@ const updateSubOrderStatus = async (req, res) => {
 
     const masterOrderForCompute = await MasterOrder.findById(subOrder.masterOrder);
     masterOrderForCompute.status = await masterOrderForCompute.computeStatus();
+    
+    // --- Gamification Hooks ---
+    try {
+      const { onDeliveryConfirmed, onOrderReturned } = require("../Services/GamificationService");
+      if (masterOrderForCompute.status === "delivered") {
+        await onDeliveryConfirmed(masterOrderForCompute._id);
+        
+        // --- Ranking Hook: Increment salesCount ---
+        const { onDeliveryConfirmed: rankSales } = require("../Services/RankingService");
+        for (const subOrderId of masterOrderForCompute.subOrders) {
+          const SubOrder = require("../Models/SubOrder.Model");
+          const sub = await SubOrder.findById(subOrderId);
+          if (sub) {
+            for (const item of sub.items) {
+              await rankSales(item.product);
+            }
+          }
+        }
+      } else if (masterOrderForCompute.status === "returned") {
+        await onOrderReturned(masterOrderForCompute._id);
+      }
+    } catch (gamiError) {
+      console.error("Gamification Hook Error:", gamiError);
+    }
+    // ---------------------------
+    
     await masterOrderForCompute.save();
 
     const msgs = { 
@@ -520,7 +569,14 @@ const verifyPayment = async (req, res) => {
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
     const tax = subOrdersData.reduce((sum, s) => sum + s.taxAmount, 0);
-    const totalAmount = subTotal + tax + shipping;
+    const adminCommission = 50; // Fixed Admin Commission
+
+    let rewardDiscount = 0;
+    if (orderData.rewardCouponType) {
+        rewardDiscount = orderData.rewardCouponType === '25' ? 25 : 50;
+    }
+
+    const totalAmount = subTotal + tax + shipping + adminCommission - rewardDiscount;
 
     const masterData = {
       user: userId, totalAmount, address: { fullName: selectedAddress.fullName, phone: selectedAddress.phone, street: selectedAddress.street, city: selectedAddress.city, state: selectedAddress.state, zipCode, country: selectedAddress.country || "India" },
@@ -529,6 +585,14 @@ const verifyPayment = async (req, res) => {
 
     const masterOrder = await createFinalOrders(session, masterData, subOrdersData);
     await session.commitTransaction();
+    // --- Social Shopping Hook: Mark shared carts as purchased ---
+    try {
+      const { markCartAsPurchased } = require("../Services/SharedCartService");
+      await markCartAsPurchased(userId);
+    } catch (shareErr) {
+      console.error("Shared cart update failed:", shareErr);
+    }
+
     res.status(201).json({ success: true, order: masterOrder });
   } catch (error) {
     if (session.inTransaction()) await session.abortTransaction();
@@ -823,6 +887,24 @@ const getAdminWalletStats = async (req, res) => {
   }
 };
 
+const applyRewardCoupon = async (req, res) => {
+    try {
+        const { orderId, couponType } = req.body;
+        const userId = req.user.userId;
+
+        const { applyRewardCoupon: serviceApply } = require("../Services/GamificationService");
+        const order = await serviceApply(orderId, userId, couponType);
+
+        res.status(200).json({
+            success: true,
+            message: `₹${couponType === '25' ? '25' : '50'} discount applied using reward points.`,
+            order
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
   placeOrder,
   verifyPayment,
@@ -837,5 +919,6 @@ module.exports = {
   getAdminDashboardStats,
   getAdminPayoutStats,
   getAdminWalletStats,
-  razorpayWebhook, // Add this
+  razorpayWebhook,
+  applyRewardCoupon,
 };

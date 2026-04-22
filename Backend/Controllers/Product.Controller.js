@@ -327,6 +327,15 @@ const createProduct = async (req, res) => {
       status: "approved",
     });
 
+    // --- Mood Hook: Auto-assign moods based on category ---
+    try {
+      const { autoAssignMoods } = require("../Services/MoodService");
+      await autoAssignMoods(product._id);
+    } catch (moodErr) {
+      console.error("Mood auto-assign failed:", moodErr);
+    }
+    // ------------------------------------------------------
+
     return res.status(201).json({ success: true, data: product });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
@@ -452,6 +461,15 @@ const updateProduct = async (req, res) => {
 
     await product.save();
 
+    // --- Mood Hook: Auto-assign moods based on category update ---
+    try {
+      const { autoAssignMoods } = require("../Services/MoodService");
+      await autoAssignMoods(product._id);
+    } catch (moodErr) {
+      console.error("Mood auto-assign failed:", moodErr);
+    }
+    // -------------------------------------------------------------
+
     // ✅ Emit real-time updates for stock and price
     if (global.io) {
       global.io.emit("stock-update", {
@@ -528,6 +546,60 @@ const searchQuery = async (req, res) => {
   }
 };
 
+const getTrendingProducts = async (req, res) => {
+  try {
+    let products = await Product.find({ "tags.isTrending": true, status: "approved", isVisible: true })
+      .sort({ rankScore: -1, createdAt: -1 })
+      .limit(10);
+
+    if (!products.length) {
+      products = await Product.find({ status: "approved", isVisible: true })
+        .sort({ rankScore: -1, createdAt: -1 })
+        .limit(10);
+    }
+
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getTopRatedProducts = async (req, res) => {
+  try {
+    let products = await Product.find({ "tags.isTopRated": true, status: "approved", isVisible: true })
+      .sort({ ratingAverage: -1, createdAt: -1 })
+      .limit(10);
+
+    if (!products.length) {
+      products = await Product.find({ status: "approved", isVisible: true })
+        .sort({ rankScore: -1, createdAt: -1 })
+        .limit(10);
+    }
+
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getBestSellerProducts = async (req, res) => {
+  try {
+    let products = await Product.find({ "tags.isBestSeller": true, status: "approved", isVisible: true })
+      .sort({ salesCount: -1, createdAt: -1 })
+      .limit(10);
+
+    if (!products.length) {
+      products = await Product.find({ status: "approved", isVisible: true })
+        .sort({ rankScore: -1, createdAt: -1 })
+        .limit(10);
+    }
+
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createProduct,
   getProduct,
@@ -536,5 +608,8 @@ module.exports = {
   deleteProduct,
   getSellerProducts,
   searchQuery,
-  getCategories
+  getCategories,
+  getTrendingProducts,
+  getTopRatedProducts,
+  getBestSellerProducts
 };
