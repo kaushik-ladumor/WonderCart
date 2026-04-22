@@ -1,5 +1,7 @@
 const User = require("../Models/User.Model");
 const Product = require("../Models/Product.Model");
+const MasterOrder = require("../Models/MasterOrder.Model");
+const SubOrder = require("../Models/SubOrder.Model");
 const Order = require("../Models/Order.Model");
 const cloudinary = require("../Utils/Cloudinary");
 const Review = require("../Models/Review.Model");
@@ -7,6 +9,16 @@ const Cart = require("../Models/Cart.Model");
 const Wishlist = require("../Models/WishList.Model");
 const Notification = require("../Models/Notification.Model");
 const Coupon = require("../Models/Coupon.Model");
+
+const getPublicId = (url) => {
+    if (!url) return null;
+    const parts = url.split("/");
+    const uploadIndex = parts.indexOf("upload");
+    if (uploadIndex === -1) return null;
+    const startIndex = parts[uploadIndex + 1]?.startsWith("v") ? uploadIndex + 2 : uploadIndex + 1;
+    const publicIdWithExt = parts.slice(startIndex).join("/");
+    return publicIdWithExt.split(".")[0];
+};
 
 const getUser = async (req, res) => {
     try {
@@ -127,14 +139,6 @@ const rejectProduct = async (req, res) => {
                 .json({ message: "Product is not pending approval" });
         }
 
-        const getPublicId = (url) => {
-            const parts = url.split("/");
-            const uploadIndex = parts.indexOf("upload");
-            if (uploadIndex === -1) return null;
-            const startIndex = parts[uploadIndex + 1]?.startsWith("v") ? uploadIndex + 2 : uploadIndex + 1;
-            const publicIdWithExt = parts.slice(startIndex).join("/");
-            return publicIdWithExt.split(".")[0];
-        };
 
         for (const variant of product.variants) {
             for (const image of variant.images) {
@@ -178,9 +182,9 @@ const deleteUser = async (req, res) => {
             /^shipped$/i,
         ];
 
-        const activeUserOrder = await Order.findOne({
+        const activeUserOrder = await MasterOrder.findOne({
             user: userId,
-            status: { $in: ACTIVE_ORDER_STATUS },
+            status: { $in: ["placed", "confirmed", "processing", "shipped", "out_for_delivery"] },
         });
         if (activeUserOrder) {
             return res.status(400).json({
@@ -190,35 +194,15 @@ const deleteUser = async (req, res) => {
         }
 
         if (user.role === "seller") {
-            const orders = await Order.find({
-                status: { $in: ACTIVE_ORDER_STATUS },
-            }).populate({
-                path: "items.product",
-                select: "owner",
+            const activeSellerOrder = await SubOrder.findOne({
+                seller: userId,
+                status: { $in: ["placed", "confirmed", "processing", "shipped", "out_for_delivery"] },
             });
 
-            let sellerHasActiveOrder = false;
-
-            for (const order of orders) {
-                const hasSellerProduct = order.items.some(
-                    (item) =>
-                        item.product &&
-                        item.product.owner.toString() === userId.toString()
-                );
-
-                if (hasSellerProduct) {
-                    sellerHasActiveOrder = true;
-                    break;
-                }
-            }
-
-            console.log("Seller Has Active Order:", sellerHasActiveOrder);
-
-            if (sellerHasActiveOrder) {
+            if (activeSellerOrder) {
                 return res.status(400).json({
                     success: false,
-                    message:
-                        "You have active orders as a seller. Complete or cancel them first.",
+                    message: "You have active orders as a seller. Complete or cancel them first.",
                 });
             }
 

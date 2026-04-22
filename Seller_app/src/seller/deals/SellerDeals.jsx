@@ -187,7 +187,7 @@ const SellerDeals = () => {
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-2">
                     <div className="flex items-center gap-1.5 text-[12px] text-[#6d7894] font-medium">
                        <Calendar className="w-3.5 h-3.5 text-[#2156d8]" />
-                       {new Date(deal.startDateTime).toLocaleDateString()} - {new Date(deal.endDateTime).toLocaleDateString()}
+                       {deal.startDateTime ? new Date(deal.startDateTime).toLocaleDateString() : 'N/A'} - {deal.endDateTime ? new Date(deal.endDateTime).toLocaleDateString() : 'N/A'}
                     </div>
                     <div className="flex items-center gap-1.5 text-[12px] text-[#6d7894] font-medium">
                        <Package className="w-3.5 h-3.5 text-[#2156d8]" />

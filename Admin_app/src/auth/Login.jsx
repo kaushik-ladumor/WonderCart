@@ -88,32 +88,29 @@ function Login() {
           </button>
 
           {/* Modal header */}
-          <div className="px-6 pt-6 pb-0 text-center">
-            <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
-              Welcome Back
-            </span>
-            <h3 className="font-display text-2xl font-bold text-[#141b2d]">
+          <div className="px-6 pt-6 pb-2 text-center">
+            <h3 className="text-[1.3rem] font-semibold text-[#11182d] tracking-tight">
               Sign In
             </h3>
-            <p className="text-xs text-[#5c6880] mt-1 mb-5">
-              Access your curation and orders.
+            <p className="text-[0.84rem] text-[#6d7892] mt-1 mb-2">
+              Access your admin control center.
             </p>
           </div>
 
           {/* Modal body */}
-          <div className="px-6 py-4">
+          <div className="px-6 py-2">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Email Input */}
               <div>
-                <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
+                <label className="text-[0.84rem] font-semibold text-[#25324d] mb-1.5 block">
                   Email Address
                 </label>
-                <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
-                  <Mail className="w-4 h-4 text-[#5c6880]" />
+                <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+                  <Mail className="w-4.5 h-4.5 text-[#6d7892]" />
                   <input
                     type="email"
                     placeholder="name@example.com"
-                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
                     disabled={disabled}
                     {...register("email", {
                       required: "Email is required",
@@ -125,35 +122,21 @@ function Login() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.email.message}</p>
+                  <p className="text-red-500 text-[0.76rem] font-semibold mt-1.5 ml-1">{errors.email.message}</p>
                 )}
               </div>
 
               {/* Password Input */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!disabled) {
-                        document.getElementById("login_modal")?.close();
-                        navigate("/forgot-password");
-                      }
-                    }}
-                    className="text-[10px] uppercase tracking-widest font-bold text-[#004ac6] hover:underline"
-                  >
-                    Forgot?
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
-                  <Lock className="w-4 h-4 text-[#5c6880]" />
+                <label className="text-[0.84rem] font-semibold text-[#25324d] mb-1.5 block">
+                  Password
+                </label>
+                <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+                  <Lock className="w-4.5 h-4.5 text-[#6d7892]" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="bg-transparent flex-1 text-sm text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
+                    className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
                     disabled={disabled}
                     {...register("password", {
                       required: "Password is required",
@@ -162,26 +145,48 @@ function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-[#5c6880] hover:text-[#141b2d]"
+                    className="text-[#6d7892] hover:text-[#11182d] transition-colors"
                     disabled={disabled}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                   </button>
                 </div>
-                {errors.password && (
-                  <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.password.message}</p>
-                )}
+                
+                <div className="flex items-center justify-between mt-1.5 font-semibold">
+                  {errors.password ? (
+                    <p className="text-red-500 text-[0.76rem] ml-1">{errors.password.message}</p>
+                  ) : <span />}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!disabled) {
+                        document.getElementById("login_modal")?.close();
+                        navigate("/forgot-password");
+                      }
+                    }}
+                    className="text-[0.82rem] text-[#0f49d7] hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
 
               {/* Login Button */}
               <button
                 type="submit"
                 disabled={disabled}
-                className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-bold rounded-xl h-12 text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform mt-2 disabled:opacity-50 shadow-lg shadow-blue-500/10 active:scale-95"
+                className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#003da3] transition-colors mt-[4px] disabled:opacity-50"
               >
                 {disabled ? "Processing..." : "Sign In to Dashboard"}
               </button>
             </form>
+          </div>
+          <div className="px-6 pb-6 pt-2">
+            <div className="flex items-center mb-5 mt-2">
+              <div className="flex-grow h-px bg-[#e4e8f2]"></div>
+              <span className="px-4 text-[0.82rem] font-semibold text-[#6d7892]">Restricted Access</span>
+              <div className="flex-grow h-px bg-[#e4e8f2]"></div>
+            </div>
           </div>
         </div>
       </div>

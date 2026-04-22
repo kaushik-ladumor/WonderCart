@@ -37,27 +37,43 @@ const RevenueChart = ({ data = [], isLoading }) => {
     if (!data || data.length === 0) return [];
 
     if (view === 'daily') {
-      return data.slice(-14).map(item => ({
-        ...item,
-        label: new Date(item._id).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-      }));
+      return data.slice(-14).map(item => {
+        const date = new Date(item._id || item.label);
+        const isValidDate = !isNaN(date.getTime());
+        
+        return {
+          ...item,
+          label: isValidDate 
+            ? date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+            : (item.label || 'Invalid')
+        };
+      });
     }
 
     const groups = {};
     data.forEach(item => {
-      const date = new Date(item._id);
+      const date = new Date(item._id || item.label);
+      const isValidDate = !isNaN(date.getTime());
+      
       let key;
-      if (view === 'weekly') {
+      if (!isValidDate) {
+        key = item.label || 'Other';
+      } else if (view === 'weekly') {
         key = `Week ${getWeek(date)}, ${date.getFullYear()}`;
       } else {
         key = date.toLocaleString('en-IN', { month: 'short', year: 'numeric' });
       }
 
       if (!groups[key]) {
-        groups[key] = { label: key, revenue: 0, orders: 0, rawDate: date };
+        groups[key] = { 
+          label: key, 
+          revenue: 0, 
+          orders: 0, 
+          rawDate: isValidDate ? date : new Date(0) 
+        };
       }
-      groups[key].revenue += item.revenue;
-      groups[key].orders += item.orders;
+      groups[key].revenue += item.revenue || 0;
+      groups[key].orders += item.orders || 0;
     });
 
     return Object.values(groups)

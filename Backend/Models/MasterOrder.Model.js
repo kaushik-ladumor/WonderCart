@@ -58,7 +58,8 @@ const masterOrderSchema = new mongoose.Schema({
       "cancelled", 
       "return_requested", 
       "returned", 
-      "refunded"
+      "refunded",
+      "on_hold"
     ],
     default: "placed",
   },
@@ -80,6 +81,7 @@ masterOrderSchema.methods.computeStatus = async function() {
 
   const statusesByWeight = {
     "cancelled": -1,
+    "on_hold": 0,
     "placed": 1,
     "confirmed": 2,
     "processing": 3,

@@ -113,45 +113,30 @@ function App() {
       <Toaster
         position="top-right"
         reverseOrder={false}
+        gutter={10}
         toastOptions={{
-          className:
-            "bg-white text-gray-900 border border-gray-100 shadow-xl rounded-2xl px-4 py-3 min-w-[280px] font-body",
-          duration: 4000,
+          className: "font-body",
+          duration: 3000,
           style: {
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(0, 0, 0, 0.05)",
-            padding: "12px 16px",
-            color: "#1a1a1a",
-            fontFamily: "Poppins, sans-serif",
-            fontSize: "12px",
-            lineHeight: "18px",
-            fontWeight: "500",
-            borderRadius: "16px",
-            boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            background: "#ffffff",
+            color: "#11182d",
+            padding: "14px 20px",
+            borderRadius: "14px",
+            fontSize: "14px",
+            fontWeight: "600",
+            border: "1px solid #d9deeb",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.05)",
           },
           success: {
             iconTheme: {
-              primary: "#000",
+              primary: "#10b981",
               secondary: "#fff",
-            },
-            style: {
-              borderLeft: "4px solid #10b981",
             },
           },
           error: {
             iconTheme: {
               primary: "#ef4444",
               secondary: "#fff",
-            },
-            style: {
-              borderLeft: "4px solid #ef4444",
-            },
-          },
-          loading: {
-            style: {
-              borderLeft: "4px solid #3b82f6",
             },
           },
         }}

@@ -152,9 +152,9 @@ export default function Navbar() {
     const handleNotification = (notification) => {
       // Show real-time toast
       if (notification.type?.includes('ORDER')) {
-          toast.success(notification.message, { icon: '📦' });
+        toast.success(notification.message, { icon: '📦' });
       } else {
-          toast(notification.message, { icon: '🔔' });
+        toast(notification.message, { icon: '🔔' });
       }
 
       setNotifications((prev) => [
@@ -257,8 +257,8 @@ export default function Navbar() {
                     placeholder="Search for products..."
                     className="w-full bg-transparent text-[0.85rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
                   />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => {
                       setIsMobileSearchExpanded(false);
                       setGlobalSearchQuery("");
@@ -504,16 +504,15 @@ export default function Navbar() {
 
       {/* Sidebar background overlay */}
       {isMenuOpen && (
-        <div 
-          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden transition-opacity" 
-          onClick={() => setIsMenuOpen(false)} 
+        <div
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden transition-opacity"
+          onClick={() => setIsMenuOpen(false)}
         />
       )}
 
       {/* Sidebar panel */}
-      <div className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[70] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl ${
-        isMenuOpen ? "translate-x-0" : "-translate-x-full"
-      }`}>
+      <div className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[70] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}>
         <div className="flex h-full flex-col bg-white overflow-hidden">
           <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-5">
             <Link
@@ -532,34 +531,34 @@ export default function Navbar() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-6">
-              <div className="space-y-1">
-                {navLinks.map((link) =>
-                  link.external ? (
-                    <a
-                      key={link.label}
-                      href={link.to}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block rounded-2xl px-4 py-3 text-[0.88rem] font-medium text-[#25324d] hover:bg-[#eef2ff] hover:text-[#0f49d7] transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link
-                      key={link.label}
-                      to={link.to}
-                      className={`block rounded-2xl px-4 py-3 text-[0.88rem] font-medium ${isPathActive(location.pathname, link.to)
-                        ? "bg-[#eef2ff] text-[#0f49d7]"
-                        : "text-[#25324d]"
-                        }`}
-                    >
-                      {link.label}
-                    </Link>
-                  ),
-                )}
-              </div>
-
+            <div className="space-y-1">
+              {navLinks.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.label}
+                    href={link.to}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-2xl px-4 py-3 text-[0.88rem] font-medium text-[#25324d] hover:bg-[#eef2ff] hover:text-[#0f49d7] transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    className={`block rounded-2xl px-4 py-3 text-[0.88rem] font-medium ${isPathActive(location.pathname, link.to)
+                      ? "bg-[#eef2ff] text-[#0f49d7]"
+                      : "text-[#25324d]"
+                      }`}
+                  >
+                    {link.label}
+                  </Link>
+                ),
+              )}
             </div>
+
+          </div>
 
           <div className="pt-2 pb-6 px-5 mt-auto bg-white border-t border-[#f1f5fb]">
             <div className="flex flex-col gap-1 mt-4">
@@ -570,7 +569,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-3"><ShoppingBag className="w-4.5 h-4.5 text-[#6d7892]" /> Bag</div>
                 {cartCount > 0 && <span className="flex items-center justify-center bg-[#0f49d7] text-white text-[10px] min-w-[20px] h-5 rounded-full font-bold px-1.5">{cartCount}</span>}
               </Link>
-              
+
               {authUser ? (
                 <>
                   <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3.5 text-[0.88rem] font-semibold text-[#11182d] hover:bg-[#f8f9fc] transition-colors">

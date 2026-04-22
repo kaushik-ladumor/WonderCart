@@ -105,7 +105,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
   return (
     <dialog id="edit_address_modal" className="modal font-body shadow-none">
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
-        <div className="bg-white rounded-2xl w-full max-w-md mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto scrollbar-hide animate-in zoom-in-95 duration-300">
+        <div className="bg-white rounded-2xl w-full max-w-md mx-auto shadow-tonal-md relative overflow-hidden animate-in zoom-in-95 duration-300">
           
           {/* Close Button */}
           <button
@@ -121,16 +121,16 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
             <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
               SHIPPING LOGISTICS
             </span>
-            <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
+            <h3 className="font-display text-[1.1rem] font-semibold text-[#141b2d]">
               Edit Address
             </h3>
-            <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5 leading-relaxed">
+            <p className="text-[0.72rem] text-[#5c6880] mt-0.5 mb-2 leading-relaxed">
               Verifying your updated delivery coordinates.
             </p>
           </div>
 
-          <div className="px-6 py-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="px-6 py-1">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Full Name</label>
@@ -269,7 +269,7 @@ const EditAddressModal = ({ onAddressUpdated, address }) => {
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 pb-6 pt-2 border-t border-[#f0f4ff] bg-gray-50/30">
+          <div className="px-6 pb-4 pt-1 border-t border-[#f0f4ff] bg-gray-50/30">
             <div className="flex items-center gap-3 text-[#5c6880]">
               <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-[#f0f4ff]">
                 <MapPin className="w-3.5 h-3.5 text-[#004ac6]" />

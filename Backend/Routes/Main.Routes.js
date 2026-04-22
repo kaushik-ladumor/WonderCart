@@ -19,6 +19,7 @@ const topSellerRouter = require("./TopSeller.Route");
 const dealRoutes = require("./deals");
 
 const notificationRouter = require("./Notification.Route");
+const suspensionRouter = require("./Suspension.Route");
 
 // Root API test
 mainRouter.get("/", (req, res) => {
@@ -37,6 +38,7 @@ mainRouter.use("/notifications", notificationRouter);
 mainRouter.use("/seller/dashboard", dashboardRouter);
 mainRouter.use("/seller-review", sellerReviewRouter);
 mainRouter.use("/admin", adminRouter);
+mainRouter.use("/admin/suspension", suspensionRouter); // Mounted here
 mainRouter.use("/email", emailRouter);
 mainRouter.use("/chat", ChatRouter);
 mainRouter.use("/visual-search", visualSearchRouter);

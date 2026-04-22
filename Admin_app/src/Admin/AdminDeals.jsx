@@ -190,7 +190,7 @@ const AdminDeals = () => {
                                                            )}
                                                            <span className="text-[10px] text-[#94a3b8] flex items-center gap-1 font-bold">
                                                               <Clock className="w-3 h-3" />
-                                                              Exp: {new Date(deal.endDateTime).toLocaleDateString()}
+                                                               Exp: {deal.endDateTime ? new Date(deal.endDateTime).toLocaleDateString() : 'N/A'}
                                                            </span>
                                                         </div>
                                                     </div>

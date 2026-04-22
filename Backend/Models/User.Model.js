@@ -66,6 +66,33 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
 
+    // --- Suspension System Fields ---
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+    activeSuspensionCase: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SuspensionCase",
+    },
+    warningCount: {
+      type: Number,
+      default: 0,
+    },
+    warningHistory: [
+      {
+        caseId: String,
+        reason: String,
+        issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        issuedAt: { type: Date, default: Date.now },
+      },
+    ],
+    // -------------------------------
+
     addresses: [addressSchema],
   },
   { timestamps: true }

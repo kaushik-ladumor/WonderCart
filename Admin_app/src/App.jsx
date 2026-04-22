@@ -6,7 +6,10 @@ import {
   Navigate,
 } from "react-router-dom";
 import React from "react";
+import { motion } from "framer-motion";
+import { ShieldCheck } from "lucide-react";
 
+import Logo from "./components/Logo";
 import Login from "./auth/Login";
 import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from "./auth/ResetPassword";
@@ -24,6 +27,7 @@ import AdminProducts from "./Admin/AdminProducts";
 import AdminUsers from "./Admin/AdminUsers"
 import AdminProfile from "./Admin/AdminProfile"
 import AdminDeals from "./Admin/AdminDeals";
+import AdminSuspension from "./Admin/AdminSuspension"; // Import new component
 
 
 import { useEffect } from "react";
@@ -100,31 +104,24 @@ function App() {
       <Toaster
         position="top-right"
         reverseOrder={false}
+        gutter={10}
         toastOptions={{
-          className:
-            "bg-white text-gray-900 border border-gray-100 shadow-xl rounded-2xl px-4 py-3 min-w-[280px] font-body",
-          duration: 4000,
+          className: "font-body",
+          duration: 3000,
           style: {
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(0, 0, 0, 0.05)",
-            padding: "12px 16px",
-            color: "#1a1a1a",
-            fontFamily: "Poppins, sans-serif",
-            fontSize: "12px",
-            lineHeight: "18px",
-            fontWeight: "500",
-            borderRadius: "16px",
-            boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            background: "#ffffff",
+            color: "#11182d",
+            padding: "14px 20px",
+            borderRadius: "14px",
+            fontSize: "14px",
+            fontWeight: "600",
+            border: "1px solid #d9deeb",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.05)",
           },
           success: {
             iconTheme: {
-              primary: "#000",
+              primary: "#10b981",
               secondary: "#fff",
-            },
-            style: {
-              borderLeft: "4px solid #10b981",
             },
           },
           error: {
@@ -132,28 +129,49 @@ function App() {
               primary: "#ef4444",
               secondary: "#fff",
             },
-            style: {
-              borderLeft: "4px solid #ef4444",
-            },
-          },
-          loading: {
-            style: {
-              borderLeft: "4px solid #3b82f6",
-            },
           },
         }}
       />
 
       <Routes>
         <Route path="/" element={
-          <div className="h-screen bg-gray-50 flex flex-col items-center justify-center space-y-4">
-            <h1 className="text-3xl font-bold text-gray-900">WonderCart Admin Portal</h1>
-            <button 
-              onClick={() => document.getElementById('login_modal')?.showModal()}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-            >
-              Sign In to Continue
-            </button>
+          <div className="min-h-screen bg-[#f1f4f9] flex flex-col items-center justify-center px-4 font-body">
+            <div className="w-full max-w-sm">
+              <div className="bg-white rounded-[24px] p-8 shadow-[0_10px_25px_rgba(0,0,0,0.03)] border border-[#e4e8f2] flex flex-col items-center text-center">
+                
+                {/* Brand Header */}
+                <div className="mb-8">
+                  <Logo />
+                </div>
+
+                {/* Typography matching Login Page */}
+                <div className="space-y-2 mb-8">
+                  <h1 className="text-[1.3rem] font-semibold text-[#11182d] tracking-tight">
+                    Admin Portal
+                  </h1>
+                  <p className="text-[0.84rem] text-[#6d7892] leading-relaxed">
+                    Secure gateway for administrative management. Please authorize to proceed.
+                  </p>
+                </div>
+
+                {/* Single Login Button matching Login Page style */}
+                <div className="w-full">
+                  <button 
+                    onClick={() => document.getElementById('login_modal')?.showModal()}
+                    className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#003da3]"
+                  >
+                    Authorize Access
+                  </button>
+                </div>
+
+                {/* Footer Subtle Text */}
+                <div className="mt-8 pt-6 border-t border-[#e4e8f2] w-full">
+                  <p className="text-[0.7rem] uppercase tracking-[0.15em] font-bold text-[#6d7892]/50">
+                    Restricted Access Control
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         } />
         {/* ================= AUTH ROUTES ================= */}
@@ -186,12 +204,13 @@ function App() {
           <Route path="wallet" element={<AdminWallet />} />
           <Route path="payouts" element={<SellerPayouts />} />
           <Route path="refunds" element={<AdminRefunds />} />
+          <Route path="suspension" element={<AdminSuspension />} />
         </Route>
-          
-          <Route path="/update-password" element={<UpdatePassword />} />
-          <Route path="/loader" element={<Loader />} />
-          {/* Page Not Found */}
-          <Route path="*" element={<PageNotFound />} />
+
+        <Route path="/update-password" element={<UpdatePassword />} />
+        <Route path="/loader" element={<Loader />} />
+        {/* Page Not Found */}
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
 
       {/* Global Login Modal - accessible from any page */}

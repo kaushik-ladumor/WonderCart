@@ -176,73 +176,178 @@ const Deals = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="h-[250px] w-full flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-[#eef2ff]">
-                        <TicketPercent className="w-10 h-10 text-gray-200 mb-3" />
-                        <h4 className="font-semibold text-gray-300 uppercase tracking-tighter">No Active Deals Found</h4>
+                    <div className="py-32 text-center">
+                        <h4 className="text-[1.2rem] font-semibold text-[#11182d] uppercase tracking-tight">
+                            No Active Deals Found
+                        </h4>
                     </div>
                 )}
             </div>
 
-            {/* DYNAMIC CATEGORY SELECTOR */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="flex items-center justify-start md:justify-center gap-5 md:gap-10 overflow-x-auto scrollbar-hide pb-4 pt-1">
-                    {/* Always show "All" */}
-                    {[ 'All', ...availableCategories ].map((catId) => {
-                        const Icon = CATEGORY_ICONS[catId] || Sparkles;
-                        const isActive = activeCategory === catId;
-                        return (
-                            <button
-                                key={catId}
-                                onClick={() => setActiveCategory(catId)}
-                                className="flex flex-col items-center gap-3 flex-shrink-0"
-                            >
-                                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-sm ${isActive
-                                        ? 'bg-[#0f49d7] text-white'
-                                        : 'bg-white text-[#11182d] border border-[#eef2ff]'
-                                    }`}>
-                                    <Icon className="w-5 h-5 md:w-6 md:h-6" />
-                                </div>
-                                <span className={`text-[10px] md:text-[0.78rem] font-semibold tracking-tight ${isActive ? 'text-[#0f49d7]' : 'text-[#5c6880]'
-                                    }`}>
-                                    {catId}
-                                </span>
-                            </button>
-                        );
-                    })}
+            {/* DYNAMIC CATEGORY SELECTOR - ONLY SHOW IF DEALS EXIST */}
+            {deals && deals.length > 0 && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="flex items-center justify-start md:justify-center gap-5 md:gap-10 overflow-x-auto scrollbar-hide pb-4 pt-1">
+                        {/* Always show "All" */}
+                        {[ 'All', ...availableCategories ].map((catId) => {
+                            const Icon = CATEGORY_ICONS[catId] || Sparkles;
+                            const isActive = activeCategory === catId;
+                            return (
+                                <button
+                                    key={catId}
+                                    onClick={() => setActiveCategory(catId)}
+                                    className="flex flex-col items-center gap-3 flex-shrink-0"
+                                >
+                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-sm ${isActive
+                                            ? 'bg-[#0f49d7] text-white'
+                                            : 'bg-white text-[#11182d] border border-[#eef2ff]'
+                                        }`}>
+                                        <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                                    </div>
+                                    <span className={`text-[10px] md:text-[0.78rem] font-semibold tracking-tight ${isActive ? 'text-[#0f49d7]' : 'text-[#5c6880]'
+                                        }`}>
+                                        {catId}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* CURATED PICKS SECTION */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 className="text-[0.9rem] font-semibold text-[#11182d] tracking-tight">Curated Picks</h3>
-                        <p className="text-[0.7rem] text-[#5c6880]">Handpicked and curated by experts.</p>
+            {/* CURATED PICKS SECTION - ONLY SHOW IF DEALS EXIST */}
+            {deals && deals.length > 0 && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-[0.9rem] font-semibold text-[#11182d] tracking-tight">Curated Picks</h3>
+                            <p className="text-[0.7rem] text-[#5c6880]">Handpicked and curated by experts.</p>
+                        </div>
+                        <Link to="/shop" className="text-[0.7rem] font-semibold text-[#0f49d7] flex items-center gap-1">
+                            View all <ChevronRight className="w-4 h-4" />
+                        </Link>
                     </div>
-                    <Link to="/shop" className="text-[0.7rem] font-semibold text-[#0f49d7] flex items-center gap-1">
-                        View all <ChevronRight className="w-4 h-4" />
-                    </Link>
+
+                    {loading && filteredDeals.length === 0 ? (
+                        <Loader />
+                    ) : filteredDeals.length === 0 ? (
+                        <div className="text-center py-20 bg-white rounded-[24px] border border-[#eef2ff]">
+                            <Zap className="w-8 h-8 text-gray-200 mx-auto mb-4" />
+                            <h4 className="text-[0.8rem] font-semibold text-gray-400 uppercase">No active deals in {activeCategory}</h4>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {filteredDeals.map((deal) => {
+                                const product = deal.productIds?.[0] || {};
+                                const productName = deal.title || product.name || "Special Campaign";
+                                const productImage = product.variants?.[0]?.images?.[0] || product.image || 'https://via.placeholder.com/300';
+                                const originalPrice = product.price || 0;
+                                
+                                const discountPrice = deal.discountType === 'percent' 
+                                    ? originalPrice * (1 - deal.discountValue / 100)
+                                    : Math.max(0, originalPrice - deal.discountValue);
+                                
+                                const isAdding = addingToCart === deal._id;
+                                const isExpired = new Date(deal.endDateTime) < new Date();
+
+                                return (
+                                    <div
+                                        key={deal._id}
+                                        className={`rounded-[18px] border border-[#e1e5f1] bg-white p-3.5 transition-all ${
+                                            isExpired ? "opacity-60" : "hover:border-[#cbd5e1]"
+                                        }`}
+                                    >
+                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-[130px_minmax(0,1fr)]">
+                                            <Link
+                                                to={`/product-detail/${product._id}`}
+                                                className="flex h-28 items-center justify-center overflow-hidden rounded-[14px] bg-[#f1f4fb] hover:opacity-90 transition-opacity"
+                                            >
+                                                {productImage ? (
+                                                    <img
+                                                        src={productImage}
+                                                        alt={productName}
+                                                        className="h-full w-full object-contain p-2 mix-blend-multiply"
+                                                    />
+                                                ) : (
+                                                    <ShoppingBag className="h-8 w-8 text-[#8fa0be]" />
+                                                )}
+                                            </Link>
+
+                                            <div className="flex min-h-full flex-col justify-between">
+                                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-[9px] font-black text-[#0f49d7] uppercase tracking-[0.2em]">
+                                                                {deal.dealType || "Exclusive"}
+                                                            </span>
+                                                            <div className="h-1 w-1 rounded-full bg-[#cbd5e1]"></div>
+                                                            <span className="text-[9px] font-bold text-[#64748b] uppercase tracking-widest">
+                                                                {deal.category || "General"}
+                                                            </span>
+                                                        </div>
+                                                        <Link
+                                                            to={`/product-detail/${product._id}`}
+                                                            className="text-[0.88rem] font-semibold text-[#11182d] hover:text-[#0f49d7] transition-colors line-clamp-1"
+                                                        >
+                                                            {productName}
+                                                        </Link>
+                                                        <div className="mt-1 flex items-center gap-2">
+                                                            <div className="bg-[#0f49d7]/5 text-[#0f49d7] text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#0f49d7]/10">
+                                                                {deal.discountType === 'percent' ? `${deal.discountValue}% OFF` : `Rs ${deal.discountValue} OFF`}
+                                                            </div>
+                                                            <span className="text-[0.7rem] text-[#94a3b8]">•</span>
+                                                            {!isExpired && (
+                                                                <div className="flex items-center gap-1.5 text-[#ef4444]">
+                                                                    <Clock className="w-3 h-3" />
+                                                                    <DealTimer endTime={deal.endDateTime} size="small" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="text-left sm:text-right">
+                                                        <p className="text-[0.95rem] font-bold text-[#11182d]">
+                                                            {formatINR(discountPrice)}
+                                                        </p>
+                                                        {originalPrice > discountPrice && (
+                                                            <p className="mt-0.5 text-[0.76rem] text-[#94a3b8] line-through font-medium">
+                                                                {formatINR(originalPrice)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-[#f1f5f9]">
+                                                    <button
+                                                        onClick={() => handleAddToCart(deal)}
+                                                        disabled={isExpired || isAdding}
+                                                        className="flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-widest text-[#0f49d7] hover:opacity-80 disabled:opacity-30 transition-all w-fit"
+                                                    >
+                                                        {isAdding ? (
+                                                            <Loader className="w-4 h-4" />
+                                                        ) : (
+                                                            <Zap className="w-3.5 h-3.5" />
+                                                        )}
+                                                        {isExpired ? "Expired" : "Claim Deal Now"}
+                                                    </button>
+                                                    
+                                                    <Link
+                                                        to={`/product-detail/${product._id}`}
+                                                        className="flex items-center gap-1 text-[0.72rem] font-bold uppercase tracking-widest text-[#64748b] hover:text-[#11182d] transition-all"
+                                                    >
+                                                        Details
+                                                        <ChevronRight className="w-3.5 h-3.5" />
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
-
-                {loading && filteredDeals.length === 0 ? (
-                    <Loader />
-                ) : filteredDeals.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-[24px] border border-[#eef2ff]">
-                        <Zap className="w-8 h-8 text-gray-200 mx-auto mb-4" />
-                        <h4 className="text-[0.8rem] font-semibold text-gray-400 uppercase">No active deals in {activeCategory}</h4>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {filteredDeals.map(deal => (
-                            <DealCard 
-                                key={deal._id} 
-                                deal={deal} 
-                                onAddToCart={() => handleAddToCart(deal)} 
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+            )}
         </div>
     );
 };

@@ -14,7 +14,6 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    // 🚨 Guard against bad tokens
     if (!token || token === "null" || token === "undefined") {
       return res.status(401).json({
         success: false,
@@ -24,16 +23,34 @@ const authMiddleware = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    let email = decoded.email;
-    if (!email && decoded.userId) {
-      const user = await User.findById(decoded.userId).select("email");
-      if (user) email = user.email;
+    const user = await User.findById(decoded.userId).select("role isSuspended isBanned email");
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User account no longer exists",
+      });
+    }
+
+    // 🔒 Trust & Safety Protection
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: "This account has been permanently terminated due to policy violations.",
+      });
+    }
+
+    if (user.isSuspended && user.role === "seller" && !req.path.includes("/appeal")) {
+      return res.status(403).json({
+        success: false,
+        message: "Access blocked. Your seller account is currently suspended for review.",
+      });
     }
 
     req.user = {
       userId: decoded.userId,
-      email,
-      role: decoded.role,
+      email: user.email,
+      role: user.role,
     };
 
     next();

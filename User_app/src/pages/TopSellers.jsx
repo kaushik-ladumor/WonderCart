@@ -71,9 +71,6 @@ const TopSellers = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div>
-            <span className="text-[10px] font-semibold text-[#0f49d7] uppercase tracking-[0.16em] block mb-3">
-              Premium Marketplace
-            </span>
             <h1 className="text-[1.5rem] sm:text-[1.8rem] font-semibold tracking-tight text-[#11182d] mb-2">
               Top Sellers
             </h1>
@@ -159,21 +156,6 @@ const TopSellers = () => {
               </>
             )}
 
-            {/* INFO BANNER */}
-            <div className="bg-[#eef2ff] rounded-[18px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-4">
-                <div className="bg-white p-2.5 rounded-full text-[#11182d] shadow-sm shrink-0 mt-1 sm:mt-0">
-                  <Clock className="w-4.5 h-4.5" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-[#11182d] text-[0.88rem]">Recalculated Hourly</h4>
-                  <p className="text-[#5d6a84] text-[0.74rem] font-medium uppercase tracking-tight mt-1 leading-relaxed">Rankings are determined by sales volume, user ratings, and stock availability.</p>
-                </div>
-              </div>
-              <button className="bg-white px-4 py-2 rounded-lg text-[0.74rem] font-semibold text-[#11182d] shadow-sm whitespace-nowrap self-start sm:self-auto shrink-0 transition-colors hover:bg-gray-50 border border-white">
-                Learn Methodology
-              </button>
-            </div>
           </div>
 
           {/* SIDEBAR */}

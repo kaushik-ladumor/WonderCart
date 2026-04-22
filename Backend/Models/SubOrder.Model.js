@@ -51,7 +51,8 @@ const subOrderSchema = new mongoose.Schema({
       "cancelled", 
       "return_requested", 
       "returned", 
-      "refunded"
+      "refunded",
+      "on_hold"
     ],
     default: "placed",
   },

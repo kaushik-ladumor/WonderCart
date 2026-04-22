@@ -89,31 +89,12 @@ function Footer() {
           ))}
         </div>
 
-        {/* Feature Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-[#eef2ff]">
-          {[
-            { icon: Globe, text: "Global Shipping" },
-            { icon: Truck, text: "Fast Delivery" },
-            { icon: RefreshCcw, text: "Easy Returns" },
-            { icon: Star, text: "Top Rated" }
-          ].map((item, i) => (
-            <div key={i} className="flex items-center justify-center gap-2 py-1">
-              <item.icon className="w-3.5 h-3.5 text-[#0f49d7]" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#11182d]">{item.text}</span>
-            </div>
-          ))}
-        </div>
 
         {/* Legal & Copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#eef2ff]">
-          <p className="text-[9px] text-[#8693a8] font-semibold uppercase tracking-[0.15em] text-center sm:text-left">
+        <div className="flex items-center justify-center pt-4 border-t border-[#eef2ff]">
+          <p className="text-[9px] text-[#8693a8] font-semibold uppercase tracking-[0.15em] text-center">
             © {currentYear} WonderCart. All Rights Reserved.
           </p>
-
-          <div className="flex items-center gap-2 p-1.5 px-3 bg-white rounded-full border border-[#eef2ff] shadow-sm">
-             <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></div>
-             <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#11182d]">Systems Operational</span>
-          </div>
         </div>
       </div>
     </footer>

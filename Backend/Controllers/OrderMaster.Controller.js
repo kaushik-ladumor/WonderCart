@@ -685,6 +685,34 @@ const getAdminDashboardStats = async (req, res) => {
       },
     ]);
 
+    // Payout Summary
+    const payoutStats = await SubOrder.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalHeld: {
+            $sum: {
+              $cond: [
+                { $and: [{ $ne: ["$status", "delivered"] }, { $ne: ["$payoutStatus", "released"] }, { $ne: ["$status", "cancelled"] }] },
+                "$sellerPayout",
+                0
+              ]
+            }
+          },
+          totalReleased: {
+            $sum: {
+              $cond: [{ $eq: ["$payoutStatus", "released"] }, "$sellerPayout", 0]
+            }
+          },
+          pendingRefunds: {
+            $sum: {
+              $cond: [{ $and: [{ $eq: ["$status", "cancelled"] }, { $ne: ["$paymentStatus", "refunded"] }] }, 1, 0]
+            }
+          }
+        }
+      }
+    ]);
+
     res.status(200).json({
       success: true,
       stats: {
@@ -694,6 +722,9 @@ const getAdminDashboardStats = async (req, res) => {
         totalProducts,
         totalSales: revenueData[0]?.totalSales || 0,
         totalCommission: commissionData[0]?.totalCommission || 0,
+        totalHeld: payoutStats[0]?.totalHeld || 0,
+        totalReleased: payoutStats[0]?.totalReleased || 0,
+        pendingRefunds: payoutStats[0]?.pendingRefunds || 0,
         salesTrend,
         statusDistribution: statusDistribution.reduce((acc, curr) => {
           acc[curr._id] = curr.count;

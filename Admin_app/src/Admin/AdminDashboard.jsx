@@ -190,256 +190,238 @@ function AdminDashboard() {
   if (loading) return <Loader />;
 
   // ================= UI =================
+  const RUPEE = '\u20B9';
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 py-5">
-        {/* Header - FAQ style */}
-        <div className="mb-8 text-center">
-          <div className="flex justify-center mb-3">
-            <Activity className="w-8 h-8 text-black" />
+    <div className="mx-auto max-w-[1180px] space-y-6 pb-8 font-poppins bg-[#f8f9fc] min-h-screen px-4 py-6">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[28px] font-semibold leading-tight text-[#141b2d]">Platform Dashboard</h1>
+            <span
+              className="h-2.5 w-2.5 rounded-full bg-[#15803d] animate-pulse"
+              title="Platform Live"
+            />
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Monitor your platform's performance and growth
+          <p className="mt-1 text-sm text-[#66728d]">
+            Monitor platform-wide revenue, sales trends, and vendor ecosystem growth.
           </p>
         </div>
 
-        {/* Stats Cards - FAQ style */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="inline-flex w-fit rounded-[18px] border border-[#dfe4f4] bg-white p-1">
+          {['all', '30d'].map((v) => (
+            <button
+              key={v}
+              className={`rounded-[14px] px-4 py-2 text-sm font-medium transition ${v === 'all'
+                  ? 'bg-[#edf2ff] text-[#0f49d7]'
+                  : 'text-[#68758f] hover:text-[#141b2d]'
+                }`}
+            >
+              {v.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* KPI Cards Section */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Platform GMV', value: `₹${stats.totalSales?.toLocaleString()}`, subLabel: 'Total Gross Value', color: 'text-[#141b2d]', iconWrap: 'bg-[#dfe7ff] text-[#0f49d7]', Icon: TrendingUp },
+          { label: 'Platform Earnings', value: `₹${stats.totalCommission?.toLocaleString()}`, subLabel: 'Net Commission', color: 'text-[#15803d]', iconWrap: 'bg-[#dff6e4] text-[#15803d]', Icon: DollarSign },
+          { label: 'Total Orders', value: stats.totalOrders?.toString(), subLabel: 'Fulfilled orders', color: 'text-[#141b2d]', iconWrap: 'bg-[#dfe4f0] text-[#56627d]', Icon: ShoppingBag },
+          { label: 'Active Sellers', value: stats.totalSellers?.toString(), subLabel: 'Onboarded merchants', color: 'text-[#0f49d7]', iconWrap: 'bg-[#e8eeff] text-[#0f49d7]', Icon: Users },
+        ].map((card, i) => (
+          <div key={i} className="rounded-[22px] border border-[#e7ebf5] bg-white p-5 shadow-[0_10px_24px_rgba(18,36,84,0.05)] transition-all hover:shadow-lg">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-gray-500 mb-1">Total Sales (GMV)</p>
-                <p className="text-xl font-bold text-gray-900">₹{stats.totalSales?.toLocaleString()}</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#6d7892] mb-1">{card.label}</p>
+                <h3 className={`text-[1.6rem] font-bold ${card.color}`}>{card.value}</h3>
               </div>
-              <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-emerald-600" />
+              <div className={`h-11 w-11 rounded-[16px] flex items-center justify-center ${card.iconWrap}`}>
+                <card.Icon className="h-5 w-5" />
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center ">
-               <p className="text-[10px] text-gray-500 uppercase font-bold">Platform Earnings</p>
-               <span className="text-xs font-bold text-emerald-600">₹{stats.totalCommission?.toLocaleString()}</span>
+            <div className="mt-4 pt-4 border-t border-[#f1f4f9] flex items-center justify-between">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{card.subLabel}</span>
+              {i === 1 && <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Secure Settlement</span>}
             </div>
           </div>
+        ))}
+      </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="flex items-start justify-between">
+      {/* Main Charts Grid */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <div className="h-full rounded-[24px] border border-[#e7ebf5] bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 mb-1">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+                <h2 className="text-[18px] font-bold text-[#141b2d]">Daily Platform Sales</h2>
+                <p className="text-xs text-[#66728d] mt-1">Platform gross merchandise value trend over time.</p>
               </div>
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                <ShoppingBag className="w-4 h-4 text-blue-600" />
+              <div className="h-10 w-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center ">
-               <p className="text-[10px] text-gray-500 uppercase font-bold">Fulfilled orders</p>
-               <span className="text-xs font-bold text-blue-600">{stats.statusDistribution?.delivered || 0}</span>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={stats.salesTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f4f9" vertical={false} />
+                  <XAxis dataKey="_id" stroke="#94a3b8" fontSize={11} axisLine={false} tickLine={false} hide />
+                  <YAxis stroke="#94a3b8" fontSize={11} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)", fontSize: '12px' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#0f49d7"
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: "#0f49d7", strokeWidth: 2, stroke: "#fff" }}
+                    activeDot={{ r: 6, fill: "#0f49d7" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-
-        {/* Money Flow Diagram - Strategy 1 Visualization */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-blue-600" />
-              <h2 className="text-base font-bold text-gray-900">
-                Live Money Flow (Razorpay Split Engine)
-              </h2>
+        </div>
+        <div className="lg:col-span-4">
+          <div className="h-full rounded-[24px] border border-[#e7ebf5] bg-white p-6 shadow-sm">
+            <div className="mb-2">
+              <h2 className="text-[18px] font-bold text-[#141b2d]">Order Distribution</h2>
+              <p className="text-xs text-[#66728d] mt-1">Breakdown by current order status.</p>
             </div>
-            <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold uppercase">Strategy 1: Independent Payouts</span>
+            <div className="h-[320px] w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={rolePieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={95}
+                    paddingAngle={6}
+                    label={false}
+                  >
+                    {rolePieData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                        stroke="none"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    formatter={(value) => <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="p-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative">
-              {/* Step 1: Customer */}
-              <div className="flex flex-col items-center z-10">
-                <div className="w-16 h-16 bg-gray-50 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2">
-                  <Users className="w-8 h-8 text-gray-400" />
-                </div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase">Customer Pay</p>
-                <p className="text-sm font-bold text-gray-900">₹{stats.totalSales?.toLocaleString()}</p>
-              </div>
+        </div>
+      </div>
 
-              {/* Arrow 1 */}
-              <div className="hidden md:block flex-1 h-0.5 bg-gray-200 relative">
-                <div className="absolute right-0 -top-1 w-2 h-2 border-t-2 border-r-2 border-gray-300 transform rotate-45"></div>
-              </div>
+      {/* Razorpay Split Engine Visualization */}
+      <div className="rounded-[24px] border border-[#e7ebf5] bg-white p-6 shadow-sm overflow-x-auto scrollbar-hide">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-[18px] font-bold text-[#141b2d]">Live Money Flow Engine</h2>
+            <p className="text-xs text-[#66728d] mt-1">Automated Razorpay Split for independent vendor settlements.</p>
+          </div>
+          <div className="h-10 w-fit px-4 bg-gray-900 rounded-xl flex items-center justify-center gap-2">
+            <Activity className="w-4 h-4 text-emerald-400" />
+            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Active Engine</span>
+          </div>
+        </div>
 
-              {/* Step 2: Platform Admin (Splitter) */}
-              <div className="flex flex-col items-center z-10">
-                <div className="w-20 h-20 bg-black rounded-3xl flex items-center justify-center mb-2 shadow-xl shrink-0">
+        <div className="p-4 sm:p-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative">
+            <div className="flex flex-col items-center z-10">
+              <div className="w-16 h-16 bg-[#f8f9fc] border-2 border-dashed border-[#d1d5e0] rounded-[22px] flex items-center justify-center mb-3">
+                <Users className="w-8 h-8 text-[#94a3b8]" />
+              </div>
+              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest">Customer Payment</p>
+              <p className="text-[1.2rem] font-bold text-[#141b2d]">₹{stats.totalSales?.toLocaleString()}</p>
+            </div>
+
+            <div className="hidden md:block flex-1 h-[2px] bg-[#eef2ff] relative">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f49d7] animate-ping"></div>
+            </div>
+
+            <div className="flex flex-col items-center z-10">
+              <div className="group relative">
+                <div className="absolute inset-0 bg-[#0f49d7] blur-xl opacity-20 transition group-hover:opacity-40"></div>
+                <div className="w-24 h-24 bg-[#0f172a] rounded-[32px] flex items-center justify-center mb-3 relative shadow-2xl">
                   <Activity className="w-10 h-10 text-white animate-pulse" />
                 </div>
-                <p className="text-[10px] font-bold text-black uppercase">WonderCart Split</p>
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-bold text-emerald-600">Admin: ₹{stats.totalCommission?.toLocaleString()}</span>
-                </div>
               </div>
+              <p className="text-[10px] font-bold text-[#141b2d] uppercase tracking-[0.2em]">WonderCart Split</p>
+              <p className="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full mt-1">₹{stats.totalCommission?.toLocaleString()}</p>
+            </div>
 
-              {/* Arrow 2-3 Split */}
-              <div className="hidden md:block flex-1 h-0.5 bg-gray-200 relative">
-                 <div className="absolute right-0 -top-1 w-2 h-2 border-t-2 border-r-2 border-gray-300 transform rotate-45"></div>
-              </div>
+            <div className="hidden md:block flex-1 h-[2px] bg-[#eef2ff] relative">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f49d7] animate-ping delay-100"></div>
+            </div>
 
-              {/* Step 3: Vendors (Sub-Orders) */}
-              <div className="flex flex-col items-center z-10">
-                <div className="flex -space-x-4 mb-2">
-                   {[1, 2, 3].map(i => (
-                     <div key={i} className="w-12 h-12 bg-white border border-gray-200 rounded-2xl flex items-center justify-center shadow-sm">
-                       <DollarSign className="w-6 h-6 text-blue-600" />
-                     </div>
-                   ))}
-                </div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase">Vendor Payouts</p>
-                <p className="text-sm font-bold text-gray-900">₹{(stats.totalSales - stats.totalCommission)?.toLocaleString()}</p>
-              </div>
-            </div>
-            
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase">Released</span>
-                </div>
-                <p className="text-lg font-bold text-emerald-900">₹{(stats.totalSales * 0.4).toLocaleString()}</p>
-              </div>
-              <div className="bg-amber-50 rounded-xl p-3 border border-amber-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                  <span className="text-[10px] font-bold text-amber-700 uppercase">On Hold</span>
-                </div>
-                <p className="text-lg font-bold text-amber-900">₹{(stats.totalSales * 0.5).toLocaleString()}</p>
-              </div>
-              <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span className="text-[10px] font-bold text-blue-700 uppercase">Settling T+1</span>
-                </div>
-                <p className="text-lg font-bold text-blue-900">₹{(stats.totalSales * 0.1).toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Daily Sales Trend Line Chart */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Daily Platform Sales (GMV)
-                </h2>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={stats.salesTrend}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="_id" stroke="#6b7280" hide />
-                    <YAxis stroke="#6b7280" />
-                    <Tooltip 
-                       contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="amount"
-                      stroke="#000000"
-                      strokeWidth={3}
-                      dot={{ r: 4, fill: "#000000", strokeWidth: 2, stroke: "#fff" }}
-                      activeDot={{ r: 6, fill: "#000000" }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Status Distribution Pie Chart */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <PieChartIcon className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Global Order Distribution
-                </h2>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={rolePieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      label
-                    >
-                      {rolePieData.map((entry, index) => (
-                        <Cell
-                           key={`cell-${index}`}
-                           fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend iconType="circle" wrapperStyle={{ paddingTop: "20px" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Metrics Section */}
-         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gray-900 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                  <Activity className="w-16 h-16" />
-               </div>
-               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Sellers</p>
-               <h3 className="text-2xl font-bold">{stats.totalSellers || 0}</h3>
-               <div className="mt-4 flex items-center gap-2">
-                  <span className="text-[10px] font-bold bg-white/10 px-2 py-1 rounded-md">Settlement Account</span>
-               </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm group hover:border-gray-300 transition-colors">
-               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Platform Reserve</p>
-               <h3 className="text-2xl font-bold text-gray-900">₹{(stats.totalCommission * 0.8).toLocaleString()}</h3>
-               <div className="mt-4 flex items-center gap-2">
-                  <TrendingUp className="w-3 h-3 text-emerald-500" />
-                  <span className="text-[10px] font-bold text-emerald-600">Stable balance</span>
-               </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm group hover:border-gray-300 transition-colors">
-               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Refunds</p>
-               <h3 className="text-2xl font-bold text-gray-900">3</h3>
-               <div className="mt-4 flex items-center gap-2">
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                  <span className="text-[10px] font-bold text-red-600">Action Required</span>
-               </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm group hover:border-gray-300 transition-colors">
-               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">SLA Health</p>
-               <h3 className="text-2xl font-bold text-gray-900">98.4%</h3>
-               <div className="mt-4 flex items-center gap-2">
-                  <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-                     <div className="h-full bg-blue-600 rounded-full w-[98.4%]"></div>
+            <div className="flex flex-col items-center z-10">
+              <div className="flex -space-x-4 mb-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-14 h-14 bg-white border border-[#e4e8f5] rounded-[22px] flex items-center justify-center shadow-lg transform hover:-translate-y-1 transition-transform">
+                    <DollarSign className="w-6 h-6 text-[#0f49d7]" />
                   </div>
-               </div>
+                ))}
+              </div>
+              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest">Vendor Share</p>
+              <p className="text-[1.2rem] font-bold text-[#141b2d]">₹{(stats.totalSales - stats.totalCommission)?.toLocaleString()}</p>
             </div>
-         </div>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {[
+              { label: 'Settled to Vendors', value: stats.totalReleased?.toLocaleString(), color: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' },
+              { label: 'Funds On Hold (Held)', value: stats.totalHeld?.toLocaleString(), color: 'bg-indigo-50 text-indigo-700 border-indigo-100', dot: 'bg-indigo-500' },
+            ].map((item, i) => (
+              <div key={i} className={`rounded-[20px] p-5 border-2 ${item.color} transition-transform hover:scale-[1.02]`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${item.dot} animate-pulse`}></div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider opacity-80">{item.label}</span>
+                </div>
+                <p className="text-2xl font-bold">₹{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* User Growth & Platform Health */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Users', value: stats.totalUsers || 0, sub: `${todayUsers} today`, Icon: Users, color: 'text-indigo-600' },
+          { label: 'Platform Reserve', value: `₹${(stats.totalCommission * 0.8).toLocaleString()}`, sub: 'Net surplus', Icon: Activity, color: 'text-emerald-600' },
+          { label: 'Pending Refunds', value: stats.pendingRefunds || 0, sub: 'Needs attention', Icon: TrendingDown, color: 'text-red-500' },
+          { label: 'Live Products', value: stats.totalProducts || 0, sub: `${todayProducts} new today`, Icon: Package, color: 'text-blue-600' }
+        ].map((met, i) => (
+          <div key={i} className="rounded-[22px] border border-[#e7ebf5] bg-white p-5 shadow-sm hover:border-[#dfe4f4] transition-colors">
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center ${met.color}`}>
+                <met.Icon className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{met.label}</p>
+            </div>
+            <h4 className="text-[1.5rem] font-bold text-[#1a2238]">{met.value}</h4>
+            <p className="mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{met.sub}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
-}
+};
 
 export default AdminDashboard;

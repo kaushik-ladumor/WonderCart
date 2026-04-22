@@ -250,8 +250,9 @@ exports.getDashboardStats = async (req, res) => {
 
     const revenueChart = result.chartData.map(c => {
       let label = c._id;
-      if(period === '30d') label = `W${label.split('-')[1]}`;
+      if (period === '30d') label = `W${label.split('-')[1]}`;
       return {
+        _id: c._id,
         label,
         revenue: c.revenue,
         orders: c.orders

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthProvider";
 import { useSocket } from "../../context/SocketProvider";
 import { API_URL } from "../../utils/constants";
+import axios from "axios";
 import {
   LayoutDashboard,
   Package,
@@ -51,7 +52,9 @@ const AdminNavbar = () => {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    if (authUser) {
+      fetchNotifications();
+    }
   }, [authUser]);
 
   useEffect(() => {
@@ -72,43 +75,48 @@ const AdminNavbar = () => {
   }, [socket, authUser]);
 
   const fetchNotifications = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.success) {
-        setNotifications(data.data.map((n) => ({
+      const res = await axios.get(`${API_URL}/notifications`);
+      if (res.data.success) {
+        setNotifications(res.data.data.map((n) => ({
           _id: n._id,
           message: n.message,
           time: new Date(n.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           read: n.isRead,
         })));
       }
-    } catch (error) { console.error(error); }
+    } catch (error) {
+      console.error("Notifications fetch error:", error);
+    }
   };
 
   const handleMarkAsRead = async (id) => {
-    const token = localStorage.getItem("token");
+    // Optimistic Update
+    setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+
     try {
-      await fetch(`${API_URL}/notifications/${id}/read`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
-    } catch (err) { console.error(err); }
+      await axios.patch(`${API_URL}/notifications/${id}/read`);
+    } catch (err) {
+      console.error("Mark as read error:", err);
+      // Revert if needed (optional for simple read/unread)
+    }
   };
 
   const handleClearAll = async () => {
-    const token = localStorage.getItem("token");
+    const originalNotifications = [...notifications];
+
+    // Optimistic Update
+    setNotifications([]);
+    toast.success("Notifications cleared");
+
     try {
-      await fetch(`${API_URL}/notifications/clear`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotifications([]);
-      toast.success("Notifications cleared");
-    } catch (err) { console.error(err); }
+      await axios.delete(`${API_URL}/notifications/clear`);
+    } catch (err) {
+      console.error("Clear all error:", err);
+      // Revert on error
+      setNotifications(originalNotifications);
+      toast.error("Failed to clear notifications");
+    }
   };
 
   const navItems = [
@@ -120,161 +128,245 @@ const AdminNavbar = () => {
     { path: "/admin/wallet", label: "Treasury", icon: Wallet },
     { path: "/admin/payouts", label: "Settlements", icon: CreditCard },
     { path: "/admin/refunds", label: "Disputes", icon: RotateCcw },
+    { path: "/admin/suspension", label: "Suspensions", icon: ShieldCheck },
     { path: "/admin/deals", label: "Deals", icon: Percent },
   ];
 
   const adminName = authUser?.name || "System Admin";
-  const adminInitial = adminName.charAt(0).toUpperCase();
 
-  const SidebarContent = () => (
-    <>
-      <div className="flex items-center gap-3 px-2 mb-10">
-        <div className="bg-[#0f172a] p-2 rounded-xl">
-           <ShieldCheck className="w-6 h-6 text-white" />
-        </div>
-        <div>
-           <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.2em] leading-none mb-1">Governance</p>
-           <h2 className="text-lg font-bold text-[#0f172a] leading-none">WonderCart</h2>
-        </div>
-        <button className="lg:hidden ml-auto p-2 text-gray-400" onClick={() => setIsMenuOpen(false)}>
-           <X className="w-6 h-6" />
+  const SidebarContent = ({ closeMenu }) => (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Sidebar Header */}
+      <div className="flex items-center gap-3 px-2 py-1 mb-6">
+        <Link
+          to="/admin/dashboard"
+          onClick={closeMenu}
+          className="flex items-center gap-3"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#0f172a] shrink-0">
+            <ShieldCheck className="h-[18px] w-[18px] text-white" />
+          </div>
+          <div>
+            <p className="text-[16px] font-semibold leading-none text-[#1a2238]">
+              WonderCart
+            </p>
+            <p className="text-[18px] font-semibold leading-none text-[#2563eb]">
+              Admin
+            </p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#99a3ba] mb-4">
+          Management
+        </p>
+        <nav className="space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={closeMenu}
+                className={`relative flex items-center justify-between rounded-[20px] px-4 py-3 transition-all ${isActive
+                    ? "bg-[#f7f9ff] text-[#2563eb]"
+                    : "text-[#62708c] hover:bg-gray-50"
+                  }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className={`h-[18px] w-[18px] ${isActive ? "text-[#2563eb]" : "text-[#7c88a3]"}`} />
+                  <span
+                    className={`text-[14px] font-medium ${isActive ? "underline underline-offset-[6px] decoration-2" : ""
+                      }`}
+                  >
+                    {item.label}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Sidebar Footer */}
+      <div className="border-t border-[#edf0f7] px-2 pt-6 mt-4 flex flex-col gap-3">
+        <Link
+          to="/admin/wallet"
+          onClick={closeMenu}
+          className="w-full bg-[#0f172a] py-3.5 rounded-[18px] flex items-center justify-center gap-2 text-white text-[13px] font-bold shadow-lg shadow-gray-200 hover:bg-black transition-all"
+        >
+          Platform Treasury
+        </Link>
+
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#d9e1f2] bg-white px-4 py-3 text-[14px] font-medium text-[#1a2238] hover:bg-gray-50 transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
         </button>
       </div>
-
-      <nav className="flex-1 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setIsMenuOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-[13px] font-bold transition-all ${
-                isActive ? "bg-[#f8fafc] text-[#2563eb]" : "text-[#64748b] hover:bg-[#f8fafc] hover:text-[#0f172a]"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {item.label}
-            </Link>
-          )
-        })}
-      </nav>
-
-      <div className="mt-auto pt-6 border-t border-[#f1f5f9] space-y-4">
-         <Link 
-           to="/admin/wallet"
-           onClick={() => setIsMenuOpen(false)}
-           className="w-full bg-[#2563eb] py-3.5 rounded-2xl flex items-center justify-center gap-2 text-white text-[13px] font-bold shadow-lg shadow-blue-100 hover:bg-[#1d4ed8] transition-all"
-         >
-            Withdraw Treasury
-         </Link>
-
-         <div className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-2xl border border-[#f1f5f9]">
-            <div className="w-10 h-10 bg-[#0f172a] rounded-xl flex items-center justify-center text-white font-bold">
-               {adminInitial}
-            </div>
-            <div className="min-w-0">
-               <p className="text-xs font-bold text-[#0f172a] truncate">{adminName}</p>
-               <p className="text-[10px] text-[#94a3b8] font-medium tracking-tight">PLATFORM MASTER</p>
-            </div>
-         </div>
-
-         <button 
-           onClick={handleLogout}
-           className="w-full flex items-center justify-center gap-2 text-[12px] font-bold text-[#94a3b8] hover:text-[#ef4444] transition-colors pb-2"
-         >
-            <LogOut className="w-3.5 h-3.5" /> Sign Out
-         </button>
-      </div>
-    </>
+    </div>
   );
 
   const notificationPanel = showDropdown && (
-    <div className="absolute right-0 top-14 w-[320px] sm:w-[380px] bg-white border border-[#e2e8f0] rounded-2xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden text-[#1e293b]">
-       <div className="px-5 py-4 border-b border-[#f1f5f9] flex justify-between items-center bg-gray-50/50">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Alert Center</h3>
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-[#2563eb] uppercase">{notifications.filter(n => !n.read).length} Unread</span>
-            <button onClick={handleClearAll} className="text-[10px] font-black text-red-500 uppercase hover:text-red-600">Clear All</button>
+    <div className="fixed inset-x-4 top-[80px] sm:absolute sm:inset-auto sm:right-0 sm:top-[calc(100%+14px)] z-[100] sm:w-[380px] overflow-hidden rounded-[24px] border border-[#e5e9f5] bg-white shadow-[0_32px_80px_rgba(18,36,84,0.18)] animate-in fade-in slide-in-from-top-2 duration-300">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[#eef1f7] px-6 py-5 bg-gray-50/50">
+        <div>
+          <h3 className="text-sm font-bold text-[#1a2238]">Notifications</h3>
+          <p className="mt-1 text-[11px] font-medium text-[#75819d]">
+            {notifications.filter((n) => !n.read).length} unread alerts
+          </p>
+        </div>
+        <button
+          onClick={handleClearAll}
+          className="text-[10px] font-bold text-[#2563eb] bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors uppercase tracking-wider"
+        >
+          Clear All
+        </button>
+      </div>
+
+      {/* Content Area */}
+      <div className="max-h-[min(60vh,420px)] overflow-y-auto scrollbar-hide py-2">
+        {notifications.length === 0 ? (
+          <div className="px-5 py-16 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[20px] bg-gray-50 text-[#94a3b8]">
+              <Bell className="h-7 w-7 opacity-40" />
+            </div>
+            <p className="mt-5 text-[15px] font-bold text-[#1a2238]">No new alerts</p>
+            <p className="mt-1.5 text-xs text-[#75819d] px-6">We'll notify you when something important happens on the platform.</p>
           </div>
-       </div>
-       <div className="max-h-80 overflow-y-auto scrollbar-hide">
-          {notifications.length === 0 ? (
-            <div className="py-12 text-center text-[11px] font-bold text-[#94a3b8] uppercase tracking-tighter">No new alerts</div>
-          ) : (
-            notifications.map(n => (
-              <div 
-                key={n._id} 
+        ) : (
+          <div className="divide-y divide-[#f0f2f8]">
+            {notifications.map((n) => (
+              <div
+                key={n._id}
                 onClick={() => handleMarkAsRead(n._id)}
-                className={`px-5 py-4 border-b border-[#f1f5f9] last:border-b-0 cursor-pointer transition-colors ${!n.read ? 'bg-blue-50/20' : 'hover:bg-gray-50/50'}`}
+                className={`group px-6 py-5 cursor-pointer transition-all ${n.read ? "bg-white" : "bg-blue-50/20"
+                  } hover:bg-gray-50`}
               >
-                 <p className={`text-[12px] leading-relaxed ${!n.read ? 'font-bold text-gray-900' : 'text-gray-500'}`}>{n.message}</p>
-                 <p className="text-[9px] text-[#94a3b8] mt-1.5 font-black uppercase tracking-widest">{n.time}</p>
+                <div className="flex items-start gap-4">
+                  <div className="relative mt-1.5 shrink-0">
+                    <div className={`h-2.5 w-2.5 rounded-full ${n.read ? "bg-gray-200" : "bg-[#2563eb]"
+                      }`}>
+                      {!n.read && <div className="absolute inset-0 rounded-full bg-[#2563eb] animate-ping opacity-40"></div>}
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-[13px] leading-relaxed ${!n.read ? 'font-bold text-[#1a2238]' : 'font-medium text-[#64748b]'}`}>
+                      {n.message}
+                    </p>
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">{n.time}</p>
+                      {!n.read && <span className="text-[9px] font-black text-[#2563eb] uppercase tracking-tighter bg-blue-50 px-1.5 py-0.5 rounded">New</span>}
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))
-          )}
-       </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      {notifications.length > 0 && (
+        <div className="border-t border-[#eef1f7] p-4 bg-gray-50/30 text-center">
+          <button className="text-[11px] font-bold text-[#64748b] hover:text-[#1a2238] transition-colors uppercase tracking-[0.1em]">
+            View Historical Activity
+          </button>
+        </div>
+      )}
     </div>
   );
 
   return (
     <>
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-[280px] lg:flex-col lg:border-r lg:border-[#e4e8f5] lg:bg-white lg:px-6 lg:py-8">
-        <SidebarContent />
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-[280px] lg:flex-col lg:border-r lg:border-[#e4e8f5] lg:bg-white lg:px-6 lg:py-8 shadow-sm">
+        <SidebarContent closeMenu={() => { }} />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 bg-[#0f172a]/40 backdrop-blur-sm z-50 lg:hidden" onClick={() => setIsMenuOpen(false)} />
-      )}
+      <div
+        className={`fixed inset-0 z-50 bg-[#0f172a]/30 backdrop-blur-sm lg:hidden transition-all duration-300 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+          }`}
+        onClick={() => setIsMenuOpen(false)}
+      />
 
       {/* Mobile Sidebar */}
-      <div className={`fixed inset-y-0 left-0 w-72 bg-white z-[60] p-6 flex flex-col transform transition-transform duration-300 lg:hidden ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-         <SidebarContent />
+      <div
+        className={`fixed inset-y-0 left-0 z-[60] flex w-[288px] flex-col bg-white lg:hidden shadow-2xl transform transition-transform duration-300 ease-in-out ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+      >
+        <div className="h-full flex flex-col p-6 relative">
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="absolute top-6 right-6 h-10 w-10 flex items-center justify-center rounded-2xl border border-[#dfe4f4] bg-white text-[#1a2238] z-[70] hover:bg-gray-50 shadow-sm"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div className="h-full">
+            <SidebarContent closeMenu={() => setIsMenuOpen(false)} />
+          </div>
+        </div>
       </div>
 
       {/* Top Header */}
-      <header className="fixed inset-x-0 top-0 z-30 lg:left-[280px] bg-white border-b border-[#e4e8f5]">
-         <div className="h-[76px] flex items-center justify-between px-4 sm:px-8">
-            <div className="flex items-center gap-6">
-               <button onClick={() => setIsMenuOpen(true)} className="lg:hidden p-2 text-[#64748b]">
-                  <Menu className="w-6 h-6" />
-               </button>
+      <header className="fixed inset-x-0 top-0 z-30 lg:left-[280px]">
+        <div className="h-[76px] flex items-center justify-between px-4 sm:px-8 bg-white/80 backdrop-blur-md border-b border-[#e4e8f5]">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="lg:hidden h-11 w-11 flex items-center justify-center rounded-2xl border border-[#dfe4f4] bg-white text-[#1a2238] hover:bg-gray-50 transition-all shadow-sm"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-               <div className="hidden md:flex items-center gap-3 relative w-96 font-sans">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8]" />
-                  <input 
-                    type="text" 
-                    placeholder="Search platform resources..."
-                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-2.5 pl-11 pr-4 text-[13px] outline-none transition-all focus:border-[#2563eb]"
-                  />
-               </div>
+            <div className="hidden md:flex items-center gap-3 relative w-[420px]">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8]" />
+              <input
+                type="text"
+                placeholder="Search platform resources..."
+                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-2.5 pl-11 pr-4 text-[13px] font-medium outline-none transition-all focus:border-[#2563eb] focus:bg-white focus:shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="h-11 w-11 flex items-center justify-center rounded-2xl border border-[#dfe4f4] bg-white text-[#64748b] hover:bg-[#f8fafc] transition-all relative"
+              >
+                <Bell className="w-5 h-5" />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute top-3 right-3 w-2 h-2 bg-[#ef4444] border-2 border-white rounded-full"></span>
+                )}
+              </button>
+              {notificationPanel}
             </div>
 
-            <div className="flex items-center gap-4 sm:gap-6">
-               <div className="relative" ref={dropdownRef}>
-                  <button onClick={() => setShowDropdown(!showDropdown)} className="p-2 text-[#64748b] hover:bg-[#f8fafc] rounded-full relative">
-                     <Bell className="w-5 h-5" />
-                     {notifications.filter(n => !n.read).length > 0 && (
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-[#ef4444] border-2 border-white rounded-full"></span>
-                     )}
-                  </button>
-                  {notificationPanel}
-               </div>
-
-               <Link to="/admin/profile" className="flex items-center gap-3 pl-4 sm:pl-6 border-l border-[#e2e8f0]">
-                  <div className="text-right hidden xl:block">
-                     <p className="text-sm font-bold text-[#0f172a] uppercase tracking-tight">Admin Portal</p>
-                     <p className="text-[10px] font-bold text-[#94a3b8]">VERSION 4.2.0-STABLE</p>
-                  </div>
-                  <div className="w-10 h-10 bg-[#eef2ff] rounded-xl flex items-center justify-center font-black text-[#2563eb]">
-                     {adminInitial}
-                  </div>
-               </Link>
-            </div>
-         </div>
+            <Link to="/admin/profile" className="flex items-center gap-3 pl-4 sm:pl-6 border-l border-[#e2e8f0]">
+              <div className="text-right hidden sm:block">
+                <p className="text-[13px] font-bold text-[#1a2238] uppercase tracking-tight">{adminName}</p>
+                <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-wider">PLATFORM MASTER</p>
+              </div>
+              <div className="h-11 w-11 rounded-2xl overflow-hidden border-2 border-[#eef2ff] shadow-sm">
+                <img
+                  src={`https://ui-avatars.com/api/?name=${adminName}&background=0f172a&color=fff&bold=true`}
+                  alt="Admin"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </Link>
+          </div>
+        </div>
       </header>
     </>
   );

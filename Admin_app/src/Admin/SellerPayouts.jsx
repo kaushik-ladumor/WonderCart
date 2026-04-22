@@ -66,125 +66,133 @@ const SellerPayouts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] p-6 font-body">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Vendor Settlements</h1>
-          <p className="text-sm text-gray-500 font-medium">Manage Razorpay Route transfers and independent sub-order payouts</p>
+    <div className="mx-auto max-w-[1240px] space-y-8 pb-10 font-poppins bg-[#f8f9fc] min-h-screen px-4 py-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-2">
+        <div>
+          <h1 className="text-[28px] font-semibold leading-tight text-[#141b2d]">Merchant Settlements</h1>
+          <p className="mt-1 text-sm text-[#66728d]">
+            Manage Razorpay Route transfers and monitor independent vendor payout cycles.
+          </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
-                 <Lock className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Locked (On Hold)</p>
-                 <p className="text-xl font-bold text-gray-900">₹{stats.totalHeld.toLocaleString()}</p>
-              </div>
-           </div>
-           
-           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Released (Settled)</p>
-                 <p className="text-xl font-bold text-gray-900">₹{stats.totalReleased.toLocaleString()}</p>
-              </div>
-           </div>
-
-           <div className="bg-black p-6 rounded-2xl shadow-xl shadow-black/10 flex items-center justify-between text-white">
-              <div>
-                 <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-1">Split Strategy</p>
-                 <p className="text-sm font-bold">Independent Strategy 1</p>
-              </div>
-              <ChevronRight className="w-5 h-5 opacity-40" />
-           </div>
-        </div>
-
-        {/* Payout Table */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
-            <h3 className="font-bold text-gray-900">Sub-Order Settlement Queue</h3>
-            <div className="relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="flex items-center gap-3">
+           <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input 
                 type="text" 
-                placeholder="Search sub-order..." 
-                className="bg-gray-50 border-none rounded-xl py-2 pl-9 pr-4 text-xs font-medium focus:ring-1 focus:ring-black w-64"
+                placeholder="Find Shop, Sub-Order..."
+                className="w-full md:w-80 bg-white border border-[#e2e8f0] rounded-2xl py-2.5 pl-11 pr-4 text-[13px] font-medium outline-none transition-all focus:border-[#2563eb] shadow-sm"
               />
-            </div>
-          </div>
+           </div>
+        </div>
+      </div>
 
-          <div className="overflow-x-auto">
-             <table className="w-full text-left">
-               <thead>
-                 <tr className="bg-gray-50/50">
-                   <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Vendor & Sub-Order</th>
-                   <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Amount</th>
-                   <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Payout Share</th>
-                   <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                   <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-gray-50">
-                 {subOrders.length > 0 ? subOrders.map((so) => (
-                   <tr key={so._id} className="hover:bg-gray-50/30 transition-colors group">
-                     <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                           <span className="text-xs font-bold text-gray-900">{so.seller?.shopName || 'Unknown Seller'}</span>
-                           <span className="text-[10px] text-gray-400 font-mono">#{so.subOrderId}</span>
-                        </div>
-                     </td>
-                     <td className="px-6 py-4 text-xs font-bold text-gray-900">₹{so.totalAmount.toLocaleString()}</td>
-                     <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                           <span className="text-xs font-bold text-indigo-600 font-mono">₹{so.sellerPayout.toLocaleString()}</span>
-                           <span className="text-[10px] text-gray-400 font-medium italic">Comm: ₹{so.platformCommission.toLocaleString()}</span>
-                        </div>
-                     </td>
-                     <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5">
-                           {so.status === 'delivered' ? (
-                             <span className="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold uppercase flex items-center gap-1">
-                               <CheckCircle2 className="w-2.5 h-2.5" /> Delivered
-                             </span>
-                           ) : (
-                             <span className="text-[9px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-bold uppercase flex items-center gap-1">
-                               <Clock className="w-2.5 h-2.5" /> {so.status}
-                             </span>
-                           )}
-                        </div>
-                     </td>
-                     <td className="px-6 py-4">
-                        {so.payoutStatus === 'released' ? (
-                           <div className="flex items-center gap-1 text-emerald-600 text-[10px] font-bold tracking-tight">
-                              <ShieldCheck className="w-3.5 h-3.5" /> Settled
-                           </div>
-                        ) : so.status === 'delivered' ? (
-                           <button 
-                             onClick={() => handleRelease(so._id)}
-                             className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all flex items-center gap-1.5"
-                           >
-                              <Unlock className="w-3 h-3" /> Release Payout
-                           </button>
-                        ) : (
-                           <div className="bg-gray-100 text-gray-400 px-4 py-1.5 rounded-lg text-[10px] font-bold cursor-not-allowed flex items-center gap-1.5">
-                              <Lock className="w-3 h-3" /> Still Held
-                           </div>
-                        )}
-                     </td>
-                   </tr>
-                 )) : (
-                    <tr>
-                      <td colSpan="5" className="px-6 py-12 text-center text-sm text-gray-400 font-medium font-body">No pending payout settlements found</td>
-                    </tr>
-                 )}
-               </tbody>
-             </table>
-          </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+         <div className="rounded-[22px] border border-[#e7ebf5] bg-white p-5 shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3">
+               <Lock className="h-5 w-5 text-amber-600" />
+            </div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Escrow Locked</p>
+            <h4 className="text-xl font-bold text-[#1a2238] leading-none">₹{stats.totalHeld.toLocaleString()}</h4>
+         </div>
+
+         <div className="rounded-[22px] border border-[#e7ebf5] bg-white p-5 shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3">
+               <ShieldCheck className="h-5 w-5 text-emerald-600" />
+            </div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Active Liquidity</p>
+            <h4 className="text-xl font-bold text-[#1a2238] leading-none">₹{stats.totalReleased.toLocaleString()}</h4>
+         </div>
+
+         <div className="col-span-2 rounded-[22px] bg-[#0f172a] p-5 shadow-xl shadow-gray-200 flex items-center justify-between text-white relative overflow-hidden">
+            <div className="relative z-10">
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 opacity-50">Settlement Protocol</p>
+               <h3 className="text-base font-bold italic">Razorpay Route &bull; Standard Batch</h3>
+               <p className="text-[11px] text-gray-500 mt-1 font-medium">Automatic transfers triggered at T+2 validation.</p>
+            </div>
+            <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center relative z-10">
+               <CreditCard className="w-5 h-5 text-white" />
+            </div>
+            <div className="absolute right-0 top-0 p-8 opacity-5 rotate-12">
+               <ShieldCheck className="w-32 h-32" />
+            </div>
+         </div>
+      </div>
+
+      {/* Settlement Table */}
+      <div className="rounded-[24px] border border-[#e7ebf5] bg-white overflow-hidden shadow-sm">
+        <div className="px-6 py-5 border-b border-[#f1f4f9]">
+           <h2 className="text-base font-bold text-[#141b2d]">Sub-Order Payout Ledger</h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50/50">
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Merchant Intelligence</th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gross Volume</th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Net Payable (Commission)</th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Validation State</th>
+                <th className="px-6 py-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Control</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f1f4f9]">
+              {subOrders.length > 0 ? subOrders.map((so) => (
+                <tr key={so._id} className="hover:bg-gray-50/30 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-[#1a2238]">{so.seller?.shopName || 'Independent Vendor'}</span>
+                      <span className="text-[10px] text-blue-600 font-mono font-bold tracking-tighter">S-O-ID: {so.subOrderId}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-[#1a2238]">₹{so.totalAmount.toLocaleString()}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-emerald-600 font-mono">₹{so.sellerPayout.toLocaleString()}</span>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">CUT: ₹{so.platformCommission.toLocaleString()}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${
+                      so.status === 'delivered' 
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                        : 'bg-amber-50 text-amber-600 border-amber-100'
+                    }`}>
+                      {so.status === 'delivered' ? <CheckCircle2 className="w-2.5 h-2.5 mr-1" /> : <Clock className="w-2.5 h-2.5 mr-1" />}
+                      {so.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    {so.payoutStatus === 'released' ? (
+                       <span className="inline-flex items-center text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 uppercase tracking-widest">
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Settled
+                       </span>
+                    ) : so.status === 'delivered' ? (
+                       <button 
+                         onClick={() => handleRelease(so._id)}
+                         className="px-5 py-2.5 bg-[#0f172a] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-gray-200 hover:bg-black transition-all"
+                       >
+                          Finalize Payout
+                       </button>
+                    ) : (
+                       <div className="inline-flex items-center text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 uppercase tracking-widest cursor-not-allowed">
+                          <Lock className="w-3.5 h-3.5 mr-1.5" /> Protocol Held
+                       </div>
+                    )}
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                   <td colSpan="5" className="px-6 py-20 text-center">
+                      <CreditCard className="w-10 h-10 text-gray-100 mx-auto mb-3" />
+                      <p className="text-sm font-bold text-gray-400">No pending payout settlements found in ledger.</p>
+                   </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

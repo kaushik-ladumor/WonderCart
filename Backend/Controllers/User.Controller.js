@@ -231,22 +231,39 @@ const googleAuth = async (req, res) => {
     let isNewUser = false;
 
     if (user) {
-      if (!user.googleId) user.googleId = uid;
-      if (photoURL && user.profile !== photoURL) {
+      // 🔒 Trust & Safety Protection
+      if (user.isBanned) {
+        return res.status(403).json({
+          success: false,
+          message: "This account has been permanently terminated due to policy violations.",
+        });
+      }
+
+      if (user.isSuspended && user.role === "seller" && selectedRole === "seller") {
+        return res.status(403).json({
+          success: false,
+          message: "Access blocked. Your seller account is currently suspended for review.",
+        });
+      }
+
+      // Update existing user with latest info from Google
+      user.googleId = uid;
+      user.isVerified = true; // Google authentication serves as verification
+      
+      if (photoURL) {
         user.profile = photoURL;
       }
+      
       await user.save();
     } else {
       isNewUser = true;
 
-      const role =
-        selectedRole === "seller" ? "seller" : "user";
+      const role = selectedRole === "seller" ? "seller" : "user";
 
       const safeUsername = (username || email.split("@")[0])
         .toLowerCase()
         .trim()
         .replace(/[.\s-]+/g, "_");
-      console.log(safeUsername);
 
       user = await User.create({
         username: safeUsername,
@@ -285,7 +302,7 @@ const googleAuth = async (req, res) => {
     console.error("Google Auth Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: error.message || "Internal server error during Google Authentication",
     });
   }
 };

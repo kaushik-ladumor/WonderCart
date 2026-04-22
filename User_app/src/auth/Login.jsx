@@ -47,7 +47,7 @@ function Login() {
       const loggedUser = response.data.user;
 
       if (loggedUser.role !== "user") {
-        toast.error("Access denied. Role mismatch for User portal.");
+        toast.error(`Access denied. Your account is registered as a ${loggedUser.role}. Please use the correct portal.`);
         setDisabled(false);
         return;
       }
@@ -70,16 +70,17 @@ function Login() {
         window.location.reload();
       }, 300);
     } catch (error) {
+      console.error("Google Login Error:", error);
       if (error.code === "auth/popup-closed-by-user") {
         toast.error("Login cancelled. Please try again.");
       } else if (error.code === "auth/popup-blocked") {
         toast.error("Popup was blocked. Please allow popups for this site.");
       } else if (error.response) {
         toast.error(
-          error.response.data?.message || "Login failed. Please try again.",
+          error.response.data?.message || "Login failed. Server rejected the request.",
         );
       } else {
-        toast.error("Google login failed. Please try again.");
+        toast.error("Google login failed. Check your internet connection or try again later.");
       }
     } finally {
       setDisabled(false);
