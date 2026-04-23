@@ -79,8 +79,8 @@ const WalletModal = ({ isOpen, onClose, onRefresh }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[#11182d]/20 backdrop-blur-sm">
-      <div className="bg-white rounded-[24px] w-full max-w-sm mx-auto shadow-2xl relative max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40">
+      <div className="bg-white rounded-[18px] w-full max-w-sm mx-auto relative max-h-[90vh] overflow-hidden flex flex-col border border-[#e1e5f1]">
         
         <button
           onClick={onClose}
@@ -90,31 +90,31 @@ const WalletModal = ({ isOpen, onClose, onRefresh }) => {
           <X className="w-4 h-4" />
         </button>
 
-        <div className="px-7 pt-7 pb-0 text-center">
-          <span className="text-[10px] uppercase tracking-[0.16em] text-[#0f49d7] font-bold block mb-1">
-            WALLET SERVICES
-          </span>
-          <h3 className="font-display text-[1.25rem] font-semibold text-[#11182d]">
+        <div className="px-6 pt-7 pb-0 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6d7892] mb-1">
+            Wallet Services
+          </p>
+          <h3 className="text-[1.3rem] font-semibold text-[#11182d]">
             Recharge Funds
           </h3>
-          <p className="text-[0.76rem] text-[#6d7892] mt-1 mb-5 leading-relaxed font-medium">
+          <p className="text-[0.76rem] text-[#6d7892] mt-1.5 mb-5 leading-relaxed">
             Add balance to your secure wallet for instantaneous checkouts.
           </p>
         </div>
 
-        <div className="px-7 py-4 space-y-6 overflow-y-auto">
+        <div className="px-6 py-4 space-y-5 overflow-y-auto">
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest font-bold text-[#6d7892] px-1 block text-left">
+            <label className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6d7892] px-1 block text-left">
               Credit Amount
             </label>
-            <div className="relative bg-[#f8f9fb] rounded-xl px-4 py-3.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0f49d7]/10 transition-all border border-[#f1f4f9] focus-within:border-[#0f49d7]">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-[#11182d]">₹</span>
+            <div className="relative bg-white rounded-[14px] px-4 py-3 border border-[#d7dcea] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-[#11182d]">₹</span>
               <input 
                 type="number" 
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="bg-transparent w-full pl-6 text-[1.1rem] font-bold text-[#11182d] outline-none placeholder:text-[#6d7892]/30"
+                className="bg-transparent w-full pl-6 text-[1.1rem] font-semibold text-[#11182d] outline-none placeholder:text-[#b3bdd2]"
               />
             </div>
           </div>
@@ -124,10 +124,10 @@ const WalletModal = ({ isOpen, onClose, onRefresh }) => {
               <button 
                 key={p}
                 onClick={() => setAmount(p.toString())}
-                className={`py-3 rounded-xl border-2 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 ${
+                className={`py-2.5 rounded-[12px] border text-[0.7rem] font-bold uppercase tracking-wider transition-all ${
                   amount === p.toString() 
-                    ? "bg-[#11182d] border-[#11182d] text-white shadow-lg shadow-black/10" 
-                    : "bg-white border-[#f1f4f9] text-[#6d7892] hover:border-[#0f49d7] hover:text-[#0f49d7]"
+                    ? "bg-[#0f49d7] border-[#0f49d7] text-white" 
+                    : "bg-white border-[#d7dcea] text-[#6d7892] hover:border-[#0f49d7] hover:text-[#0f49d7]"
                 }`}
               >
                 ₹{p}
@@ -139,32 +139,32 @@ const WalletModal = ({ isOpen, onClose, onRefresh }) => {
             <button 
               onClick={handleTopUp}
               disabled={loading}
-              className="w-full bg-[#11182d] text-white font-bold rounded-xl h-12 text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+              className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.78rem] hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto text-white" />
               ) : (
-                <>CONTINUE TO PAYMENT <ArrowRight className="w-4 h-4" /></>
+                <>Continue to Payment <ArrowRight className="w-4 h-4" /></>
               )}
             </button>
           </div>
         </div>
 
-        <div className="px-7 py-5 bg-[#f8f9fb] border-t border-[#e1e5f1]">
+        <div className="px-6 py-4 bg-[#f4f6fb] mt-auto">
           <div className="flex items-center gap-4 justify-center">
-            <div className="flex items-center gap-2 text-[#6d7892] font-bold">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#15753a]" />
-              <span className="text-[9px] uppercase tracking-widest">SECURE</span>
+            <div className="flex items-center gap-1.5 text-[#5d6a84]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#0f7a32]" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em]">SECURE</span>
             </div>
-            <div className="w-px h-3 bg-[#e1e5f1]"></div>
-            <div className="flex items-center gap-2 text-[#6d7892] font-bold">
+            <div className="w-px h-3 bg-[#d7dcea]"></div>
+            <div className="flex items-center gap-1.5 text-[#5d6a84]">
               <Zap className="w-3.5 h-3.5 text-orange-400" />
-              <span className="text-[9px] uppercase tracking-widest">INSTANT</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em]">INSTANT</span>
             </div>
-            <div className="w-px h-3 bg-[#e1e5f1]"></div>
-            <div className="flex items-center gap-2 text-[#6d7892] font-bold">
+            <div className="w-px h-3 bg-[#d7dcea]"></div>
+            <div className="flex items-center gap-1.5 text-[#5d6a84]">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#0f49d7]" />
-              <span className="text-[9px] uppercase tracking-widest">VERIFIED</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em]">VERIFIED</span>
             </div>
           </div>
         </div>

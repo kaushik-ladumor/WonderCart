@@ -35,6 +35,7 @@ import React, { useEffect } from "react";
 import SellerDeals from "./seller/deals/SellerDeals";
 import SellerDealDetails from "./seller/deals/SellerDealDetails";
 import SellerLandingPage from "./seller/LandingPage";
+import SellerReviews from "./seller/SellerReviews";
 
 function App() {
   const { authUser, setToken, setAuthUser } = useAuth();
@@ -161,6 +162,7 @@ function App() {
           <Route path="deals" element={<SellerDeals />} />
           <Route path="deals/:id" element={<SellerDealDetails />} />
           <Route path="deals/create" element={<SellerCreateDeal />} />
+          <Route path="reviews" element={<SellerReviews />} />
           <Route path="profile" element={<SellerProfile />} />
         </Route>
       </Routes>

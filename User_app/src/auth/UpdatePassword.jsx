@@ -1,4 +1,4 @@
-import { Lock, Eye, EyeOff, X, Shield, Key } from "lucide-react";
+import { Lock, Eye, EyeOff, X, Shield, Loader2, ArrowRight, CheckCircle2, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
 import { API_URL } from "../utils/constants";
 
-function UpdatePassword() {
+function UpdatePassword({ isOpen, onClose }) {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -25,8 +25,9 @@ function UpdatePassword() {
 
   const newPassword = watch("newPassword");
 
-  // Check if user has a password set by fetching profile from backend
   useEffect(() => {
+    if (!isOpen) return;
+    
     const checkHasPassword = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -35,36 +36,16 @@ function UpdatePassword() {
       }
 
       try {
-        // First check stored user data
-        const storedUser = localStorage.getItem("Users");
-        if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          if (typeof parsed.hasPassword === "boolean") {
-            setHasPassword(parsed.hasPassword);
-            setCheckingPassword(false);
-            return;
-          }
-        }
-
-        // If hasPassword not in stored data, fetch from backend
+        setCheckingPassword(true);
         const response = await axios.get(`${API_URL}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (response.data.success) {
-          const userHasPassword = response.data.user.hasPassword;
-          setHasPassword(userHasPassword);
-
-          // Update localStorage with hasPassword info
-          if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            parsed.hasPassword = userHasPassword;
-            localStorage.setItem("Users", JSON.stringify(parsed));
-          }
+          setHasPassword(response.data.user.hasPassword);
         }
       } catch (err) {
         console.error("Error checking password status:", err);
-        // Fallback: assume has password if error
         setHasPassword(true);
       } finally {
         setCheckingPassword(false);
@@ -72,23 +53,14 @@ function UpdatePassword() {
     };
 
     checkHasPassword();
-  }, []);
+  }, [isOpen]);
 
   const onSubmit = async (data) => {
-    if (!authUser?._id) {
-      toast.error("User not authenticated. Please login again.");
-      return;
-    }
-
     try {
       setLoading(true);
-
       const token = localStorage.getItem("token");
-      const passwordData = {
-        newPassword: data.newPassword,
-      };
+      const passwordData = { newPassword: data.newPassword };
 
-      // Only send currentPassword if user already has a password
       if (hasPassword && data.currentPassword) {
         passwordData.currentPassword = data.currentPassword;
       }
@@ -96,204 +68,182 @@ function UpdatePassword() {
       const response = await axios.put(
         `${API_URL}/user/update-password`,
         passwordData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
         toast.success(response.data.message);
         reset();
-
-        // Update hasPassword status after successful password set/update
-        if (response.data.hasPassword) {
-          setHasPassword(true);
-          // Update stored user data
-          const storedUser = localStorage.getItem("Users");
-          if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            parsed.hasPassword = true;
-            localStorage.setItem("Users", JSON.stringify(parsed));
-            setAuthUser(parsed);
-          }
-        }
-
-        document.getElementById("update_password_modal").close();
-      } else {
-        toast.error(response.data.message || "Failed to update password");
+        onClose();
       }
     } catch (err) {
-      console.error("Password update error:", err.response?.data);
-      toast.error(
-        err.response?.data?.message ||
-        "Failed to update password. Please try again.",
-      );
+      toast.error(err.response?.data?.message || "Failed to update password");
     } finally {
       setLoading(false);
     }
   };
 
-  const closeModal = () => {
-    if (!loading) {
-      document.getElementById("update_password_modal")?.close();
-    }
-  };
+  if (!isOpen) return null;
 
   const needsCurrentPassword = hasPassword === true;
   const isSettingNewPassword = hasPassword === false;
 
   return (
-    <dialog id="update_password_modal" className="modal font-body">
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
-        <div className="bg-white rounded-2xl w-full max-w-sm mx-auto shadow-tonal-md relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40">
+      <div className="bg-white rounded-[18px] w-full max-w-sm mx-auto relative max-h-[90vh] overflow-hidden flex flex-col border border-[#e1e5f1]">
+        
+        <button
+          onClick={onClose}
+          disabled={loading}
+          className="absolute top-4 right-4 p-1.5 rounded-full text-[#6d7892] hover:bg-[#f8f9fb] transition-colors z-10"
+        >
+          <X className="w-4 h-4" />
+        </button>
 
-          {/* Close Button */}
-          <button
-            onClick={closeModal}
-            disabled={loading}
-            className="absolute top-4 right-4 p-1.5 rounded-full text-[#5c6880] hover:bg-[#f0f4ff] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <div className="px-6 pt-7 pb-0 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6d7892] mb-1">
+            {isSettingNewPassword ? "Secure Account" : "Safety First"}
+          </p>
+          <h3 className="text-[1.3rem] font-semibold text-[#11182d]">
+            {isSettingNewPassword ? "Set Password" : "Update Password"}
+          </h3>
+          <p className="text-[0.76rem] text-[#6d7892] mt-1.5 mb-5 leading-relaxed">
+            {isSettingNewPassword
+              ? "Set a password to enable multi-method login."
+              : "Regular password rotation is recommended for security."}
+          </p>
+        </div>
 
-          {/* Modal header */}
-          <div className="px-6 pt-6 pb-0 text-center">
-            <span className="text-[10px] uppercase tracking-[0.15em] text-[#004ac6] font-semibold block mb-1">
-              {isSettingNewPassword ? "SECURE ACCOUNT" : "SAFETY FIRST"}
-            </span>
-            <h3 className="font-display text-[1.2rem] font-semibold text-[#141b2d]">
-              {isSettingNewPassword ? "Set Password" : "Update Password"}
-            </h3>
-            <p className="text-[0.76rem] text-[#5c6880] mt-1 mb-5 leading-relaxed">
-              {isSettingNewPassword
-                ? "Set a password to enable multi-method login."
-                : "Regular password rotation is recommended."}
-            </p>
-          </div>
-
-          {/* Modal body */}
-          <div className="px-6 py-4">
-            {checkingPassword ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <div className="w-10 h-10 border-4 border-[#f0f4ff] border-t-[#004ac6] rounded-full animate-spin"></div>
-                <span className="font-body text-[10px] uppercase tracking-widest font-semibold text-[#5c6880]">Synchronizing...</span>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Current Password */}
-                {needsCurrentPassword && (
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
-                      Current Password
-                    </label>
-                    <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
-                      <Lock className="w-4 h-4 text-[#5c6880]" />
-                      <input
-                        type={showCurrentPassword ? "text" : "password"}
-                        placeholder="Current password"
-                        className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
-                        disabled={loading}
-                        {...register("currentPassword", {
-                          required: needsCurrentPassword && "Required",
-                        })}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="text-[#5c6880] hover:text-[#141b2d]"
-                      >
-                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
+        <div className="px-6 py-4 space-y-5 overflow-y-auto">
+          {checkingPassword ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin text-[#0f49d7]" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#6d7892]">Syncing Status...</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {needsCurrentPassword && (
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6d7892] px-1 block text-left">
+                    Current Password
+                  </label>
+                  <div className="relative bg-white rounded-[14px] px-3.5 py-2.5 border border-[#d7dcea] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-[#b3bdd2]" />
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      placeholder="Enter current password"
+                      className="bg-transparent flex-1 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#b3bdd2]"
+                      disabled={loading}
+                      {...register("currentPassword", {
+                        required: needsCurrentPassword && "Required",
+                      })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="text-[#b3bdd2] hover:text-[#11182d]"
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6d7892] px-1 block text-left">
+                  New Password
+                </label>
+                <div className="relative bg-white rounded-[14px] px-3.5 py-2.5 border border-[#d7dcea] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-[#b3bdd2]" />
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Min. 8 characters"
+                    className="bg-transparent flex-1 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#b3bdd2]"
+                    disabled={loading}
+                    {...register("newPassword", {
+                      required: "Required",
+                      minLength: { value: 8, message: "Min 8 chars" },
+                    })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="text-[#b3bdd2] hover:text-[#11182d]"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.newPassword && (
+                  <p className="text-red-500 text-[10px] font-semibold ml-1">{errors.newPassword.message}</p>
                 )}
+              </div>
 
-                {/* New Password */}
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
-                    New Password
-                  </label>
-                  <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
-                    <Lock className="w-4 h-4 text-[#5c6880]" />
-                    <input
-                      type={showNewPassword ? "text" : "password"}
-                      placeholder="Min. 8 characters"
-                      className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
-                      disabled={loading}
-                      {...register("newPassword", {
-                        required: "Required",
-                        minLength: { value: 8, message: "Min 8 chars" },
-                      })}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="text-[#5c6880] hover:text-[#141b2d]"
-                    >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.newPassword && (
-                    <p className="text-red-500 text-[10px] font-semibold mt-1 ml-1">{errors.newPassword.message}</p>
-                  )}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6d7892] px-1 block text-left">
+                  Confirm Password
+                </label>
+                <div className="relative bg-white rounded-[14px] px-3.5 py-2.5 border border-[#d7dcea] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-[#b3bdd2]" />
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Verify new password"
+                    className="bg-transparent flex-1 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#b3bdd2]"
+                    disabled={loading}
+                    {...register("confirmPassword", {
+                      required: "Required",
+                      validate: (value) => value === newPassword || "Passwords don't match",
+                    })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-[#b3bdd2] hover:text-[#11182d]"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-[10px] font-semibold ml-1">{errors.confirmPassword.message}</p>
+                )}
+              </div>
 
-                {/* Confirm Password */}
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest font-semibold text-[#5c6880] mb-1.5 block">
-                    Confirm Password
-                  </label>
-                  <div className="flex items-center gap-2 bg-[#f0f4ff] rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#004ac6]/20 transition-all border border-transparent focus-within:border-[#004ac6]/20">
-                    <Lock className="w-4 h-4 text-[#5c6880]" />
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Verify new password"
-                      className="bg-transparent flex-1 text-[0.82rem] text-[#141b2d] outline-none placeholder:text-[#5c6880]/60"
-                      disabled={loading}
-                      {...register("confirmPassword", {
-                        required: "Required",
-                        validate: (value) => value === newPassword || "Keys don't match",
-                      })}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="text-[#5c6880] hover:text-[#141b2d]"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-red-500 text-[10px] font-semibold mt-1 ml-1">{errors.confirmPassword.message}</p>
-                  )}
-                </div>
-
-                {/* Primary Button */}
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white font-semibold rounded-xl py-3 text-[0.82rem] hover:scale-[1.02] transition-transform mt-4 disabled:opacity-50"
+                  className="w-full bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.78rem] hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {loading ? "Processing..." : isSettingNewPassword ? "Set Secure Password" : "Save Changes"}
+                  {loading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                  ) : (
+                    <>{isSettingNewPassword ? "Set Secure Password" : "Update Changes"} <ArrowRight className="w-4 h-4" /></>
+                  )}
                 </button>
-              </form>
-            )}
-          </div>
-
-          {/* Modal footer */}
-          <div className="px-6 pb-6 pt-2 border-t border-[#f0f4ff] bg-gray-50/30">
-            <div className="flex items-center gap-3 text-[#5c6880]">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-[#f0f4ff]">
-                <Shield className="w-3.5 h-3.5 text-[#004ac6]" />
               </div>
-              <span className="text-[10px] uppercase tracking-wider font-medium leading-tight">Your credential data is encrypted using archival-grade protocols.</span>
+            </form>
+          )}
+        </div>
+
+        <div className="px-6 py-4 bg-[#f4f6fb] mt-auto">
+          <div className="flex items-center gap-4 justify-center">
+            <div className="flex items-center gap-1.5 text-[#5d6a84]">
+              <Shield className="w-3.5 h-3.5 text-[#0f7a32]" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em]">SECURE</span>
+            </div>
+            <div className="w-px h-3 bg-[#d7dcea]"></div>
+            <div className="flex items-center gap-1.5 text-[#5d6a84]">
+              <Zap className="w-3.5 h-3.5 text-orange-400" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em]">ARCHIVAL</span>
+            </div>
+            <div className="w-px h-3 bg-[#d7dcea]"></div>
+            <div className="flex items-center gap-1.5 text-[#5d6a84]">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0f49d7]" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em]">ENCRYPTED</span>
             </div>
           </div>
         </div>
       </div>
-    </dialog>
+    </div>
   );
 }
 

@@ -61,11 +61,11 @@ const ProductDetail = () => {
         const reviewsData = rd?.reviews || res.data.reviews || [];
         setReviews(reviewsData);
         // Fail-safe: Update product document stats if missing
-        if (rd && rd.total_reviews !== undefined) {
+        if (rd && rd.reviewCount !== undefined) {
           setProduct(prev => ({
             ...prev,
-            total_reviews: rd.total_reviews,
-            average_rating: rd.average_rating
+            reviewCount: rd.reviewCount,
+            ratingAverage: rd.ratingAverage
           }));
         }
       } catch (err) {
@@ -296,11 +296,11 @@ const ProductDetail = () => {
             <div className="flex flex-wrap items-center gap-2.5">
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(product.average_rating || 0) ? "text-[#2563eb] fill-[#2563eb]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`} />
+                  <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(product.ratingAverage || 0) ? "text-[#2563eb] fill-[#2563eb]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`} />
                 ))}
               </div>
               <span className="text-[12px] text-[#6b7280] font-medium leading-none mt-0.5">
-                {product.average_rating || 0} ({product.total_reviews || 0} reviews)
+                {product.ratingAverage || 0} ({product.reviewCount || 0} reviews)
               </span>
             </div>
 
@@ -419,7 +419,7 @@ const ProductDetail = () => {
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-[#f5f7ff] px-3 py-2 text-[12px] font-semibold text-[#202a42]">
             <Star className="h-4 w-4 fill-[#f2b63d] text-[#f2b63d]" />
-            {product.average_rating?.toFixed(1) || "0.0"} out of 5
+            {product.ratingAverage?.toFixed(1) || "0.0"} out of 5
           </div>
         </div>
 

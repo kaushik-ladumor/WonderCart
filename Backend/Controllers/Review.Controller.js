@@ -5,18 +5,26 @@ const Notification = require("../Models/Notification.Model");
 const mongoose = require("mongoose");
 
 const updateProductStats = async (productId) => {
-  const reviews = await Review.find({ product: productId, status: "approved" });
+  try {
+    const reviews = await Review.find({ product: productId, status: "approved" });
+    
+    const reviewCount = reviews.length;
+    let ratingAverage = 0;
+    
+    if (reviewCount > 0) {
+      const totalRating = reviews.reduce((sum, rev) => sum + (Number(rev.rating) || 0), 0);
+      ratingAverage = totalRating / reviewCount;
+    }
 
-  const reviewCount = reviews.length;
-  const ratingAverage =
-    reviewCount > 0
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
-      : 0;
+    console.log(`Updating stats for product ${productId}: count=${reviewCount}, avg=${ratingAverage}`);
 
-  await Product.findByIdAndUpdate(productId, {
-    reviewCount,
-    ratingAverage: Math.round(ratingAverage * 10) / 10,
-  });
+    await Product.findByIdAndUpdate(productId, {
+      reviewCount: reviewCount,
+      ratingAverage: Math.round(ratingAverage * 10) / 10,
+    });
+  } catch (error) {
+    console.error("Failed to update product stats:", error);
+  }
 };
 
 const checkReviewEligibility = async (userId, productId, orderItemId) => {
@@ -27,10 +35,10 @@ const checkReviewEligibility = async (userId, productId, orderItemId) => {
     return { eligible: false, message: "Sellers cannot review their own products" };
   }
 
-  // 2. Same user cannot leave 2 reviews for same product across all orders
-  const existingProductReview = await Review.findOne({ user: userId, product: productId });
-  if (existingProductReview) {
-    return { eligible: false, message: "You have already reviewed this product" };
+  // 2. Same user cannot leave 2 reviews for the same specific order item
+  const existingReview = await Review.findOne({ user: userId, orderItem: orderItemId });
+  if (existingReview) {
+    return { eligible: false, message: "You have already reviewed this item" };
   }
 
   // 3. Find the specific order item
@@ -42,7 +50,7 @@ const checkReviewEligibility = async (userId, productId, orderItemId) => {
   if (!order) return { eligible: false, message: "Order not found" };
   
   // 5. Order status must be DELIVERED
-  if (order.status !== "DELIVERED") {
+  if (order.status !== "delivered") {
     return { eligible: false, message: "Item has not been delivered yet" };
   }
 

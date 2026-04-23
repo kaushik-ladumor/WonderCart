@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertCircle,
   Tag,
+  X,
   ShoppingCart,
   ArrowRight,
   TrendingUp,

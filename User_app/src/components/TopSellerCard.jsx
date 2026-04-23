@@ -63,10 +63,10 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
                 <div className="flex items-center gap-2 flex-wrap">
                      <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(productId?.average_rating || rating) ? "fill-[#ff9c07] text-[#ff9c07]" : "fill-[#f1f5fb] text-[#d9deeb]"}`} />
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(productId?.ratingAverage || rating) ? "fill-[#ff9c07] text-[#ff9c07]" : "fill-[#f1f5fb] text-[#d9deeb]"}`} />
                         ))}
                     </div>
-                    <span className="text-[0.76rem] text-[#6d7892] font-semibold uppercase tracking-wider">({productId?.total_reviews || reviewCount} reviews)</span>
+                    <span className="text-[0.76rem] text-[#6d7892] font-semibold uppercase tracking-wider">({productId?.reviewCount || reviewCount} reviews)</span>
                 </div>
                 
                 <button 
@@ -116,7 +116,7 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
         <div className="flex items-center justify-between border-t border-[#f0f4ff] pt-4">
           <div className="flex items-center gap-1.5">
              <Star className="w-4 h-4 fill-[#ff9c07] text-[#ff9c07]" />
-             <span className="text-[0.82rem] font-semibold text-[#141b2d]">{productId?.average_rating || rating}</span>
+             <span className="text-[0.82rem] font-semibold text-[#141b2d]">{productId?.ratingAverage || rating}</span>
           </div>
           <span className="text-[0.82rem] font-semibold text-[#0f49d7] hover:underline">View Details</span>
         </div>

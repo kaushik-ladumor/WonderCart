@@ -17,6 +17,7 @@ import {
   Wallet,
   Landmark,
   Plus,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useSocket } from "../context/SocketProvider";
@@ -80,6 +81,7 @@ const SellerNavbar = () => {
     { path: "/seller/bank", label: "Bank Account", icon: Landmark },
     { path: "/seller/deals", label: "My Deals", icon: Percent },
     { path: "/seller/deals/create", label: "New Campaign", icon: Plus },
+    { path: "/seller/reviews", label: "Feedback", icon: MessageSquare },
     { path: "/seller/profile", label: "Profile", icon: User },
   ];
 

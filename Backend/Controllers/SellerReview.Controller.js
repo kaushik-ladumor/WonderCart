@@ -53,7 +53,7 @@ const createSellerReview = async (req, res) => {
     }
 
     // Validation rules
-    if (subOrder.status !== "DELIVERED") {
+    if (subOrder.status !== "delivered") {
       return res.status(400).json({ success: false, message: "Reviews only allowed after delivery" });
     }
 
@@ -147,6 +147,22 @@ const getSellerReviews = async (req, res) => {
 };
 
 /**
+ * Get reviews for the authenticated seller
+ */
+const getMyReviews = async (req, res) => {
+  try {
+    const sellerId = req.user.userId;
+    const reviews = await SellerReview.find({ seller: sellerId, status: "published" })
+      .populate("user", "name profile username")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, reviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+/**
  * Get Top Rated Sellers
  */
 const getTopSellers = async (req, res) => {
@@ -166,5 +182,6 @@ module.exports = {
   createSellerReview,
   skipSellerReview,
   getSellerReviews,
+  getMyReviews,
   getTopSellers,
 };

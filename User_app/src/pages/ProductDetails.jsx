@@ -485,12 +485,12 @@ const ProductDetail = () => {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-4.5 h-4.5 ${i < Math.round(product.average_rating || 0) ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
+                    className={`w-4.5 h-4.5 ${i < Math.round(product.ratingAverage || 0) ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
                   />
                 ))}
               </div>
               <span className="text-[0.78rem] text-[#6d7892] font-semibold uppercase tracking-wider group-hover:text-[#0f49d7] transition-colors">
-                ({product.total_reviews || 0} REVIEWS)
+                ({product.reviewCount || 0} REVIEWS)
               </span>
             </button>
           </div>
@@ -516,6 +516,39 @@ const ProductDetail = () => {
               {product.description}
             </p>
           </div>
+
+          {/* Shop/Seller Info Section */}
+          {product.seller && (
+            <div className="mb-10 p-5 bg-[#f8fafc] rounded-2xl border border-[#edf2f7] flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-white border border-[#e2e8f0] p-1.5 overflow-hidden shadow-sm">
+                  <img 
+                    src={product.seller.shopLogo || "/placeholder-shop.jpg"} 
+                    alt={product.seller.shopName} 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-[0.88rem] font-bold text-[#11182d]">{product.seller.shopName || "WonderCart Seller"}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-400/10 rounded-md">
+                      <Star className="w-3 h-3 fill-orange-400 text-orange-400" />
+                      <span className="text-[11px] font-bold text-orange-400">{product.seller.average_rating || "0.0"}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-wider">
+                      ({product.seller.total_reviews || 0} SHOP REVIEWS)
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate(`/shop?seller=${product.owner}`)}
+                className="px-4 py-2 bg-white border border-[#d7dcea] rounded-xl text-[0.7rem] font-bold text-[#0f49d7] uppercase tracking-widest hover:bg-[#0f49d7] hover:text-white hover:border-[#0f49d7] transition-all"
+              >
+                Visit Store
+              </button>
+            </div>
+          )}
 
           {/* Variants */}
           {product.variants?.length > 0 && (
@@ -639,7 +672,7 @@ const ProductDetail = () => {
                   <div className="flex flex-col items-center">
                     <div className="flex items-baseline gap-1">
                         <span className="text-7xl font-semibold text-[#11182d] tracking-tighter">
-                        {product.average_rating}
+                        {product.ratingAverage || "0.0"}
                         </span>
                         <span className="text-[1.1rem] font-semibold text-[#6d7892]">/ 5.0</span>
                     </div>
@@ -647,7 +680,7 @@ const ProductDetail = () => {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-6 h-6 ${i < Math.round(product.average_rating || 0) ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
+                          className={`w-6 h-6 ${i < Math.round(product.ratingAverage || 0) ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
                         />
                       ))}
                     </div>
@@ -661,7 +694,7 @@ const ProductDetail = () => {
                 <div className="lg:col-span-8 flex flex-col justify-center h-full gap-4">
                   {[5, 4, 3, 2, 1].map((star) => {
                     const count = reviews.filter((r) => r.rating === star).length;
-                    const percent = product.total_reviews > 0 ? (count / product.total_reviews) * 100 : 0;
+                    const percent = product.reviewCount > 0 ? (count / product.reviewCount) * 100 : 0;
                     return (
                       <div
                         key={star}

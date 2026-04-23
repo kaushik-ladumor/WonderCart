@@ -30,7 +30,7 @@ const getSellingPrice = (product) =>
 const getOriginalPrice = (product) =>
   Math.round(product?.variants?.[0]?.sizes?.[0]?.originalPrice || 0);
 
-const getRating = (product) => Number(product?.average_rating || 0);
+const getRating = (product) => Number(product?.ratingAverage || 0);
 
 const buildPagination = (page, totalPages) => {
   if (totalPages <= 1) return [1];

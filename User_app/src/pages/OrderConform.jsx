@@ -17,10 +17,12 @@ import {
   Hash,
   Printer,
   SquareCheckBig,
+  LogIn,
 } from "lucide-react";
 import { API_URL } from "../utils/constants";
 import { useSocket } from "../context/SocketProvider";
 import toast from "react-hot-toast";
+import OrderActionModal from "../components/OrderActionModal";
 
 const OrderConfirmationPage = () => {
   const [order, setOrder] = useState(null);
@@ -30,6 +32,9 @@ const OrderConfirmationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const socket = useSocket();
+
+  const [modalType, setModalType] = useState(null); // 'cancel' or 'return'
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -113,10 +118,16 @@ const OrderConfirmationPage = () => {
           const data = await response.json();
 
           if (data.success && data.order) {
+            // Flatten items from subOrders if needed
+            let allItems = data.order.items || [];
+            if (allItems.length === 0 && data.order.subOrders?.length > 0) {
+              allItems = data.order.subOrders.flatMap(sub => sub.items || []);
+            }
+
             const transformedOrder = {
               ...data.order,
               items:
-                data.order.items?.map((item) => ({
+                allItems.map((item) => ({
                   ...item,
                   product: item.product
                     ? {
@@ -125,7 +136,7 @@ const OrderConfirmationPage = () => {
                       images: item.product.images || [],
                     }
                     : null,
-                })) || [],
+                })),
             };
 
             setOrder(transformedOrder);
@@ -299,12 +310,137 @@ const OrderConfirmationPage = () => {
     return steps;
   };
 
+  const handleActionSubmit = async (reason) => {
+    const endpoint = modalType === "return" ? "/order/return" : "/order/cancel";
+    const successMsg = modalType === "return" ? "Return request submitted" : "Order cancelled";
+
+    try {
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ 
+          orderId: order._id, 
+          subOrderId: order.subOrders[0].subOrderId, 
+          reason 
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(successMsg);
+        setIsModalOpen(false);
+        window.location.reload();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (e) {
+      toast.error(`Failed to ${modalType} order`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-black mx-auto mb-2" />
           <p className="text-gray-600 text-[0.82rem]">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Pure Invoice View for Printing (Amazon/Flipkart Style)
+  if (order && searchParams.get("print") === "true") {
+    return (
+      <div className="min-h-screen bg-white p-8 font-sans">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-start mb-12">
+            <div>
+              <h1 className="text-3xl font-bold text-[#11182d] mb-2 uppercase tracking-tight">Tax Invoice</h1>
+              <p className="text-gray-500 text-sm font-medium">Order ID: #{order._id.toUpperCase()}</p>
+            </div>
+            <div className="text-right">
+              <h2 className="text-2xl font-bold text-[#0f49d7] tracking-tight">WonderCart</h2>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">Official Document</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-16 mb-16">
+            <div>
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-4 pb-2 border-b border-gray-100">Billing & Shipping Details</h3>
+              <p className="text-[0.95rem] font-bold text-[#11182d]">{order.address?.fullName}</p>
+              <p className="text-sm text-gray-600 leading-relaxed mt-2 font-medium">
+                {order.address?.street}<br />
+                {order.address?.city}, {order.address?.state} - {order.address?.zipCode}<br />
+                Contact: {order.address?.phone}
+              </p>
+            </div>
+            <div className="text-right">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-4 pb-2 border-b border-gray-100">Payment Summary</h3>
+              <p className="text-sm text-gray-600 mb-2 font-medium">Invoice Date: <span className="text-[#11182d] font-bold ml-2">{new Date(order.createdAt).toLocaleDateString()}</span></p>
+              <p className="text-sm text-gray-600 mb-2 font-medium">Payment Mode: <span className="text-[#11182d] font-bold ml-2 uppercase">{order.paymentMethod}</span></p>
+              <p className="text-sm text-gray-600 font-medium">Payment Status: <span className="text-emerald-600 font-bold ml-2 uppercase">Verified / Paid</span></p>
+            </div>
+          </div>
+
+          <table className="w-full mb-16">
+            <thead>
+              <tr className="border-b-2 border-[#11182d] text-left">
+                <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#11182d]">Product Description</th>
+                <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#11182d] text-center">Qty</th>
+                <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#11182d] text-right">Unit Price</th>
+                <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#11182d] text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {order.items?.map((item, i) => (
+                <tr key={i}>
+                  <td className="py-6">
+                    <p className="text-sm font-bold text-[#11182d]">{item.name || item.product?.name || "Ordered Product"}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">
+                      {item.color || "N/A"} / {item.size || "Standard"}
+                    </p>
+                  </td>
+                  <td className="py-6 text-sm text-center text-gray-600 font-medium">{item.quantity}</td>
+                  <td className="py-6 text-sm text-right text-gray-600 font-medium">₹{item.price.toLocaleString()}</td>
+                  <td className="py-6 text-sm font-bold text-right text-[#11182d]">₹{(item.price * item.quantity).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex justify-end pt-8 border-t-2 border-[#11182d]">
+            <div className="w-72 space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500 font-medium uppercase tracking-wider text-[10px]">Net Amount</span>
+                <span className="font-bold text-[#11182d]">₹{order.totalAmount?.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                 <span className="text-gray-500 font-medium uppercase tracking-wider text-[10px]">Shipping Charges</span>
+                 <span className="text-emerald-600 font-bold uppercase text-[10px]">FREE</span>
+              </div>
+              <div className="flex justify-between items-center text-sm pb-4 border-b border-gray-100">
+                 <span className="text-gray-500 font-medium uppercase tracking-wider text-[10px]">Tax Included (0%)</span>
+                 <span className="font-bold text-[#11182d]">₹0</span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#0f49d7]">Grand Total</span>
+                <span className="text-2xl font-bold text-[#0f49d7]">₹{order.totalAmount?.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-32 p-8 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="grid grid-cols-2 gap-8 items-center">
+               <div>
+                  <p className="text-[10px] font-bold text-[#11182d] uppercase tracking-[0.1em] mb-1">Return Policy</p>
+                  <p className="text-[9px] text-gray-500 leading-relaxed font-medium">Standard 7-day return policy applies. Items must be in original condition with tags intact for successful returns.</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">Digital Authenticity</p>
+                  <p className="text-[9px] text-gray-400 italic">This is a computer-generated tax invoice. No signature is required.</p>
+               </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -358,7 +494,18 @@ const OrderConfirmationPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fb] pb-16 font-body text-[#11182d]">
-      <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          body { background: white !important; margin: 0 !important; padding: 0 !important; }
+          @page { size: auto; margin: 15mm; }
+          .invoice-card { border: none !important; box-shadow: none !important; }
+        }
+        .print-only { display: none; }
+      `}} />
+
+      <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 no-print">
 
         {/* Success Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
@@ -540,25 +687,9 @@ const OrderConfirmationPage = () => {
                      
                      {['placed', 'confirmed', 'processing'].includes(order.status) && (
                         <button 
-                          onClick={async () => {
-                            const reason = prompt("Enter reason for cancellation:");
-                            if (!reason) return;
-                            try {
-                              const res = await fetch(`${API_URL}/order/cancel`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                                body: JSON.stringify({ orderId: order._id, subOrderId: order.subOrders[0].subOrderId, reason })
-                              });
-                              const data = await res.json();
-                              if (data.success) {
-                                toast.success("Order cancelled");
-                                window.location.reload();
-                              } else {
-                                toast.error(data.message);
-                              }
-                            } catch (e) {
-                              toast.error("Failed to cancel order");
-                            }
+                          onClick={() => {
+                            setModalType("cancel");
+                            setIsModalOpen(true);
                           }}
                           className="w-full h-11 bg-white text-red-600 border border-red-100 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-red-50 active:scale-95"
                         >
@@ -568,25 +699,9 @@ const OrderConfirmationPage = () => {
 
                      {order.status === 'delivered' && (
                         <button 
-                          onClick={async () => {
-                            const reason = prompt("Why are you returning this order?");
-                            if (!reason) return;
-                            try {
-                              const res = await fetch(`${API_URL}/order/return`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                                body: JSON.stringify({ orderId: order._id, subOrderId: order.subOrders[0].subOrderId, reason })
-                              });
-                              const data = await res.json();
-                              if (data.success) {
-                                toast.success("Return request submitted");
-                                window.location.reload();
-                              } else {
-                                toast.error(data.message);
-                              }
-                            } catch (e) {
-                              toast.error("Failed to submit return request");
-                            }
+                          onClick={() => {
+                            setModalType("return");
+                            setIsModalOpen(true);
                           }}
                           className="w-full h-11 bg-white text-[#0f49d7] border border-[#0f49d7]/10 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#f6f8fd] active:scale-95"
                         >
@@ -611,6 +726,14 @@ const OrderConfirmationPage = () => {
           </div>
         </div>
       </div>
+      
+      <OrderActionModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleActionSubmit}
+        type={modalType}
+        orderId={order._id}
+      />
     </div>
   );
 };

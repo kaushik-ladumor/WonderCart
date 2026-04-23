@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
     
     const total = await TopSeller.countDocuments(query);
     const topSellers = await TopSeller.find(query)
-      .populate("productId", "average_rating total_reviews")
+      .populate("productId", "ratingAverage reviewCount")
       .sort({ rank: 1 })
       .skip(skip)
       .limit(parseInt(limit));

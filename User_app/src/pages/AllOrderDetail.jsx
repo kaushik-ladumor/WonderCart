@@ -32,7 +32,7 @@ function AllOrderDetail() {
   const [selectedSubOrderForReview, setSelectedSubOrderForReview] = useState(null);
 
   const SellerReviewButton = ({ subOrder }) => {
-    if (subOrder.status !== "delivered" || subOrder.isSellerReviewed) {
+    if (subOrder.status?.toLowerCase() !== "delivered" || subOrder.isSellerReviewed) {
       return null;
     }
 
@@ -78,7 +78,7 @@ function AllOrderDetail() {
     const [eligible, setEligible] = useState(false);
 
     useEffect(() => {
-      if (orderStatus !== "delivered") return;
+      if (orderStatus?.toLowerCase() !== "delivered") return;
       const check = async () => {
         try {
           const res = await axios.get(
@@ -320,16 +320,18 @@ function AllOrderDetail() {
                       </p>
 
                       <div className="flex flex-wrap gap-2 mt-4">
-                        {getOrderItems(order).slice(0, 3).map((item, idx) => (
-                           <ReviewButton 
-                             key={idx} 
-                             product={item.product || item} 
-                             orderItemId={item._id} 
-                             orderStatus={order.status} 
-                           />
-                        ))}
+                        {order.subOrders?.map((sub) => 
+                          sub.items?.map((item, idx) => (
+                            <ReviewButton 
+                              key={item._id || `${sub._id}-${idx}`} 
+                              product={item.product || item} 
+                              orderItemId={item._id} 
+                              orderStatus={sub.status} 
+                            />
+                          ))
+                        )}
                         {order.subOrders?.map((sub, idx) => (
-                          <SellerReviewButton key={idx} subOrder={sub} />
+                          <SellerReviewButton key={sub._id || idx} subOrder={sub} />
                         ))}
                       </div>
                     </div>

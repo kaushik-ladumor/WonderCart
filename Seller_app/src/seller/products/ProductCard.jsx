@@ -85,7 +85,7 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
             </p>
             <div className="inline-flex items-center gap-1 rounded-full bg-[#f5f7ff] px-2.5 py-1 text-[10px] font-semibold text-[#202a42]">
               <Star className="h-3 w-3 fill-[#f2b63d] text-[#f2b63d]" />
-              {product.averageRating?.toFixed(1) || "0.0"}
+              {product.ratingAverage?.toFixed(1) || "0.0"}
             </div>
           </div>
 

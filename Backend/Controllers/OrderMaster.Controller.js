@@ -6,6 +6,7 @@ const User = require("../Models/User.Model");
 const SellerProfile = require("../Models/SellerProfile.Model");
 const WalletTransaction = require("../Models/WalletTransaction.Model");
 const Notification = require("../Models/Notification.Model");
+const Coupon = require("../Models/Coupon.Model");
 const mongoose = require("mongoose");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
@@ -201,7 +202,7 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
 };
 
 const placeOrder = async (req, res) => {
-  const { items, addressId, paymentMethod, walletUsed, rewardCouponType } = req.body;
+  const { items, addressId, paymentMethod, walletUsed, rewardCouponType, couponCode } = req.body;
   const userId = req.user.userId;
 
   const session = await mongoose.startSession();
@@ -216,7 +217,23 @@ const placeOrder = async (req, res) => {
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
     const tax = subOrdersData.reduce((sum, s) => sum + s.taxAmount, 0);
-    const adminCommission = 50; // Fixed Admin Commission
+    const codFee = paymentMethod === "COD" ? 50 : 0;
+    
+    let couponDiscount = 0;
+    if (couponCode) {
+        const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: 'active' });
+        if (coupon) {
+            const discountBase = subTotal + tax;
+            if (coupon.dealType === 'percentage') {
+                couponDiscount = Math.round((discountBase * coupon.discount) / 100);
+                if (coupon.maxDiscount) couponDiscount = Math.min(couponDiscount, coupon.maxDiscount);
+            } else if (coupon.dealType === 'fixed') {
+                couponDiscount = Math.min(coupon.discount, discountBase);
+            } else if (coupon.dealType === 'free_shipping') {
+                couponDiscount = shipping;
+            }
+        }
+    }
     
     let rewardDiscount = 0;
     if (rewardCouponType) {
@@ -231,7 +248,7 @@ const placeOrder = async (req, res) => {
         }
     }
 
-    const totalAmount = subTotal + tax + shipping + adminCommission - rewardDiscount;
+    const totalAmount = Math.round(subTotal + tax + shipping + codFee - couponDiscount - rewardDiscount);
 
     let walletDeduction = 0;
     if (walletUsed) {
@@ -254,6 +271,7 @@ const placeOrder = async (req, res) => {
       totalAmount,
       walletAmount: walletDeduction,
       onlineAmount: 0,
+      codFee,
       address: { fullName: selectedAddress.fullName, phone: selectedAddress.phone, street: selectedAddress.street, city: selectedAddress.city, state: selectedAddress.state, zipCode, country: selectedAddress.country || "India" },
       paymentMethod: remainingAmount === 0 ? "Wallet" : paymentMethod,
       paymentStatus: remainingAmount === 0 ? "paid" : "pending",
@@ -569,17 +587,33 @@ const verifyPayment = async (req, res) => {
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
     const tax = subOrdersData.reduce((sum, s) => sum + s.taxAmount, 0);
-    const adminCommission = 50; // Fixed Admin Commission
+    const codFee = 0; // Online payment, no COD fee
+
+    let couponDiscount = 0;
+    if (orderData.couponCode) {
+        const coupon = await Coupon.findOne({ code: orderData.couponCode.toUpperCase(), status: 'active' });
+        if (coupon) {
+            const discountBase = subTotal + tax;
+            if (coupon.dealType === 'percentage') {
+                couponDiscount = Math.round((discountBase * coupon.discount) / 100);
+                if (coupon.maxDiscount) couponDiscount = Math.min(couponDiscount, coupon.maxDiscount);
+            } else if (coupon.dealType === 'fixed') {
+                couponDiscount = Math.min(coupon.discount, discountBase);
+            } else if (coupon.dealType === 'free_shipping') {
+                couponDiscount = shipping;
+            }
+        }
+    }
 
     let rewardDiscount = 0;
     if (orderData.rewardCouponType) {
         rewardDiscount = orderData.rewardCouponType === '25' ? 25 : 50;
     }
 
-    const totalAmount = subTotal + tax + shipping + adminCommission - rewardDiscount;
+    const totalAmount = Math.round(subTotal + tax + shipping + codFee - couponDiscount - rewardDiscount);
 
     const masterData = {
-      user: userId, totalAmount, address: { fullName: selectedAddress.fullName, phone: selectedAddress.phone, street: selectedAddress.street, city: selectedAddress.city, state: selectedAddress.state, zipCode, country: selectedAddress.country || "India" },
+      user: userId, totalAmount, codFee, address: { fullName: selectedAddress.fullName, phone: selectedAddress.phone, street: selectedAddress.street, city: selectedAddress.city, state: selectedAddress.state, zipCode, country: selectedAddress.country || "India" },
       paymentMethod: orderData.walletUsed > 0 ? "Partial" : "Razorpay", paymentStatus: "paid", razorpayOrderId: razorpay_order_id, razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature,
     };
 
