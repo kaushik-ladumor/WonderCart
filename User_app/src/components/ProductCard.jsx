@@ -108,25 +108,23 @@ const ProductCard = ({
         </Link>
 
         <div className="mt-auto pt-2">
-          <div className="flex items-center gap-2 mb-3 mt-1">
-             <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-3.5 h-3.5 ${i < Math.round(product.ratingAverage || 0) ? "text-orange-400 fill-orange-400" : "text-[#d9deeb]"}`}
-                    />
-                  ))}
-             </div>
-             <span className="text-[0.68rem] font-bold text-[#6d7892] uppercase tracking-wider">
-               ({product.reviewCount || 0})
-             </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <span className="text-[1rem] font-bold text-[#11182d] tracking-tight">₹{sellingPrice.toLocaleString()}</span>
-            <button className="text-[0.68rem] font-bold text-[#0f49d7] uppercase tracking-widest hidden sm:block">
-              View
-            </button>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[1.05rem] font-bold text-[#11182d] tracking-tight">
+              ₹{sellingPrice.toLocaleString()}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <div className="flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 ${i < Math.round(product.ratingAverage || 0) ? "text-orange-400 fill-orange-400" : "text-[#d9deeb]"}`}
+                  />
+                ))}
+              </div>
+              <span className="text-[0.65rem] font-bold text-[#6d7892] uppercase tracking-wider">
+                ({product.reviewCount || 0})
+              </span>
+            </div>
           </div>
         </div>
       </div>

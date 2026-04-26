@@ -618,6 +618,54 @@ const profile = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const id = req.user.userId;
+    const { username } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (username) user.username = username;
+
+    if (req.file) {
+      // If user already has a profile picture, delete it from Cloudinary
+      if (user.profile && user.profile.includes("cloudinary")) {
+        try {
+          const publicId = getPublicId(user.profile);
+          if (publicId) await cloudinary.uploader.destroy(publicId);
+        } catch (err) {
+          console.error("Failed to delete old profile image:", err);
+        }
+      }
+      // Multer-Cloudinary adds path to req.file
+      user.profile = req.file.path.replace("http://", "https://");
+    }
+
+    await user.save();
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        ...userObj,
+        hasPassword: !!user.password,
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 const contact = async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
@@ -1130,4 +1178,5 @@ module.exports = {
   refreshToken,
   applyCoupon,
   getAvailableCoupons,
+  updateProfile,
 };

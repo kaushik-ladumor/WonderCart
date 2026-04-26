@@ -131,7 +131,7 @@ const ProductDetail = () => {
         const ids = res.data.wishlist?.items?.map((i) => i.product) || [];
         setWishlist(ids);
       }
-    } catch {}
+    } catch { }
   };
 
   const toggleWishlist = async (e, productToToggle) => {
@@ -449,9 +449,8 @@ const ProductDetail = () => {
               <button
                 key={i}
                 onClick={() => setActiveImage(i)}
-                className={`w-20 md:w-full aspect-square bg-[#f8fafc] rounded-xl overflow-hidden border-2 shrink-0 ${
-                  activeImage === i ? "border-primary" : "border-[#d7dcea]"
-                }`}
+                className={`w-20 md:w-full aspect-square bg-[#f8fafc] rounded-xl overflow-hidden border-2 shrink-0 ${activeImage === i ? "border-primary" : "border-[#d7dcea]"
+                  }`}
               >
                 <img src={img} alt="" className="w-full h-full object-contain p-2" />
               </button>
@@ -471,13 +470,11 @@ const ProductDetail = () => {
         {/* Right Column: Info */}
         <div className="flex flex-col lg:pl-8">
           <div className="mb-8">
-            <span className="inline-block bg-tertiary-container text-tertiary text-[10px] font-medium px-3 py-1.5 rounded-lg uppercase mb-4 tracking-[0.16em]">
-              NEW ARRIVAL
-            </span>
+
             <h1 className="text-[1.5rem] sm:text-[1.75rem] font-semibold leading-[1.2] mb-4 text-[#11182d] tracking-tight">
               {product.name}
             </h1>
-            <button 
+            <button
               onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
               className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity"
             >
@@ -522,9 +519,9 @@ const ProductDetail = () => {
             <div className="mb-10 p-5 bg-[#f8fafc] rounded-2xl border border-[#edf2f7] flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl bg-white border border-[#e2e8f0] p-1.5 overflow-hidden shadow-sm">
-                  <img 
-                    src={product.seller.shopLogo || "/placeholder-shop.jpg"} 
-                    alt={product.seller.shopName} 
+                  <img
+                    src={product.seller.shopLogo || "/placeholder-shop.jpg"}
+                    alt={product.seller.shopName}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -541,9 +538,9 @@ const ProductDetail = () => {
                   </div>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => navigate(`/shop?seller=${product.owner}`)}
-                className="px-4 py-2 bg-white border border-[#d7dcea] rounded-xl text-[0.7rem] font-bold text-[#0f49d7] uppercase tracking-widest hover:bg-[#0f49d7] hover:text-white hover:border-[#0f49d7] transition-all"
+                className="w-full sm:w-auto px-6 py-3 bg-white border border-[#e2e8f0] rounded-xl text-[0.7rem] font-bold text-[#0f49d7] uppercase tracking-widest shadow-sm"
               >
                 Visit Store
               </button>
@@ -562,11 +559,10 @@ const ProductDetail = () => {
                     key={v.color}
                     onClick={() => handleColorChange(v.color)}
                     style={{ backgroundColor: v.color.toLowerCase() }}
-                    className={`w-9 h-9 rounded-full border-2 ${
-                      v.color === selectedColor
-                        ? "border-primary"
-                        : "border-[#d7dcea]"
-                    }`}
+                    className={`w-9 h-9 rounded-full border-2 ${v.color === selectedColor
+                      ? "border-primary"
+                      : "border-[#d7dcea]"
+                      }`}
                     title={v.color}
                   />
                 ))}
@@ -586,13 +582,12 @@ const ProductDetail = () => {
                     key={s.size}
                     onClick={() => s.stock > 0 && handleSizeChange(s.size)}
                     disabled={s.stock <= 0}
-                    className={`px-8 py-3 rounded-xl text-[0.82rem] font-semibold border-2 ${
-                      s.size === selectedSize
-                        ? "bg-primary border-primary text-white"
-                        : s.stock <= 0
-                          ? "bg-surface-low border-transparent text-on-surface-variant opacity-50 cursor-not-allowed"
-                          : "bg-background border-[#d7dcea] text-[#11182d]"
-                    }`}
+                    className={`px-8 py-3 rounded-xl text-[0.82rem] font-semibold border-2 ${s.size === selectedSize
+                      ? "bg-primary border-primary text-white"
+                      : s.stock <= 0
+                        ? "bg-surface-low border-transparent text-on-surface-variant opacity-50 cursor-not-allowed"
+                        : "bg-background border-[#d7dcea] text-[#11182d]"
+                      }`}
                   >
                     {s.size}
                   </button>
@@ -636,11 +631,11 @@ const ProductDetail = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-4 mb-4">
+          <div className="flex flex-row gap-4 mb-4">
             <button
               onClick={addToCart}
               disabled={!selectedSize || stock <= 0}
-              className="w-full bg-[#1e293b] text-white font-semibold rounded-2xl py-5 flex items-center justify-center gap-3 disabled:opacity-50 tracking-wider text-[0.82rem]"
+              className="flex-1 bg-[#1e293b] text-white font-semibold rounded-2xl py-5 flex items-center justify-center gap-3 disabled:opacity-50 tracking-wider text-[0.82rem]"
             >
               <ShoppingCart className="w-5 h-5" />
               ADD TO CART
@@ -648,7 +643,7 @@ const ProductDetail = () => {
             <button
               onClick={buyNow}
               disabled={!selectedSize || stock <= 0}
-              className="w-full bg-primary text-white font-semibold rounded-2xl py-5 disabled:opacity-50 tracking-wider text-[0.82rem]"
+              className="flex-1 bg-primary text-white font-semibold rounded-2xl py-5 disabled:opacity-50 tracking-wider text-[0.82rem]"
             >
               BUY NOW
             </button>
@@ -662,57 +657,43 @@ const ProductDetail = () => {
         <div id="reviews-section" className="py-16 border-t border-[#d7dcea] mt-10">
           <div className="w-full">
             <div className="">
-               <h3 className="text-[1.25rem] font-semibold mb-12 text-[#11182d] tracking-tight">Customer Feedbacks</h3>
+              <h3 className="text-[1.25rem] font-semibold mb-12 text-[#11182d] tracking-tight">Customer Feedbacks</h3>
               {/* Rating Summary & Breakdown */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 mb-16 items-start">
-                <div className="lg:col-span-4 bg-[#f8f9fc] p-10 rounded-[40px] border border-[#d7dcea] text-center">
-                  <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6d7892] mb-4">
-                    OVERALL RATING
-                  </h4>
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-7xl font-semibold text-[#11182d] tracking-tighter">
-                        {product.ratingAverage || "0.0"}
-                        </span>
-                        <span className="text-[1.1rem] font-semibold text-[#6d7892]">/ 5.0</span>
-                    </div>
-                    <div className="flex gap-1.5 my-5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-6 h-6 ${i < Math.round(product.ratingAverage || 0) ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="mt-4 p-3 bg-[#10b981]/10 rounded-xl flex items-center justify-center gap-2 border border-[#10b981]/20">
-                        <Check className="w-4 h-4 text-[#10b981]" />
-                        <span className="text-[10px] font-semibold text-[#10b981] uppercase tracking-wider">VERIFIED AUTHENTICITY GUARANTEE</span>
-                    </div>
+              <div className="max-w-4xl mx-auto mb-16 bg-[#f8fafc] rounded-[32px] p-8 sm:p-12 border border-[#f1f5f9] flex flex-col md:flex-row items-center gap-12 md:gap-20">
+                <div className="text-center shrink-0">
+                  <div className="flex items-baseline justify-center gap-1.5 mb-2">
+                    <span className="text-6xl font-bold text-[#11182d] tracking-tighter">{product.ratingAverage || "0.0"}</span>
+                    <span className="text-[1.1rem] font-bold text-[#6d7892] opacity-40">/ 5.0</span>
+                  </div>
+                  <div className="flex gap-1.5 justify-center mb-6">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${i < Math.round(product.ratingAverage || 0) ? "text-[#ff9c07] fill-[#ff9c07]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[0.78rem] font-bold text-[#6d7892] uppercase tracking-widest mb-6">Based on {product.reviewCount || 0} reviews</p>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ecfdf5] rounded-full border border-[#d1fae5]">
+                    <Check className="w-3.5 h-3.5 text-[#10b981]" />
+                    <span className="text-[9px] font-bold text-[#10b981] uppercase tracking-wider">Verified Authentic</span>
                   </div>
                 </div>
 
-                <div className="lg:col-span-8 flex flex-col justify-center h-full gap-4">
+                <div className="flex-1 w-full space-y-4">
                   {[5, 4, 3, 2, 1].map((star) => {
                     const count = reviews.filter((r) => r.rating === star).length;
                     const percent = product.reviewCount > 0 ? (count / product.reviewCount) * 100 : 0;
                     return (
-                      <div
-                        key={star}
-                        className="flex items-center gap-6 group cursor-pointer"
-                        onClick={() => setStarFilter(starFilter === star ? null : star)}
-                      >
-                        <span className="text-[0.78rem] font-semibold text-[#11182d] w-6">
-                          {star}
-                        </span>
-                        <div className="flex-1 h-2.5 bg-[#eef2ff] rounded-full overflow-hidden">
+                      <div key={star} className="flex items-center gap-5 group">
+                        <span className="text-[0.82rem] font-bold text-[#11182d] w-3">{star}</span>
+                        <div className="flex-1 h-2.5 bg-[#f1f5f9] rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${starFilter === star ? "bg-[#0f49d7]" : "bg-[#0f49d7]/80"}`}
+                            className="h-full rounded-full bg-[#0f49d7]"
                             style={{ width: `${percent}%` }}
                           />
                         </div>
-                        <span className="text-[0.78rem] font-semibold text-[#6d7892] w-8 text-right">
-                          {count}
-                        </span>
+                        <span className="text-[0.82rem] font-bold text-[#6d7892] w-8 text-right shrink-0">{count}</span>
                       </div>
                     );
                   })}
@@ -740,21 +721,21 @@ const ProductDetail = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-widest">SORT BY:</span>
-                    <select
+                  <span className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-widest">SORT BY:</span>
+                  <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     className="bg-transparent text-[0.78rem] font-semibold text-[#11182d] focus:outline-none cursor-pointer border-b-2 border-[#0f49d7] pb-1"
-                    >
+                  >
                     <option value="latest">Latest First</option>
                     <option value="highest">Highest Rating</option>
                     <option value="lowest">Lowest Rating</option>
-                    </select>
+                  </select>
                 </div>
               </div>
 
               {/* Reviews List */}
-              <div className="grid grid-cols-1 gap-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {reviews
                   .filter((r) => !starFilter || r.rating === starFilter)
                   .sort((a, b) => {
@@ -765,68 +746,57 @@ const ProductDetail = () => {
                   .map((rev) => (
                     <div
                       key={rev._id}
-                      className="group"
+                      className="group bg-[#f8fafc] border border-[#d7dcea] rounded-3xl p-6 flex flex-col h-full"
                     >
-                      <div className="flex justify-between items-start mb-6">
-                        <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-[#f8f9fc] border border-[#d7dcea] flex items-center justify-center text-[0.9rem] font-semibold text-[#0f49d7]">
-                             {rev.user?.username?.[0]?.toUpperCase() || rev.user?.name?.[0]?.toUpperCase() || "U"}
-                           </div>
-                           <div>
-                             <p className="text-[0.88rem] font-semibold text-[#11182d]">
-                               {rev.user?.username || rev.user?.name || "Anonymous"}
-                             </p>
-                             <div className="flex items-center gap-3 mt-1">
-                               <span className="text-[10px] font-semibold text-[#6d7892] uppercase">
-                                 Verified Purchaser <span className="mx-2">•</span> {new Date(rev.createdAt).toLocaleDateString()}
-                               </span>
-                             </div>
-                           </div>
-                         </div>
-                         <div className="flex gap-0.5">
-                           {[...Array(5)].map((_, i) => (
-                             <Star
-                               key={i}
-                               className={`w-4 h-4 ${i < rev.rating ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
-                             />
-                           ))}
-                         </div>
-                       </div>
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white border border-[#d7dcea] flex items-center justify-center text-[0.8rem] font-semibold text-[#0f49d7] shrink-0">
+                            {rev.user?.username?.[0]?.toUpperCase() || rev.user?.name?.[0]?.toUpperCase() || "U"}
+                          </div>
+                          <div>
+                            <p className="text-[0.82rem] font-bold text-[#11182d] line-clamp-1">
+                              {rev.user?.username || rev.user?.name || "Anonymous"}
+                            </p>
+                            <p className="text-[9px] font-semibold text-[#6d7892] uppercase">
+                              {new Date(rev.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${i < rev.rating ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
 
-                       <div className="pl-18">
-                         <p className="text-[0.88rem] text-[#6d7892] leading-relaxed mb-6">
-                             {rev.comment}
-                         </p>
+                      <div className="flex-1">
+                        <p className="text-[0.82rem] text-[#6d7892] leading-relaxed mb-4 line-clamp-4">
+                          {rev.comment}
+                        </p>
 
-                         {rev.images && rev.images.length > 0 && (
-                             <div className="flex gap-4 mb-8">
-                             {rev.images.map((img, idx) => (
-                                 <div
-                                 key={idx}
-                                 className="w-24 h-24 rounded-2xl overflow-hidden border border-[#d7dcea] cursor-zoom-in"
-                                 onClick={() => setSelectedReviewImage(img)}
-                                 >
-                                 <img src={img} alt="Review" className="w-full h-full object-cover" />
-                                 </div>
-                             ))}
-                             </div>
-                         )}
+                        {rev.images && rev.images.length > 0 && (
+                          <div className="flex gap-2 mb-2">
+                            {rev.images.map((img, idx) => (
+                              <div
+                                key={idx}
+                                className="w-16 h-16 rounded-xl overflow-hidden border border-[#d7dcea] cursor-zoom-in shrink-0"
+                                onClick={() => setSelectedReviewImage(img)}
+                              >
+                                <img src={img} alt="Review" className="w-full h-full object-cover" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
 
-                         <div className="flex items-center gap-8 pt-4 border-t border-[#d7dcea]/30">
-                             <button onClick={() => handleHelpful(rev._id)} className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[#6d7892]">
-                             <ThumbsUp className="w-4 h-4" /> HELPFUL ({rev.helpful_count || 0})
-                             </button>
-                             <button onClick={() => handleReport(rev._id)} className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[#6d7892]">
-                             <Flag className="w-4 h-4" /> REPORT
-                             </button>
-                         </div>
-                       </div>
-                     </div>
-                   ))}
-
+              </div>
             </div>
           </div>
-        </div>
         </div>
       )}
 
@@ -842,11 +812,11 @@ const ProductDetail = () => {
                 Curated items from our collection you might love
               </p>
             </div>
-            <button 
-                onClick={() => navigate("/shop")}
-                className="text-[0.78rem] font-semibold text-[#0f49d7] uppercase tracking-widest whitespace-nowrap shrink-0 self-start sm:self-auto"
+            <button
+              onClick={() => navigate("/shop")}
+              className="text-[0.78rem] font-semibold text-[#0f49d7] uppercase tracking-widest whitespace-nowrap shrink-0 self-start sm:self-auto"
             >
-                View All
+              View All
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

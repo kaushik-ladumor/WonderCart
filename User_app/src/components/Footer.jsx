@@ -57,7 +57,7 @@ function Footer() {
           {/* Brand & Mission */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2">
             <div className="inline-block mb-4">
-              <Logo />
+              <Logo size="h-20" />
             </div>
             <p className="text-[0.78rem] text-[#42506d] max-w-xs leading-relaxed">
               Experience curated editorial commerce. Premium essentials for the modern lifestyle, selected for the global collector.

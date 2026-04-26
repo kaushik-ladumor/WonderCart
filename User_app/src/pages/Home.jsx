@@ -265,7 +265,7 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="flex overflow-x-auto gap-3 rounded-[20px] border border-[#e2e6f3] bg-white p-2 sm:p-3 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex overflow-x-auto gap-2 rounded-[16px] border border-[#f1f5f9] bg-white p-1 sm:p-1.5 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {visibleCategories.map((category) => {
             const Icon = category.icon;
 
@@ -275,12 +275,12 @@ function HomePage() {
                 onClick={() =>
                   navigate(`/shop?category=${encodeURIComponent(category.label)}`)
                 }
-                className="flex flex-col items-center justify-center gap-3 rounded-2xl px-2 py-4 sm:px-3 text-center min-w-[96px] sm:min-w-[110px] lg:min-w-0 lg:flex-1 shrink-0 snap-start hover:bg-[#f8f9fc] transition-colors"
+                className="flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 sm:px-3 text-center min-w-[80px] sm:min-w-[90px] lg:min-w-0 lg:flex-1 shrink-0 snap-start"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#edf2ff] text-[#0f49d7] shadow-sm">
-                  <Icon className="h-5 w-5" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f1f5ff] text-[#0f49d7]">
+                  <Icon className="h-3.5 w-3.5" />
                 </span>
-                <span className="text-[0.72rem] sm:text-[0.76rem] font-medium uppercase tracking-[0.18em] text-[#3f4b67]">
+                <span className="text-[0.62rem] sm:text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#3f4b67]">
                   {category.label}
                 </span>
               </button>

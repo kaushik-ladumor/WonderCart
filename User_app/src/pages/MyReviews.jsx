@@ -181,101 +181,104 @@ const MyReviews = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb] py-6 pb-20 font-body text-[#11182d]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+    <div className="min-h-screen bg-[#f8fafc] py-8 pb-20 text-[#11182d]">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <span className="font-body text-[10px] uppercase tracking-[0.2em] font-semibold text-[#0f49d7] mb-1.5 block">Account Community</span>
-            <h1 className="font-display text-[1.5rem] sm:text-[1.75rem] font-semibold text-[#11182d] leading-none tracking-tight">Product Feedback</h1>
-            <p className="font-body text-[0.82rem] text-[#42506d] mt-2 font-medium">Manage all the reviews you've shared</p>
+            <div className="flex items-center gap-2 mb-2">
+               <span className="h-1 w-8 rounded-full bg-[#0f49d7]"></span>
+               <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#0f49d7]">Account Community</span>
+            </div>
+            <h1 className="text-[1.75rem] font-bold text-[#11182d] tracking-tight">Product Feedback</h1>
+            <p className="text-[0.85rem] text-[#64748b] mt-1.5 font-medium">Manage and view all the reviews you've shared</p>
           </div>
-          <div className="bg-white px-6 py-4 rounded-[18px] border border-[#e1e5f1] flex flex-col items-center justify-center min-w-[120px] shadow-sm">
-            <p className="text-[1.5rem] font-semibold text-[#0f49d7] leading-none mb-1">{reviews.length}</p>
-            <p className="text-[9px] font-bold text-[#6d7892] uppercase tracking-[0.14em]">Total Reviews</p>
+          <div className="bg-white px-8 py-5 rounded-[24px] border border-[#e2e8f0] flex items-center gap-5 shadow-sm">
+            <div className="h-12 w-12 rounded-2xl bg-[#eff6ff] flex items-center justify-center text-[#0f49d7]">
+               <MessageSquare className="w-6 h-6" />
+            </div>
+            <div>
+               <p className="text-[1.5rem] font-bold text-[#11182d] leading-none">{reviews.length}</p>
+               <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mt-1">Total Reviews</p>
+            </div>
           </div>
         </div>
 
         {reviews.length === 0 ? (
-          <div className="bg-white rounded-[24px] border border-[#e1e5f1] p-16 md:p-20 text-center shadow-sm">
-            <div className="w-16 h-16 bg-[#f8f9fb] rounded-[20px] flex items-center justify-center mx-auto mb-6 text-[#90a0be]">
-              <MessageSquare className="w-8 h-8" />
+          <div className="bg-white rounded-[32px] border border-[#e2e8f0] p-16 md:p-24 text-center shadow-sm">
+            <div className="w-20 h-20 bg-[#f8fafc] rounded-[24px] flex items-center justify-center mx-auto mb-6 text-[#94a3b8] border border-[#f1f5f9]">
+              <MessageSquare className="w-10 h-10" />
             </div>
-            <h3 className="font-display text-[1.1rem] font-semibold text-[#11182d]">No reviews found</h3>
-            <p className="font-body text-[0.82rem] text-[#42506d] mt-2 mb-8 max-w-xs mx-auto font-medium leading-relaxed">
-              You haven't shared your feedback on any products yet.
+            <h3 className="text-[1.25rem] font-bold text-[#11182d]">No reviews found</h3>
+            <p className="text-[0.88rem] text-[#64748b] mt-2 mb-8 max-w-xs mx-auto font-medium leading-relaxed">
+              Your feedback helps other shoppers make better decisions. Share your thoughts on your recent orders!
             </p>
             <button 
               onClick={() => navigate("/my-orders")}
-              className="px-8 py-3 bg-[#11182d] text-white font-semibold rounded-xl text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg shadow-black/10"
+              className="px-10 py-3.5 bg-[#11182d] text-white font-bold rounded-xl text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-black/5"
             >
               Check My Orders
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
             {reviews.map((rev) => (
               <div 
                 key={rev._id} 
-                className="bg-white rounded-[20px] border border-[#e1e5f1] p-5 sm:p-6 shadow-sm group hover:border-[#0f49d7]/20 transition-all"
+                className="bg-white rounded-[16px] border border-[#e2e8f0] p-4 shadow-sm transition-all hover:border-[#0f49d7]/30"
               >
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  {/* Product Info */}
-                  <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-[14px] overflow-hidden bg-[#f8f9fb] border border-[#eef2ff] flex items-center justify-center p-2">
-                    <img 
-                      src={rev.product?.images?.[0] || rev.product?.variants?.[0]?.images?.[0] || "/placeholder.jpg"} 
-                      alt={rev.product?.name || "Product"} 
-                      className="w-full h-full object-contain mix-blend-multiply"
-                    />
+                <div className="flex flex-col gap-3">
+                  {/* Product Header */}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#f8fafc] border border-[#f1f5f9] flex items-center justify-center p-1.5 flex-shrink-0">
+                      <img 
+                        src={rev.product?.images?.[0] || rev.product?.variants?.[0]?.images?.[0] || "/placeholder.jpg"} 
+                        alt={rev.product?.name || "Product"} 
+                        className="w-full h-full object-contain mix-blend-multiply"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-[0.78rem] font-bold text-[#11182d] truncate cursor-pointer hover:text-[#0f49d7]" onClick={() => navigate(`/product-detail/${rev.product?._id}`)}>
+                        {rev.product?.name || "Product"}
+                      </h4>
+                      <div className="flex gap-0.5 mt-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`w-2.5 h-2.5 ${i < (rev.rating || 5) ? "text-[#ffb800] fill-[#ffb800]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Review Content */}
-                  <div className="flex-1 w-full pt-1">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
-                      <div>
-                        <h4 className="font-display text-[0.88rem] font-semibold text-[#11182d] mb-1.5 leading-tight group-hover:text-[#0f49d7] transition-colors">
-                          {rev.product?.name || "Ordered Product"}
-                        </h4>
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-3.5 h-3.5 ${i < (rev.rating || 5) ? "text-[#ffb800] fill-[#ffb800]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => setEditingReview(rev)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#eef2ff] text-[#42506d] font-semibold text-[9px] uppercase tracking-widest hover:bg-gray-50 transition-colors"
-                        >
-                          <Edit2 className="w-3 h-3" /> Edit
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(rev._id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#f0c9c9] text-[#d12828] font-semibold text-[9px] uppercase tracking-widest hover:bg-[#fff5f5] transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" /> Delete
-                        </button>
-                      </div>
-                    </div>
+                  {/* Comment */}
+                  <div className="bg-[#f8fafc] rounded-lg p-3 border border-[#f1f5f9] h-[80px] overflow-y-auto">
+                    <p className="text-[0.74rem] text-[#334155] italic leading-relaxed font-medium">
+                      "{rev.comment || "No comment."}"
+                    </p>
+                  </div>
 
-                    <div className="bg-[#f8f9fd] rounded-xl p-4 mb-4 border border-[#eef2ff]">
-                      <p className="font-body text-[0.82rem] text-[#42506d] italic leading-relaxed font-medium">
-                        "{rev.comment || "No comment provided."}"
-                      </p>
+                  {/* Footer Actions & Meta */}
+                  <div className="flex items-center justify-between pt-3 border-t border-[#f1f5f9]">
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setEditingReview(rev)}
+                        className="p-2 rounded-lg border border-[#e2e8f0] text-[#475569] hover:bg-[#f8fafc] transition-all"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(rev._id)}
+                        className="p-2 rounded-lg border border-[#fee2e2] text-[#ef4444] hover:bg-[#fef2f2] transition-all"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-
-                    <div className="flex items-center gap-4">
-                        <span className={`px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest border ${
-                          rev.status === 'approved' || !rev.status ? 'bg-[#e7f6ed] text-[#15753a] border-[#d1f2e0]' : 'bg-[#fff5f5] text-[#d12828] border-[#f0c9c9]'
-                        }`}>
-                          {rev.status || 'APPROVED'}
-                        </span>
-                        <span className="text-[9px] font-semibold text-[#6d7892] uppercase tracking-[0.1em]">
-                          {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ""}
-                        </span>
-                    </div>
+                    <span className="px-2.5 py-1 rounded-lg bg-[#f8fafc] border border-[#f1f5f9] text-[10px] font-bold text-[#64748b] uppercase tracking-wider">
+                      {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>

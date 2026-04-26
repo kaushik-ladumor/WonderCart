@@ -7,6 +7,8 @@ const walletController = require('../Controllers/Wallet.Controller');
 
 const Authenticate = require('../Middlewares/Auth');
 
+const upload = require('../Middlewares/upload');
+
 userRouter.post("/signup", userController.signup);
 userRouter.post("/login", userController.login);
 userRouter.post("/refresh-token", userController.refreshToken);
@@ -17,6 +19,7 @@ userRouter.post("/forget-password", userController.forgatPassword);
 userRouter.post("/reset-password", userController.resetPassword);
 userRouter.put("/update-password", Authenticate, userController.updatePassword);
 userRouter.get("/profile", Authenticate, userController.profile);
+userRouter.put("/profile", Authenticate, upload.single('profile'), userController.updateProfile);
 userRouter.delete("/delete-account", Authenticate, userController.deleteAccount);
 userRouter.post("/contact", userController.contact);
 

@@ -371,9 +371,7 @@ const Checkout = () => {
     <div className="min-h-screen bg-[#f6f7fb] py-3 text-[#11182d]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-3">
-          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#6d7892]">
-            WonderCart
-          </p>
+
           <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight sm:text-[1.75rem]">
             Checkout
           </h1>

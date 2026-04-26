@@ -8,6 +8,11 @@ import {
   ShoppingBag,
   User,
   X,
+  Star,
+  Tag,
+  Store,
+  ShoppingBasket,
+  Briefcase,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -20,13 +25,14 @@ import { API_URL } from "../utils/constants";
 import Logo from "./Logo";
 
 const navLinks = [
-  { label: "Shop", to: "/shop" },
-  { label: "Top Sellers", to: "/top-sellers" },
-  { label: "Deals", to: "/deals" },
+  { label: "Shop", to: "/shop", icon: ShoppingBasket },
+  { label: "Top Sellers", to: "/top-sellers", icon: Star },
+  { label: "Deals", to: "/deals", icon: Tag },
   {
     label: "Become a Seller",
     to: "https://wondercart-seller.netlify.app",
     external: true,
+    icon: Briefcase,
   },
 ];
 
@@ -240,9 +246,9 @@ export default function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-[#e4e8f2] bg-white">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 flex-1 lg:flex-none">
-            <Logo className={isMobileSearchExpanded ? 'hidden sm:flex max-w-[200px] opacity-100' : 'max-w-[200px] opacity-100 transition-all duration-300'} />
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 pl-2 pr-4 sm:pl-3 sm:pr-6 lg:pl-4 lg:pr-8">
+          <div className="flex items-center gap-8 flex-1 lg:flex-none">
+            <Logo size="h-14" className={isMobileSearchExpanded ? 'hidden sm:flex max-w-[200px] opacity-100' : 'max-w-[200px] opacity-100 transition-all duration-300'} />
 
             {/* Mobile Expanded Search */}
             {isMobileSearchExpanded && (
@@ -279,7 +285,7 @@ export default function Navbar() {
                     href={link.to}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[0.82rem] font-medium text-[#42506d] hover:text-[#0f49d7] transition-colors"
+                    className="text-[0.82rem] font-medium text-[#42506d] hover:text-[#0f49d7] transition-colors nav-link-underline"
                   >
                     {link.label}
                   </a>
@@ -287,8 +293,8 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     to={link.to}
-                    className={`text-[0.82rem] font-medium ${isPathActive(location.pathname, link.to)
-                      ? "text-[#0f49d7]"
+                    className={`text-[0.82rem] font-medium nav-link-underline ${isPathActive(location.pathname, link.to)
+                      ? "text-[#0f49d7] nav-link-underline-active"
                       : "text-[#42506d]"
                       }`}
                   >
@@ -514,13 +520,8 @@ export default function Navbar() {
       <div className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[70] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}>
         <div className="flex h-full flex-col bg-white overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-5">
-            <Link
-              to="/"
-              className="text-[1.55rem] font-semibold tracking-tight text-[#0f49d7]"
-            >
-              WonderCart
-            </Link>
+          <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-2.5">
+            <Logo size="h-14" className="max-w-[180px]" />
             <button
               onClick={() => setIsMenuOpen(false)}
               className="rounded-xl p-2 text-[#5c6880] hover:bg-gray-100 transition-colors"
@@ -532,43 +533,47 @@ export default function Navbar() {
 
           <div className="flex-1 overflow-y-auto px-5 py-6">
             <div className="space-y-1">
-              {navLinks.map((link) =>
-                link.external ? (
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                return link.external ? (
                   <a
                     key={link.label}
                     href={link.to}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block rounded-2xl px-4 py-3 text-[0.88rem] font-medium text-[#25324d] hover:bg-[#eef2ff] hover:text-[#0f49d7] transition-colors"
+                    className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[0.88rem] font-medium text-[#25324d] hover:bg-[#eef2ff] hover:text-[#0f49d7] transition-colors"
                   >
-                    {link.label}
+                    <Icon className="w-4 h-4 text-[#6d7892]" /> {link.label}
                   </a>
                 ) : (
                   <Link
                     key={link.label}
                     to={link.to}
-                    className={`block rounded-2xl px-4 py-3 text-[0.88rem] font-medium ${isPathActive(location.pathname, link.to)
+                    className={`flex items-center gap-4 rounded-2xl px-4 py-3 text-[0.88rem] font-medium ${isPathActive(location.pathname, link.to)
                       ? "bg-[#eef2ff] text-[#0f49d7]"
                       : "text-[#25324d]"
                       }`}
                   >
-                    {link.label}
+                    <Icon className={`w-4 h-4 ${isPathActive(location.pathname, link.to) ? 'text-[#0f49d7]' : 'text-[#6d7892]'}`} /> {link.label}
                   </Link>
-                ),
-              )}
+                );
+              })}
+              
+              <div className="pt-2 mt-2 border-t border-[#f1f5fb]">
+                <Link to="/wishlist" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[0.88rem] font-medium text-[#25324d]">
+                  <Heart className="w-4 h-4 text-[#6d7892]" /> Wishlist
+                </Link>
+                <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[0.88rem] font-medium text-[#25324d]">
+                  <ShoppingBag className="w-4 h-4 text-[#6d7892]" /> Bag
+                  {cartCount > 0 && <span className="ml-auto flex items-center justify-center bg-[#0f49d7] text-white text-[10px] min-w-[20px] h-5 rounded-full font-bold px-1.5">{cartCount}</span>}
+                </Link>
+              </div>
             </div>
 
           </div>
 
           <div className="pt-2 pb-6 px-5 mt-auto bg-white border-t border-[#f1f5fb]">
             <div className="flex flex-col gap-1 mt-4">
-              <Link to="/wishlist" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3.5 text-[0.88rem] font-semibold text-[#11182d] hover:bg-[#f8f9fc] transition-colors">
-                <div className="flex items-center gap-3"><Heart className="w-4.5 h-4.5 text-[#6d7892]" /> Wishlist</div>
-              </Link>
-              <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3.5 text-[0.88rem] font-semibold text-[#11182d] hover:bg-[#f8f9fc] transition-colors">
-                <div className="flex items-center gap-3"><ShoppingBag className="w-4.5 h-4.5 text-[#6d7892]" /> Bag</div>
-                {cartCount > 0 && <span className="flex items-center justify-center bg-[#0f49d7] text-white text-[10px] min-w-[20px] h-5 rounded-full font-bold px-1.5">{cartCount}</span>}
-              </Link>
 
               {authUser ? (
                 <>
