@@ -793,6 +793,7 @@ const updateSubOrderStatus = async (req, res) => {
     if (status === "shipped") {
       subOrder.trackingNumber = trackingNumber;
       subOrder.trackingUrl = trackingUrl;
+      subOrder.shippedAt = new Date();
     } else if (status === "delivered") {
       subOrder.deliveredAt = new Date();
       // Payout logic

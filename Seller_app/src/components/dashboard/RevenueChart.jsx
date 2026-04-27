@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, LabelList } from 'recharts';
+import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 const RUPEE = '\u20B9';
 
@@ -15,7 +15,7 @@ const getWeek = (date) => {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-3xl border-none bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.12)] min-w-[160px]">
+      <div className="rounded-3xl border-none bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.12)] min-w-[160px] font-poppins">
         <p className="mb-3 text-[15px] font-bold text-[#1e293b]">{label}</p>
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4">
@@ -43,10 +43,10 @@ const RevenueChart = ({ data = [], isLoading }) => {
       return data.slice(-7).map(item => {
         const date = new Date(item._id || item.label);
         const isValidDate = !isNaN(date.getTime());
-        
+
         return {
           ...item,
-          label: isValidDate 
+          label: isValidDate
             ? date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
             : (item.label || 'Invalid')
         };
@@ -57,7 +57,7 @@ const RevenueChart = ({ data = [], isLoading }) => {
     data.forEach(item => {
       const date = new Date(item._id || item.label);
       const isValidDate = !isNaN(date.getTime());
-      
+
       let key;
       if (!isValidDate) {
         key = item.label || 'Other';
@@ -68,11 +68,11 @@ const RevenueChart = ({ data = [], isLoading }) => {
       }
 
       if (!groups[key]) {
-        groups[key] = { 
-          label: key, 
-          revenue: 0, 
-          orders: 0, 
-          rawDate: isValidDate ? date : new Date(0) 
+        groups[key] = {
+          label: key,
+          revenue: 0,
+          orders: 0,
+          rawDate: isValidDate ? date : new Date(0)
         };
       }
       groups[key].revenue += item.revenue || 0;
@@ -103,7 +103,7 @@ const RevenueChart = ({ data = [], isLoading }) => {
   }
 
   return (
-    <div className="flex h-[450px] flex-col rounded-[32px] border border-[#f1f5f9] bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.03)]">
+    <div className="flex h-[480px] flex-col rounded-[32px] border border-[#f1f5f9] bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.03)] font-poppins">
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div>
@@ -117,11 +117,10 @@ const RevenueChart = ({ data = [], isLoading }) => {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`rounded-full px-6 py-2 text-[12px] font-bold uppercase tracking-wider transition-all duration-500 ease-out ${
-                  view === v 
-                    ? 'bg-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)]' 
+                className={`rounded-full px-6 py-2 text-[12px] font-bold uppercase tracking-wider transition-all duration-500 ease-out ${view === v
+                    ? 'bg-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)]'
                     : 'text-[#64748b] hover:text-[#0f172a]'
-                }`}
+                  }`}
               >
                 {v}
               </button>
@@ -136,56 +135,46 @@ const RevenueChart = ({ data = [], isLoading }) => {
         </div>
       ) : (
         <div className="mt-4 flex-1">
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={processedData} margin={{ top: 25, right: 30, left: 10, bottom: 10 }}>
-              <CartesianGrid vertical={false} stroke="#e2e8f0" strokeOpacity={0.8} />
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={processedData} margin={{ top: 20, right: 30, left: 80, bottom: 80 }}>
+              <CartesianGrid vertical={false} stroke="#e2e8f0" strokeOpacity={0.5} />
               <XAxis
                 dataKey="label"
-                axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
-                tickLine={{ stroke: '#94a3b8' }}
-                tick={{ fill: '#0f172a', fontSize: 12, fontWeight: 700 }}
+                axisLine={{ stroke: '#cbd5e1', strokeWidth: 1 }}
+                tickLine={false}
+                tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600, fontFamily: 'Poppins' }}
                 dy={15}
-                label={{ value: view === 'daily' ? 'Days' : view === 'weekly' ? 'Weeks' : 'Months', position: 'insideBottomRight', offset: -10, fontSize: 12, fontWeight: 800, fill: '#0f172a' }}
               />
-              <YAxis 
-                yAxisId="revenue" 
-                axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
-                tickLine={{ stroke: '#94a3b8' }}
-                tick={{ fill: '#0f172a', fontSize: 12, fontWeight: 700 }}
-                tickFormatter={(value) => `${RUPEE}${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`}
-                label={{ value: 'Revenue', angle: -90, position: 'insideLeft', fontSize: 12, fontWeight: 800, fill: '#0f172a' }}
+              <YAxis
+                yAxisId="revenue"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600, fontFamily: 'Poppins' }}
+                tickFormatter={(value) => `${RUPEE}${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`}
               />
               <YAxis yAxisId="orders" hide />
-              <Tooltip 
-                cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '3 3' }} 
-                content={<CustomTooltip />} 
+              <Tooltip
+                cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
+                content={<CustomTooltip />}
               />
-              <Line 
+              <Line
                 yAxisId="revenue"
-                type="linear" 
-                dataKey="revenue" 
-                stroke="#2563eb" 
-                strokeWidth={2.5}
-                dot={{ r: 5, fill: '#f97316', strokeWidth: 0 }}
-                activeDot={{ r: 7, fill: '#f97316', stroke: '#fff', strokeWidth: 2 }}
-              >
-                <LabelList 
-                  dataKey="revenue" 
-                  position="top" 
-                  offset={12} 
-                  formatter={(value) => `${RUPEE}${value >= 1000 ? (value/1000).toFixed(1) + 'k' : value}`}
-                  style={{ fill: '#f97316', fontSize: 12, fontWeight: 800 }} 
-                />
-              </Line>
-              <Line 
+                type="monotone"
+                dataKey="revenue"
+                stroke="#2563eb"
+                strokeWidth={3}
+                dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }}
+                activeDot={{ r: 6, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }}
+              />
+              <Line
                 yAxisId="orders"
-                type="linear" 
-                dataKey="orders" 
-                stroke="#94a3b8" 
-                strokeWidth={1.5}
-                strokeDasharray="5 5"
-                dot={{ r: 4, fill: '#64748b', strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#64748b' }}
+                type="monotone"
+                dataKey="orders"
+                stroke="#cbd5e1"
+                strokeWidth={2}
+                strokeDasharray="4 4"
+                dot={{ r: 3, fill: '#cbd5e1', strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: '#94a3b8' }}
               />
             </LineChart>
           </ResponsiveContainer>

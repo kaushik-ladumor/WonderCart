@@ -64,6 +64,7 @@ const subOrderSchema = new mongoose.Schema({
   statusHistory: [statusHistorySchema],
   trackingNumber: String,
   trackingUrl: String,
+  shippedAt: Date,
   deliveredAt: Date,
   cancelledAt: Date,
   returnedAt: Date,

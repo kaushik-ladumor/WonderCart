@@ -105,10 +105,10 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
               <Package className="h-3.5 w-3.5 text-[#7481a2]" />
               <p
                 className={`text-[13px] font-semibold ${isOutOfStock
-                    ? "text-[#d14343]"
-                    : isLowStock
-                      ? "text-[#c77719]"
-                      : "text-[#18794e]"
+                  ? "text-[#d14343]"
+                  : isLowStock
+                    ? "text-[#c77719]"
+                    : "text-[#18794e]"
                   }`}
               >
                 {stock} units
@@ -126,7 +126,7 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 border-t border-[#edf1ff] pt-3.5">
+        <div className="grid grid-cols-2 gap-2 border-t border-[#edf1ff] pt-3.5">
           <Link
             to={`/seller/products/edit/${product._id}`}
             className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-[#2f5fe3] px-3 py-2.5 text-[11px] font-semibold text-white"
@@ -135,13 +135,7 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
             Edit
           </Link>
 
-          <Link
-            to={`/seller/products/${product._id}`}
-            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-[#d7def7] bg-white px-3 py-2.5 text-[11px] font-semibold text-[#4b587a]"
-          >
-            <Eye className="h-3.5 w-3.5" />
-            Details
-          </Link>
+          {/* Details option removed as per request */}
 
           <button
             onClick={() => onDelete(product._id)}

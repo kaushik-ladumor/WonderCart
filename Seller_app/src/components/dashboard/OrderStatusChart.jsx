@@ -55,9 +55,9 @@ const OrderStatusChart = ({ pipeline = {}, isLoading }) => {
 
   return (
     <div className="flex h-[480px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
-      <div>
-        <h3 className="text-[18px] font-semibold text-[#141b2d]">Order Breakdown</h3>
-        <p className="mt-1 text-sm text-[#66728d]">Current status distribution</p>
+      <div className="mb-8">
+        <h3 className="text-[20px] font-black tracking-tight text-[#0f172a]">Order Distribution</h3>
+        <p className="mt-1 text-[14px] font-medium text-[#64748b]">Current lifecycle status spread.</p>
       </div>
 
       {totalOrders === 0 ? (
@@ -95,12 +95,12 @@ const OrderStatusChart = ({ pipeline = {}, isLoading }) => {
               </PieChart>
             </ResponsiveContainer>
 
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center transition-all duration-300">
-              <span className={`text-[1.85rem] font-bold leading-none tracking-tight text-[#141b2d] ${activeItem ? 'scale-110' : ''}`}>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-300">
+              <span className={`text-[2.2rem] font-black leading-none tracking-tighter text-[#0f172a] ${activeItem ? 'scale-110' : ''}`}>
                 {activeItem ? activeItem.value : totalOrders}
               </span>
-              <span className={`mt-1 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 ${activeItem ? 'text-[#2156d8]' : 'text-[#6e7891]'}`}>
-                {activeItem ? activeItem.name : 'Total'}
+              <span className={`mt-2 text-[9px] font-extrabold uppercase tracking-[0.25em] transition-colors duration-300 ${activeItem ? 'text-[#2156d8]' : 'text-[#64748b]'}`}>
+                {activeItem ? activeItem.name.replaceAll('_', ' ') : 'Total Orders'}
               </span>
             </div>
           </div>

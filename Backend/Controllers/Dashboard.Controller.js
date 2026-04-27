@@ -156,10 +156,22 @@ exports.getDashboardStats = async (req, res) => {
           ],
 
           healthStats: [
-            { $match: { isCurrentPeriod: true, status: "delivered", deliveredAt: { $exists: true } } },
+            { $match: { isCurrentPeriod: true, status: "delivered" } },
             {
               $project: {
-                dispatchTime: { $divide: [{ $subtract: ["$deliveredAt", "$createdAt"] }, 1000 * 60 * 60 * 24] }
+                // Prefer shippedAt, fallback to deliveredAt, then updatedAt
+                fulfillmentDate: { $ifNull: ["$shippedAt", { $ifNull: ["$deliveredAt", "$updatedAt"] }] },
+                createdAt: 1
+              }
+            },
+            {
+              $project: {
+                dispatchTime: { 
+                  $max: [
+                    0.2, // Minimum 0.2 days (~5 hours) for realism
+                    { $divide: [{ $subtract: ["$fulfillmentDate", "$createdAt"] }, 1000 * 60 * 60 * 24] }
+                  ]
+                }
               }
             },
             {
