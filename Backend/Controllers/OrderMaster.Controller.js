@@ -109,8 +109,15 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
   const subOrderIds = [];
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+  const combinedSubOrdersTotal = subOrdersData.reduce((sum, d) => sum + (d.subTotal + d.taxAmount + d.shippingCost), 0);
+
   for (let i = 0; i < subOrdersData.length; i++) {
     const data = subOrdersData[i];
+    const subOrderTotalWithTaxAndShipping = data.subTotal + data.taxAmount + data.shippingCost;
+    const proportion = combinedSubOrdersTotal > 0 ? subOrderTotalWithTaxAndShipping / combinedSubOrdersTotal : 0;
+    const subOrderDiscount = Math.round(masterData.couponDiscount * proportion);
+    const customerPaid = subOrderTotalWithTaxAndShipping - subOrderDiscount;
+
     const subOrder = new SubOrder({
       subOrderId: `${masterOrderIdStr}-${alphabet[i]}`,
       masterOrder: masterOrder._id,
@@ -119,6 +126,8 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
       subTotal: data.subTotal,
       shippingCost: data.shippingCost,
       taxAmount: data.taxAmount,
+      discountAmount: subOrderDiscount,
+      customerPaid: customerPaid,
       platformCommission: data.platformCommission,
       sellerPayout: data.sellerPayout,
       estimatedDeliveryDate: data.estimatedDeliveryDate,

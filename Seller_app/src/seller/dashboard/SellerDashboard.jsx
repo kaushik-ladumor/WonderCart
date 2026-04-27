@@ -9,35 +9,37 @@ import RevenueChart from '../../components/dashboard/RevenueChart';
 import TopProducts from '../../components/dashboard/TopProducts';
 import StoreHealth from '../../components/dashboard/StoreHealth';
 
+import { AlertCircle } from 'lucide-react';
+
 const RUPEE = '\u20B9';
 
 const pipelineCards = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
 const pipelineStyles = {
   pending: {
-    accent: 'border-l-[#2156d8]',
-    value: 'text-[#141b2d]',
-    amount: 'text-[#5f6c89]'
+    accent: 'border-l-[#0f49d7]',
+    value: 'text-[#11182d]',
+    amount: 'text-[#6d7892]'
   },
   processing: {
-    accent: 'border-l-[#596987]',
-    value: 'text-[#141b2d]',
-    amount: 'text-[#5f6c89]'
+    accent: 'border-l-[#5c6880]',
+    value: 'text-[#11182d]',
+    amount: 'text-[#6d7892]'
   },
   shipped: {
-    accent: 'border-l-[#d8e1ff]',
-    value: 'text-[#141b2d]',
-    amount: 'text-[#5f6c89]'
+    accent: 'border-l-[#dfe7ff]',
+    value: 'text-[#11182d]',
+    amount: 'text-[#6d7892]'
   },
   delivered: {
-    accent: 'border-l-[#15803d]',
-    value: 'text-[#15803d]',
-    amount: 'text-[#5f6c89]'
+    accent: 'border-l-emerald-500',
+    value: 'text-emerald-700',
+    amount: 'text-[#6d7892]'
   },
   cancelled: {
-    accent: 'border-l-[#c81e1e]',
-    value: 'text-[#c81e1e]',
-    amount: 'text-[#5f6c89]'
+    accent: 'border-l-rose-500',
+    value: 'text-rose-700',
+    amount: 'text-[#6d7892]'
   }
 };
 
@@ -73,101 +75,105 @@ const SellerDashboard = () => {
   const storeHealth = payload?.storeHealth || {};
 
   return (
-    <div className="mx-auto max-w-[1180px] space-y-6 pb-8">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-[28px] font-semibold leading-tight text-[#141b2d]">Seller Dashboard</h1>
-            {isConnected && (
-              <span
-                className="h-2.5 w-2.5 rounded-full bg-[#15803d] animate-pulse"
-                title="Live server connected"
-              />
-            )}
-          </div>
-          <p className="mt-1 text-sm text-[#66728d]">
-            Track revenue, orders, products, and store health in one place.
-          </p>
-        </div>
-
-        <div className="inline-flex w-fit rounded-[18px] border border-[#dfe4f4] bg-white p-1">
-          {['7d', '30d', '90d', 'year'].map((value) => (
-            <button
-              key={value}
-              onClick={() => setPeriod(value)}
-              className={`rounded-[14px] px-4 py-2 text-sm font-medium transition ${
-                period === value
-                  ? 'bg-[#edf2ff] text-[#2156d8]'
-                  : 'text-[#68758f] hover:text-[#141b2d]'
-              }`}
-            >
-              {value.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {isError ? (
-        <div className="rounded-[22px] border border-[#f2c9c9] bg-[#fff4f4] px-5 py-4 text-sm text-[#b42318]">
-          Failed to load dashboard data.{' '}
-          {error?.data?.message || error?.message || 'Please check your network connection.'}
-        </div>
-      ) : null}
-
-      <KpiCards kpis={kpis} isLoading={isLoading} />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8">
-          <RevenueChart data={revenueChart} isLoading={isLoading} />
-        </div>
-        <div className="lg:col-span-4">
-          <OrderStatusChart pipeline={pipeline} isLoading={isLoading} />
-        </div>
-      </div>
-
-      <div>
-        <div className="mb-4">
-          <h2 className="text-[18px] font-semibold text-[#141b2d]">Order Pipeline</h2>
-          <p className="mt-1 text-sm text-[#66728d]">Current status breakdown for active orders.</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-          {isLoading
-            ? [1, 2, 3, 4, 5].map((item) => (
-                <div
-                  key={item}
-                  className="h-[106px] animate-pulse rounded-[22px] border border-[#e7ebf5] bg-white"
+    <div className="min-h-screen bg-[#f6f7fb] pb-6 text-[#11182d] font-poppins">
+      <div className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#11182d]">Seller Dashboard</h1>
+              {isConnected && (
+                <span
+                  className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"
+                  title="Live server connected"
                 />
-              ))
-            : pipelineCards.map((status) => {
-                const details = pipeline[status] || { count: 0, revenue: 0 };
-                const style = pipelineStyles[status];
+              )}
+            </div>
+            <p className="mt-0.5 text-[0.82rem] text-[#6d7892]">
+              Track revenue, orders, products, and store health in one place.
+            </p>
+          </div>
 
-                return (
+          <div className="inline-flex w-fit rounded-[18px] border border-[#d7dcea] bg-white p-1">
+            {['7d', '30d', '90d', 'year'].map((value) => (
+              <button
+                key={value}
+                onClick={() => setPeriod(value)}
+                className={`rounded-[14px] px-4 py-1.5 text-[0.7rem] font-bold uppercase tracking-[0.08em] transition-all ${
+                  period === value
+                    ? 'bg-[#eef2ff] text-[#0f49d7] shadow-sm'
+                    : 'text-[#6d7892] hover:text-[#11182d]'
+                }`}
+              >
+                {value === 'year' ? 'YR' : value}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {isError ? (
+          <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-[0.76rem] font-medium text-rose-700 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            <span>Failed to load dashboard data. {error?.data?.message || error?.message}</span>
+          </div>
+        ) : null}
+
+        <KpiCards kpis={kpis} isLoading={isLoading} />
+
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <RevenueChart data={revenueChart} isLoading={isLoading} />
+          </div>
+          <div className="lg:col-span-4">
+            <OrderStatusChart pipeline={pipeline} isLoading={isLoading} />
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-2.5 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0f49d7] text-[0.7rem] font-semibold text-white">
+              3
+            </span>
+            <h2 className="text-[1rem] font-semibold text-[#11182d]">Order Pipeline</h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3.5 xl:grid-cols-5">
+            {isLoading
+              ? [1, 2, 3, 4, 5].map((item) => (
                   <div
-                    key={status}
-                    className={`rounded-[22px] border border-[#e7ebf5] border-l-4 ${style.accent} bg-[#f3f6ff] px-5 py-4`}
-                  >
-                    <p className="text-[13px] font-medium uppercase tracking-wide text-[#28324a]">
-                      {status}
-                    </p>
-                    <p className={`mt-3 text-[18px] font-semibold ${style.value}`}>{details.count}</p>
-                    <p className={`mt-1 text-xs ${style.amount}`}>
-                      {RUPEE}
-                      {Number(details.revenue || 0).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                );
-              })}
-        </div>
-      </div>
+                    key={item}
+                    className="h-[90px] animate-pulse rounded-[18px] border border-[#d7dcea] bg-white"
+                  />
+                ))
+              : pipelineCards.map((status) => {
+                  const details = pipeline[status] || { count: 0, revenue: 0 };
+                  const style = pipelineStyles[status];
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8">
-          <TopProducts products={topProducts} isLoading={isLoading} />
+                  return (
+                    <div
+                      key={status}
+                      className={`rounded-[18px] border border-[#d7dcea] border-l-4 ${style.accent} bg-white px-5 py-3.5 shadow-sm hover:border-[#0f49d7] transition-all`}
+                    >
+                      <p className="text-[0.68rem] font-bold uppercase tracking-[0.1em] text-[#6d7892]">
+                        {status}
+                      </p>
+                      <p className={`mt-2 text-[1.25rem] font-bold ${style.value}`}>{details.count}</p>
+                      <p className={`mt-0.5 text-[0.7rem] font-medium ${style.amount}`}>
+                        {RUPEE}
+                        {Number(details.revenue || 0).toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                  );
+                })}
+          </div>
         </div>
-        <div className="lg:col-span-4">
-          <StoreHealth storeHealth={storeHealth} isLoading={isLoading} />
+
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <TopProducts products={topProducts} isLoading={isLoading} />
+          </div>
+          <div className="lg:col-span-4">
+            <StoreHealth storeHealth={storeHealth} isLoading={isLoading} />
+          </div>
         </div>
       </div>
     </div>

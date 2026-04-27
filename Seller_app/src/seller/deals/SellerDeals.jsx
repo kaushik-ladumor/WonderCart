@@ -71,8 +71,8 @@ const SellerDeals = () => {
   };
 
   const filteredDeals = deals.filter(deal => {
-    const matchesSearch = deal.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          deal.dealType?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = deal.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deal.dealType?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === "all" || deal.status === activeTab;
     return matchesSearch && matchesTab;
   });
@@ -128,11 +128,10 @@ const SellerDeals = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2.5 rounded-[22px] text-[13px] font-bold capitalize transition-all ${
-                activeTab === tab 
-                  ? 'bg-[#1a1a1a] text-white shadow-md' 
+              className={`px-5 py-2.5 rounded-[22px] text-[13px] font-bold capitalize transition-all ${activeTab === tab
+                  ? 'bg-[#1a1a1a] text-white shadow-md'
                   : 'text-[#6d7894] hover:bg-[#f8faff] hover:text-[#141b2d]'
-              }`}
+                }`}
             >
               {tab}
             </button>
@@ -164,13 +163,13 @@ const SellerDeals = () => {
           filteredDeals.map((deal) => (
             <div key={deal._id} className="group relative bg-white border border-[#eef1f8] rounded-[32px] p-5 hover:border-[#cbd5e1] hover:shadow-xl hover:shadow-gray-400/5 transition-all">
               <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                
+
                 {/* Visual Type */}
                 <div className="flex-shrink-0 w-16 h-16 rounded-[24px] bg-[#f8faff] border border-[#eef1f8] flex items-center justify-center relative">
-                   <Zap className={`w-7 h-7 ${deal.status === 'live' ? 'text-[#2156d8] animate-pulse' : 'text-[#7c87a2]'}`} />
-                   <div className="absolute -top-2 -right-2 bg-black text-white text-[10px] font-black px-2 py-1 rounded-lg">
-                      {deal.discountValue}%
-                   </div>
+                  <Zap className={`w-7 h-7 ${deal.status === 'live' ? 'text-[#2156d8] animate-pulse' : 'text-[#7c87a2]'}`} />
+                  <div className="absolute -top-2 -right-2 bg-black text-white text-[10px] font-black px-2 py-1 rounded-lg">
+                    {deal.discountValue}%
+                  </div>
                 </div>
 
                 {/* Info */}
@@ -186,12 +185,12 @@ const SellerDeals = () => {
                   </h3>
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-2">
                     <div className="flex items-center gap-1.5 text-[12px] text-[#6d7894] font-medium">
-                       <Calendar className="w-3.5 h-3.5 text-[#2156d8]" />
-                       {deal.startDateTime ? new Date(deal.startDateTime).toLocaleDateString() : 'N/A'} - {deal.endDateTime ? new Date(deal.endDateTime).toLocaleDateString() : 'N/A'}
+                      <Calendar className="w-3.5 h-3.5 text-[#2156d8]" />
+                      {deal.startDateTime ? new Date(deal.startDateTime).toLocaleDateString() : 'N/A'} - {deal.endDateTime ? new Date(deal.endDateTime).toLocaleDateString() : 'N/A'}
                     </div>
                     <div className="flex items-center gap-1.5 text-[12px] text-[#6d7894] font-medium">
-                       <Package className="w-3.5 h-3.5 text-[#2156d8]" />
-                       {deal.productIds?.length || 0} product(s) linked
+                      <Package className="w-3.5 h-3.5 text-[#2156d8]" />
+                      {deal.productIds?.length || 0} product(s) linked
                     </div>
                   </div>
                 </div>
@@ -203,7 +202,7 @@ const SellerDeals = () => {
                     <p className="text-xl font-black text-[#141b2d]">{deal.claimedCount || 0}</p>
                   </div>
                   <div className="h-10 w-px bg-[#f0f2f8] mx-2 hidden lg:block" />
-                  <Link 
+                  <Link
                     to={`/seller/deals/${deal._id}`}
                     className="p-3 rounded-2xl bg-[#f8faff] text-[#141b2d] hover:bg-[#2156d8] hover:text-white transition-all shadow-sm"
                   >
@@ -212,7 +211,7 @@ const SellerDeals = () => {
                 </div>
 
               </div>
-              
+
               {/* Simple Bottom Banner for Rejection */}
               {deal.status === 'rejected' && deal.rejectionReason && (
                 <div className="mt-4 pt-4 border-t border-red-50/50 flex items-center gap-2 text-red-600">

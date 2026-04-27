@@ -251,354 +251,333 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="space-y-2.5 px-0 pb-1">
-      <div className="mx-auto max-w-6xl">
-        <div className="px-1 py-0.5 sm:px-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#9aa6c7]">
-            Seller Products
-          </p>
-          <h1 className="mt-0.5 text-[18px] font-semibold tracking-[-0.03em] text-[#11182d]">
-            Add New Product
-          </h1>
-          <p className="mt-0.5 pb-1.5 text-[11px] text-[#6d7894]">
-            Fill in the details below to add a new product.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="rounded-[26px] border border-[#e3e8ff] bg-white px-4 py-4 sm:px-5">
-            <div className="mb-5 flex items-center gap-3 border-b border-[#edf1ff] pb-3">
-              <div className="rounded-2xl bg-[#eef2ff] p-2">
-                <Package className="h-[18px] w-[18px] text-[#2f5fe3]" />
-              </div>
-              <h2 className="text-[16px] font-semibold text-[#141b2d]">
-                Basic Information
-              </h2>
+    <div className="mx-auto max-w-5xl space-y-5 px-0 pb-6 font-poppins text-[#11182d]">
+      <section className="rounded-[18px] border border-[#d7dcea] bg-white px-5 py-4 sm:px-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3.5">
+            <Link
+              to="/seller/products"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f8f9fd] text-[#6d7892] hover:bg-[#0f49d7] hover:text-white transition-all shadow-sm border border-[#d7dcea]"
+            >
+              <Minus className="h-4 w-4 rotate-90" />
+            </Link>
+            <div>
+              <h1 className="text-[1.35rem] font-bold tracking-tight text-[#11182d]">Add New Product</h1>
+              <p className="mt-0.5 text-[0.8rem] text-[#6d7892]">List your product for the world to see.</p>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="e.g., Premium Wireless Headphones"
-                  className="w-full rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] px-3.5 py-2.5 text-[12px] text-[#11182d] outline-none placeholder:text-[#91a0c5] focus:border-[#2f5fe3]"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
-                  Category *{" "}
-                  {categories.length === 0 && !fetchingCategories && (
-                    <span className="normal-case text-[#d14343]">
-                      (No approved categories)
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <select
-                    name="category"
-                    required
-                    value={formData.category}
-                    onChange={handleChange}
-                    disabled={fetchingCategories || categories.length === 0}
-                    className="w-full appearance-none rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] px-3.5 py-2.5 text-[12px] text-[#11182d] outline-none focus:border-[#2f5fe3]"
-                  >
-                    <option value="">Select an approved category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#91a0c5]">
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="mt-1.5 flex items-center gap-1 text-[10px] text-[#7d88a8]">
-                  Don&apos;t see your category?
-                  <Link
-                    to="/seller/profile"
-                    className="font-semibold text-[#2f5fe3] hover:underline"
-                  >
-                    Request more info →
-                  </Link>
-                </p>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
-                  Description *
-                </label>
-                <textarea
-                  name="description"
-                  required
-                  rows={3}
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Describe features, materials, benefits..."
-                  className="w-full resize-none rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] px-3.5 py-2.5 text-[12px] text-[#11182d] outline-none placeholder:text-[#91a0c5] focus:border-[#2f5fe3]"
-                />
-              </div>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="rounded-[18px] border border-[#d7dcea] bg-white p-5 sm:p-6 shadow-sm">
+          <div className="mb-6 flex items-center gap-3.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0f49d7] text-[0.75rem] font-bold text-white shadow-sm">
+              1
+            </span>
+            <div>
+              <h2 className="text-[1rem] font-bold text-[#11182d]">Basic Information</h2>
+              <p className="text-[0.72rem] text-[#6d7892]">Name, category, and description.</p>
             </div>
           </div>
 
-          <div className="rounded-[26px] border border-[#e3e8ff] bg-white px-4 py-4 sm:px-5">
-            <div className="mb-5 flex flex-col gap-3 border-b border-[#edf1ff] pb-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-[#eef2ff] p-2">
-                  <Tag className="h-[18px] w-[18px] text-[#2f5fe3]" />
-                </div>
-                <h2 className="text-[16px] font-semibold text-[#141b2d]">
-                  Product Variants
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={addVariant}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2f5fe3] px-4 py-2.5 text-[12px] font-semibold text-white sm:w-auto"
-              >
-                <Plus className="h-4 w-4" />
-                Add Variant
-              </button>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892] ml-1">
+                Product Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g., Premium Wireless Headphones"
+                className="w-full rounded-[14px] border border-[#d7dcea] bg-[#f8f9fd] px-4 py-2.5 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#98a4bd] focus:border-[#0f49d7] focus:bg-white transition-all"
+              />
             </div>
 
+            <div className="space-y-1.5">
+              <label className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892] ml-1">
+                Category *
+              </label>
+              <div className="relative">
+                <select
+                  name="category"
+                  required
+                  value={formData.category}
+                  onChange={handleChange}
+                  disabled={fetchingCategories || categories.length === 0}
+                  className="w-full appearance-none rounded-[14px] border border-[#d7dcea] bg-[#f8f9fd] px-4 py-2.5 text-[0.82rem] text-[#11182d] outline-none focus:border-[#0f49d7] focus:bg-white transition-all"
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#98a4bd]">
+                  <ChevronDown className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892] ml-1">
+                Description *
+              </label>
+              <textarea
+                name="description"
+                required
+                rows={4}
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Tell us more about your product..."
+                className="w-full resize-none rounded-[14px] border border-[#d7dcea] bg-[#f8f9fd] px-4 py-3 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#98a4bd] focus:border-[#0f49d7] focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[18px] border border-[#d7dcea] bg-white p-5 sm:p-6 shadow-sm">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0f49d7] text-[0.75rem] font-bold text-white shadow-sm">
+                2
+              </span>
+              <div>
+                <h2 className="text-[1rem] font-bold text-[#11182d]">Variants & Images</h2>
+                <p className="text-[0.72rem] text-[#6d7892]">Add colors, stock, and photos.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={addVariant}
+              className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-[#eef2ff] px-5 py-2.5 text-[0.78rem] font-bold text-[#0f49d7] shadow-sm hover:bg-[#0f49d7] hover:text-white transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              Add Color Variant
+            </button>
+          </div>
+
+          <div className="space-y-6">
             {variants.map((variant, vIdx) => (
               <div
                 key={vIdx}
-                className="mb-4 rounded-[24px] border border-[#e7ebff] bg-[#f8f9ff] p-4 last:mb-0"
+                className="overflow-hidden rounded-[18px] border border-[#d7dcea] bg-[#f8f9fd] shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300"
               >
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-[14px] font-semibold text-[#141b2d]">
-                    Variant {vIdx + 1} {variant.color && `- ${variant.color}`}
-                  </h3>
+                <div className="flex items-center justify-between border-b border-[#d7dcea] bg-white px-5 py-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#0f49d7]" />
+                    <h3 className="text-[0.82rem] font-bold text-[#11182d]">
+                      Variant {vIdx + 1} {variant.color && <span className="ml-1 text-[#6d7892] font-semibold">({variant.color})</span>}
+                    </h3>
+                  </div>
                   {variants.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeVariant(vIdx)}
-                      className="rounded-full p-1.5 hover:bg-[#eef2ff]"
+                      className="rounded-full bg-rose-50 p-1.5 text-rose-600 hover:bg-rose-100 transition-colors"
                     >
-                      <X className="h-4 w-4 text-[#d14343]" />
+                      <X className="h-4 w-4" />
                     </button>
                   )}
                 </div>
 
-                <div className="mb-4">
-                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
-                    Color Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={variant.color}
-                    onChange={(e) => handleVariantChange(vIdx, e.target.value)}
-                    placeholder="e.g., Space Gray, Midnight Blue"
-                    className="w-full rounded-2xl border border-[#d8dff3] bg-white px-3.5 py-2.5 text-[12px] text-[#11182d] outline-none placeholder:text-[#91a0c5] focus:border-[#2f5fe3]"
-                  />
-                </div>
-
-                <div className="mb-5">
-                  <label className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
-                    <ImageIcon className="h-3.5 w-3.5" />
-                    Images (Max 5) *
-                  </label>
-                  <div className="flex flex-wrap gap-3">
-                    {variant.imagePreviews.map((src, iIdx) => (
-                      <div key={iIdx} className="relative">
-                        <img
-                          src={src}
-                          alt={`Preview ${iIdx + 1}`}
-                          className="h-20 w-20 rounded-2xl border border-[#d8dff3] object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(vIdx, iIdx)}
-                          className="absolute -right-2 -top-2 rounded-full bg-[#d14343] p-1 text-white"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </div>
-                    ))}
-                    {variant.imagePreviews.length < 5 && (
-                      <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#cbd5f4] bg-white">
-                        <Upload className="mb-1 h-5 w-5 text-[#8a97ba]" />
-                        <span className="text-[11px] text-[#7d88a8]">Upload</span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleImageUpload(vIdx, e.target.files)}
-                        />
-                      </label>
-                    )}
-                  </div>
-                  <p className="mt-2 text-[11px] text-[#7d88a8]">
-                    {variant.imagePreviews.length}/5 images
-                  </p>
-                </div>
-
-                <div>
-                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#99a5c5]">
-                      Sizes & Pricing *
+                <div className="p-5 space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892] ml-1">
+                      Color Name *
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => addSize(vIdx)}
-                      className="flex w-full items-center justify-center gap-1 rounded-2xl border border-[#d7def7] bg-white px-3 py-2 text-[11px] font-semibold text-[#55617f] sm:w-auto"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Add Size
-                    </button>
+                    <input
+                      type="text"
+                      required
+                      value={variant.color}
+                      onChange={(e) => handleVariantChange(vIdx, e.target.value)}
+                      placeholder="e.g., Phantom Black, Deep Sea Blue"
+                      className="w-full rounded-[14px] border border-[#d7dcea] bg-white px-4 py-2.5 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#98a4bd] focus:border-[#0f49d7] transition-all"
+                    />
                   </div>
 
-                  <div className="space-y-2.5">
-                    {variant.sizes.map((size, sIdx) => {
-                      const disc = calculateDiscount(
-                        size.originalPrice,
-                        size.sellingPrice,
-                      );
-                      return (
-                        <div
-                          key={sIdx}
-                          className="grid grid-cols-1 items-center gap-2.5 rounded-[20px] border border-[#e4e9fb] bg-white p-3 sm:grid-cols-5"
-                        >
-                          <input
-                            type="text"
-                            required
-                            value={size.size}
-                            onChange={(e) =>
-                              handleSizeChange(vIdx, sIdx, "size", e.target.value)
-                            }
-                            placeholder="Size"
-                            className="rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] px-3 py-2.5 text-[12px] outline-none focus:border-[#2f5fe3]"
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892] ml-1">
+                      <ImageIcon className="h-3.5 w-3.5" />
+                      Images (Max 5) *
+                    </label>
+                    <div className="flex flex-wrap gap-3.5">
+                      {variant.imagePreviews.map((src, iIdx) => (
+                        <div key={iIdx} className="group relative">
+                          <img
+                            src={src}
+                            alt="Preview"
+                            className="h-20 w-20 rounded-[14px] border border-[#d7dcea] object-cover shadow-sm group-hover:scale-105 transition-transform"
                           />
-                          <input
-                            type="number"
-                            min="0"
-                            required
-                            value={size.stock}
-                            onChange={(e) =>
-                              handleSizeChange(vIdx, sIdx, "stock", e.target.value)
-                            }
-                            placeholder="Stock"
-                            className="rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] px-3 py-2.5 text-[12px] outline-none focus:border-[#2f5fe3]"
-                          />
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-[#7d88a8]">
-                              ₹
-                            </span>
-                            <input
-                              type="number"
-                              min="1"
-                              step="0.01"
-                              required
-                              value={size.originalPrice}
-                              onChange={(e) =>
-                                handleSizeChange(
-                                  vIdx,
-                                  sIdx,
-                                  "originalPrice",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Original Price"
-                              className="w-full rounded-2xl border border-[#d8dff3] bg-[#f7f8ff] py-2.5 pl-8 pr-3 text-[12px] outline-none focus:border-[#2f5fe3]"
-                            />
-                          </div>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-[#7d88a8]">
-                              ₹
-                            </span>
-                            <input
-                              type="number"
-                              min="1"
-                              step="0.01"
-                              required
-                              value={size.sellingPrice}
-                              onChange={(e) =>
-                                handleSizeChange(
-                                  vIdx,
-                                  sIdx,
-                                  "sellingPrice",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Selling Price"
-                              className={`w-full rounded-2xl py-2.5 pl-8 pr-3 text-[12px] outline-none focus:border-[#2f5fe3] ${size.sellingPrice &&
-                                  size.originalPrice &&
-                                  parseFloat(size.sellingPrice) >
-                                  parseFloat(size.originalPrice)
-                                  ? "border border-[#efb4b4] bg-[#fff3f3]"
-                                  : "border border-[#d8dff3] bg-[#f7f8ff]"
-                                }`}
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {disc > 0 ? (
-                              <span className="whitespace-nowrap rounded-full bg-[#ebf8ef] px-2 py-1 text-[11px] font-semibold text-[#18794e]">
-                                {disc}% OFF
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 text-[11px] text-[#99a5c5]">
-                                No discount
-                              </span>
-                            )}
-                            {variant.sizes.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeSize(vIdx, sIdx)}
-                                className="rounded-full p-1.5 hover:bg-[#fff1f1]"
-                              >
-                                <Minus className="h-4 w-4 text-[#d14343]" />
-                              </button>
-                            )}
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(vIdx, iIdx)}
+                            className="absolute -right-2 -top-2 rounded-full bg-white text-rose-600 shadow-md p-0.5 hover:scale-110 transition-transform"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                      );
-                    })}
+                      ))}
+                      {variant.imagePreviews.length < 5 && (
+                        <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-[14px] border-2 border-dashed border-[#d7dcea] bg-white hover:border-[#0f49d7] hover:bg-[#eef2ff] transition-all group">
+                          <Upload className="mb-1 h-5 w-5 text-[#98a4bd] group-hover:text-[#0f49d7] group-hover:scale-110 transition-all" />
+                          <span className="text-[0.6rem] font-bold text-[#98a4bd] group-hover:text-[#0f49d7]">UPLOAD</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(vIdx, e.target.files)}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892] ml-1">
+                        Sizes & Pricing *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => addSize(vIdx)}
+                        className="inline-flex items-center gap-1.5 rounded-[12px] bg-white border border-[#d7dcea] px-4 py-1.5 text-[0.7rem] font-bold text-[#0f49d7] shadow-sm hover:bg-[#f8f9fd] transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Size
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {variant.sizes.map((size, sIdx) => {
+                        const disc = calculateDiscount(size.originalPrice, size.sellingPrice);
+                        return (
+                          <div
+                            key={sIdx}
+                            className="grid grid-cols-1 items-end gap-4 rounded-[14px] border border-[#d7dcea] bg-white p-4 shadow-sm sm:grid-cols-5 animate-in slide-in-from-left-2 duration-300"
+                          >
+                            <div className="space-y-1">
+                              <label className="text-[0.6rem] font-bold text-[#98a4bd]">Size</label>
+                              <input
+                                type="text"
+                                required
+                                value={size.size}
+                                onChange={(e) => handleSizeChange(vIdx, sIdx, "size", e.target.value)}
+                                placeholder="S, M, XL, 42..."
+                                className="w-full rounded-[10px] border border-[#d7dcea] bg-[#f8f9fd] px-3 py-2 text-[0.78rem] font-bold text-[#11182d] outline-none focus:border-[#0f49d7] focus:bg-white transition-all"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[0.6rem] font-bold text-[#98a4bd]">Stock</label>
+                              <input
+                                type="number"
+                                min="0"
+                                required
+                                value={size.stock}
+                                onChange={(e) => handleSizeChange(vIdx, sIdx, "stock", e.target.value)}
+                                placeholder="0"
+                                className="w-full rounded-[10px] border border-[#d7dcea] bg-[#f8f9fd] px-3 py-2 text-[0.78rem] font-bold text-[#11182d] outline-none focus:border-[#0f49d7] focus:bg-white transition-all"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[0.6rem] font-bold text-[#98a4bd]">Original Price</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[0.7rem] font-bold text-[#98a4bd]">₹</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="0.01"
+                                  required
+                                  value={size.originalPrice}
+                                  onChange={(e) => handleSizeChange(vIdx, sIdx, "originalPrice", e.target.value)}
+                                  className="w-full rounded-[10px] border border-[#d7dcea] bg-[#f8f9fd] pl-6 pr-3 py-2 text-[0.78rem] font-bold text-[#11182d] outline-none focus:border-[#0f49d7] focus:bg-white transition-all"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[0.6rem] font-bold text-[#98a4bd]">Selling Price</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[0.7rem] font-bold text-[#98a4bd]">₹</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="0.01"
+                                  required
+                                  value={size.sellingPrice}
+                                  onChange={(e) => handleSizeChange(vIdx, sIdx, "sellingPrice", e.target.value)}
+                                  className={`w-full rounded-[10px] pl-6 pr-3 py-2 text-[0.78rem] font-bold text-[#11182d] outline-none focus:border-[#0f49d7] focus:bg-white transition-all ${size.sellingPrice && size.originalPrice && parseFloat(size.sellingPrice) > parseFloat(size.originalPrice)
+                                      ? "border-rose-300 bg-rose-50"
+                                      : "border-[#d7dcea] bg-[#f8f9fd]"
+                                    }`}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between pb-1 gap-2">
+                              <div className="flex-1">
+                                {disc > 0 ? (
+                                  <span className="inline-flex h-8 w-full items-center justify-center rounded-[10px] bg-emerald-50 text-[0.68rem] font-black text-emerald-600 border border-emerald-100 shadow-inner">
+                                    {disc}% OFF
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex h-8 w-full items-center justify-center text-[0.6rem] font-bold text-[#98a4bd]">
+                                    NO DISCOUNT
+                                  </span>
+                                )}
+                              </div>
+                              {variant.sizes.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeSize(vIdx, sIdx)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                                >
+                                  <Minus className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        </div>
 
-          <div className="flex flex-col justify-end gap-3 rounded-[26px] border border-[#e3e8ff] bg-white px-4 py-4 sm:flex-row sm:px-5">
-            <button
-              type="button"
-              onClick={() => navigate("/seller/products")}
-              disabled={loading}
-              className="order-2 rounded-2xl border border-[#d7def7] bg-white px-5 py-2.5 text-[12px] font-semibold text-[#55617f] disabled:opacity-50 sm:order-1"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="order-1 flex items-center justify-center gap-2 rounded-2xl bg-[#2f5fe3] px-5 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50 sm:order-2"
-            >
-              {loading ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Adding Product...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Publish Product
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="flex flex-col-reverse gap-3 rounded-[18px] border border-[#d7dcea] bg-white p-5 sm:flex-row sm:justify-end shadow-sm">
+          <button
+            type="button"
+            onClick={() => navigate("/seller/products")}
+            disabled={loading}
+            className="inline-flex items-center justify-center rounded-[14px] border border-[#d7dcea] bg-white px-8 py-3 text-[0.82rem] font-bold text-[#6d7892] hover:bg-[#f8f9fd] transition-all active:scale-95 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-[#0f49d7] px-8 py-3 text-[0.82rem] font-bold text-white shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Publishing...
+              </>
+            ) : (
+              <>
+                <Save className="h-4.5 w-4.5" />
+                Publish Product
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

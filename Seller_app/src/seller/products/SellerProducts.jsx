@@ -166,16 +166,16 @@ const SellerProducts = () => {
 
   if (error) {
     return (
-      <div className="px-0 py-2">
-        <div className="mx-auto max-w-md rounded-[26px] border border-[#e3e8ff] bg-white px-5 py-7 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#fef0f0]">
-            <AlertCircle className="h-7 w-7 text-[#d14343]" />
+      <div className="px-0 py-2 font-poppins">
+        <div className="mx-auto max-w-md rounded-[18px] border border-rose-200 bg-white px-5 py-7 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50">
+            <AlertCircle className="h-7 w-7 text-rose-600" />
           </div>
-          <h3 className="text-[18px] font-semibold text-[#11182d]">Unable to Load Products</h3>
-          <p className="mt-2 text-sm text-[#6d7894]">{error}</p>
+          <h3 className="text-[1.1rem] font-bold text-[#11182d]">Unable to Load Products</h3>
+          <p className="mt-2 text-[0.82rem] text-[#6d7892]">{error}</p>
           <button
             onClick={() => fetchProducts()}
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f5fe3] px-4 py-3 text-sm font-semibold text-white"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-[14px] bg-[#0f49d7] px-6 py-3 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all"
           >
             <RefreshCw className="h-4 w-4" />
             Try Again
@@ -192,81 +192,78 @@ const SellerProducts = () => {
       label: "Total Products",
       value: products.length,
       icon: Package,
-      iconClasses: "bg-[#eaf0ff] text-[#2f5fe3]",
+      iconWrap: "bg-[#eef2ff] text-[#0f49d7]",
       valueClasses: "text-[#11182d]",
     },
     {
       label: "Products In Stock",
       value: stats.inStock,
       icon: TrendingUp,
-      iconClasses: "bg-[#e9f8ef] text-[#18794e]",
-      valueClasses: "text-[#18794e]",
+      iconWrap: "bg-emerald-50 text-emerald-600",
+      valueClasses: "text-emerald-700",
     },
     {
       label: "Out of Stock",
       value: stats.outOfStock,
-      icon: BarChart3,
-      iconClasses: "bg-[#fef0f0] text-[#d14343]",
-      valueClasses: "text-[#d14343]",
+      icon: AlertCircle,
+      iconWrap: "bg-rose-50 text-rose-600",
+      valueClasses: "text-rose-700",
     },
     {
       label: "Total Stock",
       value: stats.totalStock,
       icon: Package,
-      iconClasses: "bg-[#f5f7ff] text-[#7481a2]",
+      iconWrap: "bg-[#f8f9fd] text-[#6d7892]",
       valueClasses: "text-[#11182d]",
     },
   ];
 
   return (
-    <div className="space-y-4 px-0 pb-2">
-      <section className="rounded-[28px] border border-[#e3e8ff] bg-white px-5 py-4 sm:px-6 sm:py-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#9aa6c7]">
-              Seller Products
-            </p>
-            <h1 className="mt-1.5 text-[24px] font-semibold tracking-[-0.03em] text-[#11182d]">
-              Product Inventory
-            </h1>
-            <p className="mt-1.5 max-w-2xl text-[13px] text-[#6d7894]">
-              Manage your catalog, stock, and product details in the same clean seller
-              workspace.
-            </p>
+    <div className="space-y-5 px-0 pb-6 font-poppins text-[#11182d]">
+      <section className="rounded-[18px] border border-[#d7dcea] bg-white px-5 py-4 sm:px-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0f49d7] text-[0.75rem] font-bold text-white shadow-sm">
+              1
+            </span>
+            <div>
+              <h1 className="text-[1.35rem] font-bold tracking-tight text-[#11182d]">Product Inventory</h1>
+              <p className="mt-0.5 text-[0.8rem] text-[#6d7892]">Manage catalog, stock, and variants.</p>
+            </div>
           </div>
 
           <Link
             to="/seller/products/add"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f5fe3] px-4 py-2.5 text-[13px] font-semibold text-white lg:min-w-[172px]"
+            className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-[#0f49d7] px-6 py-2.5 text-[0.82rem] font-bold text-white shadow-sm hover:shadow-md transition-all lg:min-w-[180px]"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4.5 w-4.5" />
             Add New Product
           </Link>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3.5 xl:grid-cols-4">
         {statCards.map((card) => {
           const Icon = card.icon;
 
           return (
             <div
               key={card.label}
-              className="rounded-[24px] border border-[#e3e8ff] bg-white px-4 py-3.5"
+              className="rounded-[18px] border border-[#d7dcea] bg-white px-5 py-4 shadow-sm group hover:border-[#0f49d7] transition-all"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#98a4c4]">
+                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892]">
                     {card.label}
                   </p>
-                  <p className={`mt-2.5 text-[26px] font-semibold ${card.valueClasses}`}>
+                  <p className={`mt-2.5 text-[1.5rem] font-bold tracking-tight ${card.valueClasses}`}>
                     {card.value}
                   </p>
                 </div>
                 <div
-                  className={`flex h-11 w-11 items-center justify-center rounded-2xl ${card.iconClasses}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-[12px] ${card.iconWrap} transition-transform group-hover:scale-110`}
                 >
-                  <Icon className="h-[18px] w-[18px]" />
+                  <Icon className="h-4.5 w-4.5" />
                 </div>
               </div>
             </div>
@@ -274,44 +271,44 @@ const SellerProducts = () => {
         })}
       </section>
 
-      <section className="rounded-[28px] border border-[#e3e8ff] bg-white px-5 py-4 sm:px-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <section className="rounded-[18px] border border-[#d7dcea] bg-white px-5 py-4 sm:px-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full max-w-2xl">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7d88a8]" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98a4bd]" />
             <input
               type="text"
-              placeholder="Search products by name, category, or description..."
+              placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-2xl border border-[#d9e0f7] bg-[#f7f8ff] py-2.5 pl-11 pr-11 text-[13px] text-[#11182d] outline-none placeholder:text-[#7f8aac] focus:border-[#2f5fe3]"
+              className="w-full rounded-[14px] border border-[#d7dcea] bg-[#f8f9fd] py-2.5 pl-11 pr-11 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#98a4bd] focus:border-[#0f49d7] focus:bg-white transition-all"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[#7d88a8]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[#98a4bd] hover:text-rose-600 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-[13px] text-[#6d7894]">
-            <span>{filteredProducts.length} shown</span>
-            <span className="h-4 w-px bg-[#d6def4]" />
+          <div className="flex items-center gap-3 text-[0.78rem] font-semibold text-[#6d7892]">
+            <span className="text-[#11182d]">{filteredProducts.length} shown</span>
+            <span className="h-3.5 w-px bg-[#d7dcea]" />
             <span>{products.length} total</span>
           </div>
         </div>
       </section>
 
       {filteredProducts.length === 0 ? (
-        <section className="rounded-[28px] border border-[#e3e8ff] bg-white px-6 py-10 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[20px] bg-[#f2f5ff]">
-            <Package className="h-7 w-7 text-[#6c79a0]" />
+        <section className="rounded-[18px] border border-[#d7dcea] bg-white px-6 py-12 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#f8f9fd] border border-[#d7dcea]/50">
+            <Package className="h-8 w-8 text-[#98a4bd]" />
           </div>
-          <h3 className="text-[18px] font-semibold text-[#11182d]">
+          <h3 className="text-[1.1rem] font-bold text-[#11182d]">
             {searchTerm ? "No products found" : "No products yet"}
           </h3>
-          <p className="mx-auto mt-2 max-w-sm text-[13px] text-[#6d7894]">
+          <p className="mx-auto mt-2 max-w-xs text-[0.82rem] text-[#6d7892] font-medium leading-relaxed">
             {searchTerm
               ? "Try adjusting your search to find the right product faster."
               : "Start by adding your first product to build your seller catalog."}
@@ -319,7 +316,7 @@ const SellerProducts = () => {
           {!searchTerm && (
             <Link
               to="/seller/products/add"
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#2f5fe3] px-4 py-2.5 text-[13px] font-semibold text-white"
+              className="mt-6 inline-flex items-center gap-2 rounded-[14px] bg-[#0f49d7] px-6 py-3 text-[0.82rem] font-bold text-white shadow-sm"
             >
               <Plus className="h-4 w-4" />
               Add Your First Product
@@ -327,8 +324,8 @@ const SellerProducts = () => {
           )}
         </section>
       ) : (
-        <>
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product._id}
@@ -337,18 +334,18 @@ const SellerProducts = () => {
                 deleteLoading={deleteLoading}
               />
             ))}
-          </section>
+          </div>
 
-          <section className="rounded-[28px] border border-[#e3e8ff] bg-white px-5 py-4 text-center sm:px-6">
-            <p className="text-[13px] text-[#6d7894]">
-              Showing {filteredProducts.length} of {products.length} products
+          <section className="rounded-[18px] border border-[#d7dcea] bg-white px-5 py-4 text-center shadow-sm">
+            <p className="text-[0.78rem] font-semibold text-[#6d7892]">
+              Showing <span className="text-[#11182d]">{filteredProducts.length}</span> of <span className="text-[#11182d]">{products.length}</span> products
             </p>
 
             {hasMore && !searchTerm && (
               <button
                 onClick={handleLoadMore}
                 disabled={loadingMore}
-                className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#2f5fe3] px-5 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+                className="mt-4 inline-flex items-center gap-2.5 rounded-[14px] bg-[#0f49d7] px-6 py-2.5 text-[0.82rem] font-bold text-white shadow-sm hover:shadow-md transition-all disabled:opacity-60"
               >
                 {loadingMore ? (
                   <>
@@ -361,12 +358,12 @@ const SellerProducts = () => {
               </button>
             )}
           </section>
-        </>
+        </div>
       )}
 
       <Link
         to="/seller/products/add"
-        className="fixed bottom-6 right-6 z-20 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#2f5fe3] text-white md:hidden"
+        className="fixed bottom-6 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-[#0f49d7] text-white shadow-lg hover:scale-110 transition-transform md:hidden"
       >
         <Plus className="h-6 w-6" />
       </Link>

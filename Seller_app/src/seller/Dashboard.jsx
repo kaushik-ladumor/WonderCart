@@ -14,16 +14,13 @@ const Dashboard = () => {
   const [period, setPeriod] = useState('30d');
   const dispatch = useDispatch();
 
-  // Load the dashboard stats
   const { data, isLoading, isError, error } = useGetDashboardStatsQuery(period);
-
   const [isConnected, setIsConnected] = useState(socket.connected);
 
   useEffect(() => {
     const onConnect = () => setIsConnected(true);
     const onDisconnect = () => setIsConnected(false);
     const onNewOrder = () => {
-      // Invalidate dashboard stats
       dispatch(dashboardApi.util.invalidateTags(['DashboardStats']));
     };
 
@@ -38,7 +35,6 @@ const Dashboard = () => {
     };
   }, [dispatch]);
 
-  // Extract variables
   const kpis = data?.kpis || {};
   const pipeline = data?.pipeline || {};
   const revenueChart = data?.revenueChart || [];
@@ -46,109 +42,150 @@ const Dashboard = () => {
   const storeHealth = data?.storeHealth || {};
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6 pb-20 dark:bg-gray-900 min-h-screen">
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-b border-gray-100 dark:border-gray-800 pb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#2156d8] bg-[#2156d8]/10 px-2 py-0.5 rounded-md">Real-time Analytics</span>
-          </div>
-          <h1 className="text-[1.75rem] font-black tracking-tight text-[#0f172a] dark:text-white flex items-center gap-3">
-            Business Overview
-            {isConnected && (
-              <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-500/20">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Live</span>
-              </div>
-            )}
-          </h1>
-        </div>
-
-        {/* Period Selector Tabs */}
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-full p-1 text-[11px] font-bold">
-          {['7d', '30d', '90d', 'year'].map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-5 py-2 rounded-full transition-all duration-300 ${period === p
-                ? 'bg-white dark:bg-gray-700 shadow-md shadow-gray-200/50 dark:shadow-none text-[#2156d8] dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                }`}
-            >
-              {p.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {isError ? (
-        <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 text-sm font-medium border border-rose-100">
-          ⚠️ Failed to sync dashboard data. {error?.data?.message || error?.message || "Please check your network connection."}
-        </div>
-      ) : null}
-
-      {/* QuickActions Bar */}
-      <div className="mb-8">
-        <QuickActions />
-      </div>
-
-      {/* KPI Cards Row */}
-      <KpiCards kpis={kpis} isLoading={isLoading} />
-
-      {/* Order Pipeline */}
-      <div className="mb-10 mt-10">
-        <div className="flex items-center justify-between mb-5 px-1">
-          <h2 className="text-[15px] font-extrabold uppercase tracking-widest text-[#1e293b] dark:text-gray-100">Order Lifecycle</h2>
-          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Active Pipeline</span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {isLoading ? (
-            [1, 2, 3, 4, 5].map((i) => <div key={i} className="h-28 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-[24px]" />)
-          ) : (
-            ['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => {
-              const d = pipeline[status] || { count: 0, revenue: 0 };
-              const colors = {
-                pending: 'border-l-[#f59e0b] text-[#f59e0b]',
-                processing: 'border-l-[#6366f1] text-[#6366f1]',
-                shipped: 'border-l-[#3b82f6] text-[#3b82f6]',
-                delivered: 'border-l-[#10b981] text-[#10b981]',
-                cancelled: 'border-l-[#ef4444] text-[#ef4444]'
-              };
-              return (
-                <div key={status} className={`border border-gray-100 border-l-[4px] rounded-[22px] p-5 bg-white dark:bg-gray-800 transition-all duration-300 shadow-sm ${colors[status].split(' ')[0]} group cursor-default`}>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#64748b] mb-3">{status.toUpperCase()}</p>
-                  <h3 className={`text-[1.75rem] font-black leading-none tracking-tight mb-2 ${colors[status].split(' ')[1]}`}>{d.count}</h3>
-                  <div className="flex items-center gap-1 text-[#94a3b8]">
-                    <span className="text-[11px] font-bold">₹{d.revenue?.toLocaleString('en-IN')}</span>
+    <div className="mx-auto max-w-7xl space-y-6 px-4 pb-12 pt-0 font-poppins text-[#11182d]">
+      <section className="rounded-[18px] border border-[#d7dcea] bg-white px-5 py-4 sm:px-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eef2ff] text-[#0f49d7] shadow-sm border border-[#d7dcea]">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className="text-[1.35rem] font-black tracking-tight text-[#11182d]">Business Overview</h1>
+                {isConnected && (
+                  <div className="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[0.6rem] font-black text-emerald-600 uppercase tracking-widest">LIVE</span>
                   </div>
-                </div>
-              );
-            })
-          )}
+                )}
+              </div>
+              <p className="text-[0.8rem] text-[#6d7892]">Real-time analytics and performance tracking.</p>
+            </div>
+          </div>
+
+          <div className="flex bg-[#f1f4fb] p-1 rounded-[14px] border border-[#d7dcea] shadow-inner">
+            {['7d', '30d', '90d', 'year'].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-4 py-1.5 rounded-[10px] text-[0.7rem] font-bold transition-all duration-300 uppercase tracking-wider ${
+                  period === p
+                    ? 'bg-white text-[#0f49d7] shadow-sm'
+                    : 'text-[#6d7892] hover:text-[#0f49d7]'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {isError && (
+        <div className="rounded-[18px] border border-rose-100 bg-rose-50 p-4 shadow-sm animate-in fade-in duration-500">
+          <div className="flex items-center gap-3 text-rose-600">
+            <AlertCircle className="h-5 w-5" />
+            <p className="text-[0.8rem] font-bold">Failed to sync dashboard data: {error?.data?.message || "Check your connection."}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6">
+        <QuickActions />
+        
+        <div>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0f49d7] text-[0.7rem] font-black text-white shadow-sm">
+              1
+            </span>
+            <h2 className="text-[1rem] font-black tracking-tight text-[#11182d]">Key Performance Indicators</h2>
+          </div>
+          <KpiCards kpis={kpis} isLoading={isLoading} />
+        </div>
+
+        <div>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0f49d7] text-[0.7rem] font-black text-white shadow-sm">
+              2
+            </span>
+            <h2 className="text-[1rem] font-black tracking-tight text-[#11182d]">Order Lifecycle Pipeline</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {isLoading ? (
+              [1, 2, 3, 4, 5].map((i) => <div key={i} className="h-28 bg-[#f8f9fd] animate-pulse rounded-[18px] border border-[#d7dcea]" />)
+            ) : (
+              ['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => {
+                const d = pipeline[status] || { count: 0, revenue: 0 };
+                const colors = {
+                  pending: 'text-[#f59e0b] bg-amber-50 border-amber-100',
+                  processing: 'text-[#6366f1] bg-indigo-50 border-indigo-100',
+                  shipped: 'text-[#3b82f6] bg-blue-50 border-blue-100',
+                  delivered: 'text-[#10b981] bg-emerald-50 border-emerald-100',
+                  cancelled: 'text-[#ef4444] bg-rose-50 border-rose-100'
+                };
+                return (
+                  <div key={status} className="group relative overflow-hidden rounded-[18px] border border-[#d7dcea] bg-white p-5 shadow-sm transition-all hover:border-[#0f49d7]/30 hover:shadow-md">
+                    <div className={`absolute left-0 top-0 h-1 w-full opacity-50 ${colors[status].split(' ')[1].replace('bg-', 'bg-')}`} />
+                    <p className="text-[0.65rem] font-black uppercase tracking-[0.15em] text-[#6d7892] mb-3">{status}</p>
+                    <h3 className={`text-[1.75rem] font-black leading-none tracking-tighter mb-1.5 ${colors[status].split(' ')[0]}`}>{d.count}</h3>
+                    <p className="text-[0.75rem] font-bold text-[#11182d]">₹{d.revenue?.toLocaleString('en-IN')}</p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8">
+            <div className="mb-4 flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0f49d7] text-[0.7rem] font-black text-white shadow-sm">
+                3
+              </span>
+              <h2 className="text-[1rem] font-black tracking-tight text-[#11182d]">Revenue Trends</h2>
+            </div>
+            <div className="rounded-[18px] border border-[#d7dcea] bg-white p-1 shadow-sm overflow-hidden">
+              <RevenueChart data={revenueChart} isLoading={isLoading} />
+            </div>
+          </div>
+          <div className="lg:col-span-4">
+            <div className="mb-4 flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0f49d7] text-[0.7rem] font-black text-white shadow-sm">
+                4
+              </span>
+              <h2 className="text-[1rem] font-black tracking-tight text-[#11182d]">Order Status</h2>
+            </div>
+            <div className="rounded-[18px] border border-[#d7dcea] bg-white p-1 shadow-sm overflow-hidden">
+              <OrderStatusChart pipeline={pipeline} isLoading={isLoading} />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8">
+            <div className="mb-4 flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0f49d7] text-[0.7rem] font-black text-white shadow-sm">
+                5
+              </span>
+              <h2 className="text-[1rem] font-black tracking-tight text-[#11182d]">Top Selling Products</h2>
+            </div>
+            <div className="rounded-[18px] border border-[#d7dcea] bg-white shadow-sm overflow-hidden">
+              <TopProducts products={topProducts} isLoading={isLoading} />
+            </div>
+          </div>
+          <div className="lg:col-span-4">
+            <div className="mb-4 flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0f49d7] text-[0.7rem] font-black text-white shadow-sm">
+                6
+              </span>
+              <h2 className="text-[1rem] font-black tracking-tight text-[#11182d]">Store Health</h2>
+            </div>
+            <div className="rounded-[18px] border border-[#d7dcea] bg-white shadow-sm overflow-hidden">
+              <StoreHealth storeHealth={storeHealth} isLoading={isLoading} />
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-        <div className="lg:col-span-7 xl:col-span-8">
-          <RevenueChart data={revenueChart} isLoading={isLoading} />
-        </div>
-        <div className="lg:col-span-5 xl:col-span-4">
-          <OrderStatusChart pipeline={pipeline} isLoading={isLoading} />
-        </div>
-      </div>
-
-      {/* Bottom Layout Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 xl:col-span-8">
-          <TopProducts products={topProducts} isLoading={isLoading} />
-        </div>
-        <div className="lg:col-span-5 xl:col-span-4">
-          <StoreHealth storeHealth={storeHealth} isLoading={isLoading} />
-        </div>
-      </div>
-
     </div>
   );
 };

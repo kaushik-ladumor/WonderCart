@@ -312,37 +312,96 @@ exports.getDashboardStats = async (req, res) => {
 exports.getSellerEarnings = async (req, res) => {
   try {
     const sellerId = new mongoose.Types.ObjectId(req.user.userId);
-    
-    // 1. Get Wallet Balance (Available)
+    const { period = "30d" } = req.query;
+
+    // 1. Get Wallet Balance
     const user = await User.findById(sellerId);
     const availableBalance = user.walletBalance || 0;
 
-    // 2. Get SubOrders for Stats
-    const orders = await SubOrder.find({ seller: sellerId });
-    
-    const totalEarnings = orders
-      .filter(o => o.status === "delivered")
-      .reduce((sum, o) => sum + (o.sellerPayout || 0), 0);
+    // 2. Aggregate Orders for Detailed Earnings
+    const allSubOrders = await SubOrder.find({ seller: sellerId })
+      .populate({
+        path: "masterOrder",
+        select: "paymentMethod paymentStatus orderId masterOrderId razorpayPaymentId"
+      })
+      .sort({ createdAt: -1 });
+
+    const stats = {
+      successfulRevenue: 0,
+      cancelledRevenue: 0,
+      pendingRevenue: 0,
+      returnedAmount: 0,
+      onlinePaymentsTotal: 0,
+      codPaymentsTotal: 0,
+      platformCommissionTotal: 0,
+      totalCouponDiscounts: 0,
+      totalCustomerPaid: 0,
+      orderCount: allSubOrders.length,
+      successfulCount: 0,
+      cancelledCount: 0,
+      returnedCount: 0
+    };
+
+    const orderBreakdown = allSubOrders.map(so => {
+      const isDelivered = so.status === "delivered";
+      const isCancelled = so.status === "cancelled";
+      const isReturned = so.status === "returned" || so.status === "refunded";
+      const isPending = !isDelivered && !isCancelled && !isReturned;
+
+      // Use stored fields or fallback to calculation for older orders
+      const discount = so.discountAmount || 0;
+      const commission = so.platformCommission || so.commissionAmount || 0;
+      const customerPay = so.customerPaid || (so.subTotal + (so.shippingCost || so.shippingAmount || 0) + so.taxAmount - discount);
+      const sellerEarn = so.sellerPayout || so.vendorPayoutAmount || (so.subTotal - commission);
       
-    const pendingPayouts = orders
-      .filter(o => !["delivered", "cancelled", "returned"].includes(o.status))
-      .reduce((sum, o) => sum + (o.sellerPayout || 0), 0);
+      const paymentMethod = so.masterOrder?.paymentMethod || "N/A";
 
-    // 3. Get Recent Transactions
-    const transactions = await WalletTransaction.find({ user: sellerId })
-      .sort({ createdAt: -1 })
-      .limit(20);
+      if (isDelivered) {
+        stats.successfulRevenue += sellerEarn;
+        stats.successfulCount++;
+        if (paymentMethod === "Razorpay") stats.onlinePaymentsTotal += customerPay;
+        else stats.codPaymentsTotal += customerPay;
+      } else if (isCancelled) {
+        stats.cancelledRevenue += sellerEarn;
+        stats.cancelledCount++;
+      } else if (isReturned) {
+        stats.returnedAmount += customerPay;
+        stats.returnedCount++;
+      } else {
+        stats.pendingRevenue += sellerEarn;
+      }
 
-    // 4. Chart Data (Zero-filled based on period)
-    const { period = "30d" } = req.query;
+      stats.platformCommissionTotal += commission;
+      stats.totalCouponDiscounts += discount;
+      stats.totalCustomerPaid += customerPay;
+
+      return {
+        id: so._id,
+        orderId: so.subOrderId,
+        date: so.createdAt,
+        status: so.status,
+        paymentMethod,
+        financials: {
+          subTotal: so.subTotal,
+          tax: so.taxAmount,
+          shipping: so.shippingCost || so.shippingAmount || 0,
+          discount,
+          adminFee: commission,
+          customerPaid: customerPay,
+          sellerEarnings: sellerEarn
+        }
+      };
+    });
+
+    // 3. Chart Data
     let daysToFetch = 30;
     if (period === "7d") daysToFetch = 7;
-    if (period === "Yr" || period === "year") daysToFetch = 365;
-    
+    if (period === "year") daysToFetch = 365;
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysToFetch);
-    
-    const dbData = await SubOrder.aggregate([
+
+    const chartData = await SubOrder.aggregate([
       { $match: { seller: sellerId, status: "delivered", deliveredAt: { $gte: startDate } } },
       {
         $group: {
@@ -353,55 +412,42 @@ exports.getSellerEarnings = async (req, res) => {
       { $sort: { "_id": 1 } }
     ]);
 
-    // Zero-filling logic
-    const dataMap = new Map(dbData.map(item => [item._id, item.value]));
+    // Zero-fill chart
+    const dataMap = new Map(chartData.map(item => [item._id, item.value]));
     const finalChartData = [];
     for (let i = 0; i <= daysToFetch; i++) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() + i);
-        const dateStr = d.toISOString().split('T')[0];
-        finalChartData.push({
-            name: dateStr,
-            value: dataMap.get(dateStr) || 0
-        });
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      finalChartData.push({
+        name: dateStr,
+        value: dataMap.get(dateStr) || 0
+      });
     }
 
-    // 5. Category Breakdown
-    const categories = await SubOrder.aggregate([
-      { $match: { seller: sellerId, status: "delivered" } },
-      { $unwind: "$items" },
-      {
-        $group: {
-          _id: "$items.category",
-          total: { $sum: "$items.price" }
-        }
-      }
-    ]);
-
-    const totalCatRevenue = categories.reduce((sum, c) => sum + c.total, 0);
-    const formattedCategories = categories.map(c => ({
-      name: c._id || "Other",
-      percentage: totalCatRevenue > 0 ? Math.round((c.total / totalCatRevenue) * 100) : 0,
-      color: c._id === "Electronics" ? "bg-[#2563eb]" : (c._id === "Footwear" ? "bg-[#10b981]" : "bg-[#64748b]")
-    })).sort((a,b) => b.percentage - a.percentage).slice(0, 3);
+    // 4. Recent Transactions
+    const transactions = await WalletTransaction.find({ user: sellerId })
+      .sort({ createdAt: -1 })
+      .limit(10);
 
     res.status(200).json({
       success: true,
-      totalEarnings,
-      availableBalance,
-      pendingPayouts,
-      nextPayoutDate: "Nov 05, 2026",
+      balance: availableBalance,
+      summary: stats,
+      orders: orderBreakdown.slice(0, 50), // Send last 50 for performance
+      chartData: finalChartData,
       transactions: transactions.map(t => ({
         id: t._id,
         date: t.createdAt,
         amount: t.amount,
-        refId: t.refId || `TXN-${t._id.toString().slice(-8).toUpperCase()}`,
-        status: t.type === "credit" ? "SUCCESS" : "PROCESSING"
-      })),
-      chartData: finalChartData,
-      categories: formattedCategories
+        type: t.type,
+        source: t.source,
+        description: t.description,
+        status: "SUCCESS"
+      }))
     });
   } catch (error) {
+    console.error("Seller Earnings API Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

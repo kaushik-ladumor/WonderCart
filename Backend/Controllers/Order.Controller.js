@@ -441,6 +441,14 @@ const handleOrderCreation = async (req, res, data) => {
 
     const finalOrderTotal = combinedTotal - finalDiscount;
 
+    // Distribute discount and calculate customerPaid for each sub-order
+    subOrders.forEach(so => {
+      const proportion = combinedTotal > 0 ? (so.subTotal + so.taxAmount + so.shippingAmount) / combinedTotal : 0;
+      const subOrderDiscount = Math.round(finalDiscount * proportion);
+      so.discountAmount = subOrderDiscount;
+      so.customerPaid = (so.subTotal + so.taxAmount + so.shippingAmount) - subOrderDiscount;
+    });
+
     // 3. CREATE MASTER ORDER
     const order = new Order({
       masterOrderId: masterId,

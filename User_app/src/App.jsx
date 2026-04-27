@@ -90,6 +90,8 @@ function App() {
                 return axios(originalRequest);
               }
             }
+            // If No Refresh Token
+            throw new Error("No refresh token available");
           } catch (err) {
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");

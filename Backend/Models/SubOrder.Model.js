@@ -37,6 +37,8 @@ const subOrderSchema = new mongoose.Schema({
   subTotal: Number,
   shippingCost: Number,
   taxAmount: { type: Number, default: 0 },
+  discountAmount: { type: Number, default: 0 },
+  customerPaid: { type: Number, default: 0 },
   platformCommission: Number,
   sellerPayout: Number, 
   status: {

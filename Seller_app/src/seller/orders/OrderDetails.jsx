@@ -162,7 +162,7 @@ const OrderDetails = () => {
                   ))}
               </select>
             </div>
-            <button 
+            <button
               onClick={() => handleStatusUpdate()}
               disabled={updating || (newStatus === order.status && trackingId === (order.trackingId || ""))}
               className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#2156d8] px-8 text-[14px] font-bold text-white shadow-xl shadow-blue-100 transition hover:bg-[#1d4ed8] disabled:opacity-50"
@@ -188,11 +188,11 @@ const OrderDetails = () => {
                 {order.items.map((item, index) => (
                   <div key={index} className="flex items-center gap-6 py-8">
                     <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-[#0f172a] overflow-hidden">
-                       <img 
-                         src={item.image || item.product?.variants?.[0]?.images?.[0] || item.product?.image} 
-                         alt={item.name} 
-                         className="h-full w-full object-cover"
-                       />
+                      <img
+                        src={item.image || item.product?.variants?.[0]?.images?.[0] || item.product?.image}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                     <div className="flex-1">
                       <h4 className="text-base font-bold text-[#141b2d]">{item.name}</h4>
@@ -216,22 +216,22 @@ const OrderDetails = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-               {/* Tracking ID Card */}
-               <div className="rounded-[32px] border border-[#e2e8f0] bg-white p-8">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7c87a2]">Tracking ID</p>
-                    <button className="text-[#7c87a2] hover:text-[#2156d8] transition"><Copy className="h-4 w-4" /></button>
+              {/* Tracking ID Card */}
+              <div className="rounded-[32px] border border-[#e2e8f0] bg-white p-8">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7c87a2]">Tracking ID</p>
+                  <button className="text-[#7c87a2] hover:text-[#2156d8] transition"><Copy className="h-4 w-4" /></button>
+                </div>
+                <div className="mt-4 flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0fdf4] text-[#18794e]">
+                    <Truck className="h-5 w-5" />
                   </div>
-                  <div className="mt-4 flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0fdf4] text-[#18794e]">
-                      <Truck className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-[#141b2d] uppercase">{order.trackingId || "PENDING-ID"}</p>
-                      <p className="text-[11px] font-medium text-[#7c87a2]">via {order.masterOrder?.shippingMethod || "Standard Courier"}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#141b2d] uppercase">{order.trackingId || "PENDING-ID"}</p>
+                    <p className="text-[11px] font-medium text-[#7c87a2]">via {order.masterOrder?.shippingMethod || "Standard Courier"}</p>
                   </div>
-               </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -239,7 +239,7 @@ const OrderDetails = () => {
             {/* Customer Details Card */}
             <div className="rounded-[32px] border border-[#e2e8f0] bg-white p-8">
               <h3 className="text-base font-bold text-[#141b2d]">Customer Details</h3>
-              
+
               <div className="mt-8 flex items-center gap-4">
                 <div className="h-14 w-14 rounded-full bg-[#f1f5f9] flex items-center justify-center text-base font-bold text-[#7c87a2] overflow-hidden border border-[#e2e8f0]">
                   <img src={`https://ui-avatars.com/api/?name=${order.masterOrder?.address?.fullName || order.masterOrder?.user?.fullName || 'Customer'}&background=eff4ff&color=2156d8&bold=true`} alt="User" />
@@ -249,68 +249,68 @@ const OrderDetails = () => {
                     {order.masterOrder?.address?.fullName || order.masterOrder?.user?.fullName || order.masterOrder?.user?.username || "Customer"}
                   </p>
                   <p className="text-xs font-medium text-[#7c87a2]">
-                     Premium Customer
+                    Premium Customer
                   </p>
                 </div>
               </div>
 
               <div className="mt-8 space-y-4">
-                 <div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-[#7c87a2]">Contact</p>
-                   <p className="mt-1 text-sm font-bold text-[#141b2d]">{order.masterOrder?.user?.email}</p>
-                   <p className="text-sm font-bold text-[#141b2d]">{order.masterOrder?.address?.phone}</p>
-                 </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#7c87a2]">Contact</p>
+                  <p className="mt-1 text-sm font-bold text-[#141b2d]">{order.masterOrder?.user?.email}</p>
+                  <p className="text-sm font-bold text-[#141b2d]">{order.masterOrder?.address?.phone}</p>
+                </div>
               </div>
             </div>
 
             {/* Shipping Card */}
             <div className="rounded-[32px] border border-[#e2e8f0] bg-white p-8">
-               <h3 className="text-base font-bold text-[#141b2d] mb-6">Shipping To</h3>
-               
-               <p className="text-sm font-medium leading-relaxed text-[#5f6b88]">
-                  {order.masterOrder?.address?.street}, {order.masterOrder?.address?.city}, {order.masterOrder?.address?.state} - {order.masterOrder?.address?.zipCode}, India
-               </p>
+              <h3 className="text-base font-bold text-[#141b2d] mb-6">Shipping To</h3>
+
+              <p className="text-sm font-medium leading-relaxed text-[#5f6b88]">
+                {order.masterOrder?.address?.street}, {order.masterOrder?.address?.city}, {order.masterOrder?.address?.state} - {order.masterOrder?.address?.zipCode}, India
+              </p>
             </div>
 
             {/* Earnings Breakdown */}
             <div className="relative overflow-hidden rounded-[32px] bg-[#2156d8] p-8 text-white shadow-xl shadow-blue-100">
-               <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-8">
-                     <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-100">Earnings Breakdown</p>
-                     <span className="rounded-lg bg-[#ffffff20] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
-                         {order.paymentStatus === 'paid' ? 'PROCESSED' : 'PENDING'}
-                     </span>
-                  </div>
-                  
-                  <div className="space-y-4">
-                     <div className="flex items-center justify-between text-[13px] font-bold opacity-80">
-                        <span>Order Subtotal</span>
-                        <span>{RUPEE}{Number(order.subTotal || 0).toLocaleString()}</span>
-                     </div>
-                     <div className="flex items-center justify-between text-[13px] font-bold opacity-80">
-                        <span>Platform Commission (12%)</span>
-                        <span>-{RUPEE}{Number(order.platformCommission || 0).toLocaleString()}</span>
-                     </div>
-                     <div className="flex items-center justify-between text-[13px] font-bold opacity-80">
-                        <span>Shipping Charges</span>
-                        <span>+{RUPEE}{Number(order.shippingCost || 0).toLocaleString()}</span>
-                     </div>
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-8">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-100">Earnings Breakdown</p>
+                  <span className="rounded-lg bg-[#ffffff20] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+                    {order.paymentStatus === 'paid' ? 'PROCESSED' : 'PENDING'}
+                  </span>
+                </div>
 
-                     <div className="mt-8 border-t border-white/20 pt-7">
-                       <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-100">Actual Payout</p>
-                            <p className="mt-2 text-[32px] font-black leading-none">{RUPEE}{Number(order.sellerPayout || 0).toLocaleString()}</p>
-                          </div>
-                       </div>
-                     </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-[13px] font-bold opacity-80">
+                    <span>Order Subtotal</span>
+                    <span>{RUPEE}{Number(order.subTotal || 0).toLocaleString()}</span>
                   </div>
-               </div>
+                  <div className="flex items-center justify-between text-[13px] font-bold opacity-80">
+                    <span>Platform Commission (12%)</span>
+                    <span>-{RUPEE}{Number(order.platformCommission || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[13px] font-bold opacity-80">
+                    <span>Shipping Charges</span>
+                    <span>+{RUPEE}{Number(order.shippingCost || 0).toLocaleString()}</span>
+                  </div>
 
-               {/* Stylized Icon Watermark */}
-               <div className="absolute -bottom-4 -right-4 opacity-15">
-                  <CreditCard className="h-28 w-28 rotate-12" />
-               </div>
+                  <div className="mt-8 border-t border-white/20 pt-7">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-100">Actual Payout</p>
+                        <p className="mt-2 text-[32px] font-black leading-none">{RUPEE}{Number(order.sellerPayout || 0).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stylized Icon Watermark */}
+              <div className="absolute -bottom-4 -right-4 opacity-15">
+                <CreditCard className="h-28 w-28 rotate-12" />
+              </div>
             </div>
 
           </div>

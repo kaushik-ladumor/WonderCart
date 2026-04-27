@@ -62,9 +62,9 @@ const RevenueChart = ({ data = [], isLoading }) => {
       if (!isValidDate) {
         key = item.label || 'Other';
       } else if (view === 'weekly') {
-        key = `Week ${getWeek(date)}, ${date.getFullYear()}`;
+        key = `W${getWeek(date)}, ${date.getFullYear()}`;
       } else {
-        key = date.toLocaleString('en-IN', { month: 'short', year: 'numeric' });
+        key = date.toLocaleString('en-IN', { month: 'short' });
       }
 
       if (!groups[key]) {
@@ -86,14 +86,14 @@ const RevenueChart = ({ data = [], isLoading }) => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-[420px] flex-col rounded-[32px] border border-[#f1f5f9] bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.03)]">
-        <div className="mb-3 h-7 w-60 rounded-full bg-[#f8fafc] animate-pulse" />
-        <div className="mb-10 h-5 w-48 rounded-full bg-[#f8fafc] animate-pulse" />
-        <div className="flex flex-1 items-end justify-between gap-6 px-4">
+      <div className="flex h-full min-h-[380px] flex-col rounded-[18px] border border-[#d7dcea] bg-white p-5 shadow-sm">
+        <div className="mb-3 h-5 w-44 rounded bg-[#f1f4fb] animate-pulse" />
+        <div className="mb-6 h-3.5 w-32 rounded bg-[#f1f4fb] animate-pulse" />
+        <div className="flex flex-1 items-end justify-between gap-4 px-2">
           {[1, 2, 3, 4, 5, 6, 7].map((item) => (
             <div
               key={item}
-              className="w-full rounded-t-full bg-[#f8fafc] animate-pulse"
+              className="w-full rounded-t-lg bg-[#f1f4fb] animate-pulse"
               style={{ height: `${Math.random() * 60 + 20}%` }}
             />
           ))}
@@ -103,78 +103,86 @@ const RevenueChart = ({ data = [], isLoading }) => {
   }
 
   return (
-    <div className="flex h-[480px] flex-col rounded-[32px] border border-[#f1f5f9] bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.03)] font-poppins">
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+    <div className="flex h-[440px] flex-col rounded-[18px] border border-[#d7dcea] bg-white p-5 shadow-sm font-poppins">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#dfe7ff] text-[0.7rem] font-semibold text-[#0f49d7]">
+            1
+          </span>
           <div>
-            <h3 className="text-[22px] font-black tracking-tight text-[#0f172a]">Revenue &amp; Orders Performance</h3>
-            <p className="mt-1 text-[15px] font-medium text-[#64748b]">
-              {view.charAt(0).toUpperCase() + view.slice(1)} view compared across revenue and order count.
-            </p>
+            <h3 className="text-[0.95rem] font-semibold text-[#11182d]">Performance Analytics</h3>
+            <p className="text-[0.72rem] text-[#6d7892]">Revenue & Order trends</p>
           </div>
-          <div className="inline-flex rounded-full bg-[#f1f5f9] p-1 shadow-inner">
-            {['daily', 'weekly', 'monthly'].map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`rounded-full px-6 py-2 text-[12px] font-bold uppercase tracking-wider transition-all duration-500 ease-out ${view === v
-                    ? 'bg-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)]'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                  }`}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
+        </div>
+        <div className="flex bg-[#f1f4fb] p-1 rounded-[12px] border border-[#d7dcea] w-fit">
+          {['daily', 'weekly', 'monthly'].map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`rounded-[10px] px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.08em] transition-all ${view === v
+                ? 'bg-white text-[#0f49d7] shadow-sm'
+                : 'text-[#6d7892] hover:text-[#0f49d7]'
+                }`}
+            >
+              {v.substring(0, 3)}
+            </button>
+          ))}
         </div>
       </div>
 
       {!processedData || processedData.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center text-sm font-medium text-[#94a3b8]">
-          No performance data available for this period.
+        <div className="flex flex-1 items-center justify-center text-[0.82rem] font-medium text-[#6d7892]">
+          No performance data available.
         </div>
       ) : (
-        <div className="mt-4 flex-1">
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={processedData} margin={{ top: 20, right: 30, left: 80, bottom: 80 }}>
-              <CartesianGrid vertical={false} stroke="#e2e8f0" strokeOpacity={0.5} />
+        <div className="flex-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={processedData}
+              margin={{ top: 10, right: 15, left: 10, bottom: 10 }}
+            >
+              <CartesianGrid vertical={false} stroke="#f1f4fb" strokeOpacity={0.8} />
               <XAxis
                 dataKey="label"
-                axisLine={{ stroke: '#cbd5e1', strokeWidth: 1 }}
+                axisLine={{ stroke: '#f1f4fb', strokeWidth: 1 }}
                 tickLine={false}
-                tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600, fontFamily: 'Poppins' }}
-                dy={15}
+                tick={{ fill: '#98a4bd', fontSize: 9, fontWeight: 700, fontFamily: 'Poppins' }}
+                dy={10}
+                padding={{ left: 20, right: 20 }}
               />
               <YAxis
                 yAxisId="revenue"
-                axisLine={false}
+                axisLine={{ stroke: '#f1f4fb', strokeWidth: 1 }}
                 tickLine={false}
-                tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600, fontFamily: 'Poppins' }}
-                tickFormatter={(value) => `${RUPEE}${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`}
+                tick={{ fill: '#98a4bd', fontSize: 9, fontWeight: 700, fontFamily: 'Poppins' }}
+                tickFormatter={(val) => `${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`}
+                dx={-10}
               />
               <YAxis yAxisId="orders" hide />
               <Tooltip
-                cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
+                cursor={{ stroke: '#f1f4fb', strokeWidth: 2 }}
                 content={<CustomTooltip />}
               />
               <Line
                 yAxisId="revenue"
                 type="monotone"
                 dataKey="revenue"
-                stroke="#2563eb"
+                stroke="#0f49d7"
                 strokeWidth={3}
-                dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }}
-                activeDot={{ r: 6, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }}
+                dot={{ r: 4, fill: '#0f49d7', strokeWidth: 2, stroke: '#fff' }}
+                activeDot={{ r: 6, fill: '#0f49d7', stroke: '#fff', strokeWidth: 2 }}
+                animationDuration={1000}
               />
               <Line
                 yAxisId="orders"
                 type="monotone"
                 dataKey="orders"
-                stroke="#cbd5e1"
+                stroke="#98a4bd"
                 strokeWidth={2}
                 strokeDasharray="4 4"
-                dot={{ r: 3, fill: '#cbd5e1', strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: '#94a3b8' }}
+                dot={{ r: 3, fill: '#98a4bd', strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: '#98a4bd' }}
+                animationDuration={1000}
               />
             </LineChart>
           </ResponsiveContainer>

@@ -32,11 +32,11 @@ const OrderStatusChart = ({ pipeline = {}, isLoading }) => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-[350px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
-        <div className="mb-2 h-6 w-36 rounded bg-[#edf1fb] animate-pulse" />
-        <div className="mb-8 h-4 w-32 rounded bg-[#edf1fb] animate-pulse" />
+      <div className="flex h-full min-h-[350px] flex-col rounded-[18px] border border-[#d7dcea] bg-white p-5 shadow-sm">
+        <div className="mb-2 h-5 w-32 rounded bg-[#f1f4fb] animate-pulse" />
+        <div className="mb-8 h-3 w-28 rounded bg-[#f1f4fb] animate-pulse" />
         <div className="flex flex-1 items-center justify-center">
-          <div className="h-40 w-40 rounded-full border-[14px] border-[#edf1fb] animate-pulse" />
+          <div className="h-32 w-32 rounded-full border-[12px] border-[#f1f4fb] animate-pulse" />
         </div>
       </div>
     );
@@ -54,28 +54,33 @@ const OrderStatusChart = ({ pipeline = {}, isLoading }) => {
   const activeItem = activeIndex !== null ? data[activeIndex] : null;
 
   return (
-    <div className="flex h-[480px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
-      <div className="mb-8">
-        <h3 className="text-[20px] font-black tracking-tight text-[#0f172a]">Order Distribution</h3>
-        <p className="mt-1 text-[14px] font-medium text-[#64748b]">Current lifecycle status spread.</p>
+    <div className="flex h-[440px] flex-col rounded-[18px] border border-[#d7dcea] bg-white p-5 shadow-sm">
+      <div className="mb-5 flex items-center gap-2.5">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#dfe7ff] text-[0.7rem] font-semibold text-[#0f49d7]">
+          2
+        </span>
+        <div>
+          <h3 className="text-[0.95rem] font-semibold text-[#11182d]">Order Distribution</h3>
+          <p className="text-[0.72rem] text-[#6d7892]">Lifecycle status spread</p>
+        </div>
       </div>
 
       {totalOrders === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center text-sm text-[#75819d]">
-          <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#e3e8f5]">0</div>
+        <div className="flex flex-1 flex-col items-center justify-center text-sm text-[#6d7892]">
+          <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#f1f4fb]">0</div>
           No orders yet
         </div>
       ) : (
         <>
-          <div className="relative mb-6 mt-4 flex-1">
-            <ResponsiveContainer width="100%" height={230}>
+          <div className="relative mb-4 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={72}
-                  outerRadius={96}
+                  innerRadius="65%"
+                  outerRadius="85%"
                   paddingAngle={1}
                   dataKey="value"
                   labelLine={false}
@@ -95,34 +100,31 @@ const OrderStatusChart = ({ pipeline = {}, isLoading }) => {
               </PieChart>
             </ResponsiveContainer>
 
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-300">
-              <span className={`text-[2.2rem] font-black leading-none tracking-tighter text-[#0f172a] ${activeItem ? 'scale-110' : ''}`}>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className={`text-[1.8rem] font-bold tracking-tight text-[#11182d] transition-all ${activeItem ? 'scale-110' : ''}`}>
                 {activeItem ? activeItem.value : totalOrders}
               </span>
-              <span className={`mt-2 text-[9px] font-extrabold uppercase tracking-[0.25em] transition-colors duration-300 ${activeItem ? 'text-[#2156d8]' : 'text-[#64748b]'}`}>
-                {activeItem ? activeItem.name.replaceAll('_', ' ') : 'Total Orders'}
+              <span className={`text-[0.6rem] font-bold uppercase tracking-[0.15em] transition-colors ${activeItem ? 'text-[#0f49d7]' : 'text-[#6d7892]'}`}>
+                {activeItem ? activeItem.name.replaceAll('_', ' ') : 'Total'}
               </span>
             </div>
           </div>
 
-          <div className="space-y-3 pt-2">
-            {data.map((item, idx) => {
-              const percent = Math.round((item.value / totalOrders) * 100);
-              return (
-                <div 
-                  key={item.name} 
-                  onMouseEnter={() => setActiveIndex(idx)}
-                  onMouseLeave={() => setActiveIndex(null)}
-                  className={`flex items-center justify-between gap-3 text-sm transition-opacity duration-300 cursor-default ${activeIndex !== null && activeIndex !== idx ? 'opacity-30' : 'opacity-100'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="font-medium capitalize text-[#1f2940]">{item.name}</span>
-                  </div>
-                  <span className="font-bold text-[#1f2940]">{item.value}</span>
+          <div className="space-y-2.5 pt-2 border-t border-[#f1f4fb]">
+            {data.slice(0, 5).map((item, idx) => (
+              <div 
+                key={item.name} 
+                onMouseEnter={() => setActiveIndex(idx)}
+                onMouseLeave={() => setActiveIndex(null)}
+                className={`flex items-center justify-between gap-3 transition-all cursor-default ${activeIndex !== null && activeIndex !== idx ? 'opacity-30' : 'opacity-100'}`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-[0.78rem] font-semibold capitalize text-[#33415e]">{item.name.replaceAll('_', ' ')}</span>
                 </div>
-              );
-            })}
+                <span className="text-[0.78rem] font-bold text-[#11182d]">{item.value}</span>
+              </div>
+            ))}
           </div>
         </>
       )}
