@@ -36,10 +36,12 @@ router.get("/rising", async (req, res) => {
     const { category } = req.query;
     const query = { category: category || "All" };
     
-    const sellers = await TopSeller.find(query).lean();
-    
     // Calculate rank improvement: previousRank - rank
     // If previousRank is null, it was not in top 100, assume previous rank was 101
+    const sellers = await TopSeller.find(query)
+      .populate("productId", "ratingAverage reviewCount")
+      .lean();
+
     const rising = sellers.map(seller => {
       const prev = seller.previousRank || 101;
       const improvement = prev - seller.rank;
@@ -69,7 +71,8 @@ router.get("/categories", async (req, res) => {
     
     // Find #1 product for each category
     for (const cat of categories) {
-       const topProduct = await TopSeller.findOne({ category: cat, rank: 1 });
+       const topProduct = await TopSeller.findOne({ category: cat, rank: 1 })
+         .populate("productId", "ratingAverage reviewCount");
        if (topProduct) {
          categoriesWithProduct.push({
            category: cat,

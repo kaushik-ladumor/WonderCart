@@ -22,18 +22,28 @@ const getPublicId = (url) => {
   return publicIdWithExt.split(".")[0];
 };
 
-const assignCouponsToNewUser = async (userId, role) => {
+const assignCouponsToNewUser = async (user) => {
   try {
+    const userId = user._id;
     const now = new Date();
-    // Dynamically assign existing "all" and "new_users" coupons to the new user
+    
+    // 1. Generate Referral Code for this user if not exists
+    if (!user.referralCode) {
+      const code = (user.username || user.email.split('@')[0])
+        .substring(0, 4)
+        .toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+      user.referralCode = code;
+      await user.save();
+    }
+
+    // 2. Dynamically assign existing "all" and "new_users" coupons to the new user
     await Coupon.updateMany(
       {
         status: "active",
         targetType: { $in: ["all", "new_users"] },
-        targetRole: role || "user",
         $or: [
-          { expirationDate: null },
-          { expirationDate: { $gt: now } }
+          { neverExpires: true },
+          { endDate: { $gt: now } }
         ],
         startDate: { $lte: now }
       },
@@ -43,6 +53,7 @@ const assignCouponsToNewUser = async (userId, role) => {
     console.error("Error assigning coupons to new user:", error);
   }
 };
+
 
 const generateTokens = async (user) => {
   const accessToken = jwt.sign(
@@ -69,9 +80,9 @@ const generateTokens = async (user) => {
 
 const signup = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role, referredByCode } = req.body;
 
-    if (!username || !email || !password, !role) {
+    if (!username || !email || !password || !role) {
       return res.status(400).json({
         success: false,
         message: "All fields (username, email, password, role) are required",
@@ -84,6 +95,17 @@ const signup = async (req, res) => {
         success: false,
         message: "User already exists",
       });
+    }
+
+    // Handle Referral logic
+    let referrerId = null;
+    if (referredByCode) {
+        const referrer = await User.findOne({ referralCode: referredByCode.toUpperCase() });
+        if (referrer) {
+            referrerId = referrer._id;
+            referrer.referralCount = (referrer.referralCount || 0) + 1;
+            await referrer.save();
+        }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -99,10 +121,11 @@ const signup = async (req, res) => {
       password: hashedPassword,
       verificationCode,
       expireCode,
+      referredBy: referrerId
     });
 
-    // Assign eligible coupons to new user
-    await assignCouponsToNewUser(newUser._id, newUser.role);
+    // Assign eligible coupons to new user and generate referral code
+    await assignCouponsToNewUser(newUser);
 
     // --- Gamification: Signup Points ---
     await addPoints(newUser._id, 50, "Signup Reward");
@@ -254,11 +277,11 @@ const googleAuth = async (req, res) => {
       // Update existing user with latest info from Google
       user.googleId = uid;
       user.isVerified = true; // Google authentication serves as verification
-      
+
       if (photoURL) {
         user.profile = photoURL;
       }
-      
+
       await user.save();
     } else {
       isNewUser = true;
@@ -270,6 +293,17 @@ const googleAuth = async (req, res) => {
         .trim()
         .replace(/[.\s-]+/g, "_");
 
+      // Handle Referral logic for Google Auth
+      let referrerId = null;
+      if (req.body.referredByCode) {
+          const referrer = await User.findOne({ referralCode: req.body.referredByCode.toUpperCase() });
+          if (referrer) {
+              referrerId = referrer._id;
+              referrer.referralCount = (referrer.referralCount || 0) + 1;
+              await referrer.save();
+          }
+      }
+
       user = await User.create({
         username: safeUsername,
         email,
@@ -277,10 +311,11 @@ const googleAuth = async (req, res) => {
         role,
         profile: photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
         isVerified: true,
+        referredBy: referrerId
       });
 
-      // Assign eligible coupons to new user
-      await assignCouponsToNewUser(user._id, user.role);
+      // Assign eligible coupons to new user and generate referral code
+      await assignCouponsToNewUser(user);
 
       // --- Gamification: Signup Points ---
       await addPoints(user._id, 50, "Signup Reward (Google)");
@@ -591,13 +626,22 @@ const profile = async (req, res) => {
   try {
     const id = req.user.userId; // 👈 JWT payload
 
-    const user = await User.findById(id);
+    let user = await User.findById(id);
 
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
+    }
+
+    // Auto-generate referral code if missing (for old users)
+    if (!user.referralCode) {
+      const code = (user.username || user.email.split('@')[0])
+        .substring(0, 4)
+        .toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+      user.referralCode = code;
+      await user.save();
     }
 
     const userObj = user.toObject();
@@ -1017,13 +1061,8 @@ const getAvailableCoupons = async (req, res) => {
       if (coupon.targetType === "new_users" && pastOrdersCount > 0) return null;
 
       // 2. Usage Check (Per user limit)
-      const usageCount = await Order.countDocuments({
-        user: userId,
-        coupon: coupon._id,
-        status: { $ne: "cancelled" }
-      });
-
-      if (usageCount >= (coupon.perUserLimit || 1)) return null;
+      const hasUsed = coupon.usedBy?.some(id => id.toString() === userId.toString());
+      if (hasUsed) return null;
 
       return coupon;
     }));
@@ -1092,13 +1131,8 @@ const applyCoupon = async (req, res) => {
     }
 
     // Check per user limit
-    const usageCount = await Order.countDocuments({
-      user: userId,
-      coupon: coupon._id,
-      status: { $ne: "cancelled" }
-    });
-
-    if (usageCount >= (coupon.perUserLimit || 1)) {
+    const hasUsed = coupon.usedBy?.some(id => id.toString() === userId.toString());
+    if (hasUsed) {
       return res.status(400).json({ message: "You have already used this coupon" });
     }
 

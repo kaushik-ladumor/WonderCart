@@ -57,7 +57,8 @@ const getItemImage = (item) =>
   item?.image ||
   item?.product?.image ||
   item?.product?.images?.[0] ||
-  item?.product?.variants?.find((variant) => variant?.images?.[0])?.images?.[0] ||
+  item?.product?.variants?.find((variant) => variant?.images?.[0])
+    ?.images?.[0] ||
   "";
 
 const Checkout = () => {
@@ -129,7 +130,7 @@ const Checkout = () => {
 
       setOrderItems(
         items.map((item) => ({
-          productId: item.product?._id || item.productId || item.product,
+          product: item.product?._id || item.productId || item.product,
           productName: item.productName || item.product?.name || "Product",
           productImg: getItemImage(item),
           color: item.color || item.product?.variants?.[0]?.color || "",
@@ -137,6 +138,7 @@ const Checkout = () => {
           price: Math.round(item.sellingPrice || item.price || 0),
           originalPrice: Math.round(item.originalPrice || item.price || 0),
           quantity: item.quantity || 1,
+          category: item.product?.category || item.category || ""
         })),
       );
       setIsDirectOrder(false);
@@ -200,13 +202,16 @@ const Checkout = () => {
     loadOrderItems(token);
     loadAddresses(token);
     fetchWallet();
-    
+
     // Fetch available coupons
-    axios.get(`${API_URL}/user/coupons`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => {
-      setAvailableCoupons(res.data.coupons || []);
-    }).catch(err => console.error("Failed to fetch coupons", err));
+    axios
+      .get(`${API_URL}/coupon/available?onlyAvailable=true`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setAvailableCoupons(res.data.coupons || []);
+      })
+      .catch((err) => console.error("Failed to fetch coupons", err));
   }, [navigate]);
 
   const subtotal = orderItems.reduce(
@@ -217,46 +222,50 @@ const Checkout = () => {
   const gst = Math.round(subtotal * 0.18);
   const codFee = paymentOption === "cod" ? 50 : 0;
 
-  let couponDiscountAmount = 0;
-  if (appliedCoupon) {
-    const discountBase = subtotal + gst;
-    if (appliedCoupon.dealType === "percentage") {
-      couponDiscountAmount = Math.round(
-        (discountBase * appliedCoupon.discount) / 100,
-      );
-      if (appliedCoupon.maxDiscount) {
-        couponDiscountAmount = Math.min(
-          couponDiscountAmount,
-          appliedCoupon.maxDiscount,
-        );
-      }
-    } else if (appliedCoupon.dealType === "fixed") {
-      couponDiscountAmount = Math.min(appliedCoupon.discount, discountBase);
-    } else if (appliedCoupon.dealType === "free_shipping") {
-      couponDiscountAmount = shipping;
-    }
+  let couponDiscountAmount = appliedCoupon ? appliedCoupon.discount || 0 : 0;
+  let finalShipping = shipping;
+  
+  if (appliedCoupon && appliedCoupon.couponType === 'free_shipping') {
+    finalShipping = 0;
+    couponDiscountAmount = shipping; 
   }
 
-  const rewardDiscountAmount = appliedRewardCoupon === '25' ? 25 : (appliedRewardCoupon === '50' ? 50 : 0);
+  const rewardDiscountAmount =
+    appliedRewardCoupon === "25" ? 25 : appliedRewardCoupon === "50" ? 50 : 0;
+    
   const orderTotal = Math.round(
-    subtotal + shipping + gst + codFee - couponDiscountAmount - rewardDiscountAmount,
+    subtotal +
+      finalShipping +
+      gst +
+      codFee -
+      couponDiscountAmount -
+      rewardDiscountAmount,
   );
   const walletDeduction = useWallet ? Math.min(walletBalance, orderTotal) : 0;
   const netPayable = Math.max(orderTotal - walletDeduction, 0);
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
+  const handleApplyCoupon = async (codeToApply = null) => {
+    const code = (typeof codeToApply === 'string' ? codeToApply : couponCode) || "";
+    if (!code.toString().trim()) return;
     setApplyingCoupon(true);
     try {
       const response = await axios.post(
-        `${API_URL}/user/apply-coupon`,
-        { couponCode: couponCode.trim() },
+        `${API_URL}/coupon/validate`,
+        { 
+          code: code.trim(),
+          items: orderItems,
+          subTotal: subtotal,
+          paymentMethod: actualPaymentMethod
+        },
         { headers: { Authorization: `Bearer ${getToken()}` } },
       );
       if (response.data.success) {
-        setAppliedCoupon(response.data.coupon);
-        setCouponCode(response.data.coupon.code || couponCode.trim());
-        toast.success("Coupon applied");
+        setAppliedCoupon({
+          ...response.data.coupon,
+          discount: response.data.discount
+        });
+        setCouponCode(code.trim());
+        toast.success(response.data.message || "Coupon applied");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Invalid coupon");
@@ -348,18 +357,22 @@ const Checkout = () => {
       console.error("DEBUG - Response headers:", error.response?.headers);
       console.error("DEBUG - Response data:", error.response?.data);
 
-      let errorMsg = "Something went wrong. Please check your internet connection.";
+      let errorMsg =
+        "Something went wrong. Please check your internet connection.";
       if (error.response) {
         // The server responded with a status code that falls out of the range of 2xx
-        errorMsg = error.response.data?.message || `Server error: ${error.response.status}`;
+        errorMsg =
+          error.response.data?.message ||
+          `Server error: ${error.response.status}`;
       } else if (error.request) {
         // The request was made but no response was received
-        errorMsg = "No response from server. Please ensure the backend is running on port 4000.";
+        errorMsg =
+          "No response from server. Please ensure the backend is running on port 4000.";
       } else {
         // Something happened in setting up the request that triggered an Error
         errorMsg = error.message;
       }
-      
+
       toast.error(errorMsg);
       setSubmitting(false);
     }
@@ -371,7 +384,6 @@ const Checkout = () => {
     <div className="min-h-screen bg-[#f6f7fb] py-3 text-[#11182d]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-3">
-
           <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight sm:text-[1.75rem]">
             Checkout
           </h1>
@@ -384,7 +396,9 @@ const Checkout = () => {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0f49d7] text-[0.78rem] font-semibold text-white">
                   1
                 </span>
-                <h2 className="text-[1.1rem] font-semibold">Shipping Address</h2>
+                <h2 className="text-[1.1rem] font-semibold">
+                  Shipping Address
+                </h2>
               </div>
 
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -431,7 +445,9 @@ const Checkout = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingAddress(address);
-                              document.getElementById("edit_address_modal")?.showModal();
+                              document
+                                .getElementById("edit_address_modal")
+                                ?.showModal();
                             }}
                             className="text-[10px] font-bold uppercase tracking-widest text-[#004ac6] hover:underline"
                           >
@@ -444,9 +460,15 @@ const Checkout = () => {
                                 if (window.confirm("Set as default address?")) {
                                   try {
                                     const token = getToken();
-                                    await axios.put(`${API_URL}/user/address/${address._id}/default`, {}, {
-                                      headers: { Authorization: `Bearer ${token}` }
-                                    });
+                                    await axios.put(
+                                      `${API_URL}/user/address/${address._id}/default`,
+                                      {},
+                                      {
+                                        headers: {
+                                          Authorization: `Bearer ${token}`,
+                                        },
+                                      },
+                                    );
                                     loadAddresses(token);
                                     toast.success("Default address updated");
                                   } catch (err) {
@@ -463,12 +485,21 @@ const Checkout = () => {
                         <button
                           onClick={async (e) => {
                             e.stopPropagation();
-                            if (window.confirm("Are you sure you want to delete this address?")) {
+                            if (
+                              window.confirm(
+                                "Are you sure you want to delete this address?",
+                              )
+                            ) {
                               try {
                                 const token = getToken();
-                                await axios.delete(`${API_URL}/user/address/${address._id}`, {
-                                  headers: { Authorization: `Bearer ${token}` }
-                                });
+                                await axios.delete(
+                                  `${API_URL}/user/address/${address._id}`,
+                                  {
+                                    headers: {
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                  },
+                                );
                                 loadAddresses(token);
                                 toast.success("Address deleted");
                               } catch (err) {
@@ -604,7 +635,10 @@ const Checkout = () => {
 
               <div className="mt-3.5 space-y-3">
                 {orderItems.map((item, index) => (
-                  <div key={`${item.productId}-${index}`} className="flex gap-2.5">
+                  <div
+                    key={`${item.productId}-${index}`}
+                    className="flex gap-2.5"
+                  >
                     <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[14px] bg-[#f1f4fb]">
                       {item.productImg ? (
                         <img
@@ -641,7 +675,9 @@ const Checkout = () => {
                         type="text"
                         placeholder="Coupon code"
                         value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          setCouponCode(e.target.value.toUpperCase())
+                        }
                         className="h-10 flex-1 rounded-[10px] border border-[#d7dcea] bg-white px-3 text-[0.76rem] uppercase tracking-[0.12em] text-[#11182d] outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-[#7c88a2]"
                       />
                       <button
@@ -655,77 +691,110 @@ const Checkout = () => {
                     </div>
 
                     <div className="mt-4 border-t border-[#d7dcea] pt-3">
-                        <div className="flex items-center justify-between mb-2">
-                            <p className="text-[0.76rem] font-semibold text-[#11182d]">Wonder Points</p>
-                            <span className="text-[0.7rem] font-bold text-[#0f49d7]">{rewardPoints} Pts</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2">
-                            <button 
-                                type="button"
-                                onClick={() => {
-                                    if (rewardPoints >= 250) {
-                                        setAppliedRewardCoupon(appliedRewardCoupon === '25' ? null : '25');
-                                    } else {
-                                        toast.error("You need at least 250 points");
-                                    }
-                                }}
-                                className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all ${
-                                    appliedRewardCoupon === '25' 
-                                    ? 'bg-[#eef2ff] border-[#0f49d7] ring-1 ring-[#0f49d7]' 
-                                    : 'bg-white border-[#d7dcea] hover:border-[#0f49d7]'
-                                }`}
-                            >
-                                <span className={`text-[0.8rem] font-bold ${appliedRewardCoupon === '25' ? 'text-[#0f49d7]' : 'text-[#11182d]'}`}>₹25 Off</span>
-                                <span className="text-[0.6rem] text-[#6d7892]">250 Points</span>
-                            </button>
-                            
-                            <button 
-                                type="button"
-                                onClick={() => {
-                                    if (rewardPoints >= 500) {
-                                        setAppliedRewardCoupon(appliedRewardCoupon === '50' ? null : '50');
-                                    } else {
-                                        toast.error("You need at least 500 points");
-                                    }
-                                }}
-                                className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all ${
-                                    appliedRewardCoupon === '50' 
-                                    ? 'bg-[#eef2ff] border-[#0f49d7] ring-1 ring-[#0f49d7]' 
-                                    : 'bg-white border-[#d7dcea] hover:border-[#0f49d7]'
-                                }`}
-                            >
-                                <span className={`text-[0.8rem] font-bold ${appliedRewardCoupon === '50' ? 'text-[#0f49d7]' : 'text-[#11182d]'}`}>₹50 Off</span>
-                                <span className="text-[0.6rem] text-[#6d7892]">500 Points</span>
-                            </button>
-                        </div>
-                        {appliedRewardCoupon && (
-                            <p className="mt-2 text-[0.65rem] text-[#0f7a32] flex items-center gap-1">
-                                <Check className="w-3 h-3" /> Reward points will be deducted on order placement
-                            </p>
-                        )}
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[0.76rem] font-semibold text-[#11182d]">
+                          Wonder Points
+                        </p>
+                        <span className="text-[0.7rem] font-bold text-[#0f49d7]">
+                          {rewardPoints} Pts
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (rewardPoints >= 250) {
+                              setAppliedRewardCoupon(
+                                appliedRewardCoupon === "25" ? null : "25",
+                              );
+                            } else {
+                              toast.error("You need at least 250 points");
+                            }
+                          }}
+                          className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all ${
+                            appliedRewardCoupon === "25"
+                              ? "bg-[#eef2ff] border-[#0f49d7] ring-1 ring-[#0f49d7]"
+                              : "bg-white border-[#d7dcea] hover:border-[#0f49d7]"
+                          }`}
+                        >
+                          <span
+                            className={`text-[0.8rem] font-bold ${appliedRewardCoupon === "25" ? "text-[#0f49d7]" : "text-[#11182d]"}`}
+                          >
+                            ₹25 Off
+                          </span>
+                          <span className="text-[0.6rem] text-[#6d7892]">
+                            250 Points
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (rewardPoints >= 500) {
+                              setAppliedRewardCoupon(
+                                appliedRewardCoupon === "50" ? null : "50",
+                              );
+                            } else {
+                              toast.error("You need at least 500 points");
+                            }
+                          }}
+                          className={`flex flex-col items-center justify-center py-2 rounded-xl border transition-all ${
+                            appliedRewardCoupon === "50"
+                              ? "bg-[#eef2ff] border-[#0f49d7] ring-1 ring-[#0f49d7]"
+                              : "bg-white border-[#d7dcea] hover:border-[#0f49d7]"
+                          }`}
+                        >
+                          <span
+                            className={`text-[0.8rem] font-bold ${appliedRewardCoupon === "50" ? "text-[#0f49d7]" : "text-[#11182d]"}`}
+                          >
+                            ₹50 Off
+                          </span>
+                          <span className="text-[0.6rem] text-[#6d7892]">
+                            500 Points
+                          </span>
+                        </button>
+                      </div>
+                      {appliedRewardCoupon && (
+                        <p className="mt-2 text-[0.65rem] text-[#0f7a32] flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Reward points will be
+                          deducted on order placement
+                        </p>
+                      )}
                     </div>
                     {availableCoupons.length > 0 && (
                       <div className="mt-4 border-t border-[#d7dcea] pt-3">
-                        <p className="mb-2 text-[0.76rem] font-semibold text-[#11182d]">Available Coupons</p>
+                        <p className="mb-2 text-[0.76rem] font-semibold text-[#11182d]">
+                          Available Coupons
+                        </p>
                         <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
-                          {availableCoupons.map(c => (
-                            <div key={c._id} className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#e1e5f1] hover:border-[#0f49d7] cursor-pointer transition-colors"
-                                 onClick={() => {
-                                    setCouponCode(c.code);
-                                    // Let the user click Apply themselves, or we can apply it automatically
-                                 }}>
+                          {availableCoupons.map((c) => (
+                            <div
+                              key={c._id}
+                              className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#e1e5f1] hover:border-[#0f49d7] cursor-pointer transition-colors"
+                              onClick={() => {
+                                setCouponCode(c.code);
+                                // Let the user click Apply themselves, or we can apply it automatically
+                              }}
+                            >
                               <div>
-                                <span className="text-[0.7rem] font-bold uppercase tracking-wider text-[#0f49d7] bg-[#eef2ff] px-1.5 py-0.5 rounded">{c.code}</span>
-                                <p className="text-[0.7rem] mt-1 text-[#42506d]">{c.description || `${c.discount}${c.dealType === 'percentage' ? '%' : ' Rs'} off`}</p>
+                                <span className="text-[0.7rem] font-bold uppercase tracking-wider text-[#0f49d7] bg-[#eef2ff] px-1.5 py-0.5 rounded">
+                                  {c.code}
+                                </span>
+                                <p className="text-[0.7rem] mt-1 text-[#42506d]">
+                                  {c.description ||
+                                    `${c.discount}${c.dealType === "percentage" ? "%" : " Rs"} off`}
+                                </p>
                               </div>
-                              <button type="button" 
-                                      className="text-[0.7rem] font-semibold text-[#0f49d7]"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setCouponCode(c.code);
-                                        // Wait a tick for state to update, passing the specific code is easier but handleApplyCoupon uses state
-                                      }}>
+                              <button
+                                type="button"
+                                className="text-[0.7rem] font-semibold text-[#0f49d7]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCouponCode(c.code);
+                                  // Wait a tick for state to update, passing the specific code is easier but handleApplyCoupon uses state
+                                }}
+                              >
                                 Use
                               </button>
                             </div>
@@ -765,7 +834,13 @@ const Checkout = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#42506d]">Shipping</span>
-                  <span className={shipping === 0 ? "font-medium text-[#0f7a32]" : "font-medium text-[#11182d]"}>
+                  <span
+                    className={
+                      shipping === 0
+                        ? "font-medium text-[#0f7a32]"
+                        : "font-medium text-[#11182d]"
+                    }
+                  >
                     {shipping === 0 ? "FREE" : formatPrice(shipping)}
                   </span>
                 </div>
@@ -905,3 +980,4 @@ const Checkout = () => {
 };
 
 export default Checkout;
+  

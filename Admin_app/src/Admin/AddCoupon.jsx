@@ -15,6 +15,12 @@ import {
   Percent,
   CreditCard,
   Tag,
+  Truck,
+  MapPin,
+  ShieldCheck,
+  Zap,
+  Globe,
+  ShoppingCart
 } from "lucide-react";
 
 function AddCoupon() {
@@ -26,48 +32,55 @@ function AddCoupon() {
     code: "",
     name: "",
     description: "",
-    dealType: "fixed",
-    discount: "",
+    couponType: "flat",
+    discountAmount: "",
     maxDiscount: "",
-    perUserLimit: 1,
-    expirationDate: "",
-    neverExpires: true,
-    targetType: "all",
-    targetRole: "user",
-    targetCategory: "",
-    minCompletedOrders: "",
     minOrderValue: "",
-    isFirstOrderOnly: false,
-    randomUserCount: "",
+    usageLimitTotal: "",
+    usageLimitPerUser: 1,
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: "",
+    neverExpires: false,
+    targetType: "all",
+    targetCity: "",
+    targetRegion: "",
+    targetCategory: "",
+    targetProducts: "", // Will be split into array
+    allowedPaymentMethods: ["Razorpay", "COD", "Wallet"],
+    status: "active",
+    referrerRewardAmount: 0
   });
 
   const createCoupon = async (e) => {
     e.preventDefault();
 
-    // Enhanced validation
-    const isDiscountRequired = formData.dealType !== "free_shipping";
-    const isExpirationRequired = !formData.neverExpires;
-
-    if (!formData.code || !formData.name || (isDiscountRequired && formData.discount === "") || (isExpirationRequired && !formData.expirationDate)) {
-      toast.error("Please fill in all required fields (Code, Name, Discount/Date)");
+    if (!formData.code || !formData.name || !formData.discountAmount) {
+      toast.error("Code, Name, and Discount Amount are required");
       return;
     }
 
     setLoading(true);
+    
+    // Prepare data
     const dataToSend = {
       ...formData,
-      discount: isDiscountRequired ? formData.discount : 0,
-      expirationDate: formData.neverExpires ? null : formData.expirationDate,
+      discountAmount: Number(formData.discountAmount),
+      maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : undefined,
+      minOrderValue: formData.minOrderValue ? Number(formData.minOrderValue) : 0,
+      usageLimitTotal: formData.usageLimitTotal ? Number(formData.usageLimitTotal) : null,
+      usageLimitPerUser: Number(formData.usageLimitPerUser),
+      targetProducts: formData.targetProducts ? formData.targetProducts.split(",").map(id => id.trim()) : [],
+      endDate: formData.neverExpires ? null : formData.endDate,
     };
 
     try {
-      await axios.post(`${API_URL}/admin/coupons/create`, dataToSend, {
+      await axios.post(`${API_URL}/coupon`, dataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      toast.success("Coupon created successfully!");
+      toast.success("Marketing campaign launched successfully!");
       navigate("/admin/coupon");
     } catch (error) {
       console.error(error);
@@ -78,441 +91,441 @@ function AddCoupon() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handlePaymentMethodToggle = (method) => {
+    setFormData(prev => {
+        const methods = [...prev.allowedPaymentMethods];
+        if (methods.includes(method)) {
+            return { ...prev, allowedPaymentMethods: methods.filter(m => m !== method) };
+        } else {
+            return { ...prev, allowedPaymentMethods: [...methods, method] };
+        }
+    });
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto px-4 py-5">
-        {/* Header - FAQ style */}
-        <div className="mb-6 text-center">
-          <div className="flex justify-center mb-3">
-            <Gift className="w-8 h-8 text-black" />
-          </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            Create Campaign
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Configure your new discount code and target audience
-          </p>
-        </div>
-
-        {/* Back Button */}
-        <div className="mb-5">
-          <button
-            onClick={() => navigate("/admin/coupon")}
-            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Campaigns
-          </button>
-        </div>
-
-        <form onSubmit={createCoupon} className="space-y-4">
-          {/* Basic Info Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  General Information
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Coupon Code *
-                  </label>
-                  <div className="relative">
-                    <Ticket className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      name="code"
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm font-mono uppercase"
-                      placeholder="SUMMER50"
-                      value={formData.code}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          code: e.target.value.toUpperCase(),
-                        })
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Campaign Name *
-                  </label>
-                  <input
-                    name="name"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                    placeholder="Summer Clearance Sale"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  rows="2"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm resize-none"
-                  placeholder="Details about this promotion..."
-                  value={formData.description}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Rewards Configuration Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Rewards Configuration
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Deal Type
-                </label>
-                <select
-                  name="dealType"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm bg-white"
-                  value={formData.dealType}
-                  onChange={handleChange}
-                >
-                  <option value="fixed">Fixed Amount Discount</option>
-                  <option value="percentage">Percentage Discount</option>
-                  <option value="free_shipping">Free Shipping</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {formData.dealType !== "free_shipping" && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">
-                      {formData.dealType === "percentage"
-                        ? "Percentage (%)"
-                        : "Amount (₹)"}
-                    </label>
-                    <input
-                      name="discount"
-                      type="number"
-                      min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      placeholder="0"
-                      value={formData.discount}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                )}
-                {formData.dealType === "percentage" && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">
-                      Maximum Cap (₹)
-                    </label>
-                    <input
-                      name="maxDiscount"
-                      type="number"
-                      min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      placeholder="No limit"
-                      value={formData.maxDiscount}
-                      onChange={handleChange}
-                    />
-                  </div>
-                )}
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Per User Limit
-                  </label>
-                  <input
-                    name="perUserLimit"
-                    type="number"
-                    min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                    value={formData.perUserLimit}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Min Order Value (₹)
-                  </label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      name="minOrderValue"
-                      type="number"
-                      min="0"
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      placeholder="e.g., 500"
-                      value={formData.minOrderValue}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Schedule Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Schedule & Validity
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <p className="text-xs text-gray-600">
-                  <span className="font-medium text-gray-900">Note:</span>{" "}
-                  Campaign will start immediately upon creation.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="neverExpires"
-                    name="neverExpires"
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
-                    checked={formData.neverExpires}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        neverExpires: e.target.checked,
-                        expirationDate: e.target.checked ? "" : prev.expirationDate,
-                      }))
-                    }
-                  />
-                  <label
-                    htmlFor="neverExpires"
-                    className="text-xs font-medium text-gray-700 cursor-pointer"
-                  >
-                    Never Expires (Lifetime Coupon)
-                  </label>
-                </div>
-
-                {!formData.neverExpires && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">
-                      Expiration Date *
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        name="expirationDate"
-                        type="date"
-                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                        value={formData.expirationDate}
-                        onChange={handleChange}
-                        required={!formData.neverExpires}
-                        min={new Date().toISOString().split("T")[0]}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Audience Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Audience Targeting
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Target Audience
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {["all", "new_users", "loyal_users", "specific_users"].map(
-                    (type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, targetType: type }))
-                        }
-                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${formData.targetType === type
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                          }`}
-                      >
-                        {type
-                          .split("_")
-                          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                          .join(" ")}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isFirstOrderOnly"
-                    name="isFirstOrderOnly"
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
-                    checked={formData.isFirstOrderOnly}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        isFirstOrderOnly: e.target.checked,
-                      }))
-                    }
-                  />
-                  <label
-                    htmlFor="isFirstOrderOnly"
-                    className="text-xs font-medium text-gray-700 cursor-pointer"
-                  >
-                    First Order Only (Valid for new customers only)
-                  </label>
-                </div>
-              </div>
-
-              {formData.targetType === "loyal_users" && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-                  <label className="text-xs font-medium text-blue-900">
-                    Minimum Completed Orders
-                  </label>
-                  <input
-                    name="minCompletedOrders"
-                    type="number"
-                    min="0"
-                    className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    placeholder="Enter minimum orders"
-                    value={formData.minCompletedOrders}
-                    onChange={handleChange}
-                    required
-                  />
-                  <p className="text-xs text-blue-700">
-                    Number of delivered orders required for eligibility.
-                  </p>
-                </div>
-              )}
-
-              {formData.targetType === "specific_users" && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-purple-900">
-                      Target User Role
-                    </label>
-                    <select
-                      name="targetRole"
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                      value={formData.targetRole}
-                      onChange={handleChange}
-                    >
-                      <option value="user">User (Customer)</option>
-                      <option value="seller">Seller</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-purple-900">
-                      Random User Count
-                    </label>
-                    <input
-                      name="randomUserCount"
-                      type="number"
-                      min="1"
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                      placeholder="Enter number of users"
-                      value={formData.randomUserCount}
-                      onChange={handleChange}
-                      required
-                    />
-                    <p className="text-[10px] text-purple-700">
-                      Selected number of random {formData.targetRole}s will receive this code.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Category Targeting Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Inventory Targeting
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Product Category (Optional)
-                </label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    name="targetCategory"
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                    placeholder="e.g., Footwear, Electronics (Leave empty for all)"
-                    value={formData.targetCategory}
-                    onChange={handleChange}
-                  />
-                </div>
-                <p className="text-[10px] text-gray-500 mt-1">
-                  If set, this coupon will only apply to products in this category.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="pt-2">
+    <div className="min-h-screen bg-[#f8f9fc] font-poppins pb-20">
+      <div className="max-w-5xl mx-auto px-6 py-10">
+        
+        {/* Breadcrumb & Title */}
+        <div className="mb-10">
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                onClick={() => navigate("/admin/coupon")}
+                className="flex items-center gap-2 text-[#64748b] hover:text-[#1e293b] transition-all text-sm font-semibold mb-4 group"
             >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Gift className="w-4 h-4" />
-                  Launch Campaign
-                </>
-              )}
+                <div className="p-1.5 rounded-lg bg-white border border-[#e2e8f0] group-hover:bg-gray-50 shadow-sm">
+                    <ArrowLeft className="w-4 h-4" />
+                </div>
+                Return to Ledger
             </button>
+            <div className="flex items-end gap-4">
+                <div className="h-16 w-16 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-100 rotate-3">
+                    <Zap className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-black text-[#141b2d] tracking-tight">New Marketing Campaign</h1>
+                    <p className="text-[#64748b] font-medium">Design high-conversion incentives for WinderCart users</p>
+                </div>
+            </div>
+        </div>
+
+        <form onSubmit={createCoupon} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Section 1: Identity */}
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-[#f1f5f9] flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <Tag className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-[#1e293b]">Campaign Identity</h2>
+                </div>
+                <div className="p-8 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">COUPON CODE</label>
+                            <div className="relative">
+                                <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    name="code"
+                                    type="text"
+                                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all uppercase placeholder:text-gray-300"
+                                    placeholder="e.g. FESTIVAL10"
+                                    value={formData.code}
+                                    onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">CAMPAIGN TITLE</label>
+                            <input
+                                name="name"
+                                type="text"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-bold text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                placeholder="e.g. Diwali Super Sale 2025"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[13px] font-bold text-[#475569] ml-1">PUBLIC DESCRIPTION</label>
+                        <textarea
+                            name="description"
+                            rows="3"
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-4 px-4 text-sm font-medium text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+                            placeholder="Tell users what they get..."
+                            value={formData.description}
+                            onChange={handleChange}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Section 2: Reward Logic */}
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-[#f1f5f9] flex items-center gap-3">
+                    <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                        <Sparkles className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-[#1e293b]">Reward Configuration</h2>
+                </div>
+                <div className="p-8 space-y-8">
+                    <div className="space-y-4">
+                        <label className="text-[13px] font-bold text-[#475569] ml-1">COUPON TYPE</label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {[
+                                { id: 'percentage', label: 'Percentage', icon: Percent, color: 'text-blue-600', bg: 'bg-blue-50' },
+                                { id: 'flat', label: 'Flat Amount', icon: CreditCard, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                                { id: 'free_shipping', label: 'Free Shipping', icon: Truck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                                { id: 'welcome', label: 'Welcome', icon: Gift, color: 'text-rose-600', bg: 'bg-rose-50' },
+                                { id: 'loyalty', label: 'Loyalty', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
+                                { id: 'referral', label: 'Referral', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+                            ].map(type => (
+                                <button
+                                    key={type.id}
+                                    type="button"
+                                    onClick={() => setFormData({...formData, couponType: type.id})}
+                                    className={`flex flex-col items-center gap-3 p-4 rounded-[24px] border-2 transition-all ${
+                                        formData.couponType === type.id 
+                                        ? 'border-blue-600 bg-blue-50/30' 
+                                        : 'border-[#f1f5f9] bg-white hover:border-[#e2e8f0]'
+                                    }`}
+                                >
+                                    <div className={`p-2.5 rounded-xl ${type.bg} ${type.color}`}>
+                                        <type.icon className="w-5 h-5" />
+                                    </div>
+                                    <span className={`text-xs font-bold ${formData.couponType === type.id ? 'text-blue-600' : 'text-[#64748b]'}`}>
+                                        {type.label}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">
+                                {formData.couponType === 'percentage' ? 'DISCOUNT %' : 'DISCOUNT AMOUNT (₹)'}
+                            </label>
+                            <input
+                                name="discountAmount"
+                                type="number"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-black text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                value={formData.discountAmount}
+                                onChange={handleChange}
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">MAX DISCOUNT (₹)</label>
+                            <input
+                                name="maxDiscount"
+                                type="number"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-black text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                value={formData.maxDiscount}
+                                onChange={handleChange}
+                                placeholder="No Cap"
+                                disabled={formData.couponType !== 'percentage'}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">MIN ORDER (₹)</label>
+                            <input
+                                name="minOrderValue"
+                                type="number"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-black text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                value={formData.minOrderValue}
+                                onChange={handleChange}
+                                placeholder="0"
+                            />
+                        </div>
+                    </div>
+
+                    {formData.couponType === 'referral' && (
+                        <div className="p-5 bg-purple-50 rounded-3xl border border-purple-100 flex items-center gap-4">
+                            <div className="h-12 w-12 bg-white text-purple-600 rounded-2xl flex items-center justify-center shadow-sm">
+                                <Users className="w-6 h-6" />
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-[11px] font-black text-purple-600 uppercase tracking-widest">Referrer Reward (Wallet Credit)</label>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xl font-black text-purple-900">₹</span>
+                                    <input 
+                                        name="referrerRewardAmount"
+                                        type="number"
+                                        className="bg-transparent border-none p-0 text-xl font-black text-purple-900 focus:ring-0 w-24"
+                                        value={formData.referrerRewardAmount}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Section 3: Targeting & Restrictions */}
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-[#f1f5f9] flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <Users className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-[#1e293b]">Targeting & Inventory</h2>
+                </div>
+                <div className="p-8 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">AUDIENCE SCOPE</label>
+                            <div className="space-y-3">
+                                {[
+                                    { id: 'all', label: 'All Registered Users', sub: 'Open campaign' },
+                                    { id: 'new_users', label: 'Acquisition Focus', sub: 'First-time buyers only' },
+                                    { id: 'specific_users', label: 'Direct Targeting', sub: 'Manual user selection' },
+                                    { id: 'local_users', label: 'Hyper-Local', sub: 'City/Region specific' },
+                                ].map(target => (
+                                    <label key={target.id} className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                                        formData.targetType === target.id ? 'border-blue-600 bg-blue-50/30' : 'border-[#f1f5f9] bg-[#f8fafc] hover:border-[#e2e8f0]'
+                                    }`}>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${formData.targetType === target.id ? 'border-blue-600' : 'border-gray-300'}`}>
+                                                {formData.targetType === target.id && <div className="h-2 w-2 bg-blue-600 rounded-full" />}
+                                            </div>
+                                            <div>
+                                                <p className={`text-sm font-bold ${formData.targetType === target.id ? 'text-blue-600' : 'text-[#1e293b]'}`}>{target.label}</p>
+                                                <p className="text-[10px] text-[#64748b] font-bold uppercase">{target.sub}</p>
+                                            </div>
+                                        </div>
+                                        <input 
+                                            type="radio" 
+                                            name="targetType" 
+                                            value={target.id} 
+                                            checked={formData.targetType === target.id}
+                                            onChange={handleChange}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            {formData.targetType === 'local_users' && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[13px] font-bold text-[#475569] ml-1">TARGET CITY</label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                            <input
+                                                name="targetCity"
+                                                type="text"
+                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                                placeholder="e.g. Mumbai"
+                                                value={formData.targetCity}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[13px] font-bold text-[#475569] ml-1">TARGET REGION</label>
+                                        <div className="relative">
+                                            <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                            <input
+                                                name="targetRegion"
+                                                type="text"
+                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                                placeholder="e.g. Maharashtra"
+                                                value={formData.targetRegion}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-bold text-[#475569] ml-1">RESTRICT TO CATEGORY</label>
+                                <div className="relative">
+                                    <ShoppingCart className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        name="targetCategory"
+                                        type="text"
+                                        className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                        placeholder="e.g. Electronics"
+                                        value={formData.targetCategory}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-bold text-[#475569] ml-1">SPECIFIC PRODUCT IDs</label>
+                                <textarea
+                                    name="targetProducts"
+                                    rows="3"
+                                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-4 px-4 text-[13px] font-mono font-bold text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+                                    placeholder="Comma separated IDs..."
+                                    value={formData.targetProducts}
+                                    onChange={handleChange}
+                                />
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest px-1">Optional: Limits coupon to these items only</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
           </div>
+
+          <div className="space-y-8">
+            
+            {/* Validity Sidebar Card */}
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden sticky top-8">
+                <div className="px-8 py-6 border-b border-[#f1f5f9] flex items-center gap-3 bg-gray-50/50">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                        <Calendar className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-[#1e293b]">Scheduling</h2>
+                </div>
+                <div className="p-8 space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Start Date</label>
+                        <input
+                            name="startDate"
+                            type="date"
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3 px-4 text-sm font-bold text-[#1e293b] outline-none"
+                            value={formData.startDate}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                            <span className="text-xs font-bold text-gray-600">NEVER EXPIRES</span>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({...formData, neverExpires: !formData.neverExpires})}
+                                className={`w-11 h-6 rounded-full transition-all relative ${formData.neverExpires ? 'bg-blue-600' : 'bg-gray-300'}`}
+                            >
+                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.neverExpires ? 'left-6' : 'left-1'}`} />
+                            </button>
+                        </div>
+
+                        {!formData.neverExpires && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Expiration Date</label>
+                                <input
+                                    name="endDate"
+                                    type="date"
+                                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3 px-4 text-sm font-bold text-[#1e293b] outline-none"
+                                    value={formData.endDate}
+                                    onChange={handleChange}
+                                    required={!formData.neverExpires}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 space-y-4">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Usage Governance</label>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-bold text-gray-500 uppercase">Total Usage Limit</p>
+                                <input 
+                                    name="usageLimitTotal"
+                                    type="number"
+                                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3 px-4 text-sm font-bold text-[#1e293b] outline-none"
+                                    placeholder="Unlimited"
+                                    value={formData.usageLimitTotal}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-bold text-gray-500 uppercase">Limit Per User</p>
+                                <input 
+                                    name="usageLimitPerUser"
+                                    type="number"
+                                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3 px-4 text-sm font-bold text-[#1e293b] outline-none"
+                                    value={formData.usageLimitPerUser}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 space-y-4">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Accepted Payments</label>
+                        <div className="flex flex-wrap gap-2">
+                            {['Razorpay', 'COD', 'Wallet'].map(method => (
+                                <button
+                                    key={method}
+                                    type="button"
+                                    onClick={() => handlePaymentMethodToggle(method)}
+                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border-2 transition-all ${
+                                        formData.allowedPaymentMethods.includes(method)
+                                        ? 'border-blue-600 bg-blue-50 text-blue-600'
+                                        : 'border-gray-100 bg-gray-50 text-gray-400'
+                                    }`}
+                                >
+                                    {method}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-8">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-[#1e293b] text-white py-4 rounded-[24px] font-black text-sm uppercase tracking-widest hover:bg-[#0f172a] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-slate-200 flex items-center justify-center gap-3"
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <ShieldCheck className="w-5 h-5" />
+                                    Publish Campaign
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+          </div>
+
         </form>
       </div>
     </div>
@@ -520,3 +533,4 @@ function AddCoupon() {
 }
 
 export default AddCoupon;
+

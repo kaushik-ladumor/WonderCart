@@ -6,56 +6,76 @@ const mongoose = require("mongoose");
 
 const updateProductStats = async (productId) => {
   try {
-    const reviews = await Review.find({ product: productId, status: "approved" });
+    const id = new mongoose.Types.ObjectId(productId);
+    const reviews = await Review.find({ product: id, status: "approved" });
     
     const reviewCount = reviews.length;
     let ratingAverage = 0;
     
     if (reviewCount > 0) {
-      const totalRating = reviews.reduce((sum, rev) => sum + (Number(rev.rating) || 0), 0);
+      const totalRating = reviews.reduce((sum, rev) => sum + (rev.rating || 0), 0);
       ratingAverage = totalRating / reviewCount;
     }
 
-    console.log(`Updating stats for product ${productId}: count=${reviewCount}, avg=${ratingAverage}`);
+    const roundedRating = Math.round(ratingAverage * 10) / 10;
 
-    await Product.findByIdAndUpdate(productId, {
+    await Product.findByIdAndUpdate(id, {
       reviewCount: reviewCount,
-      ratingAverage: Math.round(ratingAverage * 10) / 10,
+      ratingAverage: roundedRating,
     });
+
+    // Also update TopSeller snapshot if it exists for this product
+    const TopSeller = require("../Models/TopSeller.Model");
+    await TopSeller.updateMany({ productId: id }, {
+      reviewCount: reviewCount,
+      rating: roundedRating
+    });
+
+    console.log(`[REVIEWS] Updated stats for product ${productId}: count=${reviewCount}, avg=${roundedRating}`);
   } catch (error) {
     console.error("Failed to update product stats:", error);
   }
 };
 
 const checkReviewEligibility = async (userId, productId, orderItemId) => {
-  // 1. Seller cannot review their own products
+  // 1. Validate ObjectIds to prevent CastError (Source of many 500 errors)
+  if (!mongoose.Types.ObjectId.isValid(productId) || !mongoose.Types.ObjectId.isValid(orderItemId)) {
+    return { eligible: false, message: "Invalid product or order item ID" };
+  }
+
+  // 2. Seller cannot review their own products
   const product = await Product.findById(productId);
   if (!product) return { eligible: false, message: "Product not found" };
   if (String(product.owner) === String(userId)) {
     return { eligible: false, message: "Sellers cannot review their own products" };
   }
 
-  // 2. Same user cannot leave 2 reviews for the same specific order item
+  // 3. Same user cannot leave 2 reviews for the same specific order item
   const existingReview = await Review.findOne({ user: userId, orderItem: orderItemId });
   if (existingReview) {
     return { eligible: false, message: "You have already reviewed this item" };
   }
 
-  // 3. Find the specific order item
-  const order = await SubOrder.findOne({
-    "items._id": orderItemId,
-    seller: { $ne: userId } // Extra check
-  });
+  // 4. Find the specific order item and verify the BUYER (not just "not seller")
+  const subOrder = await SubOrder.findOne({
+    "items._id": orderItemId
+  }).populate("masterOrder");
 
-  if (!order) return { eligible: false, message: "Order not found" };
+  if (!subOrder || !subOrder.masterOrder) {
+    return { eligible: false, message: "Order item not found" };
+  }
   
+  // Verify ownership: The user requesting the review must be the one who placed the master order
+  if (String(subOrder.masterOrder.user) !== String(userId)) {
+    return { eligible: false, message: "You are not authorized to review this item" };
+  }
+
   // 5. Order status must be DELIVERED
-  if (order.status !== "delivered") {
+  if (subOrder.status !== "delivered") {
     return { eligible: false, message: "Item has not been delivered yet" };
   }
 
-  // (Removed 1-day wait and 30-day expiry as per user request for immediate feedback)
-  return { eligible: true };
+  return { eligible: true, product }; // Return product to avoid re-fetching
 };
 
 const checkEligibility = async (req, res) => {
@@ -64,8 +84,11 @@ const checkEligibility = async (req, res) => {
     const userId = req.user.userId;
 
     const result = await checkReviewEligibility(userId, productId, orderItemId);
-    return res.status(200).json({ success: true, ...result });
+    // Remove product from response to keep it clean
+    const { product, ...cleanResult } = result;
+    return res.status(200).json({ success: true, ...cleanResult });
   } catch (err) {
+    console.error("CHECK ELIGIBILITY ERROR:", err);
     return res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -76,10 +99,10 @@ const addReview = async (req, res) => {
     const userId = req.user.userId;
 
     if (!productId || !orderItemId || rating === undefined) {
-      return res.status(400).json({ success: false, message: "Invalid payload" });
+      return res.status(400).json({ success: false, message: "Missing required fields: productId, orderItemId, or rating" });
     }
 
-    const { eligible, message } = await checkReviewEligibility(userId, productId, orderItemId);
+    const { eligible, message, product } = await checkReviewEligibility(userId, productId, orderItemId);
     if (!eligible) {
       return res.status(403).json({ success: false, message });
     }
@@ -91,17 +114,17 @@ const addReview = async (req, res) => {
       rating: Number(rating),
       comment: comment || "",
       images: images || [],
-      status: "approved" // Mode A: Auto-publish
+      status: "approved"
     });
 
     await review.save();
 
+    // Update Product's review array
     await Product.findByIdAndUpdate(productId, {
       $push: { reviews: review._id },
     });
 
     // Notify Seller
-    const product = await Product.findById(productId);
     if (product && product.owner) {
       await Notification.create({
         user: product.owner,
@@ -114,8 +137,14 @@ const addReview = async (req, res) => {
     await updateProductStats(productId);
 
     // --- Gamification: Review Points ---
-    const { addPoints } = require("../Services/GamificationService");
-    await addPoints(userId, 20, `Review for ${product.name}`);
+    try {
+      const { addPoints } = require("../Services/GamificationService");
+      if (product) {
+        await addPoints(userId, 20, `Review for ${product.name}`);
+      }
+    } catch (gamiErr) {
+      console.error("Gamification Error (Non-blocking):", gamiErr);
+    }
     // ------------------------------------
 
     res.status(201).json({
@@ -125,13 +154,17 @@ const addReview = async (req, res) => {
     });
   } catch (err) {
     console.error("ADD REVIEW ERROR:", err);
-    return res.status(500).json({ success: false, message: "Something went wrong. Try again." });
+    return res.status(500).json({ success: false, message: err.message || "Something went wrong. Try again." });
   }
 };
 
 const getReview = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid product ID" });
+    }
+
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found" });
@@ -141,12 +174,24 @@ const getReview = async (req, res) => {
       .populate("user", "username profile isVerified")
       .sort({ createdAt: -1 });
 
+    const reviewCount = reviews.length;
+    let ratingAverage = 0;
+    if (reviewCount > 0) {
+      const totalRating = reviews.reduce((sum, rev) => sum + (rev.rating || 0), 0);
+      ratingAverage = Math.round((totalRating / reviewCount) * 10) / 10;
+    }
+
+    // Sync DB stats if they are out of sync
+    if (product.reviewCount !== reviewCount || product.ratingAverage !== ratingAverage) {
+      await Product.findByIdAndUpdate(id, { reviewCount, ratingAverage });
+    }
+
     return res.status(200).json({
       success: true,
       data: {
         reviews,
-        reviewCount: product.reviewCount,
-        ratingAverage: product.ratingAverage,
+        reviewCount,
+        ratingAverage,
       },
     });
   } catch (err) {

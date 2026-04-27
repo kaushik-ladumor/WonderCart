@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { 
-  Store, 
-  ChevronRight, 
-  ArrowRight, 
-  BarChart3, 
-  Truck, 
-  ShieldCheck, 
-  Globe2, 
-  DollarSign, 
-  Zap, 
+import {
+  Store,
+  ChevronRight,
+  ArrowRight,
+  BarChart3,
+  Truck,
+  ShieldCheck,
+  Globe2,
+  DollarSign,
+  Zap,
   Users,
   TrendingUp,
   Clock,
@@ -18,43 +18,114 @@ import {
   ChevronLeft,
   Search,
   LayoutDashboard,
-  Rocket
+  Rocket,
+  Menu,
+  X
 } from "lucide-react";
 
 // --- Components ---
 
 const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <nav className="sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 font-poppins">
+    <nav className="sticky top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 font-poppins">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 sm:h-18">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-lg sm:text-xl font-bold text-blue-600 whitespace-nowrap">WonderCart Seller</span>
-          </div>
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
+            <img 
+              src="/WonderCart Logo.png" 
+              alt="WonderCart" 
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
+            <div className="h-8 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+            <span className="text-[14px] font-bold text-gray-900 uppercase tracking-[0.15em] hidden sm:block">
+              Seller <span className="text-blue-600">Portal</span>
+            </span>
+          </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-8">
-            <a href="#platform" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">PLATFORM</a>
-            <a href="#statistics" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">STATISTICS</a>
-            <a href="#earnings" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">EARNINGS</a>
-            <a href="#guide" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">GUIDE</a>
-            <a href="#partners" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">PARTNERS</a>
+          <div className="hidden lg:flex items-center gap-10">
+            {[
+              { label: 'Platform', href: '#platform' },
+              { label: 'Statistics', href: '#statistics' },
+              { label: 'Earnings', href: '#earnings' },
+              { label: 'Guide', href: '#guide' },
+              { label: 'Partners', href: '#partners' }
+            ].map((link) => (
+              <a 
+                key={link.label}
+                href={link.href} 
+                className="text-[0.82rem] font-bold text-gray-500 hover:text-blue-600 transition-colors uppercase tracking-widest relative group py-2"
+              >
+                {link.label}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+              </a>
+            ))}
           </div>
 
-          {/* Buttons */}
-          <div className="flex items-center gap-3 sm:gap-6 shrink-0">
-            <button 
+          {/* Buttons & Mobile Toggle */}
+          <div className="flex items-center gap-4 sm:gap-8 shrink-0">
+            <button
               onClick={() => document.getElementById("login_modal")?.showModal()}
-              className="text-xs sm:text-sm font-bold text-gray-700 hover:text-blue-600 whitespace-nowrap"
+              className="hidden sm:block text-[0.88rem] font-bold text-[#111827] hover:text-blue-600 transition-colors"
             >
               Login
             </button>
-            <Link 
+            <Link
               to="/signup"
-              className="px-3 sm:px-6 py-2 bg-blue-600 text-white text-[11px] sm:text-sm font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap"
+              className="hidden sm:block px-8 py-3 bg-[#111827] text-white text-[0.88rem] font-bold rounded-xl hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-gray-200"
             >
-              Start selling
+              Start Selling
+            </Link>
+            
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <div className={`lg:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-[500px] opacity-100 visible' : 'max-h-0 opacity-0 invisible'}`}>
+        <div className="px-4 py-6 space-y-4">
+          {[
+            { label: 'Platform', href: '#platform' },
+            { label: 'Statistics', href: '#statistics' },
+            { label: 'Earnings', href: '#earnings' },
+            { label: 'Guide', href: '#guide' },
+            { label: 'Partners', href: '#partners' }
+          ].map((link) => (
+            <a 
+              key={link.label}
+              href={link.href}
+              onClick={() => setIsMenuOpen(false)}
+              className="block text-[0.88rem] font-bold text-gray-600 hover:text-blue-600 transition-colors uppercase tracking-widest"
+            >
+              {link.label}
+            </a>
+          ))}
+          <div className="pt-4 border-t border-gray-100 flex flex-col gap-4">
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                document.getElementById("login_modal")?.showModal();
+              }}
+              className="w-full py-4 text-[0.88rem] font-bold text-[#11182d] bg-gray-50 rounded-xl"
+            >
+              Login
+            </button>
+            <Link
+              to="/signup"
+              onClick={() => setIsMenuOpen(false)}
+              className="w-full py-4 bg-[#111827] text-white text-center text-[0.88rem] font-bold rounded-xl shadow-lg"
+            >
+              Start Selling
             </Link>
           </div>
         </div>
@@ -76,7 +147,7 @@ const Hero = () => {
               Reach millions of buyers across India and manage your entire business from a single intuitive dashboard. Join 1.5 Lakh+ successful sellers today.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-              <Link 
+              <Link
                 to="/signup"
                 className="w-full sm:w-auto px-10 py-3.5 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm text-center"
               >
@@ -89,9 +160,9 @@ const Hero = () => {
           </div>
           <div className="relative mt-8 lg:mt-0">
             <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100">
-              <img 
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2488&auto=format&fit=crop" 
-                alt="Seller working" 
+              <img
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2488&auto=format&fit=crop"
+                alt="Seller working"
                 className="w-full h-auto object-cover max-h-[400px] lg:max-h-none"
               />
             </div>
@@ -148,7 +219,7 @@ const Benefits = () => {
           <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest block mb-2">THE PLATFORM</span>
           <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 tracking-tight">Everything you need to grow</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {benefits.map((benefit, i) => (
             <div key={i} className="p-8 bg-[#f9fafc] rounded-xl group border border-transparent hover:border-gray-100 transition-all shadow-sm">
@@ -183,7 +254,7 @@ const ProfitCalculator = () => {
           <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">Calculate your earning potential</h2>
           <p className="text-gray-500 text-sm font-medium italic">See how much profit you can generate with WonderCart</p>
         </div>
-        
+
         <div className="grid lg:grid-cols-2 gap-0 overflow-hidden rounded-2xl shadow-lg border border-gray-100">
           {/* Inputs */}
           <div className="bg-white p-8 sm:p-12 border-r border-gray-50">
@@ -193,7 +264,7 @@ const ProfitCalculator = () => {
                   <span className="text-gray-600 uppercase tracking-widest text-[10px]">Avg Selling Price</span>
                   <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">₹ {sellingPrice}</span>
                 </div>
-                <input 
+                <input
                   type="range" min="100" max="5000" step="10"
                   value={sellingPrice}
                   onChange={(e) => setSellingPrice(Number(e.target.value))}
@@ -206,7 +277,7 @@ const ProfitCalculator = () => {
                   <span className="text-gray-600 uppercase tracking-widest text-[10px]">Product Cost Price</span>
                   <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">₹ {costPrice}</span>
                 </div>
-                <input 
+                <input
                   type="range" min="50" max="4000" step="10"
                   value={costPrice}
                   onChange={(e) => setCostPrice(Number(e.target.value))}
@@ -219,7 +290,7 @@ const ProfitCalculator = () => {
                   <span className="text-gray-600 uppercase tracking-widest text-[10px]">Orders / Month</span>
                   <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">{ordersPerMonth}</span>
                 </div>
-                <input 
+                <input
                   type="range" min="10" max="1000" step="10"
                   value={ordersPerMonth}
                   onChange={(e) => setOrdersPerMonth(Number(e.target.value))}
@@ -251,7 +322,7 @@ const ProfitCalculator = () => {
                 <div className="flex items-baseline gap-2 mb-8">
                   <p className="text-4xl lg:text-5xl font-bold">₹ {(monthlyEarnings >= 0 ? monthlyEarnings : 0).toLocaleString()}</p>
                 </div>
-                
+
                 <button className="w-full py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-lg text-sm">
                   Start Your Business Plan
                 </button>
@@ -281,7 +352,7 @@ const HowItWorks = () => {
 
         <div className="relative">
           <div className="hidden lg:block absolute top-8 left-[10%] right-[10%] h-[1px] bg-gray-100 -z-0" />
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-y-10 gap-x-6 relative z-10">
             {steps.map((step, i) => (
               <div key={i} className="flex flex-col items-center">
@@ -358,15 +429,15 @@ const FinalCTA = () => {
         <p className="text-lg text-blue-100 mb-10 max-w-xl mx-auto leading-relaxed opacity-90 font-medium">
           Start selling to millions of active buyers today. No upfront costs, total transparency.
         </p>
-        
+
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link 
+          <Link
             to="/signup"
             className="w-full sm:w-auto px-10 py-4 bg-white text-blue-600 font-bold rounded-md text-lg shadow-lg hover:bg-gray-50 transition-all"
           >
             Start For Free
           </Link>
-          <button 
+          <button
             onClick={() => document.getElementById("login_modal")?.showModal()}
             className="w-full sm:w-auto px-10 py-4 border-2 border-white/40 text-white font-bold rounded-md text-lg hover:bg-white/10 transition-all"
           >
@@ -393,7 +464,7 @@ const SellerLandingPage = () => {
       <HowItWorks />
       <Testimonials />
       <FinalCTA />
-      
+
       <footer className="py-10 border-t border-gray-100 font-poppins">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
           <div className="flex items-center gap-2">
@@ -407,7 +478,7 @@ const SellerLandingPage = () => {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 text-center md:text-left">
-           <p className="text-[10px] text-gray-300 font-medium uppercase tracking-[0.2em]">© 2026 WonderCart Technologies.</p>
+          <p className="text-[10px] text-gray-300 font-medium uppercase tracking-[0.2em]">© 2026 WonderCart Technologies.</p>
         </div>
       </footer>
     </div>

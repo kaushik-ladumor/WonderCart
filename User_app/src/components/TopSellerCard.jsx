@@ -4,11 +4,14 @@ import { Star, ShoppingCart, ChevronRight, Check } from 'lucide-react';
 
 const TopSellerCard = ({ seller, isFeatured = false }) => {
   const navigate = useNavigate();
-  const { rank, productId, productName, productImage, price, originalPrice, rating, reviewCount, salesCount } = seller;
+  const { rank, productId, productName, productImage, price, originalPrice, salesCount } = seller;
   
   const discount = originalPrice && originalPrice > price 
     ? Math.round(((originalPrice - price) / originalPrice) * 100) 
     : 0;
+    
+  const displayRating = (typeof productId === 'object' ? productId?.ratingAverage : seller.rating) || 0;
+  const displayReviewCount = (typeof productId === 'object' ? productId?.reviewCount : seller.reviewCount) || 0;
     
   const handleAddToCart = (e) => {
       e.stopPropagation();
@@ -59,14 +62,14 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
                Engineered for high-intensity performance with responsive cushioning and a breathable mesh upper for peak results.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-auto">
+             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-auto">
                 <div className="flex items-center gap-2 flex-wrap">
                      <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(productId?.ratingAverage || rating) ? "fill-[#ff9c07] text-[#ff9c07]" : "fill-[#f1f5fb] text-[#d9deeb]"}`} />
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(displayRating) ? "fill-[#ff9c07] text-[#ff9c07]" : "fill-[#f1f5fb] text-[#d9deeb]"}`} />
                         ))}
                     </div>
-                    <span className="text-[0.76rem] text-[#6d7892] font-semibold uppercase tracking-wider">({productId?.reviewCount || reviewCount} reviews)</span>
+                    <span className="text-[0.76rem] text-[#6d7892] font-semibold uppercase tracking-wider">({displayReviewCount} reviews)</span>
                 </div>
                 
                 <button 
@@ -116,7 +119,7 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
         <div className="flex items-center justify-between border-t border-[#f0f4ff] pt-4">
           <div className="flex items-center gap-1.5">
              <Star className="w-4 h-4 fill-[#ff9c07] text-[#ff9c07]" />
-             <span className="text-[0.82rem] font-semibold text-[#141b2d]">{productId?.ratingAverage || rating}</span>
+             <span className="text-[0.82rem] font-semibold text-[#141b2d]">{displayRating || "0.0"}</span>
           </div>
           <span className="text-[0.82rem] font-semibold text-[#0f49d7] hover:underline">View Details</span>
         </div>

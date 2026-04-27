@@ -21,8 +21,10 @@ const startServer = async () => {
 
   const startPointsCron = require("./cron/pointsCron");
   const startRankingCron = require("./cron/rankingCron");
+  const initCouponCron = require("./cron/couponCron");
   startPointsCron();
   startRankingCron();
+  initCouponCron();
 
   const app = express();
   const PORT = process.env.PORT || 4000;

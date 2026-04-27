@@ -285,6 +285,12 @@ function AllOrderDetail() {
                       <p className="font-body text-[9px] uppercase font-semibold text-[#6d7892] tracking-widest mb-1">Total</p>
                       <p className="font-body text-[0.82rem] font-semibold text-[#0f49d7] italic">₹{Math.round(order.totalAmount || 0).toLocaleString()}</p>
                     </div>
+                    {order.couponDiscount > 0 && (
+                      <div className="bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
+                        <p className="font-body text-[8px] uppercase font-bold text-emerald-600 tracking-widest leading-none mb-1">Savings</p>
+                        <p className="font-body text-[0.72rem] font-bold text-emerald-600 leading-none">₹{Math.round(order.couponDiscount).toLocaleString()}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3">

@@ -17,6 +17,14 @@ import {
   Gift,
   Percent,
   CreditCard,
+  Truck,
+  MapPin,
+  ShieldCheck,
+  Zap,
+  Globe,
+  ShoppingCart,
+  Trash2,
+  Pencil
 } from "lucide-react";
 
 function EditCoupon() {
@@ -31,59 +39,63 @@ function EditCoupon() {
     code: "",
     name: "",
     description: "",
-    dealType: "",
-    discount: "",
+    couponType: "flat",
+    discountAmount: "",
     maxDiscount: "",
-    perUserLimit: 1,
+    minOrderValue: "",
+    usageLimitTotal: "",
+    usageLimitPerUser: 1,
     startDate: "",
-    expirationDate: "",
+    endDate: "",
     neverExpires: false,
     targetType: "all",
-    targetRole: "user",
+    targetCity: "",
+    targetRegion: "",
     targetCategory: "",
-    minCompletedOrders: "",
-    minOrderValue: "",
-    isFirstOrderOnly: false,
-    randomUserCount: "",
+    targetProducts: "", 
+    allowedPaymentMethods: ["Razorpay", "COD", "Wallet"],
+    status: "active",
+    referrerRewardAmount: 0
   });
 
   useEffect(() => {
     const fetchCoupon = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API_URL}/admin/coupons/${couponId}`, {
+        const res = await axios.get(`${API_URL}/coupon/${couponId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        const coupon = res.data.data;
+        const coupon = res.data.coupon;
         if (coupon) {
           setFormData({
             code: coupon.code || "",
             name: coupon.name || "",
             description: coupon.description || "",
-            dealType: coupon.dealType || "",
-            discount: coupon.discount || "",
+            couponType: coupon.couponType || "flat",
+            discountAmount: coupon.discountAmount || "",
             maxDiscount: coupon.maxDiscount || "",
-            perUserLimit: coupon.perUserLimit || 1,
-            startDate: coupon.startDate ? coupon.startDate.split("T")[0] : "",
-            expirationDate: coupon.expirationDate
-              ? coupon.expirationDate.split("T")[0]
-              : "",
-            neverExpires: !coupon.expirationDate,
-            targetType: coupon.targetType || "all",
-            targetRole: coupon.targetRole || "user",
-            targetCategory: coupon.targetCategory || "",
-            minCompletedOrders: coupon.minCompletedOrders || "",
             minOrderValue: coupon.minOrderValue || "",
-            isFirstOrderOnly: !!coupon.isFirstOrderOnly,
-            randomUserCount: coupon.randomUserCount || "",
+            usageLimitTotal: coupon.usageLimitTotal || "",
+            usageLimitPerUser: coupon.usageLimitPerUser || 1,
+            startDate: coupon.startDate ? coupon.startDate.split("T")[0] : "",
+            endDate: coupon.endDate ? coupon.endDate.split("T")[0] : "",
+            neverExpires: !!coupon.neverExpires,
+            targetType: coupon.targetType || "all",
+            targetCity: coupon.targetCity || "",
+            targetRegion: coupon.targetRegion || "",
+            targetCategory: coupon.targetCategory || "",
+            targetProducts: coupon.targetProducts ? coupon.targetProducts.join(", ") : "",
+            allowedPaymentMethods: coupon.allowedPaymentMethods || ["Razorpay", "COD", "Wallet"],
+            status: coupon.status || "active",
+            referrerRewardAmount: coupon.referrerRewardAmount || 0
           });
         }
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load coupon details");
+        toast.error("Failed to load campaign data");
       } finally {
         setLoading(false);
       }
@@ -97,28 +109,31 @@ function EditCoupon() {
   const updateCoupon = async (e) => {
     e.preventDefault();
 
-    const isDiscountRequired = formData.dealType !== "free_shipping";
-    const isExpirationRequired = !formData.neverExpires;
-
-    if (!formData.code || !formData.name || (isDiscountRequired && formData.discount === "") || (isExpirationRequired && !formData.expirationDate)) {
-      toast.error("Please fill in all required fields (Code, Name, Discount/Date)");
+    if (!formData.code || !formData.name || !formData.discountAmount) {
+      toast.error("Required fields missing");
       return;
     }
 
     setUpdating(true);
     const dataToSend = {
       ...formData,
-      discount: isDiscountRequired ? formData.discount : 0,
-      expirationDate: formData.neverExpires ? null : formData.expirationDate,
+      discountAmount: Number(formData.discountAmount),
+      maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : undefined,
+      minOrderValue: formData.minOrderValue ? Number(formData.minOrderValue) : 0,
+      usageLimitTotal: formData.usageLimitTotal ? Number(formData.usageLimitTotal) : null,
+      usageLimitPerUser: Number(formData.usageLimitPerUser),
+      targetProducts: formData.targetProducts ? formData.targetProducts.split(",").map(id => id.trim()) : [],
+      endDate: formData.neverExpires ? null : formData.endDate,
     };
+
     try {
-      await axios.put(`${API_URL}/admin/coupons/update/${couponId}`, dataToSend, {
+      await axios.patch(`${API_URL}/coupon/${couponId}`, dataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      toast.success("Coupon updated successfully");
+      toast.success("Campaign updated successfully");
       navigate("/admin/coupon");
     } catch (error) {
       console.error(error);
@@ -129,445 +144,285 @@ function EditCoupon() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handlePaymentMethodToggle = (method) => {
+    setFormData(prev => {
+        const methods = [...prev.allowedPaymentMethods];
+        if (methods.includes(method)) {
+            return { ...prev, allowedPaymentMethods: methods.filter(m => m !== method) };
+        } else {
+            return { ...prev, allowedPaymentMethods: [...methods, method] };
+        }
+    });
   };
 
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto px-4 py-5">
-        {/* Header - FAQ style */}
-        <div className="mb-6 text-center">
-          <div className="flex justify-center mb-3">
-            <Gift className="w-8 h-8 text-black" />
-          </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            Edit Campaign
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Modify your existing discount code settings
-          </p>
-        </div>
-
-        {/* Back Button */}
-        <div className="mb-5">
-          <button
-            onClick={() => navigate("/admin/coupon")}
-            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Campaigns
-          </button>
-        </div>
-
-        <form onSubmit={updateCoupon} className="space-y-4">
-          {/* General Info Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  General Information
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Coupon Code
-                  </label>
-                  <div className="relative">
-                    <Ticket className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      name="code"
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm font-mono uppercase"
-                      value={formData.code}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          code: e.target.value.toUpperCase(),
-                        })
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Campaign Name
-                  </label>
-                  <input
-                    name="name"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  rows="2"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm resize-none"
-                  value={formData.description}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Rewards Configuration Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Rewards Configuration
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Deal Type
-                </label>
-                <select
-                  name="dealType"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm bg-white"
-                  value={formData.dealType}
-                  onChange={handleChange}
-                >
-                  <option value="fixed">Fixed Amount Discount</option>
-                  <option value="percentage">Percentage Discount</option>
-                  <option value="free_shipping">Free Shipping</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {formData.dealType !== "free_shipping" && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">
-                      {formData.dealType === "percentage"
-                        ? "Percentage (%)"
-                        : "Amount (₹)"}
-                    </label>
-                    <input
-                      name="discount"
-                      type="number"
-                      min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      value={formData.discount}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                )}
-                {formData.dealType === "percentage" && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">
-                      Maximum Cap (₹)
-                    </label>
-                    <input
-                      name="maxDiscount"
-                      type="number"
-                      min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      value={formData.maxDiscount}
-                      onChange={handleChange}
-                    />
-                  </div>
-                )}
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Per User Limit
-                  </label>
-                  <input
-                    name="perUserLimit"
-                    type="number"
-                    min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                    value={formData.perUserLimit}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700">
-                    Min Order Value (₹)
-                  </label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      name="minOrderValue"
-                      type="number"
-                      min="0"
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      placeholder="e.g., 500"
-                      value={formData.minOrderValue}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Schedule Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Schedule & Validity
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Start Date (Read Only)
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    name="startDate"
-                    type="date"
-                    readOnly
-                    className="w-full pl-9 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-500 cursor-not-allowed"
-                    value={formData.startDate}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="neverExpires"
-                    name="neverExpires"
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
-                    checked={formData.neverExpires}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        neverExpires: e.target.checked,
-                        expirationDate: e.target.checked ? "" : prev.expirationDate,
-                      }))
-                    }
-                  />
-                  <label
-                    htmlFor="neverExpires"
-                    className="text-xs font-medium text-gray-700 cursor-pointer"
-                  >
-                    Never Expires (Lifetime Coupon)
-                  </label>
-                </div>
-
-                {!formData.neverExpires && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">
-                      Expiration Date *
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        name="expirationDate"
-                        type="date"
-                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                        value={formData.expirationDate}
-                        onChange={handleChange}
-                        required={!formData.neverExpires}
-                        min={new Date().toISOString().split("T")[0]}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Audience Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Audience Targeting
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Target Audience
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {["all", "new_users", "loyal_users", "specific_users"].map(
-                    (type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, targetType: type }))
-                        }
-                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${formData.targetType === type
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                          }`}
-                      >
-                        {type
-                          .split("_")
-                          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                          .join(" ")}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isFirstOrderOnly"
-                    name="isFirstOrderOnly"
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
-                    checked={formData.isFirstOrderOnly}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        isFirstOrderOnly: e.target.checked,
-                      }))
-                    }
-                  />
-                  <label
-                    htmlFor="isFirstOrderOnly"
-                    className="text-xs font-medium text-gray-700 cursor-pointer"
-                  >
-                    First Order Only (Valid for new customers only)
-                  </label>
-                </div>
-              </div>
-
-              {formData.targetType === "loyal_users" && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-                  <label className="text-xs font-medium text-blue-900">
-                    Minimum Completed Orders
-                  </label>
-                  <input
-                    name="minCompletedOrders"
-                    type="number"
-                    min="0"
-                    className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    value={formData.minCompletedOrders}
-                    onChange={handleChange}
-                    required
-                  />
-                  <p className="text-xs text-blue-700">
-                    Delivered orders required for eligibility.
-                  </p>
-                </div>
-              )}
-
-              {formData.targetType === "specific_users" && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-purple-900">
-                      Target User Role
-                    </label>
-                    <select
-                      name="targetRole"
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                      value={formData.targetRole}
-                      onChange={handleChange}
-                    >
-                      <option value="user">User (Customer)</option>
-                      <option value="seller">Seller</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-purple-900">
-                      Random User Count
-                    </label>
-                    <input
-                      name="randomUserCount"
-                      type="number"
-                      min="0"
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                      value={formData.randomUserCount}
-                      onChange={handleChange}
-                      required
-                    />
-                    <p className="text-[10px] text-purple-700">
-                      Note: Changing role or count here won't re-randomize users. Use "allowedUsers" list for manual control.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Category Targeting Card */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-gray-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  Inventory Targeting
-                </h2>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Product Category (Optional)
-                </label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    name="targetCategory"
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                    placeholder="e.g., Footwear, Electronics (Leave empty for all)"
-                    value={formData.targetCategory}
-                    onChange={handleChange}
-                  />
-                </div>
-                <p className="text-[10px] text-gray-500 mt-1">
-                  If set, this coupon will only apply to products in this category.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="pt-2">
+    <div className="min-h-screen bg-[#f8f9fc] font-poppins pb-20">
+      <div className="max-w-5xl mx-auto px-6 py-10">
+        
+        {/* Breadcrumb & Title */}
+        <div className="mb-10">
             <button
-              type="submit"
-              disabled={updating}
-              className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                onClick={() => navigate("/admin/coupon")}
+                className="flex items-center gap-2 text-[#64748b] hover:text-[#1e293b] transition-all text-sm font-semibold mb-4 group"
             >
-              {updating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Changes
-                </>
-              )}
+                <div className="p-1.5 rounded-lg bg-white border border-[#e2e8f0] group-hover:bg-gray-50 shadow-sm">
+                    <ArrowLeft className="w-4 h-4" />
+                </div>
+                Return to Ledger
             </button>
+            <div className="flex items-end gap-4">
+                <div className="h-16 w-16 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-100 rotate-3">
+                    <Pencil className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-black text-[#141b2d] tracking-tight">Modify Campaign</h1>
+                    <p className="text-[#64748b] font-medium">Update parameters for active incentive "{formData.code}"</p>
+                </div>
+            </div>
+        </div>
+
+        <form onSubmit={updateCoupon} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Identity */}
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-[#f1f5f9] flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <Tag className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-[#1e293b]">Campaign Identity</h2>
+                </div>
+                <div className="p-8 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">COUPON CODE</label>
+                            <input
+                                name="code"
+                                type="text"
+                                className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-black text-gray-500 outline-none cursor-not-allowed"
+                                value={formData.code}
+                                readOnly
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">CAMPAIGN TITLE</label>
+                            <input
+                                name="name"
+                                type="text"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-bold text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[13px] font-bold text-[#475569] ml-1">PUBLIC DESCRIPTION</label>
+                        <textarea
+                            name="description"
+                            rows="3"
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-4 px-4 text-sm font-medium text-[#1e293b] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+                            value={formData.description}
+                            onChange={handleChange}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Logic */}
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-[#f1f5f9] flex items-center gap-3">
+                    <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                        <Sparkles className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-[#1e293b]">Reward Configuration</h2>
+                </div>
+                <div className="p-8 space-y-8">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {[
+                            { id: 'percentage', label: 'Percentage', icon: Percent },
+                            { id: 'flat', label: 'Flat Amount', icon: CreditCard },
+                            { id: 'free_shipping', label: 'Free Shipping', icon: Truck },
+                        ].map(type => (
+                            <button
+                                key={type.id}
+                                type="button"
+                                onClick={() => setFormData({...formData, couponType: type.id})}
+                                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
+                                    formData.couponType === type.id ? 'border-blue-600 bg-blue-50/30' : 'border-gray-50 bg-white'
+                                }`}
+                            >
+                                <type.icon className={`w-4 h-4 ${formData.couponType === type.id ? 'text-blue-600' : 'text-gray-400'}`} />
+                                <span className={`text-[10px] font-black uppercase ${formData.couponType === type.id ? 'text-blue-600' : 'text-gray-400'}`}>
+                                    {type.label}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">VALUE</label>
+                            <input
+                                name="discountAmount"
+                                type="number"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-black text-[#1e293b] outline-none"
+                                value={formData.discountAmount}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">MAX CAP</label>
+                            <input
+                                name="maxDiscount"
+                                type="number"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-black text-[#1e293b] outline-none"
+                                value={formData.maxDiscount}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">MIN ORDER</label>
+                            <input
+                                name="minOrderValue"
+                                type="number"
+                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3.5 px-4 text-sm font-black text-[#1e293b] outline-none"
+                                value={formData.minOrderValue}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Targeting */}
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-[#f1f5f9] flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <Users className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-[#1e293b]">Targeting & Scope</h2>
+                </div>
+                <div className="p-8 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <label className="text-[13px] font-bold text-[#475569] ml-1">AUDIENCE TYPE</label>
+                            <div className="grid grid-cols-1 gap-2">
+                                {['all', 'new_users', 'specific_users', 'local_users'].map(target => (
+                                    <button
+                                        key={target}
+                                        type="button"
+                                        onClick={() => setFormData({...formData, targetType: target})}
+                                        className={`px-4 py-3 rounded-2xl border-2 text-left transition-all ${
+                                            formData.targetType === target ? 'border-blue-600 bg-blue-50/30 text-blue-600' : 'border-[#f1f5f9] text-[#64748b]'
+                                        }`}
+                                    >
+                                        <span className="text-xs font-black uppercase tracking-wider">{target.replace('_', ' ')}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-bold text-[#475569] ml-1">PRODUCT RESTRICTIONS</label>
+                                <textarea
+                                    name="targetProducts"
+                                    rows="4"
+                                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-4 px-4 text-[11px] font-mono font-bold text-[#1e293b] outline-none resize-none"
+                                    placeholder="Product ID list..."
+                                    value={formData.targetProducts}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
           </div>
+
+          {/* Sidebar */}
+          <div className="space-y-8">
+            <div className="bg-white rounded-[32px] border border-[#e2e8f0] shadow-sm overflow-hidden sticky top-8">
+                <div className="p-8 space-y-8">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                            <span className="text-xs font-bold text-gray-600 uppercase">Status</span>
+                            <select 
+                                name="status"
+                                className="bg-transparent border-none text-xs font-black uppercase text-blue-600 focus:ring-0"
+                                value={formData.status}
+                                onChange={handleChange}
+                            >
+                                <option value="active">Active</option>
+                                <option value="inactive">Paused</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Validity</label>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-bold text-gray-500 uppercase">End Date</p>
+                                <input
+                                    name="endDate"
+                                    type="date"
+                                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl py-3 px-4 text-sm font-bold text-[#1e293b] outline-none"
+                                    value={formData.endDate}
+                                    onChange={handleChange}
+                                    disabled={formData.neverExpires}
+                                />
+                            </div>
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input 
+                                    type="checkbox"
+                                    name="neverExpires"
+                                    checked={formData.neverExpires}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-xs font-bold text-[#1e293b] uppercase">No Expiry</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100">
+                        <button
+                            type="submit"
+                            disabled={updating}
+                            className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 shadow-xl shadow-blue-100 flex items-center justify-center gap-3"
+                        >
+                            {updating ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+                            Update Campaign
+                        </button>
+                    </div>
+
+                    <div className="pt-4">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/admin/coupon')}
+                            className="w-full bg-white text-gray-500 py-4 rounded-[24px] font-black text-sm uppercase tracking-widest border border-gray-100 hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+          </div>
+
         </form>
       </div>
     </div>
@@ -575,3 +430,4 @@ function EditCoupon() {
 }
 
 export default EditCoupon;
+

@@ -15,7 +15,7 @@ import Loader from "../components/Loader";
 import { API_URL } from "../utils/constants";
 
 const getCouponTypeIcon = (coupon) => {
-  if (coupon.dealType === "free_shipping") return Truck;
+  if (coupon.couponType === "free_shipping") return Truck;
   if (coupon.targetCategory) return ShoppingBag;
   return Ticket;
 };
@@ -25,14 +25,14 @@ const isCouponExpired = (coupon) =>
   new Date(coupon.expirationDate).getTime() < Date.now();
 
 const formatDiscount = (coupon) => {
-  if (coupon.dealType === "percentage") return `${coupon.discount}%`;
-  if (coupon.dealType === "free_shipping") return "Rs 0";
-  return `Rs ${Number(coupon.discount || 0).toLocaleString()}`;
+  if (coupon.couponType === "percentage") return `${coupon.discountAmount}%`;
+  if (coupon.couponType === "free_shipping") return "Rs 0";
+  return `Rs ${Number(coupon.discountAmount || 0).toLocaleString()}`;
 };
 
 const formatDescription = (coupon) =>
   coupon.description ||
-  `Get ${coupon.discount}${coupon.dealType === "percentage" ? "%" : " Rs"} off on your next purchase.`;
+  `Get ${coupon.discountAmount}${coupon.couponType === "percentage" ? "%" : " Rs"} off on your next purchase.`;
 
 const formatExpiry = (coupon) =>
   coupon.expirationDate
@@ -69,19 +69,28 @@ const MyCoupons = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchCoupons = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/");
-          return;
-        }
+  const [user, setUser] = useState(null);
 
-        const response = await axios.get(`${API_URL}/user/coupons`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCoupons(response.data.coupons || []);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/");
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const [couponsRes, profileRes] = await Promise.all([
+          axios.get(`${API_URL}/coupon/available`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_URL}/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        ]);
+        
+        setCoupons(couponsRes.data.coupons || []);
+        setUser(profileRes.data.user || null);
       } catch (error) {
         toast.error("Failed to load your rewards");
       } finally {
@@ -89,9 +98,8 @@ const MyCoupons = () => {
       }
     };
 
-    fetchCoupons();
+    fetchData();
   }, [navigate]);
-
 
   const handleCopyCode = async (coupon) => {
     if (isCouponExpired(coupon)) return;
@@ -123,7 +131,9 @@ const MyCoupons = () => {
         </div>
 
         {loading ? (
-          <div className="py-20"><Loader /></div>
+          <div className="py-20">
+            <Loader />
+          </div>
         ) : coupons.length > 0 ? (
           <div className="space-y-3">
             <div className="px-1 mb-2">
@@ -131,9 +141,10 @@ const MyCoupons = () => {
                 Available Rewards ({coupons.length})
               </h2>
             </div>
-            
+
             {coupons.map((coupon) => {
-              const expired = isCouponExpired(coupon);
+              const isUsed = coupon.isUsed;
+              const expired = isCouponExpired(coupon) || isUsed;
               const Icon = getCouponTypeIcon(coupon);
 
               return (
@@ -153,12 +164,16 @@ const MyCoupons = () => {
                       }`}
                     >
                       <div className="flex flex-col items-center gap-1.5">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-[12px] bg-white shadow-sm ${
-                          expired ? "text-[#8a93a7]" : "text-[#0f49d7]"
-                        }`}>
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-[12px] bg-white shadow-sm ${
+                            expired ? "text-[#8a93a7]" : "text-[#0f49d7]"
+                          }`}
+                        >
                           <Icon className="h-4.5 w-4.5" />
                         </div>
-                        <div className={`text-[1rem] font-bold ${expired ? "text-[#8a93a7]" : "text-[#11182d]"}`}>
+                        <div
+                          className={`text-[1rem] font-bold ${expired ? "text-[#8a93a7]" : "text-[#11182d]"}`}
+                        >
                           {formatDiscount(coupon)}
                         </div>
                       </div>
@@ -169,17 +184,25 @@ const MyCoupons = () => {
                       <div className="flex flex-col justify-between h-full">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className={`text-[0.95rem] font-semibold ${expired ? "text-[#7e8799]" : "text-[#11182d]"}`}>
+                            <h3
+                              className={`text-[0.95rem] font-semibold ${expired ? "text-[#7e8799]" : "text-[#11182d]"}`}
+                            >
                               {coupon.name || "Special Offer"}
                             </h3>
-                            <span className={`rounded-lg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${
-                              expired ? "bg-[#f0f2f5] text-[#8a93a7]" : "bg-[#0f49d7] text-white"
-                            }`}>
+                            <span
+                              className={`rounded-lg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${
+                                expired
+                                  ? "bg-[#f0f2f5] text-[#8a93a7]"
+                                  : "bg-[#0f49d7] text-white"
+                              }`}
+                            >
                               {coupon.code}
                             </span>
                           </div>
-                          
-                          <p className={`mt-1.5 text-[0.78rem] leading-5 ${expired ? "text-[#9aa3b5]" : "text-[#42506d]"}`}>
+
+                          <p
+                            className={`mt-1.5 text-[0.78rem] leading-5 ${expired ? "text-[#9aa3b5]" : "text-[#42506d]"}`}
+                          >
                             {formatDescription(coupon)}
                           </p>
                         </div>
@@ -189,11 +212,12 @@ const MyCoupons = () => {
                             <Calendar className="h-3.5 w-3.5 text-[#0f49d7]" />
                             {formatExpiry(coupon)}
                           </div>
-                          
+
                           {coupon.minOrderValue > 0 && (
                             <div className="flex items-center gap-1.5 text-[0.7rem] font-medium text-[#6d7892]">
                               <Target className="h-3.5 w-3.5 text-[#0f49d7]" />
-                              Min Rs {Number(coupon.minOrderValue).toLocaleString()}
+                              Min Rs{" "}
+                              {Number(coupon.minOrderValue).toLocaleString()}
                             </div>
                           )}
 
@@ -217,7 +241,7 @@ const MyCoupons = () => {
                             : "bg-[#11182d] text-white hover:bg-black"
                         }`}
                       >
-                        {expired ? "Expired" : "Copy Code"}
+                        {isUsed ? "Used" : expired ? "Expired" : "Copy Code"}
                       </button>
                     </div>
                   </div>
@@ -245,6 +269,86 @@ const MyCoupons = () => {
           </div>
         )}
 
+        {/* Ambassador Program Section */}
+        {user && (
+          <div className="mt-8 rounded-[24px] bg-[#11182d] p-6 sm:p-8 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+              <Gift className="w-32 h-32" />
+            </div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f49d7] text-white">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-[1.2rem] font-bold">Ambassador Program</h2>
+                  <p className="text-[0.78rem] text-white/60">Invite friends and earn ₹100 for each successful referral</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-center">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-full sm:w-auto flex flex-col gap-1.5">
+                    <span className="text-[0.65rem] font-bold uppercase tracking-widest text-white/40 ml-1">Your Referral Code</span>
+                    <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-4 py-3 min-w-[200px] justify-between">
+                      <span className="text-[1.1rem] font-mono font-bold tracking-wider">{user.referralCode || "N/A"}</span>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(user.referralCode || "");
+                          toast.success("Code copied!");
+                        }}
+                        className="text-[0.7rem] font-bold text-[#0f49d7] hover:text-white transition-colors"
+                      >
+                        COPY
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="hidden sm:block w-px h-12 bg-white/10"></div>
+
+                  <div className="w-full sm:w-auto flex flex-col gap-1.5">
+                    <span className="text-[0.65rem] font-bold uppercase tracking-widest text-white/40 ml-1">Friends Referred</span>
+                    <div className="text-[1.5rem] font-bold px-1">{user.referralCount || 0}</div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={async () => {
+                    if (!user.referralCode) {
+                      toast.error("Referral code is still being generated. Please try again in a moment.");
+                      return;
+                    }
+                    
+                    const shareData = {
+                      title: 'Shop & Save at WonderCart',
+                      text: `Join WonderCart using my referral code ${user.referralCode} and we both get exclusive rewards!`,
+                      url: `https://wondercart-customer.netlify.app/signup?ref=${user.referralCode}`
+                    };
+
+                    try {
+                      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                        await navigator.share(shareData);
+                        toast.success("Shared successfully!");
+                      } else {
+                        throw new Error("Share not supported");
+                      }
+                    } catch (err) {
+                      // Fallback to clipboard
+                      const fullText = `${shareData.text} Shop here: ${shareData.url}`;
+                      await navigator.clipboard.writeText(fullText);
+                      toast.success("Invite message copied to clipboard!");
+                    }
+                  }}
+                  className="w-full md:w-auto bg-[#0f49d7] hover:bg-[#0042cc] text-white rounded-xl px-8 py-4 text-[0.85rem] font-bold transition-all shadow-lg shadow-[#0f49d7]/20"
+                >
+                  Share Invite Link
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Info Section */}
         <div className="mt-8">
           <div className="px-1 mb-4">
@@ -252,16 +356,21 @@ const MyCoupons = () => {
               Usage Guide
             </h3>
           </div>
-          
+
           <div className="grid gap-3 md:grid-cols-3">
             {rewardSteps.map((step) => {
               const Icon = step.icon;
               return (
-                <div key={step.title} className="rounded-[18px] bg-white border border-[#e1e5f1] p-5">
+                <div
+                  key={step.title}
+                  className="rounded-[18px] bg-white border border-[#e1e5f1] p-5"
+                >
                   <div className="mb-3.5 flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#f4f7ff] text-[#0f49d7]">
                     <Icon className="h-4 w-4" />
                   </div>
-                  <h4 className="text-[0.9rem] font-semibold text-[#11182d]">{step.title}</h4>
+                  <h4 className="text-[0.9rem] font-semibold text-[#11182d]">
+                    {step.title}
+                  </h4>
                   <p className="mt-1.5 text-[0.76rem] leading-5 text-[#5d6a84]">
                     {step.description}
                   </p>

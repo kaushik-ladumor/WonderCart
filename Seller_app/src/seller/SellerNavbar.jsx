@@ -78,7 +78,6 @@ const SellerNavbar = () => {
     { path: "/seller/orders", label: "Orders", icon: ShoppingCart },
     { path: "/seller/earnings", label: "Earnings", icon: DollarSign },
     { path: "/seller/wallet", label: "My Wallet", icon: Wallet },
-    { path: "/seller/bank", label: "Bank Account", icon: Landmark },
     { path: "/seller/deals", label: "My Deals", icon: Percent },
     { path: "/seller/deals/create", label: "New Campaign", icon: Plus },
     { path: "/seller/reviews", label: "Feedback", icon: MessageSquare },
@@ -179,7 +178,7 @@ const SellerNavbar = () => {
     // Our backend doesn't have a bulk read yet, so we'll do individual or add it
     const token = localStorage.getItem("token");
     if (!token) return;
-    
+
     // For now, let's just mark locally and then mark each in background or add bulk route
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     toast.success("Marked all as read");
@@ -242,75 +241,62 @@ const SellerNavbar = () => {
   };
 
   const notificationPanel = showDropdown ? (
-    <div className="absolute right-0 top-[calc(100%+14px)] z-[100] w-[min(92vw,380px)] overflow-hidden rounded-[24px] border border-[#e5e9f5] bg-white shadow-[0_28px_60px_rgba(18,36,84,0.14)]">
-      <div className="flex items-center justify-between border-b border-[#eef1f7] px-5 py-4">
-        <div>
-          <h3 className="text-sm font-semibold text-[#1a2238]">Notifications</h3>
-          <p className="mt-0.5 text-xs text-[#75819d]">
-            {unreadCount > 0 ? `${unreadCount} new update${unreadCount > 1 ? "s" : ""}` : "All caught up"}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllRead}
-              className="text-xs font-medium text-[#2156d8] transition hover:text-[#173d99]"
-            >
-              Mark all read
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button
-              onClick={clearAll}
-              className="text-xs font-medium text-[#7a849b] transition hover:text-[#1a2238]"
-            >
-              Clear
-            </button>
-          )}
+    <div className="absolute right-[-70px] sm:right-0 top-[calc(100%+12px)] z-[100] w-[280px] sm:w-[340px] overflow-hidden rounded-[24px] border border-[#e2e7f2] bg-white shadow-[0_18px_40px_rgba(17,24,45,0.12)]">
+      <div className="flex items-center justify-between border-b border-[#edf1f8] px-5 py-4">
+        <h3 className="text-[0.88rem] font-bold text-[#11182d]">Notifications</h3>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={markAllRead}
+            className="text-[0.74rem] font-bold text-[#0f49d7] hover:underline"
+          >
+            Mark all read
+          </button>
+          <button
+            onClick={clearAll}
+            className="text-[0.74rem] font-bold text-[#cf2b2b] hover:underline"
+          >
+            Clear
+          </button>
         </div>
       </div>
 
-      <div className="custom-scrollbar max-h-80 overflow-y-auto">
+      <div className="max-h-80 overflow-y-auto scrollbar-hide">
         {notifications.length === 0 ? (
-          <div className="px-5 py-12 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#eef2ff]">
-              <Bell className="h-6 w-6 text-[#6c7896]" />
-            </div>
-            <p className="mt-4 text-sm font-semibold text-[#1a2238]">No new notifications</p>
-            <p className="mt-1 text-xs text-[#75819d]">Order updates will appear here.</p>
+          <div className="px-4 py-10 text-center text-[0.82rem] text-[#6a7690]">
+            No notifications yet
           </div>
         ) : (
           notifications.map((notification) => (
             <div
               key={notification._id}
-              className={`group border-b border-[#f0f2f8] px-5 py-4 last:border-b-0 ${
-                notification.read ? "bg-white" : "bg-[#f7f9ff]"
+              className={`group flex items-start gap-3 border-b border-[#f4f6fb] px-5 py-4 last:border-b-0 cursor-pointer transition-colors hover:bg-gray-50/50 ${
+                notification.read ? "bg-white" : "bg-[#f8faff]"
               }`}
+              onClick={() => markOneRead(notification._id)}
             >
-              <div className="flex items-start gap-3">
-                <span
-                  className={`mt-1.5 h-2.5 w-2.5 rounded-full ${
-                    notification.read ? "bg-[#d4daec]" : "bg-[#2156d8]"
-                  }`}
-                />
-                <div
-                  className="min-w-0 flex-1 cursor-pointer"
-                  onClick={() => markOneRead(notification._id)}
-                >
-                  <p className="text-sm leading-6 text-[#1a2238]">{notification.message}</p>
-                  <p className="mt-1 text-xs text-[#7b859d]">{notification.time}</p>
-                </div>
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    deleteNotification(notification._id);
-                  }}
-                  className="rounded-full p-1.5 text-[#9da6bb] opacity-0 transition group-hover:bg-[#eef2ff] group-hover:opacity-100 group-hover:text-[#4e5a77]"
-                  aria-label="Dismiss notification"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+              <span
+                className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
+                  notification.read ? "bg-[#d9deeb]" : "bg-[#0f49d7]"
+                }`}
+              />
+              <div className="min-w-0 flex-1">
+                <p className={`text-[0.82rem] leading-6 ${notification.read ? 'text-[#6a7690]' : 'text-[#11182d] font-medium'}`}>
+                  {notification.message}
+                </p>
+                <p className="mt-1 text-[10px] text-[#7c88a2]">
+                  {notification.time}
+                </p>
               </div>
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  deleteNotification(notification._id);
+                }}
+                className="rounded-lg p-1.5 text-[#7c88a2] opacity-0 transition group-hover:bg-gray-100 group-hover:opacity-100"
+                aria-label="Dismiss notification"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           ))
         )}
@@ -320,32 +306,20 @@ const SellerNavbar = () => {
 
   return (
     <>
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-[272px] lg:flex-col lg:border-r lg:border-[#e4e8f5] lg:bg-white lg:px-6 lg:py-6">
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-[272px] lg:flex-col lg:border-r lg:border-[#e4e8f5] lg:bg-white lg:px-4 lg:pb-6 lg:pt-0">
         <Link
           to="/seller/dashboard"
-          className="flex items-center gap-3 px-2 py-1"
+          className="flex items-center justify-start pt-2 pb-6 group"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#e8eeff]">
-            <Store className="h-[18px] w-[18px] text-[#2156d8]" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7c88a3]">
-              Seller
-            </p>
-            <p className="text-[16px] font-semibold leading-none text-[#1a2238]">
-              WonderCart
-            </p>
-            <p className="text-[18px] font-semibold leading-none text-[#2156d8]">
-              Hub
-            </p>
-          </div>
+          <img 
+            src="/WonderCart Logo.png" 
+            alt="WonderCart" 
+            className="h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+          />
         </Link>
 
-        <div className="mt-7 flex-1">
-          <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#99a3ba]">
-            Management
-          </p>
-          <nav className="mt-4 space-y-1">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPath === item.path;
@@ -359,20 +333,20 @@ const SellerNavbar = () => {
                   key={item.path}
                   to={isLocked ? "#" : item.path}
                   onClick={(event) => handleNavClick(event, isLocked)}
-                  className={`relative flex items-center justify-between rounded-[20px] px-4 py-3 ${
-                    isActive
-                      ? "bg-[#f7f9ff] text-[#2156d8]"
-                      : "text-[#62708c]"
-                  } ${isLocked ? "opacity-55" : ""}`}
+                  className={`relative flex items-center justify-between rounded-[20px] px-4 py-3 transition-colors ${isActive
+                      ? "text-[#2156d8]"
+                      : "text-[#62708c] hover:text-[#2156d8]"
+                    } ${isLocked ? "opacity-55" : ""}`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon className="h-[18px] w-[18px]" />
                     <span
-                      className={`text-[14px] font-medium ${
-                        isActive ? "underline underline-offset-[6px] decoration-2" : ""
+                      className={`text-[14px] font-medium relative group ${
+                        isActive ? "text-[#2156d8] font-bold" : ""
                       }`}
                     >
                       {item.label}
+                      <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${isActive ? "w-full" : "w-0 group-hover:w-full"}`}></span>
                     </span>
                   </div>
                   {isLocked ? <Lock className="h-4 w-4 text-[#8f99b1]" /> : null}
@@ -396,7 +370,7 @@ const SellerNavbar = () => {
 
       <header className="fixed inset-x-0 top-0 z-30 lg:left-[272px]">
         <div className="border-b border-[#e4e8f5] bg-white">
-          <div className="flex h-[76px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <div className="flex h-[64px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -429,7 +403,7 @@ const SellerNavbar = () => {
                   <p className="text-[10px] font-medium text-[#94a3b8]">MERCHANT #{authUser?._id?.substring(0, 6).toUpperCase()}</p>
                 </div>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2ff] text-sm font-semibold text-[#2156d8] overflow-hidden">
-                   <img src={`https://ui-avatars.com/api/?name=${sellerName}&background=0f172a&color=fff`} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={`https://ui-avatars.com/api/?name=${sellerName}&background=0f172a&color=fff`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>
@@ -438,105 +412,97 @@ const SellerNavbar = () => {
       </header>
 
       <div
-        className={`fixed inset-0 z-40 bg-[#121826]/30 lg:hidden ${
+        className={`fixed inset-0 z-40 bg-[#121826]/30 lg:hidden ${mobileMenuOpen ? "visible opacity-100" : "invisible opacity-0"
+          }`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      <div
+        className={`fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden transition-opacity ${
           mobileMenuOpen ? "visible opacity-100" : "invisible opacity-0"
         }`}
         onClick={() => setMobileMenuOpen(false)}
       />
 
       <div
-        className={`fixed inset-y-0 left-0 z-50 flex w-[288px] flex-col bg-white px-6 py-6 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85%,340px)] flex-col bg-white transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between">
-          <Link
-            to="/seller/dashboard"
-            className="flex items-center gap-3"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#e8eeff]">
-              <Store className="h-[18px] w-[18px] text-[#2156d8]" />
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7c88a3]">
-                Seller
-              </p>
-              <p className="text-[16px] font-semibold leading-none text-[#1a2238]">WonderCart</p>
-              <p className="text-[18px] font-semibold leading-none text-[#2156d8]">Hub</p>
-            </div>
-          </Link>
+        <div className="flex h-full flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-[#e4e8f2] px-5 py-4">
+            <Link
+              to="/seller/dashboard"
+              className="flex items-center justify-start group"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <img 
+                src="/WonderCart Logo.png" 
+                alt="WonderCart" 
+                className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              />
+            </Link>
 
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#dfe4f4] bg-[#f7f8ff] text-[#1a2238]"
-            aria-label="Close menu"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-[#5c6880] hover:bg-gray-100 transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-        <div className="mt-7">
-          <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#99a3ba]">
-            Management
-          </p>
-          <nav className="mt-4 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentPath === item.path;
-              const isLocked =
-                !isProfileActive &&
-                item.path !== "/seller/dashboard" &&
-                item.path !== "/seller/profile";
+          {/* Navigation Links */}
+          <div className="flex-1 overflow-y-auto px-5 pt-2 pb-6 scrollbar-hide">
+            <nav className="space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPath === item.path;
+                const isLocked =
+                  !isProfileActive &&
+                  item.path !== "/seller/dashboard" &&
+                  item.path !== "/seller/profile";
 
-              return (
-                <Link
-                  key={item.path}
-                  to={isLocked ? "#" : item.path}
-                  onClick={(event) =>
-                    handleNavClick(event, isLocked, () => setMobileMenuOpen(false))
-                  }
-                  className={`flex items-center justify-between rounded-[20px] px-4 py-3 ${
-                    isActive
-                      ? "bg-[#f7f9ff] text-[#2156d8]"
-                      : "text-[#62708c]"
-                  } ${isLocked ? "opacity-55" : ""}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="h-[18px] w-[18px]" />
-                    <span
-                      className={`text-[14px] font-medium ${
-                        isActive ? "underline underline-offset-[6px] decoration-2" : ""
-                      }`}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-                  {isLocked && <Lock className="h-4 w-4 text-[#8f99b1]" />}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+                return (
+                  <Link
+                    key={item.path}
+                    to={isLocked ? "#" : item.path}
+                    onClick={(event) =>
+                      handleNavClick(event, isLocked, () => setMobileMenuOpen(false))
+                    }
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3.5 text-[0.88rem] font-medium transition-all ${
+                      isActive
+                        ? "text-[#2156d8]"
+                        : "text-[#25324d] hover:text-[#2156d8]"
+                    } ${isLocked ? "opacity-50" : ""}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Icon className={`h-[18px] w-[18px] ${isActive ? "text-[#2156d8]" : "text-[#6d7892]"}`} />
+                      <span className={isActive ? "font-bold" : ""}>
+                        {item.label}
+                      </span>
+                    </div>
+                    {isLocked && <Lock className="h-4 w-4 text-[#8f99b1]" />}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
-        <div className="mt-auto border-t border-[#edf0f7] pt-4 space-y-3">
-          <button
-            className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-[#2156d8] py-3.5 text-[14px] font-bold text-white shadow-xl shadow-blue-100 hover:bg-[#1d4ed8] transition-all"
-          >
-            Withdraw Funds
-          </button>
-
-
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              handleLogout();
-            }}
-            className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#d9e1f2] bg-white px-4 py-3 text-[14px] font-medium text-[#1a2238] hover:bg-gray-50 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+          {/* Footer Actions */}
+          <div className="mt-auto border-t border-[#f1f5fb] px-5 py-6">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                handleLogout();
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-[16px] border border-[#e2e7f2] bg-white py-4 text-[0.88rem] font-bold text-[#cf2b2b] hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     </>

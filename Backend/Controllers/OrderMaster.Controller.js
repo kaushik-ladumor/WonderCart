@@ -29,6 +29,9 @@ const customerOrderPopulate = {
   ],
 };
 
+const CouponService = require("../Services/Coupon.Service");
+const ReferralService = require("../Services/Referral.Service");
+
 /**
  * Split items by seller and prepare sub-orders data
  */
@@ -46,7 +49,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
         seller: sellerId,
         sellerPin: sellerProfile?.businessAddress?.pinCode || "110001",
         handlingDays: sellerProfile?.handlingTimeDays || 2,
-        commissionRate: sellerProfile?.platformCommissionRate || 10,
+        commissionRate: 50, // Flat ₹50 platform fee
         items: [],
         subTotal: 0,
       };
@@ -74,7 +77,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
   return Object.values(sellerGroups).map(group => {
     const zone = getZone(group.sellerPin, customerPin);
     const edd = calculateEDD(new Date(), group.handlingDays, zone);
-    const commission = 0; // Fixed ₹50 per order handled at Master Level
+    const commission = 50; // Fixed ₹50 per seller
     const tax = Math.round(group.subTotal * 0.18);
     
     const mustShipBy = new Date();
@@ -86,7 +89,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
       taxAmount: tax,
       estimatedDeliveryDate: edd,
       platformCommission: commission,
-      sellerPayout: group.subTotal, // Seller always receives full product amount
+      sellerPayout: group.subTotal - commission, // Seller gets full amount - ₹50 fee
       mustShipBy,
       shippingCost: group.subTotal < 999 ? 50 : 0,
     };
@@ -124,12 +127,13 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
       handlingTimeDays: data.handlingDays,
       status: "placed",
       statusHistory: [{ from: "", to: "placed", reason: "Order placed" }],
-      paymentStatus: masterData.paymentStatus === "paid" ? "paid" : "pending",
+      paymentStatus: (masterData.paymentStatus === "paid" || masterData.paymentStatus === "COD_PENDING") ? "pending" : "pending",
     });
 
     if (masterData.paymentStatus === "paid") {
        subOrder.status = "confirmed";
        subOrder.statusHistory.push({ from: "placed", to: "confirmed", reason: "Payment confirmed" });
+       subOrder.paymentStatus = "paid";
 
        // --- 🚀 RAZORPAY ROUTE: CREATE HELD TRANSFER ---
        if (masterData.razorpayPaymentId) {
@@ -153,12 +157,9 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
                 });
                 subOrder.razorpayTransferId = transfer.items[0].id;
                 console.log(`✅ Transfer created (held): ${subOrder.razorpayTransferId} for ${subOrder.subOrderId}`);
-            } else {
-                console.warn(`⚠️ No linked account for vendor ${data.seller}. Transfer skipped.`);
             }
           } catch (rzpErr) {
-            console.error(`❌ Razorpay Transfer Creation Error for ${subOrder.subOrderId}:`, rzpErr.message);
-            // In production, we might want to flag this for admin retry
+            console.error(`❌ Razorpay Transfer Creation Error:`, rzpErr.message);
           }
        }
     } else if (masterData.paymentMethod === "COD") {
@@ -167,14 +168,6 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
 
     await subOrder.save({ session });
     subOrderIds.push(subOrder._id);
-
-    // NOTIFICATION: To Seller
-    sendNotification({
-        userId: data.seller,
-        role: 'seller',
-        type: 'NEW_ORDER',
-        message: `You have a new sub-order: ${subOrder.subOrderId}!`
-    });
 
     // Stock Management
     for (const item of data.items) {
@@ -188,21 +181,20 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
 
   masterOrder.subOrders = subOrderIds;
   masterOrder.status = await masterOrder.computeStatus();
+  
+  // If order has a coupon, lock it
+  if (masterOrder.coupon) {
+    await CouponService.lockCoupon(masterOrder.coupon, masterOrder.user, masterOrder._id, masterOrder.couponDiscount);
+  }
+
   await masterOrder.save({ session });
-
   await Cart.updateOne({ user: masterData.user }, { $set: { items: [] } }, { session });
-
-  // NOTIFICATION: To Admin
-  notifyAdmins({
-      type: 'MASTER_ORDER_PLACED',
-      message: `Master order ${masterOrder.orderId} placed (Total: ₹${masterOrder.totalAmount})`
-  });
 
   return masterOrder;
 };
 
 const placeOrder = async (req, res) => {
-  const { items, addressId, paymentMethod, walletUsed, rewardCouponType, couponCode } = req.body;
+  const { items, addressId, paymentMethod, walletUsed, couponCode } = req.body;
   const userId = req.user.userId;
 
   const session = await mongoose.startSession();
@@ -211,59 +203,64 @@ const placeOrder = async (req, res) => {
   try {
     const userDoc = await User.findById(userId);
     const selectedAddress = userDoc.addresses.id(addressId);
+    if (!selectedAddress) throw new Error("Address not found");
+    
     const zipCode = selectedAddress.zipCode || selectedAddress.zipcode;
     const subOrdersData = await prepareOrderSplitting(items, zipCode);
 
     const subTotal = subOrdersData.reduce((sum, s) => sum + s.subTotal, 0);
     const shipping = subOrdersData.reduce((sum, s) => sum + s.shippingCost, 0);
     const tax = subOrdersData.reduce((sum, s) => sum + s.taxAmount, 0);
-    const codFee = paymentMethod === "COD" ? 50 : 0;
+    const codFee = paymentMethod === "COD" ? 0 : 0; // Removed cod fee as per new rules (₹50 is platform fee from seller)
     
     let couponDiscount = 0;
+    let couponId = null;
+    let finalShipping = shipping;
+
     if (couponCode) {
-        const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: 'active' });
-        if (coupon) {
-            const discountBase = subTotal + tax;
-            if (coupon.dealType === 'percentage') {
-                couponDiscount = Math.round((discountBase * coupon.discount) / 100);
-                if (coupon.maxDiscount) couponDiscount = Math.min(couponDiscount, coupon.maxDiscount);
-            } else if (coupon.dealType === 'fixed') {
-                couponDiscount = Math.min(coupon.discount, discountBase);
-            } else if (coupon.dealType === 'free_shipping') {
-                couponDiscount = shipping;
-            }
+        const validation = await CouponService.validateCoupon(couponCode, userId, items, subTotal, paymentMethod);
+        couponDiscount = validation.discount;
+        couponId = validation.coupon._id;
+        
+        if (validation.coupon.couponType === 'free_shipping') {
+            finalShipping = 0;
+            couponDiscount = shipping; // Free shipping is treated as a discount equal to shipping cost
         }
     }
     
-    let rewardDiscount = 0;
-    if (rewardCouponType) {
-        const { redeemPoints } = require("../Services/GamificationService");
-        const pointsToRedeem = rewardCouponType === '25' ? 250 : (rewardCouponType === '50' ? 500 : 0);
-        if (pointsToRedeem > 0) {
-            if (userDoc.rewardPoints < pointsToRedeem) throw new Error("Insufficient reward points");
-            rewardDiscount = rewardCouponType === '25' ? 25 : 50;
-            // Note: redeemPoints saves user, so we do it outside transaction or within if it handles it.
-            // For simplicity, we'll let redeemPoints handle it.
-            await redeemPoints(userId, pointsToRedeem);
-        }
-    }
-
-    const totalAmount = Math.round(subTotal + tax + shipping + codFee - couponDiscount - rewardDiscount);
+    const totalAmount = Math.round(subTotal + tax + finalShipping - couponDiscount);
 
     let walletDeduction = 0;
     if (walletUsed) {
       if (userDoc.walletBalance < walletUsed) throw new Error("Insufficient wallet balance.");
-      walletDeduction = walletUsed;
+      walletDeduction = Math.min(walletUsed, totalAmount);
       userDoc.walletBalance -= walletDeduction;
       await userDoc.save({ session });
-      await WalletTransaction.create([{ user: userId, amount: walletDeduction, type: "debit", source: "order_payment", description: "Order creation" }], { session });
+      await WalletTransaction.create([{ 
+          user: userId, 
+          amount: walletDeduction, 
+          type: "debit", 
+          source: "order_payment", 
+          description: "Order creation" 
+      }], { session });
     }
 
     const remainingAmount = totalAmount - walletDeduction;
     if (paymentMethod === "Razorpay" && remainingAmount > 0) {
-      const rzpOrder = await razorpay.orders.create({ amount: Math.round(remainingAmount * 100), currency: "INR", receipt: `receipt_${Date.now()}` });
+      const rzpOrder = await razorpay.orders.create({ 
+          amount: Math.round(remainingAmount * 100), 
+          currency: "INR", 
+          receipt: `receipt_${Date.now()}` 
+      });
       await session.commitTransaction();
-      return res.status(200).json({ success: true, razorpayOrder: rzpOrder, walletUsed: walletDeduction, remainingAmount });
+      return res.status(200).json({ 
+          success: true, 
+          razorpayOrder: rzpOrder, 
+          walletUsed: walletDeduction, 
+          remainingAmount,
+          couponCode,
+          couponDiscount
+      });
     }
 
     const masterData = {
@@ -271,21 +268,25 @@ const placeOrder = async (req, res) => {
       totalAmount,
       walletAmount: walletDeduction,
       onlineAmount: 0,
-      codFee,
-      address: { fullName: selectedAddress.fullName, phone: selectedAddress.phone, street: selectedAddress.street, city: selectedAddress.city, state: selectedAddress.state, zipCode, country: selectedAddress.country || "India" },
+      codFee: 0,
+      address: { 
+          fullName: selectedAddress.fullName, 
+          phone: selectedAddress.phone, 
+          street: selectedAddress.street, 
+          city: selectedAddress.city, 
+          state: selectedAddress.state, 
+          zipCode, 
+          country: selectedAddress.country || "India" 
+      },
       paymentMethod: remainingAmount === 0 ? "Wallet" : paymentMethod,
-      paymentStatus: remainingAmount === 0 ? "paid" : "pending",
+      paymentStatus: remainingAmount === 0 ? "paid" : (paymentMethod === "COD" ? "COD_PENDING" : "pending"),
+      coupon: couponId,
+      couponCode: couponCode,
+      couponDiscount: couponDiscount
     };
 
     const masterOrder = await createFinalOrders(session, masterData, subOrdersData);
     await session.commitTransaction();
-    // --- Social Shopping Hook: Mark shared carts as purchased ---
-    try {
-      const { markCartAsPurchased } = require("../Services/SharedCartService");
-      await markCartAsPurchased(userId);
-    } catch (shareErr) {
-      console.error("Shared cart update failed:", shareErr);
-    }
 
     res.status(201).json({ success: true, order: masterOrder });
   } catch (err) {
@@ -295,6 +296,7 @@ const placeOrder = async (req, res) => {
     session.endSession();
   }
 };
+
 
 const cancelSubOrder = async (req, res) => {
   const { subOrderId } = req.params;
@@ -365,9 +367,20 @@ const cancelSubOrder = async (req, res) => {
 
     await subOrder.save();
     
+    // 3. RELEASE COUPON if applicable
+    if (masterOrder.coupon) {
+      // Rule: For COD cancellations before delivery, coupon is released.
+      // Rule: If it's the last sub-order being cancelled, release coupon.
+      const activeSubs = await SubOrder.countDocuments({ masterOrder: masterOrder._id, status: { $ne: 'cancelled' } });
+      if (activeSubs === 0 || masterOrder.paymentMethod === "COD") {
+        await CouponService.releaseCoupon(masterOrder._id);
+      }
+    }
+
     // Update Master Order Status
     masterOrder.status = await masterOrder.computeStatus();
     await masterOrder.save();
+
 
     // NOTIFICATIONS
     sendNotification({
@@ -533,8 +546,17 @@ const updateSubOrderStatus = async (req, res) => {
             }
           }
         }
+
+        // --- Referral Hook: Credit referrer if this is the first order ---
+        await ReferralService.processFirstOrderReward(masterOrderForCompute.user, masterOrderForCompute._id);
       } else if (masterOrderForCompute.status === "returned") {
         await onOrderReturned(masterOrderForCompute._id);
+      }
+
+      // --- Coupon Hook: Release coupon if entire order is returned or cancelled ---
+      if (masterOrderForCompute.coupon && (masterOrderForCompute.status === "returned" || masterOrderForCompute.status === "cancelled")) {
+        const CouponService = require("../Services/Coupon.Service");
+        await CouponService.releaseCoupon(masterOrderForCompute._id);
       }
     } catch (gamiError) {
       console.error("Gamification Hook Error:", gamiError);
@@ -590,34 +612,56 @@ const verifyPayment = async (req, res) => {
     const codFee = 0; // Online payment, no COD fee
 
     let couponDiscount = 0;
+    let couponId = null;
+    let finalShipping = shipping;
+
     if (orderData.couponCode) {
-        const coupon = await Coupon.findOne({ code: orderData.couponCode.toUpperCase(), status: 'active' });
-        if (coupon) {
-            const discountBase = subTotal + tax;
-            if (coupon.dealType === 'percentage') {
-                couponDiscount = Math.round((discountBase * coupon.discount) / 100);
-                if (coupon.maxDiscount) couponDiscount = Math.min(couponDiscount, coupon.maxDiscount);
-            } else if (coupon.dealType === 'fixed') {
-                couponDiscount = Math.min(coupon.discount, discountBase);
-            } else if (coupon.dealType === 'free_shipping') {
-                couponDiscount = shipping;
-            }
+        // We validate again to get the correct couponId and discount
+        const validation = await CouponService.validateCoupon(orderData.couponCode, userId, orderData.items, subTotal, "Razorpay");
+        couponDiscount = validation.discount;
+        couponId = validation.coupon._id;
+
+        if (validation.coupon.couponType === 'free_shipping') {
+            finalShipping = 0;
+            couponDiscount = shipping;
         }
     }
 
-    let rewardDiscount = 0;
-    if (orderData.rewardCouponType) {
-        rewardDiscount = orderData.rewardCouponType === '25' ? 25 : 50;
-    }
-
-    const totalAmount = Math.round(subTotal + tax + shipping + codFee - couponDiscount - rewardDiscount);
+    const totalAmount = Math.round(subTotal + tax + finalShipping - couponDiscount);
 
     const masterData = {
-      user: userId, totalAmount, codFee, address: { fullName: selectedAddress.fullName, phone: selectedAddress.phone, street: selectedAddress.street, city: selectedAddress.city, state: selectedAddress.state, zipCode, country: selectedAddress.country || "India" },
-      paymentMethod: orderData.walletUsed > 0 ? "Partial" : "Razorpay", paymentStatus: "paid", razorpayOrderId: razorpay_order_id, razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature,
+      user: userId, 
+      totalAmount, 
+      codFee: 0, 
+      address: { 
+          fullName: selectedAddress.fullName, 
+          phone: selectedAddress.phone, 
+          street: selectedAddress.street, 
+          city: selectedAddress.city, 
+          state: selectedAddress.state, 
+          zipCode, 
+          country: selectedAddress.country || "India" 
+      },
+      paymentMethod: orderData.walletUsed > 0 ? "Partial" : "Razorpay", 
+      paymentStatus: "paid", 
+      razorpayOrderId: razorpay_order_id, 
+      razorpayPaymentId: razorpay_payment_id, 
+      razorpaySignature: razorpay_signature,
+      coupon: couponId,
+      couponCode: orderData.couponCode,
+      couponDiscount: couponDiscount
     };
 
     const masterOrder = await createFinalOrders(session, masterData, subOrdersData);
+    
+    // Mark coupon as used since payment is verified
+    if (couponId) {
+        await CouponService.markAsUsed(masterOrder._id);
+    }
+
+    // --- Referral Hook: Credit referrer if this is the first order ---
+    await ReferralService.processFirstOrderReward(userId, masterOrder._id);
+
     await session.commitTransaction();
     // --- Social Shopping Hook: Mark shared carts as purchased ---
     try {

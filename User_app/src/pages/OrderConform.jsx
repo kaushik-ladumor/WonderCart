@@ -412,8 +412,14 @@ const OrderConfirmationPage = () => {
             <div className="w-72 space-y-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500 font-medium uppercase tracking-wider text-[10px]">Net Amount</span>
-                <span className="font-bold text-[#11182d]">₹{order.totalAmount?.toLocaleString()}</span>
+                <span className="font-bold text-[#11182d]">₹{Math.round(order.totalAmount + (order.couponDiscount || 0) - (order.shippingCost || 0)).toLocaleString()}</span>
               </div>
+              {order.couponDiscount > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-emerald-600 font-bold uppercase tracking-wider text-[10px]">Coupon Savings</span>
+                  <span className="font-bold text-emerald-600">-₹{Math.round(order.couponDiscount).toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center text-sm">
                  <span className="text-gray-500 font-medium uppercase tracking-wider text-[10px]">Shipping Charges</span>
                  <span className="text-emerald-600 font-bold uppercase text-[10px]">FREE</span>
@@ -640,8 +646,9 @@ const OrderConfirmationPage = () => {
                           { label: 'Date', val: new Date(order.createdAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }), icon: Calendar },
                           { label: 'Payment', val: order.paymentMethod || "Direct Payment", icon: PaymentIcon },
                           { label: 'Payment State', val: order.paymentStatus?.toUpperCase() || 'VALIDATED', isBadge: true },
-                          { label: 'Tracking', val: order.paymentStatus === 'paid' ? 'READY TO SHIP' : 'PROCESSING', isTracking: true }
-                        ].map((row, i) => (
+                          { label: 'Tracking', val: order.paymentStatus === 'paid' ? 'READY TO SHIP' : 'PROCESSING', isTracking: true },
+                          order.couponDiscount > 0 ? { label: 'Coupon Discount', val: `-₹${order.couponDiscount}`, isSavings: true } : null
+                        ].filter(Boolean).map((row, i) => (
                           <div key={i} className="flex justify-between items-center group">
                              <span className="text-[9px] font-semibold text-[#6d7892] uppercase tracking-[0.1em]">{row.label}</span>
                              {row.isBadge ? (
@@ -650,6 +657,8 @@ const OrderConfirmationPage = () => {
                                 </span>
                              ) : row.isTracking ? (
                                 <span className="text-[9px] font-semibold text-[#0f49d7] uppercase tracking-widest italic">{row.val}</span>
+                             ) : row.isSavings ? (
+                                <span className="text-[0.78rem] font-bold text-emerald-600">{row.val}</span>
                              ) : (
                                 <span className="text-[0.78rem] font-semibold text-[#11182d]">{row.val}</span>
                              )}

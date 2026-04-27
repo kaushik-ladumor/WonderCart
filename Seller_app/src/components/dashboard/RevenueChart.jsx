@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, LabelList } from 'recharts';
 
 const RUPEE = '\u20B9';
 
@@ -15,15 +15,18 @@ const getWeek = (date) => {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-[18px] border border-[#e5e9f5] bg-white p-3 text-sm shadow-[0_16px_30px_rgba(18,36,84,0.08)]">
-        <p className="mb-2 font-semibold text-[#1a2238]">{label}</p>
-        <p className="mb-1 font-medium text-[#6e82b5]">
-          Revenue: {RUPEE}
-          {Number(payload[0]?.value || 0).toLocaleString('en-IN')}
-        </p>
-        <p className="font-medium text-[#2156d8]">
-          Orders: {Number(payload[1]?.value || 0).toLocaleString('en-IN')}
-        </p>
+      <div className="rounded-3xl border-none bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.12)] min-w-[160px]">
+        <p className="mb-3 text-[15px] font-bold text-[#1e293b]">{label}</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[13px] font-semibold text-[#64748b]">Revenue:</span>
+            <span className="text-[14px] font-bold text-[#334155]">{RUPEE}{Number(payload[0]?.value || 0).toLocaleString('en-IN')}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[13px] font-semibold text-[#64748b]">Orders:</span>
+            <span className="text-[14px] font-bold text-[#2563eb]">{Number(payload[1]?.value || 0).toLocaleString('en-IN')}</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -37,7 +40,7 @@ const RevenueChart = ({ data = [], isLoading }) => {
     if (!data || data.length === 0) return [];
 
     if (view === 'daily') {
-      return data.slice(-14).map(item => {
+      return data.slice(-7).map(item => {
         const date = new Date(item._id || item.label);
         const isValidDate = !isNaN(date.getTime());
         
@@ -83,14 +86,14 @@ const RevenueChart = ({ data = [], isLoading }) => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-[350px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
-        <div className="mb-2 h-6 w-52 rounded bg-[#edf1fb] animate-pulse" />
-        <div className="mb-8 h-4 w-40 rounded bg-[#edf1fb] animate-pulse" />
-        <div className="flex flex-1 items-end justify-between gap-4 px-2">
+      <div className="flex h-full min-h-[420px] flex-col rounded-[32px] border border-[#f1f5f9] bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.03)]">
+        <div className="mb-3 h-7 w-60 rounded-full bg-[#f8fafc] animate-pulse" />
+        <div className="mb-10 h-5 w-48 rounded-full bg-[#f8fafc] animate-pulse" />
+        <div className="flex flex-1 items-end justify-between gap-6 px-4">
           {[1, 2, 3, 4, 5, 6, 7].map((item) => (
             <div
               key={item}
-              className="w-full rounded-t-[12px] bg-[#edf1fb] animate-pulse"
+              className="w-full rounded-t-full bg-[#f8fafc] animate-pulse"
               style={{ height: `${Math.random() * 60 + 20}%` }}
             />
           ))}
@@ -100,51 +103,91 @@ const RevenueChart = ({ data = [], isLoading }) => {
   }
 
   return (
-    <div className="flex h-[400px] flex-col rounded-[28px] border border-[#e7ebf5] bg-white p-7 shadow-[0_16px_40px_rgba(18,36,84,0.06)]">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h3 className="text-[18px] font-semibold text-[#141b2d]">Revenue &amp; Orders Performance</h3>
-          <p className="mt-1 text-sm text-[#66728d]">
-            {view.charAt(0).toUpperCase() + view.slice(1)} view compared across revenue and order count.
-          </p>
-        </div>
-        <div className="inline-flex rounded-full bg-[#eef2ff] p-1 text-[11px] font-bold uppercase tracking-wider">
-          {['daily', 'weekly', 'monthly'].map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`rounded-full px-4 py-1.5 transition-all duration-300 ${
-                view === v ? 'bg-[#2156d8] text-white shadow-lg' : 'text-[#68739d] hover:text-[#2156d8]'
-              }`}
-            >
-              {v}
-            </button>
-          ))}
+    <div className="flex h-[450px] flex-col rounded-[32px] border border-[#f1f5f9] bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.03)]">
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+          <div>
+            <h3 className="text-[22px] font-black tracking-tight text-[#0f172a]">Revenue &amp; Orders Performance</h3>
+            <p className="mt-1 text-[15px] font-medium text-[#64748b]">
+              {view.charAt(0).toUpperCase() + view.slice(1)} view compared across revenue and order count.
+            </p>
+          </div>
+          <div className="inline-flex rounded-full bg-[#f1f5f9] p-1 shadow-inner">
+            {['daily', 'weekly', 'monthly'].map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`rounded-full px-6 py-2 text-[12px] font-bold uppercase tracking-wider transition-all duration-500 ease-out ${
+                  view === v 
+                    ? 'bg-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)]' 
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {!processedData || processedData.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center text-sm text-[#75819d]">
-          No chart data available for this period.
+        <div className="flex flex-1 items-center justify-center text-sm font-medium text-[#94a3b8]">
+          No performance data available for this period.
         </div>
       ) : (
-        <div className="mt-6 flex-1">
-          <ResponsiveContainer width="100%" height={290}>
-            <BarChart data={processedData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }} barCategoryGap="20%">
-              <CartesianGrid vertical={false} stroke="#edf1f8" />
+        <div className="mt-4 flex-1">
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={processedData} margin={{ top: 25, right: 30, left: 10, bottom: 10 }}>
+              <CartesianGrid vertical={false} stroke="#e2e8f0" strokeOpacity={0.8} />
               <XAxis
                 dataKey="label"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#4b556d', fontSize: 10, fontWeight: 600 }}
-                dy={10}
+                axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                tickLine={{ stroke: '#94a3b8' }}
+                tick={{ fill: '#0f172a', fontSize: 12, fontWeight: 700 }}
+                dy={15}
+                label={{ value: view === 'daily' ? 'Days' : view === 'weekly' ? 'Weeks' : 'Months', position: 'insideBottomRight', offset: -10, fontSize: 12, fontWeight: 800, fill: '#0f172a' }}
               />
-              <YAxis yAxisId="revenue" hide />
+              <YAxis 
+                yAxisId="revenue" 
+                axisLine={{ stroke: '#94a3b8', strokeWidth: 1.5 }}
+                tickLine={{ stroke: '#94a3b8' }}
+                tick={{ fill: '#0f172a', fontSize: 12, fontWeight: 700 }}
+                tickFormatter={(value) => `${RUPEE}${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`}
+                label={{ value: 'Revenue', angle: -90, position: 'insideLeft', fontSize: 12, fontWeight: 800, fill: '#0f172a' }}
+              />
               <YAxis yAxisId="orders" hide />
-              <Tooltip cursor={{ fill: '#f8fafd' }} content={<CustomTooltip />} />
-              <Bar yAxisId="revenue" dataKey="revenue" fill="#c7d5f7" radius={[10, 10, 0, 0]} maxBarSize={40} />
-              <Bar yAxisId="orders" dataKey="orders" fill="#2156d8" radius={[10, 10, 0, 0]} maxBarSize={24} />
-            </BarChart>
+              <Tooltip 
+                cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '3 3' }} 
+                content={<CustomTooltip />} 
+              />
+              <Line 
+                yAxisId="revenue"
+                type="linear" 
+                dataKey="revenue" 
+                stroke="#2563eb" 
+                strokeWidth={2.5}
+                dot={{ r: 5, fill: '#f97316', strokeWidth: 0 }}
+                activeDot={{ r: 7, fill: '#f97316', stroke: '#fff', strokeWidth: 2 }}
+              >
+                <LabelList 
+                  dataKey="revenue" 
+                  position="top" 
+                  offset={12} 
+                  formatter={(value) => `${RUPEE}${value >= 1000 ? (value/1000).toFixed(1) + 'k' : value}`}
+                  style={{ fill: '#f97316', fontSize: 12, fontWeight: 800 }} 
+                />
+              </Line>
+              <Line 
+                yAxisId="orders"
+                type="linear" 
+                dataKey="orders" 
+                stroke="#94a3b8" 
+                strokeWidth={1.5}
+                strokeDasharray="5 5"
+                dot={{ r: 4, fill: '#64748b', strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#64748b' }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       )}

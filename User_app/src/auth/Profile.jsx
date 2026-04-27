@@ -112,7 +112,7 @@ const Profile = () => {
         setLoadingCoupons(true);
         const token = localStorage.getItem("token");
         if (!token) return;
-        const response = await axios.get(`${API_URL}/user/coupons`, {
+        const response = await axios.get(`${API_URL}/coupon/available`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCoupons(response.data.coupons || []);

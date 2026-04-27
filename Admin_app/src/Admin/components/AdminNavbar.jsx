@@ -77,7 +77,10 @@ const AdminNavbar = () => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get(`${API_URL}/notifications`);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (res.data.success) {
         setNotifications(res.data.data.map((n) => ({
           _id: n._id,
@@ -96,7 +99,10 @@ const AdminNavbar = () => {
     setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
 
     try {
-      await axios.patch(`${API_URL}/notifications/${id}/read`);
+      const token = localStorage.getItem("token");
+      await axios.patch(`${API_URL}/notifications/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
     } catch (err) {
       console.error("Mark as read error:", err);
       // Revert if needed (optional for simple read/unread)
@@ -111,7 +117,10 @@ const AdminNavbar = () => {
     toast.success("Notifications cleared");
 
     try {
-      await axios.delete(`${API_URL}/notifications/clear`);
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/notifications/clear`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
     } catch (err) {
       console.error("Clear all error:", err);
       // Revert on error

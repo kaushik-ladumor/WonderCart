@@ -71,16 +71,21 @@ const masterOrderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "SubOrder"
   }],
-  // --- Gamification System Fields ---
-  pointsAwarded: {
-    type: Boolean,
-    default: false,
+  // --- Coupon System Fields ---
+  coupon: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Coupon",
   },
-  pointsEarned: {
+  couponCode: String,
+  couponDiscount: {
     type: Number,
     default: 0,
   },
-  // ----------------------------------
+  couponDetails: {
+    type: Object, // Store snapshot of coupon rules at time of purchase
+  },
+  // -----------------------------
+
 }, { timestamps: true });
 
 masterOrderSchema.methods.computeStatus = async function() {

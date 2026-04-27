@@ -70,7 +70,7 @@ function Shop() {
     const params = new URLSearchParams(location.search);
     const categoryFromUrl = params.get("category");
     const queryFromUrl = params.get("q");
-    
+
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
     } else {
@@ -322,8 +322,8 @@ function Shop() {
                 >
                   <span
                     className={`flex h-5 w-5 items-center justify-center rounded-md border ${active
-                        ? "border-[#0f49d7] bg-[#0f49d7] text-white"
-                        : "border-[#b6c1d7] bg-white"
+                      ? "border-[#0f49d7] bg-[#0f49d7] text-white"
+                      : "border-[#b6c1d7] bg-white"
                       }`}
                   >
                     {active && <Check className="h-3.5 w-3.5" />}
@@ -375,8 +375,8 @@ function Shop() {
               >
                 <span
                   className={`h-5 w-5 rounded-full border ${minRating === rating
-                      ? "border-[#0f49d7] bg-[#0f49d7]"
-                      : "border-[#b6c1d7] bg-white"
+                    ? "border-[#0f49d7] bg-[#0f49d7]"
+                    : "border-[#b6c1d7] bg-white"
                     }`}
                 />
                 <span className="text-[0.88rem] text-[#25324d] font-medium">
@@ -401,7 +401,7 @@ function Shop() {
             <SlidersHorizontal className="h-4 w-4" />
             Filters
           </button>
-          
+
           {/* Mobile localized search bar removed */}
         </div>
 
@@ -522,8 +522,8 @@ function Shop() {
                             key={item}
                             onClick={() => setPage(item)}
                             className={`flex h-9 min-w-[36px] items-center justify-center rounded-[12px] px-2 text-[0.88rem] ${currentPage === item
-                                ? "bg-[#0f49d7] text-white"
-                                : "bg-white text-[#11182d]"
+                              ? "bg-[#0f49d7] text-white"
+                              : "bg-white text-[#11182d]"
                               }`}
                           >
                             {item}

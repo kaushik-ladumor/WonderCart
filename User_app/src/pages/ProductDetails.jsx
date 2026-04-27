@@ -53,6 +53,9 @@ const ProductDetail = () => {
   const [sortBy, setSortBy] = useState("latest");
   const [selectedReviewImage, setSelectedReviewImage] = useState(null);
   const [activeDeal, setActiveDeal] = useState(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isEligible, setIsEligible] = useState(false);
+  const [eligibleOrderId, setEligibleOrderId] = useState(null);
 
   // Decode user ID from JWT
   useEffect(() => {
@@ -243,12 +246,58 @@ const ProductDetail = () => {
         const res = await axios.get(`${API_URL}/review/${id}`);
         const reviewsData = res.data.data?.reviews || res.data.reviews || [];
         setReviews(reviewsData);
+        
+        // Sync stats to product state to ensure UI is up to date
+        if (res.data.data?.reviewCount !== undefined) {
+          setProduct(prev => ({
+            ...prev,
+            reviewCount: res.data.data.reviewCount,
+            ratingAverage: res.data.data.ratingAverage
+          }));
+        }
       } catch (err) {
         setReviews([]);
       }
     };
     fetchReviews();
   }, [id, refreshKey]);
+
+  // Check review eligibility
+  useEffect(() => {
+    const checkEligibility = async () => {
+      if (!token || !id) return;
+      try {
+        // We need an orderItemId to review, but on product page we check if user BOUGHT it ever.
+        // For simplicity, we'll look for any delivered sub-order item for this product that isn't reviewed.
+        const res = await axios.get(`${API_URL}/orders/my-orders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const orders = res.data.orders || [];
+        for (const order of orders) {
+          for (const subOrder of (order.subOrders || [])) {
+            if (subOrder.status === 'delivered') {
+               const item = subOrder.items.find(i => String(i.productId._id || i.productId) === String(id));
+               if (item) {
+                 // Check if already reviewed
+                 const revCheck = await axios.get(`${API_URL}/review/check-eligibility?productId=${id}&orderItemId=${item._id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                 });
+                 if (revCheck.data.eligible) {
+                    setIsEligible(true);
+                    setEligibleOrderId(item._id);
+                    return;
+                 }
+               }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Eligibility check failed", err);
+      }
+    };
+    checkEligibility();
+  }, [id, token, refreshKey]);
 
   const fetchRecommended = async (category, productId) => {
     try {
@@ -530,7 +579,7 @@ const ProductDetail = () => {
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-400/10 rounded-md">
                       <Star className="w-3 h-3 fill-orange-400 text-orange-400" />
-                      <span className="text-[11px] font-bold text-orange-400">{product.seller.average_rating || "0.0"}</span>
+                      <span className="text-[11px] font-bold text-orange-400">{(product.seller.average_rating || 0).toFixed(1)}</span>
                     </div>
                     <span className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-wider">
                       ({product.seller.total_reviews || 0} SHOP REVIEWS)
@@ -653,152 +702,172 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {reviews.length > 0 && (
-        <div id="reviews-section" className="py-16 border-t border-[#d7dcea] mt-10">
-          <div className="w-full">
-            <div className="">
-              <h3 className="text-[1.25rem] font-semibold mb-12 text-[#11182d] tracking-tight">Customer Feedbacks</h3>
-              {/* Rating Summary & Breakdown */}
-              <div className="max-w-4xl mx-auto mb-16 bg-[#f8fafc] rounded-[32px] p-8 sm:p-12 border border-[#f1f5f9] flex flex-col md:flex-row items-center gap-12 md:gap-20">
-                <div className="text-center shrink-0">
-                  <div className="flex items-baseline justify-center gap-1.5 mb-2">
-                    <span className="text-6xl font-bold text-[#11182d] tracking-tighter">{product.ratingAverage || "0.0"}</span>
-                    <span className="text-[1.1rem] font-bold text-[#6d7892] opacity-40">/ 5.0</span>
-                  </div>
-                  <div className="flex gap-1.5 justify-center mb-6">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${i < Math.round(product.ratingAverage || 0) ? "text-[#ff9c07] fill-[#ff9c07]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-[0.78rem] font-bold text-[#6d7892] uppercase tracking-widest mb-6">Based on {product.reviewCount || 0} reviews</p>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ecfdf5] rounded-full border border-[#d1fae5]">
-                    <Check className="w-3.5 h-3.5 text-[#10b981]" />
-                    <span className="text-[9px] font-bold text-[#10b981] uppercase tracking-wider">Verified Authentic</span>
-                  </div>
+      <div id="reviews-section" className="py-16 border-t border-[#d7dcea] mt-10">
+        <div className="w-full">
+          <div className="">
+            <div className="flex justify-between items-center mb-12">
+              <h3 className="text-[1.25rem] font-semibold text-[#11182d] tracking-tight">Customer Feedbacks ({reviews.length})</h3>
+              {isEligible && (
+                <button 
+                  onClick={() => setIsReviewModalOpen(true)}
+                  className="px-6 py-2.5 bg-[#0f49d7] text-white rounded-xl text-[0.74rem] font-bold uppercase tracking-widest shadow-md hover:bg-[#0d3ebb] transition-colors"
+                >
+                  Write a Review
+                </button>
+              )}
+            </div>
+            
+            {/* Rating Summary & Breakdown */}
+            <div className="max-w-4xl mx-auto mb-16 bg-[#f8fafc] rounded-[32px] p-8 sm:p-12 border border-[#f1f5f9] flex flex-col md:flex-row items-center gap-12 md:gap-20">
+              <div className="text-center shrink-0">
+                <div className="flex items-baseline justify-center gap-1.5 mb-2">
+                  <span className="text-6xl font-bold text-[#11182d] tracking-tighter">{(product.ratingAverage || 0).toFixed(1)}</span>
+                  <span className="text-[1.1rem] font-bold text-[#6d7892] opacity-40">/ 5.0</span>
                 </div>
-
-                <div className="flex-1 w-full space-y-4">
-                  {[5, 4, 3, 2, 1].map((star) => {
-                    const count = reviews.filter((r) => r.rating === star).length;
-                    const percent = product.reviewCount > 0 ? (count / product.reviewCount) * 100 : 0;
-                    return (
-                      <div key={star} className="flex items-center gap-5 group">
-                        <span className="text-[0.82rem] font-bold text-[#11182d] w-3">{star}</span>
-                        <div className="flex-1 h-2.5 bg-[#f1f5f9] rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-[#0f49d7]"
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                        <span className="text-[0.82rem] font-bold text-[#6d7892] w-8 text-right shrink-0">{count}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Filters & Sorting */}
-              <div className="flex flex-wrap justify-between items-center gap-6 mb-12 pb-6 border-b border-[#d7dcea]">
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide">
-                  <button
-                    onClick={() => setStarFilter(null)}
-                    className={`px-6 py-2.5 rounded-xl text-[0.74rem] font-semibold border-2 ${!starFilter ? "bg-[#11182d] border-[#11182d] text-white" : "bg-white border-[#d7dcea] text-[#6d7892]"}`}
-                  >
-                    All Reviews
-                  </button>
-                  {[5, 4, 3, 2, 1].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setStarFilter(s)}
-                      className={`px-5 py-2.5 rounded-xl text-[0.74rem] font-semibold flex items-center gap-2 border-2 ${starFilter === s ? "bg-[#0f49d7] border-[#0f49d7] text-white" : "bg-white border-[#d7dcea] text-[#6d7892]"}`}
-                    >
-                      {s} <Star className={`w-3.5 h-3.5 ${starFilter === s ? "fill-white" : ""}`} />
-                    </button>
+                <div className="flex gap-1.5 justify-center mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${i < Math.round(product.ratingAverage || 0) ? "text-[#ff9c07] fill-[#ff9c07]" : "text-[#e2e8f0] fill-[#e2e8f0]"}`}
+                    />
                   ))}
                 </div>
-
-                <div className="flex items-center gap-4">
-                  <span className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-widest">SORT BY:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-transparent text-[0.78rem] font-semibold text-[#11182d] focus:outline-none cursor-pointer border-b-2 border-[#0f49d7] pb-1"
-                  >
-                    <option value="latest">Latest First</option>
-                    <option value="highest">Highest Rating</option>
-                    <option value="lowest">Lowest Rating</option>
-                  </select>
+                <p className="text-[0.78rem] font-bold text-[#6d7892] uppercase tracking-widest mb-6">Based on {product.reviewCount || 0} reviews</p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ecfdf5] rounded-full border border-[#d1fae5]">
+                  <Check className="w-3.5 h-3.5 text-[#10b981]" />
+                  <span className="text-[9px] font-bold text-[#10b981] uppercase tracking-wider">Verified Authentic</span>
                 </div>
               </div>
 
-              {/* Reviews List */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {reviews
-                  .filter((r) => !starFilter || r.rating === starFilter)
-                  .sort((a, b) => {
-                    if (sortBy === "highest") return b.rating - a.rating;
-                    if (sortBy === "lowest") return a.rating - b.rating;
-                    return new Date(b.createdAt) - new Date(a.createdAt);
-                  })
-                  .map((rev) => (
-                    <div
-                      key={rev._id}
-                      className="group bg-[#f8fafc] border border-[#d7dcea] rounded-3xl p-6 flex flex-col h-full"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-white border border-[#d7dcea] flex items-center justify-center text-[0.8rem] font-semibold text-[#0f49d7] shrink-0">
-                            {rev.user?.username?.[0]?.toUpperCase() || rev.user?.name?.[0]?.toUpperCase() || "U"}
-                          </div>
-                          <div>
-                            <p className="text-[0.82rem] font-bold text-[#11182d] line-clamp-1">
-                              {rev.user?.username || rev.user?.name || "Anonymous"}
-                            </p>
-                            <p className="text-[9px] font-semibold text-[#6d7892] uppercase">
-                              {new Date(rev.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${i < rev.rating ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
-                            />
-                          ))}
-                        </div>
+              <div className="flex-1 w-full space-y-4">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = reviews.filter((r) => r.rating === star).length;
+                  const percent = product.reviewCount > 0 ? (count / product.reviewCount) * 100 : 0;
+                  return (
+                    <div key={star} className="flex items-center gap-5 group">
+                      <span className="text-[0.82rem] font-bold text-[#11182d] w-3">{star}</span>
+                      <div className="flex-1 h-2.5 bg-[#f1f5f9] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[#0f49d7]"
+                          style={{ width: `${percent}%` }}
+                        />
                       </div>
-
-                      <div className="flex-1">
-                        <p className="text-[0.82rem] text-[#6d7892] leading-relaxed mb-4 line-clamp-4">
-                          {rev.comment}
-                        </p>
-
-                        {rev.images && rev.images.length > 0 && (
-                          <div className="flex gap-2 mb-2">
-                            {rev.images.map((img, idx) => (
-                              <div
-                                key={idx}
-                                className="w-16 h-16 rounded-xl overflow-hidden border border-[#d7dcea] cursor-zoom-in shrink-0"
-                                onClick={() => setSelectedReviewImage(img)}
-                              >
-                                <img src={img} alt="Review" className="w-full h-full object-cover" />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <span className="text-[0.82rem] font-bold text-[#6d7892] w-8 text-right shrink-0">{count}</span>
                     </div>
-                  ))}
-
+                  );
+                })}
               </div>
             </div>
+
+            {reviews.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-[24px] border border-dashed border-[#d7dcea]">
+                <div className="w-12 h-12 bg-[#f8faff] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Star className="w-6 h-6 text-[#94a3b8]" />
+                </div>
+                <h4 className="text-[1rem] font-semibold text-[#11182d]">No reviews yet</h4>
+                <p className="text-[0.82rem] text-[#6d7892] mt-1">Be the first to share your thoughts about this product.</p>
+              </div>
+            ) : (
+              <>
+                {/* Filters & Sorting */}
+                <div className="flex flex-wrap justify-between items-center gap-6 mb-12 pb-6 border-b border-[#d7dcea]">
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+                    <button
+                      onClick={() => setStarFilter(null)}
+                      className={`px-6 py-2.5 rounded-xl text-[0.74rem] font-semibold border-2 ${!starFilter ? "bg-[#11182d] border-[#11182d] text-white" : "bg-white border-[#d7dcea] text-[#6d7892]"}`}
+                    >
+                      All Reviews
+                    </button>
+                    {[5, 4, 3, 2, 1].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setStarFilter(s)}
+                        className={`px-5 py-2.5 rounded-xl text-[0.74rem] font-semibold flex items-center gap-2 border-2 ${starFilter === s ? "bg-[#0f49d7] border-[#0f49d7] text-white" : "bg-white border-[#d7dcea] text-[#6d7892]"}`}
+                      >
+                        {s} <Star className={`w-3.5 h-3.5 ${starFilter === s ? "fill-white" : ""}`} />
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-semibold text-[#6d7892] uppercase tracking-widest">SORT BY:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="bg-transparent text-[0.78rem] font-semibold text-[#11182d] focus:outline-none cursor-pointer border-b-2 border-[#0f49d7] pb-1"
+                    >
+                      <option value="latest">Latest First</option>
+                      <option value="highest">Highest Rating</option>
+                      <option value="lowest">Lowest Rating</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Reviews List */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {reviews
+                    .filter((r) => !starFilter || r.rating === starFilter)
+                    .sort((a, b) => {
+                      if (sortBy === "highest") return b.rating - a.rating;
+                      if (sortBy === "lowest") return a.rating - b.rating;
+                      return new Date(b.createdAt) - new Date(a.createdAt);
+                    })
+                    .map((rev) => (
+                      <div
+                        key={rev._id}
+                        className="group bg-[#f8fafc] border border-[#d7dcea] rounded-3xl p-6 flex flex-col h-full"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white border border-[#d7dcea] flex items-center justify-center text-[0.8rem] font-semibold text-[#0f49d7] shrink-0">
+                              {rev.user?.username?.[0]?.toUpperCase() || rev.user?.name?.[0]?.toUpperCase() || "U"}
+                            </div>
+                            <div>
+                              <p className="text-[0.82rem] font-bold text-[#11182d] line-clamp-1">
+                                {rev.user?.username || rev.user?.name || "Anonymous"}
+                              </p>
+                              <p className="text-[9px] font-semibold text-[#6d7892] uppercase">
+                                {new Date(rev.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3 h-3 ${i < rev.rating ? "text-orange-400 fill-orange-400" : "text-gray-200 fill-gray-200"}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex-1">
+                          <p className="text-[0.82rem] text-[#6d7892] leading-relaxed mb-4 line-clamp-4">
+                            {rev.comment}
+                          </p>
+
+                          {rev.images && rev.images.length > 0 && (
+                            <div className="flex gap-2 mb-2">
+                              {rev.images.map((img, idx) => (
+                                <div
+                                  key={idx}
+                                  className="w-16 h-16 rounded-xl overflow-hidden border border-[#d7dcea] cursor-zoom-in shrink-0"
+                                  onClick={() => setSelectedReviewImage(img)}
+                                >
+                                  <img src={img} alt="Review" className="w-full h-full object-cover" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Recommended Section */}
       {recommendedProducts.length > 0 && (
@@ -853,9 +922,15 @@ const ProductDetail = () => {
       <Review
         id={id}
         productName={product.name}
-        productImage={product.images?.[0]}
-        orderItemId={null}
-        onSuccess={refreshReviews}
+        productImage={images[0]}
+        orderItemId={eligibleOrderId}
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        onSuccess={() => {
+          setIsReviewModalOpen(false);
+          setIsEligible(false);
+          refreshReviews();
+        }}
       />
     </div>
   );

@@ -46,6 +46,10 @@ mainRouter.use("/email", emailRouter);
 mainRouter.use("/chat", ChatRouter);
 mainRouter.use("/visual-search", visualSearchRouter);
 mainRouter.use("/api/top-sellers", topSellerRouter);
+const couponRouter = require("./Coupon.Route");
+
+mainRouter.use("/coupon", couponRouter);
 mainRouter.use("/api/deals", dealRoutes);
+
 
 module.exports = mainRouter;

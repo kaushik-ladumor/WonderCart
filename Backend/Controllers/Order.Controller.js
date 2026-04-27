@@ -143,13 +143,9 @@ const createOrder = async (req, res) => {
           return res.status(400).json({ success: false, message: "You are not eligible for this coupon" });
         }
 
-        const usageCount = await Order.countDocuments({
-          user: userId,
-          coupon: coupon._id,
-          status: { $ne: "cancelled" }
-        });
-        if (usageCount >= (coupon.perUserLimit || 1)) {
-          return res.status(400).json({ success: false, message: "Usage limit exceeded for this coupon" });
+        const hasUsed = coupon.usedBy?.some(id => id.toString() === userId.toString());
+        if (hasUsed) {
+          return res.status(400).json({ success: false, message: "You have already used this coupon" });
         }
 
         if (coupon.minOrderValue > 0 && subTotal < coupon.minOrderValue) {
@@ -402,15 +398,44 @@ const handleOrderCreation = async (req, res, data) => {
       combinedTotal += (subTotal + tax + shipping);
     });
 
-    // Handle coupon on the combined total
+    // Handle coupon on the combined total and MARK AS USED
     let finalDiscount = 0;
     let couponId = null;
     if (couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: "active" });
       if (coupon) {
-        // ... (simplified logic for now to keep focus on sub-orders)
-        finalDiscount = 0; // In a real app, distribute discount across sub-orders proportional to sub-totals
+        // Recalculate discount based on sub-orders subtotal to ensure accuracy
+        const totalSubTotal = subOrders.reduce((sum, so) => sum + so.subTotal, 0);
+        let applicableBase = totalSubTotal;
+
+        if (coupon.targetCategory) {
+          const targetCat = coupon.targetCategory.toLowerCase().trim();
+          applicableBase = subOrders.reduce((sum, so) => {
+            const catItems = so.items.filter(item => item.category?.toLowerCase().trim() === targetCat);
+            return sum + catItems.reduce((s, it) => s + (it.price * it.quantity), 0);
+          }, 0);
+        }
+
+        const tax = Math.round(applicableBase * 0.18);
+        const shipping = totalSubTotal < 999 ? 50 : 0;
+        let baseForDiscount = applicableBase + tax;
+        if (!coupon.targetCategory) baseForDiscount += shipping;
+
+        if (coupon.dealType === 'percentage') {
+          finalDiscount = Math.round((baseForDiscount * coupon.discount) / 100);
+          if (coupon.maxDiscount && finalDiscount > coupon.maxDiscount) finalDiscount = coupon.maxDiscount;
+        } else if (coupon.dealType === 'fixed') {
+          finalDiscount = Math.round(Math.min(coupon.discount, baseForDiscount));
+        } else if (coupon.dealType === 'free_shipping') {
+          finalDiscount = shipping;
+        }
+
         couponId = coupon._id;
+
+        // --- CRITICAL: Mark Coupon as Used by this User ---
+        await Coupon.findByIdAndUpdate(couponId, {
+          $addToSet: { usedBy: userId }
+        });
       }
     }
 
@@ -725,7 +750,7 @@ const updateSubOrderStatus = async (req, res) => {
     };
 
     const currentStatus = subOrder.status;
-    
+
     // Check if backward transition is attempted (using weights)
     const statusWeights = {
       "cancelled": -1,

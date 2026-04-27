@@ -1,10 +1,10 @@
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Gift } from "lucide-react";
 import { sendEmail } from "../utils/emailService";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import VerifyEmail from "./VerifyEmail";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "../Firebase";
@@ -23,6 +23,7 @@ function Signup() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [tempEmail, setTempEmail] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setAuthUser, setToken, setRefreshToken } = useAuth();
 
   const {
@@ -31,9 +32,11 @@ function Signup() {
     formState: { errors },
     reset,
     watch,
+    setValue
   } = useForm({
     defaultValues: {
       role: "user",
+      referredByCode: searchParams.get("ref") || ""
     },
   });
 
@@ -58,6 +61,7 @@ function Signup() {
           photoURL: user.photoURL,
           uid: user.uid,
           selectedRole,
+          referredByCode: searchParams.get("ref") || "",
         },
       );
 
@@ -140,6 +144,7 @@ function Signup() {
       email: data.email,
       password: data.password,
       role: "user",
+      referredByCode: data.referredByCode
     };
 
     try {
@@ -320,6 +325,29 @@ function Signup() {
                   />
                 </div>
                 {errors.email && <p className="text-red-500 text-[0.76rem] font-semibold mt-1 ml-1">{errors.email.message}</p>}
+              </div>
+
+              {/* Referral Code Input (Optional) - MOVED HERE */}
+              <div className="space-y-1.5">
+                <label className="text-[0.84rem] font-semibold text-[#25324d] block flex items-center justify-between">
+                  Referral Code
+                  <div className="flex items-center gap-2">
+                    {searchParams.get("ref") && (
+                      <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider animate-pulse">Benefit Applied</span>
+                    )}
+                    <span className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider">Optional</span>
+                  </div>
+                </label>
+                <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-all ${searchParams.get("ref") ? "bg-indigo-50/50 border-indigo-200" : "bg-white border-[#d9deeb]"} focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7]`}>
+                  <Gift className={`w-4.5 h-4.5 ${searchParams.get("ref") ? "text-indigo-600" : "text-[#6d7892]"}`} />
+                  <input
+                    type="text"
+                    placeholder="ENTER-CODE"
+                    className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] font-mono outline-none placeholder:text-[#94a3b8] uppercase"
+                    disabled={disabled}
+                    {...register("referredByCode")}
+                  />
+                </div>
               </div>
 
               {/* Password Input */}

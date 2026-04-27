@@ -166,7 +166,7 @@ function Wishlist() {
             size: variant.size,
           }, { headers: { Authorization: `Bearer ${token}` } });
           addedCount++;
-        } catch (err) {}
+        } catch (err) { }
       }
 
       if (addedCount > 0) {
@@ -196,38 +196,38 @@ function Wishlist() {
   return (
     <div className="min-h-screen bg-[#f8f9fc] py-6 text-[#11182d]">
       <div className="max-w-7xl mx-auto px-4">
-        
+
         {/* Header */}
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-           <div>
-              <h1 className="text-[1.6rem] md:text-[2rem] font-semibold text-[#11182d] leading-tight tracking-tight">
-                Curated Wishlist
-              </h1>
-              <p className="text-[0.8rem] text-[#42506d] leading-relaxed">
-                Save and manage your most-wanted premium lifestyle essentials.
-              </p>
-           </div>
-           
-           <div className="flex gap-2">
-              <button
-                onClick={() => navigate("/")}
-                className="h-10 px-6 border border-[#eef2ff] bg-white text-[#42506d] text-[0.65rem] font-semibold uppercase tracking-widest rounded-xl hover:text-[#0f49d7] shadow-sm flex items-center gap-2"
-              >
-                Continue Shopping
-              </button>
-              <button
-                onClick={addAllToCart}
-                disabled={inStockCount === 0 || addingAllToCart}
-                className="h-10 px-6 bg-[#0f49d7] text-white text-[0.65rem] font-semibold uppercase tracking-widest rounded-xl disabled:opacity-50 shadow-md flex items-center gap-2"
-              >
-                {addingAllToCart ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                )}
-                Add All to Cart ({inStockCount})
-              </button>
-           </div>
+          <div>
+            <h1 className="text-[1.6rem] md:text-[2rem] font-semibold text-[#11182d] leading-tight tracking-tight">
+              Curated Wishlist
+            </h1>
+            <p className="text-[0.8rem] text-[#42506d] leading-relaxed">
+              Save and manage your most-wanted premium lifestyle essentials.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate("/")}
+              className="h-10 px-6 border border-[#eef2ff] bg-white text-[#42506d] text-[0.65rem] font-semibold uppercase tracking-widest rounded-xl hover:text-[#0f49d7] shadow-sm flex items-center gap-2"
+            >
+              Continue Shopping
+            </button>
+            <button
+              onClick={addAllToCart}
+              disabled={inStockCount === 0 || addingAllToCart}
+              className="h-10 px-6 bg-[#0f49d7] text-white text-[0.65rem] font-semibold uppercase tracking-widest rounded-xl disabled:opacity-50 shadow-md flex items-center gap-2"
+            >
+              {addingAllToCart ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <ShoppingCart className="w-3.5 h-3.5" />
+              )}
+              Add All to Cart ({inStockCount})
+            </button>
+          </div>
         </div>
 
         {wishlistItems.length > 0 && (
@@ -239,15 +239,15 @@ function Wishlist() {
               { icon: Star, label: "Avg Rating", value: avgRating, color: "text-[#f59e0b]" },
             ].map((stat, i) => (
               <div key={i} className="bg-white p-4 rounded-[20px] border border-[#eef2ff] shadow-sm">
-                 <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 bg-[#f8f9fc] border border-[#eef2ff] rounded-xl flex items-center justify-center ${stat.color}`}>
-                       <stat.icon className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                       <p className="text-[0.6rem] font-semibold text-[#5d6a84] uppercase tracking-widest mb-0.5">{stat.label}</p>
-                       <p className="text-[0.9rem] font-semibold text-[#11182d]">{stat.value}</p>
-                    </div>
-                 </div>
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 bg-[#f8f9fc] border border-[#eef2ff] rounded-xl flex items-center justify-center ${stat.color}`}>
+                    <stat.icon className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <p className="text-[0.6rem] font-semibold text-[#5d6a84] uppercase tracking-widest mb-0.5">{stat.label}</p>
+                    <p className="text-[0.9rem] font-semibold text-[#11182d]">{stat.value}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -296,9 +296,8 @@ function Wishlist() {
               return (
                 <div
                   key={product._id}
-                  className={`rounded-[18px] border border-[#e1e5f1] bg-white p-3.5 transition-all ${
-                    !isAvailable ? "opacity-60" : "hover:border-[#cbd5e1]"
-                  }`}
+                  className={`rounded-[18px] border border-[#e1e5f1] bg-white p-3.5 transition-all ${!isAvailable ? "opacity-60" : "hover:border-[#cbd5e1]"
+                    }`}
                 >
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-[130px_minmax(0,1fr)]">
                     <Link
@@ -326,14 +325,14 @@ function Wishlist() {
                             {productName}
                           </Link>
                           <div className="mt-1 flex items-center gap-2">
-                             <div className="flex items-center gap-1">
-                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                <span className="text-[0.7rem] font-medium text-[#11182d]">{product.averageRating || "4.5"}</span>
-                             </div>
-                             <span className="text-[0.7rem] text-[#94a3b8]">•</span>
-                             <span className={`text-[0.7rem] font-semibold uppercase tracking-wider ${isAvailable ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                               {isAvailable ? "In Stock" : "Out of Stock"}
-                             </span>
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              <span className="text-[0.7rem] font-medium text-[#11182d]">{product.averageRating || "4.5"}</span>
+                            </div>
+                            <span className="text-[0.7rem] text-[#94a3b8]">•</span>
+                            <span className={`text-[0.7rem] font-semibold uppercase tracking-wider ${isAvailable ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                              {isAvailable ? "In Stock" : "Out of Stock"}
+                            </span>
                           </div>
                         </div>
 
@@ -393,7 +392,7 @@ function Wishlist() {
                             )}
                             Add to Cart
                           </button>
-                          
+
                           <div className="h-4 w-[1px] bg-[#e2e8f0]"></div>
 
                           <button
@@ -404,7 +403,7 @@ function Wishlist() {
                             Remove
                           </button>
                         </div>
-                        
+
                         <Link
                           to={`/product-detail/${product._id}`}
                           className="flex items-center gap-1 text-[0.72rem] font-bold uppercase tracking-widest text-[#64748b] hover:text-[#11182d] transition-all"

@@ -122,7 +122,22 @@ const userSchema = new mongoose.Schema(
         selectedAt: { type: Date, default: Date.now },
         productsSeen: { type: Number, default: 0 }
       }
-    ]
+    ],
+    // ----------------------------------
+    // --- Referral System Fields ---
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    referralCount: {
+      type: Number,
+      default: 0,
+    },
     // ----------------------------------
   },
   { timestamps: true }
