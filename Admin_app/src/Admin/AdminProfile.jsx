@@ -1,320 +1,415 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  User,
+  Calendar,
+  CheckCircle2,
+  LogOut,
   Mail,
   Shield,
-  Settings,
-  LogOut,
-  Calendar,
-  CheckCircle,
-  Key,
   Trash2,
-  AlertCircle,
+  User,
+  Plus,
+  Key,
+  Settings,
+  LayoutDashboard,
+  Users
 } from "lucide-react";
 import axios from "axios";
+import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
+import { useNavigate } from "react-router-dom";
 import UpdatePassword from "../auth/UpdatePassword";
 import DeleteModal from "../auth/DeletedModel";
-import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
 import { API_URL } from "../utils/constants";
+
+const formatDate = (dateString) =>
+  dateString
+    ? new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+    : "N/A";
 
 const AdminProfile = () => {
   const navigate = useNavigate();
   const { authUser, setAuthUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [profileData, setProfileData] = useState({
+  const [showUpdatePassword, setShowUpdatePassword] = useState(false);
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [editForm, setEditForm] = useState({
     username: "",
-    email: "",
-    profile: "",
-    role: "",
-    createdAt: "",
-    isVerified: false,
   });
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          document.getElementById("login_modal")?.showModal();
-          return;
-        }
-
-        const response = await axios.get(`${API_URL}/user/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (response.data?.user) {
-          const user = response.data.user;
-          setProfileData({
-            username: user.username || "",
-            email: user.email || "",
-            profile:
-              user.profile ||
-              "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-            role: user.role || "",
-            createdAt: user.createdAt || "",
-            isVerified: user.isVerified || false,
-          });
-          setAuthUser(user);
-        }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          setAuthUser(null);
-          document.getElementById("login_modal")?.showModal();
-        }
-      } finally {
-        setLoading(false);
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/");
+        return;
       }
-    };
+      const response = await axios.get(`${API_URL}/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const user = response.data.user;
+      setAuthUser(user);
+      setEditForm({
+        username: user.username || "",
+      });
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        setAuthUser(null);
+        navigate("/");
+      } else {
+        toast.error(error.response?.data?.message || "Failed to fetch profile");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProfile();
   }, [setAuthUser, navigate]);
 
-  const handleLogout = () => {
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("username", editForm.username);
+      if (selectedFile) {
+        formData.append("profile", selectedFile);
+      }
+
+      const res = await axios.put(`${API_URL}/user/profile`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        },
+      });
+      if (res.data.success) {
+        setAuthUser(res.data.user);
+        setIsEditing(false);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        toast.success("Profile updated successfully");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await axios.post(
+          `${API_URL}/user/logout`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+      }
+    } catch (error) {
+      console.error("Logout API failed", error);
+    }
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("Users");
     setAuthUser(null);
     navigate("/");
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   if (loading) return <Loader />;
 
+  const displayName = authUser?.username || authUser?.name || "System Admin";
+
+  const infoTiles = [
+    {
+      title: "Joined Date",
+      value: formatDate(authUser?.createdAt),
+      icon: Calendar,
+      valueColor: "text-[#11182d]",
+    },
+    {
+      title: "Account Role",
+      value: authUser?.role
+        ? authUser.role.charAt(0).toUpperCase() + authUser.role.slice(1)
+        : "Admin",
+      icon: Shield,
+      valueColor: "text-[#11182d]",
+    },
+    {
+      title: "Verification Status",
+      value: authUser?.isVerified ? "Verified Profile" : "Email Not Verified",
+      icon: CheckCircle2,
+      valueColor: authUser?.isVerified ? "text-[#15753a]" : "text-[#c0392b]",
+    },
+  ];
+
+  const settingsItems = [
+    {
+      title: "Update Password",
+      description: "Ensure your account is secure",
+      icon: Key,
+      action: () => document.getElementById("update_password_modal")?.showModal(),
+    },
+    {
+      title: "Platform Dashboard",
+      description: "View platform analytics",
+      icon: LayoutDashboard,
+      action: () => navigate("/admin/dashboard"),
+    },
+    {
+      title: "User Management",
+      description: "Manage system users",
+      icon: Users,
+      action: () => navigate("/admin/users"),
+    },
+  ];
+
   return (
-    <div className="bg-white">
-      {/* Header */}
-      <div className="border-b border-gray-200 px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Profile</h1>
-        <p className="text-gray-600 text-sm mt-1">
-          Manage your account settings
-        </p>
-      </div>
+    <div className="bg-[#f6f7fb] text-[#11182d] font-poppins pb-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-[1.75rem] font-bold tracking-tight text-[#11182d]">
+              Admin Profile
+            </h1>
+            <p className="mt-1 text-[0.85rem] text-[#64748b]">
+              Manage your administrative identity and preferences
+            </p>
+          </div>
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="inline-flex items-center justify-center rounded-xl bg-white border border-[#e2e8f0] px-5 py-2.5 text-[0.82rem] font-semibold text-[#11182d] transition-all hover:bg-[#f8fafc] hover:border-[#cbd5e1] active:scale-[0.98] shadow-sm"
+            >
+              <User className="w-4 h-4 mr-2 text-[#0f49d7]" />
+              Edit Profile
+            </button>
+          )}
+        </div>
 
-      <div className="p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Profile Card */}
-              <div className="border border-gray-200 rounded-lg p-5">
-                <div className="flex flex-col sm:flex-row items-start gap-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full border-2 border-white shadow overflow-hidden bg-gray-100">
-                      <img
-                        src={profileData.profile}
-                        alt={profileData.username}
-                        className="w-full h-full object-cover"
-                      />
+        <div className="rounded-[24px] border border-[#e2e8f0] bg-white p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+            <div className="relative group shrink-0">
+              <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-[6px] border-[#f1f5f9] bg-[#f8fafc] relative shadow-inner">
+                {previewUrl || authUser?.profile ? (
+                  <img
+                    src={previewUrl || authUser?.profile}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-12 w-12 text-[#94a3b8]" />
+                )}
+                {isEditing && (
+                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+                    <div className="bg-white/20 p-2 rounded-full backdrop-blur-md">
+                      <Plus className="w-6 h-6 text-white" />
                     </div>
-                    {profileData.isVerified && (
-                      <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1 rounded-full">
-                        <CheckCircle className="w-3 h-3" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h2 className="text-xl font-bold text-gray-900">
-                        @{profileData.username || "Admin"}
-                      </h2>
-                      <span className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs font-medium rounded">
-                        {profileData.role || "admin"}
-                      </span>
-                      {profileData.isVerified && (
-                        <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3" />
-                          Verified
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Mail className="w-4 h-4" />
-                        <span>{profileData.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>Joined {formatDate(profileData.createdAt)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 pt-5 border-t border-gray-100">
-                  <div className="p-3 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Account Type</p>
-                    <p className="text-sm font-semibold capitalize text-black">
-                      {profileData.role}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Status</p>
-                    <p className="text-sm font-semibold text-green-600">
-                      {profileData.isVerified ? "Verified" : "Pending"}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Member Since</p>
-                    <p className="text-sm font-semibold text-black">
-                      {formatDate(profileData.createdAt)}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Last Active</p>
-                    <p className="text-sm font-semibold text-black">Now</p>
-                  </div>
-                </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        setSelectedFile(file);
+                        setPreviewUrl(URL.createObjectURL(file));
+                        toast.success("Photo selected. Save to confirm.");
+                      }}
+                    />
+                  </label>
+                )}
               </div>
-
-              {/* Account Info */}
-              <div className="border border-gray-200 rounded-lg p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Account Information
-                </h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Username
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 font-medium">
-                      @{profileData.username}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 font-medium">
-                      {profileData.email}
-                    </div>
-                    {profileData.isVerified && (
-                      <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" />
-                        Email verified
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              {authUser?.isVerified && (
+                <span className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-[#10b981] text-white shadow-sm">
+                  <CheckCircle2 className="h-4 w-4" />
+                </span>
+              )}
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Security */}
-              <div className="border border-gray-200 rounded-lg p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Security
-                </h3>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={() =>
-                      document
-                        .getElementById("update_password_modal")
-                        ?.showModal()
-                    }
-                    className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50"
-                  >
-                    <div className="w-10 h-10 bg-black rounded flex items-center justify-center">
-                      <Key className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-black">
-                        Update Password
-                      </p>
-                      <p className="text-xs text-gray-500">Change password</p>
-                    </div>
-                  </button>
-
-                  <div className="p-3 bg-yellow-50 border border-yellow-100 rounded">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
-                      <div>
-                        <p className="text-xs font-medium text-yellow-800">
-                          Security Tip
-                        </p>
-                        <p className="text-xs text-yellow-700">
-                          Update your password regularly
-                        </p>
-                      </div>
+            <div className="flex-1 w-full">
+              {isEditing ? (
+                <form onSubmit={handleUpdateProfile} className="w-full space-y-4 max-w-md">
+                  <div className="text-left">
+                    <label className="block text-[11px] font-bold text-[#64748b] uppercase tracking-wider mb-1.5 ml-1">Username</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8]" />
+                      <input
+                        type="text"
+                        placeholder="Username"
+                        value={editForm.username}
+                        onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                        className="w-full rounded-[14px] border border-[#e2e8f0] bg-[#f8fafc] pl-10 pr-4 py-3 text-[0.88rem] font-medium outline-none focus:border-[#0f49d7] focus:ring-4 focus:ring-blue-500/5 transition-all"
+                        required
+                      />
                     </div>
                   </div>
+                  <div className="flex gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setPreviewUrl(null);
+                        setSelectedFile(null);
+                      }}
+                      className="flex-1 rounded-[14px] border border-[#e2e8f0] py-3 text-[0.82rem] font-bold text-[#475569] hover:bg-[#f8fafc] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={updating}
+                      className="flex-1 rounded-[14px] bg-[#0f49d7] py-3 text-[0.82rem] font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-[#0838a7] active:scale-[0.98] transition-all disabled:opacity-50"
+                    >
+                      {updating ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="mt-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h2 className="text-[1.5rem] font-bold text-[#11182d]">{displayName}</h2>
+                    <span className="rounded-full bg-[#eef2ff] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#0f49d7]">
+                      Platform Master
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[0.88rem] font-medium text-[#64748b] flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    {authUser?.email || "admin@wondercart.com"}
+                  </p>
+                  <p className="mt-2 text-[0.82rem] font-medium text-[#64748b]">
+                    Full access to platform administration, user management, and order oversight.
+                  </p>
                 </div>
-              </div>
-
-              {/* Actions */}
-              <div className="border border-gray-200 rounded-lg p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Actions
-                </h3>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-black text-white rounded font-medium hover:bg-gray-800"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-white text-red-600 border border-red-300 rounded font-medium hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Account
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick Links */}
-              <div className="border border-gray-200 rounded-lg p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Quick Links
-                </h3>
-                <div className="space-y-2">
-                  <a
-                    href="/admin/dashboard"
-                    className="block text-sm text-gray-600 hover:text-black py-1"
-                  >
-                    Dashboard
-                  </a>
-                  <a
-                    href="/admin/settings"
-                    className="block text-sm text-gray-600 hover:text-black py-1"
-                  >
-                    System Settings
-                  </a>
-                  <a
-                    href="/admin/users"
-                    className="block text-sm text-gray-600 hover:text-black py-1"
-                  >
-                    User Management
-                  </a>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+          {infoTiles.map((tile) => {
+            const Icon = tile.icon;
+            return (
+              <div
+                key={tile.title}
+                className="rounded-[16px] border border-[#e1e5f1] bg-[#eef2ff] px-4 py-3.5"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-white text-[#0f49d7]">
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                  <div>
+                    <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-[#5d6a84]">
+                      {tile.title}
+                    </p>
+                    <p className={`mt-1.5 text-[0.9rem] font-semibold ${tile.valueColor}`}>
+                      {tile.value}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
+          <section>
+            <div className="mb-3">
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d]">
+                Administrative Actions
+              </h2>
+              <div className="mt-2 h-1 w-10 rounded-full bg-[#0f49d7]" />
+            </div>
+
+            <div className="overflow-hidden rounded-[18px] border border-[#e1e5f1] bg-white">
+              {settingsItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.title}
+                    type="button"
+                    onClick={item.action}
+                    className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gray-50 ${index !== settingsItems.length - 1
+                        ? "border-b border-[#edf1f8]"
+                        : ""
+                      }`}
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef2ff] text-[#0f49d7]">
+                      <Icon className="h-4.5 w-4.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[0.9rem] font-semibold text-[#11182d]">
+                        {item.title}
+                      </p>
+                      <p className="mt-0.5 text-[0.76rem] text-[#5d6a84]">
+                        {item.description}
+                      </p>
+                    </div>
+                    <span className="text-[1.1rem] text-[#b0b8cb]">›</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-3">
+              <h2 className="text-[1.1rem] font-semibold text-[#11182d]">
+                Account Actions
+              </h2>
+              <div className="mt-2 h-1 w-10 rounded-full bg-[#d12828]" />
+            </div>
+
+            <div className="rounded-[18px] border border-[#f0c9c9] bg-white p-4">
+              <p className="text-[0.76rem] leading-5 text-[#42506d]">
+                Danger zone: actions here cannot be undone. Please proceed with
+                caution.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-[14px] bg-[#1f2940] text-[0.8rem] font-semibold text-white transition-all hover:bg-black"
+              >
+                <LogOut className="h-4.5 w-4.5" />
+                Logout Session
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="mt-3 flex h-11 w-full items-center justify-center gap-3 rounded-[14px] border border-[#d12828] bg-white text-[0.8rem] font-semibold text-[#d12828] transition-all hover:bg-red-50"
+              >
+                <Trash2 className="h-4.5 w-4.5" />
+                Delete Account
+              </button>
+
+              <button
+                type="button"
+                disabled
+                className="mt-3 flex h-11 w-full items-center justify-center gap-3 rounded-[14px] bg-[#edf1f7] text-[0.8rem] font-semibold text-[#b2bccf]"
+              >
+                <Shield className="h-4.5 w-4.5" />
+                Advanced Recovery (Locked)
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
 
-      {/* Modals */}
       <UpdatePassword />
       <DeleteModal
         isOpen={showDeleteModal}

@@ -219,16 +219,17 @@ const SellerProducts = () => {
   ];
 
   return (
-    <div className="space-y-5 px-0 pb-6 font-poppins text-[#11182d]">
-      <section className="rounded-[18px] border border-[#d7dcea] bg-white px-5 py-4 sm:px-6 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="min-h-screen bg-[#f6f7fb] py-3 text-[#11182d] font-poppins">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
+        <section className="rounded-[18px] border border-[#e1e5f1] bg-white px-5 py-4 sm:px-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0f49d7] text-[0.75rem] font-bold text-white shadow-sm">
               1
             </span>
             <div>
-              <h1 className="text-[1.35rem] font-bold tracking-tight text-[#11182d]">Product Inventory</h1>
-              <p className="mt-0.5 text-[0.8rem] text-[#6d7892]">Manage catalog, stock, and variants.</p>
+              <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#11182d]">Product Inventory</h1>
+              <p className="mt-0.5 text-[0.82rem] text-[#6d7892]">Manage catalog, stock, and variants.</p>
             </div>
           </div>
 
@@ -367,6 +368,7 @@ const SellerProducts = () => {
       >
         <Plus className="h-6 w-6" />
       </Link>
+      </div>
     </div>
   );
 };

@@ -193,29 +193,29 @@ function AdminDashboard() {
   const RUPEE = '\u20B9';
 
   return (
-    <div className="mx-auto max-w-[1180px] space-y-6 pb-8 font-poppins bg-[#f8f9fc] min-h-screen px-4 py-6">
+    <div className="mx-auto max-w-7xl space-y-5 pb-8 font-poppins bg-[#f6f7fb] min-h-screen px-4 py-4 sm:px-6 lg:px-8">
       {/* Header Section */}
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-[28px] font-semibold leading-tight text-[#141b2d]">Platform Dashboard</h1>
+            <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#11182d]">Platform Dashboard</h1>
             <span
-              className="h-2.5 w-2.5 rounded-full bg-[#15803d] animate-pulse"
+              className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"
               title="Platform Live"
             />
           </div>
-          <p className="mt-1 text-sm text-[#66728d]">
+          <p className="mt-0.5 text-[0.82rem] text-[#6d7892]">
             Monitor platform-wide revenue, sales trends, and vendor ecosystem growth.
           </p>
         </div>
 
-        <div className="inline-flex w-fit rounded-[18px] border border-[#dfe4f4] bg-white p-1">
+        <div className="inline-flex w-fit rounded-[18px] border border-[#d7dcea] bg-white p-1">
           {['all', '30d'].map((v) => (
             <button
               key={v}
-              className={`rounded-[14px] px-4 py-2 text-sm font-medium transition ${v === 'all'
-                  ? 'bg-[#edf2ff] text-[#0f49d7]'
-                  : 'text-[#68758f] hover:text-[#141b2d]'
+              className={`rounded-[14px] px-4 py-1.5 text-[0.7rem] font-bold uppercase tracking-[0.08em] transition-all ${v === 'all'
+                  ? 'bg-[#eef2ff] text-[#0f49d7] shadow-sm'
+                  : 'text-[#6d7892] hover:text-[#11182d]'
                 }`}
             >
               {v.toUpperCase()}
@@ -225,52 +225,56 @@ function AdminDashboard() {
       </div>
 
       {/* KPI Cards Section */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Platform GMV', value: `₹${stats.totalSales?.toLocaleString()}`, subLabel: 'Total Gross Value', color: 'text-[#141b2d]', iconWrap: 'bg-[#dfe7ff] text-[#0f49d7]', Icon: TrendingUp },
-          { label: 'Platform Earnings', value: `₹${stats.totalCommission?.toLocaleString()}`, subLabel: 'Net Commission', color: 'text-[#15803d]', iconWrap: 'bg-[#dff6e4] text-[#15803d]', Icon: DollarSign },
-          { label: 'Total Orders', value: stats.totalOrders?.toString(), subLabel: 'Fulfilled orders', color: 'text-[#141b2d]', iconWrap: 'bg-[#dfe4f0] text-[#56627d]', Icon: ShoppingBag },
-          { label: 'Active Sellers', value: stats.totalSellers?.toString(), subLabel: 'Onboarded merchants', color: 'text-[#0f49d7]', iconWrap: 'bg-[#e8eeff] text-[#0f49d7]', Icon: Users },
+          { label: 'Platform GMV', value: `₹${stats.totalSales?.toLocaleString()}`, subLabel: 'Total Gross Value', color: 'text-[#11182d]', iconWrap: 'bg-[#eef2ff] text-[#0f49d7]', Icon: TrendingUp },
+          { label: 'Platform Earnings', value: `₹${stats.totalCommission?.toLocaleString()}`, subLabel: 'Net Commission', color: 'text-[#11182d]', iconWrap: 'bg-emerald-50 text-emerald-600', Icon: DollarSign },
+          { label: 'Total Orders', value: stats.totalOrders?.toString(), subLabel: 'Fulfilled orders', color: 'text-[#11182d]', iconWrap: 'bg-[#f8f9fd] text-[#5c6880]', Icon: ShoppingBag },
+          { label: 'Active Sellers', value: stats.totalSellers?.toString(), subLabel: 'Onboarded merchants', color: 'text-[#11182d]', iconWrap: 'bg-[#eef2ff] text-[#0f49d7]', Icon: Users },
         ].map((card, i) => (
-          <div key={i} className="rounded-[22px] border border-[#e7ebf5] bg-white p-5 shadow-[0_10px_24px_rgba(18,36,84,0.05)] transition-all hover:shadow-lg">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#6d7892] mb-1">{card.label}</p>
-                <h3 className={`text-[1.6rem] font-bold ${card.color}`}>{card.value}</h3>
-              </div>
-              <div className={`h-11 w-11 rounded-[16px] flex items-center justify-center ${card.iconWrap}`}>
-                <card.Icon className="h-5 w-5" />
+          <div key={i} className="rounded-[18px] border border-[#d7dcea] bg-white p-[1.125rem] shadow-sm hover:border-[#0f49d7] transition-all group">
+            <div className="flex items-start justify-between gap-2.5">
+              <p className="max-w-[150px] text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892]">
+                {card.label}
+              </p>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-[12px] ${card.iconWrap} transition-transform group-hover:scale-110`}>
+                <card.Icon className="h-4.5 w-4.5" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-[#f1f4f9] flex items-center justify-between">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{card.subLabel}</span>
-              {i === 1 && <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Secure Settlement</span>}
+            
+            <div className="mt-3 flex items-end gap-2">
+              <h2 className="text-[1.35rem] font-bold leading-none text-[#11182d] tracking-tight">{card.value}</h2>
+            </div>
+
+            <div className="mt-2.5 text-[0.65rem] font-semibold text-[#6d7892] uppercase tracking-wider flex items-center justify-between">
+              <span>{card.subLabel}</span>
+              {i === 1 && <span className="font-bold text-[#18794e] bg-[#e9f8ef] px-1.5 py-0.5 rounded-md lowercase tracking-normal">secure setup</span>}
             </div>
           </div>
         ))}
       </div>
 
       {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-8">
-          <div className="h-full rounded-[24px] border border-[#e7ebf5] bg-white p-6 shadow-sm">
+          <div className="h-full rounded-[18px] border border-[#d7dcea] bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-[18px] font-bold text-[#141b2d]">Daily Platform Sales</h2>
-                <p className="text-xs text-[#66728d] mt-1">Platform gross merchandise value trend over time.</p>
+                <h2 className="text-[1.1rem] font-bold text-[#11182d]">Daily Platform Sales</h2>
+                <p className="text-[0.88rem] text-[#6d7892] mt-1">Platform gross merchandise value trend over time.</p>
               </div>
-              <div className="h-10 w-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
+              <div className="h-10 w-10 bg-[#f6f7fb] rounded-[14px] flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-[#0f49d7]" />
               </div>
             </div>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.salesTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f4f9" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f6f7fb" vertical={false} />
                   <XAxis dataKey="_id" stroke="#94a3b8" fontSize={11} axisLine={false} tickLine={false} hide />
                   <YAxis stroke="#94a3b8" fontSize={11} axisLine={false} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)", fontSize: '12px' }}
+                    contentStyle={{ borderRadius: "14px", border: "1px solid #e1e5f1", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", fontSize: '12px' }}
                   />
                   <Line
                     type="monotone"
@@ -286,10 +290,10 @@ function AdminDashboard() {
           </div>
         </div>
         <div className="lg:col-span-4">
-          <div className="h-full rounded-[24px] border border-[#e7ebf5] bg-white p-6 shadow-sm">
+          <div className="h-full rounded-[18px] border border-[#d7dcea] bg-white p-6 shadow-sm">
             <div className="mb-2">
-              <h2 className="text-[18px] font-bold text-[#141b2d]">Order Distribution</h2>
-              <p className="text-xs text-[#66728d] mt-1">Breakdown by current order status.</p>
+              <h2 className="text-[1.1rem] font-bold text-[#11182d]">Order Distribution</h2>
+              <p className="text-[0.88rem] text-[#6d7892] mt-1">Breakdown by current order status.</p>
             </div>
             <div className="h-[320px] w-full flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -314,12 +318,12 @@ function AdminDashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '14px', border: '1px solid #e1e5f1', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                   />
                   <Legend
                     verticalAlign="bottom"
                     iconType="circle"
-                    formatter={(value) => <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide">{value}</span>}
+                    formatter={(value) => <span className="text-[0.7rem] font-semibold text-[#6d7892] uppercase tracking-wider">{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -329,71 +333,71 @@ function AdminDashboard() {
       </div>
 
       {/* Razorpay Split Engine Visualization */}
-      <div className="rounded-[24px] border border-[#e7ebf5] bg-white p-6 shadow-sm overflow-x-auto scrollbar-hide">
+      <div className="rounded-[18px] border border-[#d7dcea] bg-white p-6 shadow-sm overflow-x-auto scrollbar-hide">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-[18px] font-bold text-[#141b2d]">Live Money Flow Engine</h2>
-            <p className="text-xs text-[#66728d] mt-1">Automated Razorpay Split for independent vendor settlements.</p>
+            <h2 className="text-[1.1rem] font-bold text-[#11182d]">Live Money Flow Engine</h2>
+            <p className="text-[0.88rem] text-[#6d7892] mt-1">Automated Razorpay Split for independent vendor settlements.</p>
           </div>
-          <div className="h-10 w-fit px-4 bg-gray-900 rounded-xl flex items-center justify-center gap-2">
-            <Activity className="w-4 h-4 text-emerald-400" />
-            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Active Engine</span>
+          <div className="h-10 w-fit px-4 bg-[#11182d] rounded-[14px] flex items-center justify-center gap-2">
+            <Activity className="w-4 h-4 text-[#18794e]" />
+            <span className="text-[0.7rem] font-bold text-white uppercase tracking-widest">Active Engine</span>
           </div>
         </div>
 
         <div className="p-4 sm:p-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative">
             <div className="flex flex-col items-center z-10">
-              <div className="w-16 h-16 bg-[#f8f9fc] border-2 border-dashed border-[#d1d5e0] rounded-[22px] flex items-center justify-center mb-3">
-                <Users className="w-8 h-8 text-[#94a3b8]" />
+              <div className="w-16 h-16 bg-[#f6f7fb] border-2 border-dashed border-[#d7dcea] rounded-[18px] flex items-center justify-center mb-3">
+                <Users className="w-8 h-8 text-[#6d7892]" />
               </div>
-              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest">Customer Payment</p>
-              <p className="text-[1.2rem] font-bold text-[#141b2d]">₹{stats.totalSales?.toLocaleString()}</p>
+              <p className="text-[0.7rem] font-bold text-[#6d7892] uppercase tracking-widest">Customer Payment</p>
+              <p className="text-[1.2rem] font-bold text-[#11182d]">₹{stats.totalSales?.toLocaleString()}</p>
             </div>
 
-            <div className="hidden md:block flex-1 h-[2px] bg-[#eef2ff] relative">
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f49d7] animate-ping"></div>
+            <div className="hidden md:block flex-1 h-[2px] bg-[#f6f7fb] relative">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f49d7]"></div>
             </div>
 
             <div className="flex flex-col items-center z-10">
               <div className="group relative">
                 <div className="absolute inset-0 bg-[#0f49d7] blur-xl opacity-20 transition group-hover:opacity-40"></div>
-                <div className="w-24 h-24 bg-[#0f172a] rounded-[32px] flex items-center justify-center mb-3 relative shadow-2xl">
-                  <Activity className="w-10 h-10 text-white animate-pulse" />
+                <div className="w-24 h-24 bg-[#11182d] rounded-[24px] flex items-center justify-center mb-3 relative shadow-xl">
+                  <Activity className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <p className="text-[10px] font-bold text-[#141b2d] uppercase tracking-[0.2em]">WonderCart Split</p>
-              <p className="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full mt-1">₹{stats.totalCommission?.toLocaleString()}</p>
+              <p className="text-[0.7rem] font-bold text-[#11182d] uppercase tracking-widest">WonderCart Split</p>
+              <p className="text-[0.88rem] font-bold text-[#18794e] bg-[#e9f8ef] px-3 py-1 rounded-[8px] mt-1">₹{stats.totalCommission?.toLocaleString()}</p>
             </div>
 
-            <div className="hidden md:block flex-1 h-[2px] bg-[#eef2ff] relative">
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f49d7] animate-ping delay-100"></div>
+            <div className="hidden md:block flex-1 h-[2px] bg-[#f6f7fb] relative">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f49d7]"></div>
             </div>
 
             <div className="flex flex-col items-center z-10">
               <div className="flex -space-x-4 mb-3">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="w-14 h-14 bg-white border border-[#e4e8f5] rounded-[22px] flex items-center justify-center shadow-lg transform hover:-translate-y-1 transition-transform">
+                  <div key={i} className="w-14 h-14 bg-white border border-[#d7dcea] rounded-[18px] flex items-center justify-center shadow-sm transform hover:-translate-y-1 transition-transform">
                     <DollarSign className="w-6 h-6 text-[#0f49d7]" />
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest">Vendor Share</p>
-              <p className="text-[1.2rem] font-bold text-[#141b2d]">₹{(stats.totalSales - stats.totalCommission)?.toLocaleString()}</p>
+              <p className="text-[0.7rem] font-bold text-[#6d7892] uppercase tracking-widest">Vendor Share</p>
+              <p className="text-[1.2rem] font-bold text-[#11182d]">₹{(stats.totalSales - stats.totalCommission)?.toLocaleString()}</p>
             </div>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             {[
-              { label: 'Settled to Vendors', value: stats.totalReleased?.toLocaleString(), color: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' },
-              { label: 'Funds On Hold (Held)', value: stats.totalHeld?.toLocaleString(), color: 'bg-indigo-50 text-indigo-700 border-indigo-100', dot: 'bg-indigo-500' },
+              { label: 'Settled to Vendors', value: stats.totalReleased?.toLocaleString(), color: 'bg-[#e9f8ef] text-[#18794e] border-[#b7ebc6]', dot: 'bg-[#18794e]' },
+              { label: 'Funds On Hold (Held)', value: stats.totalHeld?.toLocaleString(), color: 'bg-[#f6f7fb] text-[#11182d] border-[#d7dcea]', dot: 'bg-[#0f49d7]' },
             ].map((item, i) => (
-              <div key={i} className={`rounded-[20px] p-5 border-2 ${item.color} transition-transform hover:scale-[1.02]`}>
+              <div key={i} className={`rounded-[18px] p-5 border-2 ${item.color} transition-transform hover:scale-[1.02]`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2.5 h-2.5 rounded-full ${item.dot} animate-pulse`}></div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider opacity-80">{item.label}</span>
+                  <div className={`w-2.5 h-2.5 rounded-full ${item.dot}`}></div>
+                  <span className="text-[0.7rem] font-bold uppercase tracking-widest opacity-90">{item.label}</span>
                 </div>
-                <p className="text-2xl font-bold">₹{item.value}</p>
+                <p className="text-[1.5rem] font-bold">₹{item.value}</p>
               </div>
             ))}
           </div>
@@ -403,20 +407,20 @@ function AdminDashboard() {
       {/* User Growth & Platform Health */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Users', value: stats.totalUsers || 0, sub: `${todayUsers} today`, Icon: Users, color: 'text-indigo-600' },
-          { label: 'Platform Reserve', value: `₹${(stats.totalCommission * 0.8).toLocaleString()}`, sub: 'Net surplus', Icon: Activity, color: 'text-emerald-600' },
-          { label: 'Pending Refunds', value: stats.pendingRefunds || 0, sub: 'Needs attention', Icon: TrendingDown, color: 'text-red-500' },
-          { label: 'Live Products', value: stats.totalProducts || 0, sub: `${todayProducts} new today`, Icon: Package, color: 'text-blue-600' }
+          { label: 'Total Users', value: stats.totalUsers || 0, sub: `${todayUsers} today`, Icon: Users, color: 'text-[#0f49d7]' },
+          { label: 'Platform Reserve', value: `₹${(stats.totalCommission * 0.8).toLocaleString()}`, sub: 'Net surplus', Icon: Activity, color: 'text-[#18794e]' },
+          { label: 'Pending Refunds', value: stats.pendingRefunds || 0, sub: 'Needs attention', Icon: TrendingDown, color: 'text-rose-600' },
+          { label: 'Live Products', value: stats.totalProducts || 0, sub: `${todayProducts} new today`, Icon: Package, color: 'text-[#0f49d7]' }
         ].map((met, i) => (
-          <div key={i} className="rounded-[22px] border border-[#e7ebf5] bg-white p-5 shadow-sm hover:border-[#dfe4f4] transition-colors">
+          <div key={i} className="rounded-[18px] border border-[#d7dcea] bg-white p-5 shadow-sm transition-colors">
             <div className="flex items-center gap-3 mb-3">
-              <div className={`h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center ${met.color}`}>
+              <div className={`h-8 w-8 rounded-[10px] bg-[#f6f7fb] flex items-center justify-center ${met.color}`}>
                 <met.Icon className="h-4 w-4" />
               </div>
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{met.label}</p>
+              <p className="text-[0.7rem] font-bold text-[#6d7892] uppercase tracking-widest">{met.label}</p>
             </div>
-            <h4 className="text-[1.5rem] font-bold text-[#1a2238]">{met.value}</h4>
-            <p className="mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{met.sub}</p>
+            <h4 className="text-[1.5rem] font-bold text-[#11182d]">{met.value}</h4>
+            <p className="mt-1 text-[0.7rem] font-bold text-[#6d7892] uppercase tracking-widest">{met.sub}</p>
           </div>
         ))}
       </div>

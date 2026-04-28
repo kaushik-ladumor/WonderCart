@@ -2,7 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Star, Package, Edit, Eye, Trash2, Tag } from "lucide-react";
 
-const RUPEE = "\u20B9";
+const formatPrice = (price) =>
+  `Rs ${Math.round(Number(price || 0)).toLocaleString("en-IN")}`;
 
 const ProductCard = ({ product, onDelete, deleteLoading }) => {
   const getTotalStock = (variants) => {
@@ -20,20 +21,20 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
     "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80";
 
   const getPriceRange = (variants) => {
-    if (!variants?.length) return `${RUPEE}0`;
+    if (!variants?.length) return formatPrice(0);
 
     const allPrices = variants
       .flatMap((variant) => variant.sizes?.map((size) => size.sellingPrice || 0) || [0])
       .filter((price) => price > 0);
 
-    if (!allPrices.length) return `${RUPEE}0`;
+    if (!allPrices.length) return formatPrice(0);
 
     const minPrice = Math.min(...allPrices);
     const maxPrice = Math.max(...allPrices);
 
     return minPrice === maxPrice
-      ? `${RUPEE}${minPrice.toLocaleString()}`
-      : `${RUPEE}${minPrice.toLocaleString()} - ${RUPEE}${maxPrice.toLocaleString()}`;
+      ? formatPrice(minPrice)
+      : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
   };
 
   const stock = getTotalStock(product.variants);
@@ -48,7 +49,7 @@ const ProductCard = ({ product, onDelete, deleteLoading }) => {
       : "bg-[#ebf8ef] text-[#18794e]";
 
   return (
-    <div className="overflow-hidden rounded-[18px] border border-[#d7dcea] bg-white shadow-sm hover:shadow-md transition-all group font-poppins">
+    <div className="overflow-hidden rounded-[18px] border border-[#e1e5f1] bg-white shadow-sm hover:shadow-md transition-all group font-poppins">
       <Link
         to={`/seller/products/${product._id}`}
         className="relative block aspect-[4/3] overflow-hidden bg-[#f8f9fd]"

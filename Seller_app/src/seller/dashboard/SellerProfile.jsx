@@ -530,13 +530,13 @@ const SellerProfile = () => {
   );
 
   return (
-    <div className="seller-profile-page -mt-3 bg-[#f5f6ff] px-4 pb-2 pt-1 sm:px-6">
-      <div className="mx-auto max-w-[1180px]">
+    <div className="seller-profile-page min-h-screen bg-[#f6f7fb] py-3 text-[#11182d] font-poppins">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
         {/* Header */}
-        <div className="mb-5">
+        <div className="mb-3">
           <div>
-            <h1 className="text-[28px] font-semibold leading-tight text-[#141b2d]">Seller Profile</h1>
-            <p className="mt-1 text-sm text-[#66728d]">Complete your profile to start selling</p>
+            <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#11182d]">Seller Profile</h1>
+            <p className="mt-1 text-[0.82rem] text-[#6d7892]">Complete your profile to start selling</p>
           </div>
         </div>
 
@@ -1032,21 +1032,48 @@ const SellerProfile = () => {
 
                 {/* Category Request Modal */}
                 {showCategoryRequest && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-                    <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-[0_24px_60px_rgba(18,36,84,0.18)]">
-                      <h3 className="mb-4 text-lg font-semibold text-[#141b2d]">Request New Category</h3>
-                      <select value={newCategoryRequest.category} onChange={e => setNewCategoryRequest(p => ({ ...p, category: e.target.value }))}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm mb-3 bg-white">
-                        <option value="">Select category</option>
-                        {ALL_CATEGORIES.filter(c => !profile?.sellerCategories?.includes(c)).map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                      <textarea value={newCategoryRequest.reason} onChange={e => setNewCategoryRequest(p => ({ ...p, reason: e.target.value }))}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm resize-none" rows={3} placeholder="Why do you need this category?" />
-                      <div className="mt-4 flex gap-3">
-                        <button onClick={() => setShowCategoryRequest(false)} className="profile-secondary-btn flex-1 py-2.5 text-sm font-medium">Cancel</button>
-                        <button onClick={handleRequestCategory} className="profile-primary-btn flex-1 py-2.5 text-sm font-semibold">Submit Request</button>
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+                    <div className="bg-white rounded-2xl w-full max-w-md mx-auto shadow-tonal-md relative animate-in zoom-in-95 duration-300 font-poppins">
+                      <div className="px-6 pt-6 pb-4">
+                        <h3 className="text-[1.3rem] font-semibold text-[#11182d] tracking-tight">
+                          Request New Category
+                        </h3>
+                      </div>
+
+                      <div className="px-6 pb-6 space-y-4">
+                        <select
+                          value={newCategoryRequest.category}
+                          onChange={e => setNewCategoryRequest(p => ({ ...p, category: e.target.value }))}
+                          className="w-full bg-white rounded-xl px-4 py-3 border border-[#d9deeb] focus:border-[#0f49d7] focus:ring-1 focus:ring-[#0f49d7] outline-none text-[0.88rem] text-[#11182d] transition-all"
+                        >
+                          <option value="">Select category</option>
+                          {ALL_CATEGORIES.filter(c => !profile?.sellerCategories?.includes(c)).map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+
+                        <textarea
+                          value={newCategoryRequest.reason}
+                          onChange={e => setNewCategoryRequest(p => ({ ...p, reason: e.target.value }))}
+                          className="w-full bg-white rounded-xl px-4 py-3 border border-[#d9deeb] focus:border-[#0f49d7] focus:ring-1 focus:ring-[#0f49d7] outline-none text-[0.88rem] text-[#11182d] placeholder:text-[#94a3b8] transition-all resize-none"
+                          rows={3}
+                          placeholder="Why do you need this category?"
+                        />
+
+                        <div className="flex gap-3 pt-2">
+                          <button
+                            onClick={() => setShowCategoryRequest(false)}
+                            className="flex-1 bg-white border border-[#d9deeb] text-[#25324d] font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#f8f9fc] transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleRequestCategory}
+                            className="flex-1 bg-[#0f49d7] text-white font-semibold rounded-[14px] h-11 text-[0.88rem] hover:bg-[#003da3] transition-colors"
+                          >
+                            Submit Request
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1070,9 +1097,9 @@ const SellerProfile = () => {
       <style>{`
         .seller-profile-page .profile-card {
           background: #ffffff;
-          border: 1px solid #e6ebf6;
-          border-radius: 24px;
-          box-shadow: 0 10px 24px rgba(18, 36, 84, 0.05);
+          border: 1px solid #e1e5f1;
+          border-radius: 18px;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
 
         .seller-profile-page .status-banner {
@@ -1088,9 +1115,9 @@ const SellerProfile = () => {
         }
 
         .seller-profile-page .profile-primary-btn {
-          background: #2156d8;
+          background: #0f49d7;
           color: #ffffff;
-          border-radius: 16px;
+          border-radius: 14px;
         }
 
         .seller-profile-page .profile-danger-btn {
@@ -1112,10 +1139,10 @@ const SellerProfile = () => {
         .seller-profile-page input:not([type="checkbox"]):not([type="file"]),
         .seller-profile-page select,
         .seller-profile-page textarea {
-          background: #f6f8ff !important;
-          border-color: #dfe5f4 !important;
-          border-radius: 16px !important;
-          color: #1a2238 !important;
+          background: #f6f7fb !important;
+          border-color: #e1e5f1 !important;
+          border-radius: 14px !important;
+          color: #11182d !important;
           box-shadow: none !important;
         }
 

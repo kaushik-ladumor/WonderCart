@@ -520,6 +520,146 @@ const deleteCoupon = async (req, res) => {
     }
 };
 
+const getEarningsSummary = async (req, res) => {
+    try {
+        const SubOrder = require('../Models/SubOrder.Model');
+        const SellerProfile = require('../Models/SellerProfile.Model');
+
+        const COMMISSION_RATE = 15; // %
+
+        // --- Platform-wide KPIs from SubOrders ---
+        const kpiAgg = await SubOrder.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue:       { $sum: "$customerPaid" },
+                    totalCommission:    { $sum: "$platformCommission" },
+                    totalSellerPayout:  { $sum: "$sellerPayout" },
+                    pendingPayouts: {
+                        $sum: {
+                            $cond: [{ $eq: ["$payoutStatus", "pending"] }, "$sellerPayout", 0]
+                        }
+                    },
+                    paidOut: {
+                        $sum: {
+                            $cond: [{ $eq: ["$payoutStatus", "released"] }, "$sellerPayout", 0]
+                        }
+                    },
+                }
+            }
+        ]);
+
+        const kpi = kpiAgg[0] || {
+            totalRevenue: 0,
+            totalCommission: 0,
+            totalSellerPayout: 0,
+            pendingPayouts: 0,
+            paidOut: 0,
+        };
+
+        // --- Per-seller breakdown ---
+        const sellerAgg = await SubOrder.aggregate([
+            {
+                $group: {
+                    _id: "$seller",
+                    grossSales:   { $sum: "$subTotal" },
+                    commission:   { $sum: "$platformCommission" },
+                    netPayable:   { $sum: "$sellerPayout" },
+                    totalOrders:  { $sum: 1 },
+                    pendingAmt: {
+                        $sum: {
+                            $cond: [{ $eq: ["$payoutStatus", "pending"] }, "$sellerPayout", 0]
+                        }
+                    },
+                    lastActivity: { $max: "$updatedAt" },
+                    payoutStatuses: { $addToSet: "$payoutStatus" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "sellerUser"
+                }
+            },
+            { $unwind: { path: "$sellerUser", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    _id: 1,
+                    sellerName: {
+                        $ifNull: ["$sellerUser.name", "Unknown Seller"]
+                    },
+                    sellerId: {
+                        $ifNull: [
+                            { $toString: "$_id" },
+                            "N/A"
+                        ]
+                    },
+                    grossSales: 1,
+                    commission: 1,
+                    netPayable: 1,
+                    totalOrders: 1,
+                    pendingAmt: 1,
+                    lastActivity: 1,
+                    // pending if any suborder is still pending, else released
+                    status: {
+                        $cond: [
+                            { $gt: ["$pendingAmt", 0] },
+                            "pending",
+                            "paid"
+                        ]
+                    }
+                }
+            },
+            { $sort: { netPayable: -1 } }
+        ]);
+
+        const activeSellers = await User.countDocuments({ role: 'seller' });
+
+        // Growth: compare current month vs last month revenue
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+        const [thisMonth, lastMonth] = await Promise.all([
+            SubOrder.aggregate([
+                { $match: { createdAt: { $gte: startOfMonth } } },
+                { $group: { _id: null, total: { $sum: "$customerPaid" } } }
+            ]),
+            SubOrder.aggregate([
+                { $match: { createdAt: { $gte: startOfLastMonth, $lt: startOfMonth } } },
+                { $group: { _id: null, total: { $sum: "$customerPaid" } } }
+            ])
+        ]);
+
+        const thisMonthRevenue = thisMonth[0]?.total || 0;
+        const lastMonthRevenue = lastMonth[0]?.total || 1;
+        const growthPercent = parseFloat(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1));
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                stats: {
+                    totalRevenue:        Math.round(kpi.totalRevenue),
+                    platformCommission:  Math.round(kpi.totalCommission),
+                    totalSellerPayable:  Math.round(kpi.totalSellerPayout),
+                    pendingPayouts:      Math.round(kpi.pendingPayouts),
+                    paidOutThisMonth:    Math.round(kpi.paidOut),
+                    activeSellerCount:   activeSellers,
+                    commissionRate:      COMMISSION_RATE,
+                    growthPercent:       isNaN(growthPercent) ? 0 : growthPercent,
+                },
+                payouts: sellerAgg
+            }
+        });
+
+    } catch (error) {
+        console.error("getEarningsSummary Error:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 module.exports = {
     getUser,
     getProduct,
@@ -531,5 +671,6 @@ module.exports = {
     getCoupon,
     getSingleCoupon,
     updateCoupon,
-    deleteCoupon
+    deleteCoupon,
+    getEarningsSummary,
 };

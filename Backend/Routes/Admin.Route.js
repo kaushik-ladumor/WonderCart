@@ -11,6 +11,14 @@ const requireVerification = require("../Middlewares/RequireVerification");
 
 
 
+// Get earnings summary (platform commission + seller payables)
+adminRouter.get(
+    "/earnings-summary",
+    Authorization,
+    authorizationRole('admin'),
+    adminController.getEarningsSummary
+);
+
 // Get all users
 adminRouter.get(
     "/users",
