@@ -2,58 +2,59 @@
 
 ![WonderCart Hero](./wondercart_hero_1777654337170.png)
 
-[![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Latest-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![Gemini AI](https://img.shields.io/badge/Gemini_AI-Flash-4285F4?logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=vercel)](https://wondercart-customer.netlify.app)
+[![Frontend - Netlify](https://img.shields.io/badge/Frontend-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://wondercart-customer.netlify.app)
+[![Backend - Render](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
 
-**WonderCart** is a production-grade, multi-vendor e-commerce platform designed for speed, scalability, and premium user experience. Built with a unified backend and specialized frontends for Customers, Sellers, and Administrators, WonderCart integrates cutting-edge AI features, real-time synchronization, and a robust financial split engine.
+**WonderCart** is a production-grade, multi-vendor e-commerce platform designed for speed, scalability, and premium user experience. Built with a unified backend and specialized high-fidelity frontends for Customers, Sellers, and Administrators.
+
+🔗 **Live Demo:** [https://wondercart-customer.netlify.app](https://wondercart-customer.netlify.app)
 
 ---
 
-## ✨ Core Ecosystem
+## ✨ Core Platforms
 
-The platform is divided into three distinct, high-fidelity React applications:
+### 👤 Customer App (`User_app`) - [Deployed on Netlify]
+*The ultimate shopping experience with a focus on discovery and seamless checkout.*
+- **AI Mood-Based Shopping**: Recommend products based on the user's current mood using advanced sentiment mapping.
+- **Visual Search**: Upload an image to find similar products instantly using MobileNet-powered vector embeddings.
+- **AI Chatbot**: Intelligent customer support and order tracking powered by **Google Gemini**.
+- **Shared Carts**: Collaborate with friends by sharing your shopping cart link.
+- **Wallet & Credits**: Internal wallet for instant refunds, promotional credits, and seamless payments.
+- **Advanced Order Tracking**: Real-time item-level checklists and visual status timelines.
+- **Coupons & Wishlists**: Robust discount system and persistent product wishlists.
 
-### 👤 Customer Experience (`User_app`)
-- **Premium UI/UX**: Built with React 19 and Tailwind CSS 4 for a buttery-smooth, modern shopping experience.
-- **AI Chatbot**: Integrated Gemini-powered AI to help users find products and track orders via natural language.
-- **Smart Checkout**: Real-time stock validation, automated tax calculation, and Razorpay-powered secure payments.
-- **Wallet System**: Seamless internal credits for instant refunds and promotional balances.
+### 🏪 Seller Hub (`Seller_app`) - [Deployed on Netlify]
+*A powerful command center for vendors to scale their business.*
+- **Inventory & Variants**: Manage complex products with multiple color/size variants and granular stock control.
+- **Deal Management**: Create and track flash deals and limited-time offers with performance analytics.
+- **Store Health Metrics**: Real-time tracking of Customer Satisfaction, Return Rate, and Growth.
+- **Sales Analytics**: High-fidelity data visualization with **Recharts** for revenue and order trends.
+- **Multi-Stage Fulfillment**: Granular control over the order lifecycle (Pending → Packed → Shipped → Delivered).
+- **Merchant Onboarding**: Fast-track application process for new vendors.
 
-### 🏪 Seller Hub (`Seller_app`)
-- **Inventory Control**: Granular management of product variants (colors, sizes) with real-time stock tracking.
-- **Fulfillment Pipeline**: Multi-stage order processing (Pending → Shipped → Delivered) with tracking integration.
-- **Advanced Analytics**: Real-time sales charts and revenue insights powered by Recharts.
-- **Merchant Onboarding**: Streamlined application process for new vendors.
-
-### 🛡️ Admin Control (`Admin_app`)
-- **Global Oversight**: Monitor Platform GMV, order volume, and seller performance from a centralized command center.
-- **Vendor Management**: Global commission configuration and seller verification workflows.
-- **Financial Split Engine**: Advanced T+1 settlement logic and automated payout monitoring via Razorpay Route.
-- **System Health**: Real-time logs and user growth analytics.
+### 🛡️ Admin Portal (`Admin_app`) - [Deployed on Netlify]
+*Total control over the ecosystem's health and financial flow.*
+- **Global Financial Dashboard**: Monitor platform GMV, total earnings, and order distribution.
+- **Razorpay Split Engine**: Automated vendor payouts and commission deduction via Razorpay Route.
+- **Merchant Oversight**: Review seller applications, manage commissions, and handle vendor relations.
+- **Dispute & Suspension**: Case-based system for managing user/seller moderation and account suspensions.
+- **System Monitoring**: Real-time platform stats and growth tracking.
 
 ---
 
 ## 🚀 Advanced Technical Features
 
-### 🤖 AI & Machine Learning
-- **Gemini Integration**: Uses `gemini-1.5-flash` for intelligent intent classification and customer support.
-- **Edge ML**: Integrated TensorFlow.js and MobileNet for future-ready image recognition and product classification.
-- **Automated Summarization**: AI-driven product description enhancement and review analysis.
+### 🤖 AI & Machine Learning Architecture
+- **Intent Classification**: Uses `gemini-1.5-flash` to understand customer queries and automate responses.
+- **Edge ML**: Integrated **TensorFlow.js** for client-side and server-side image processing.
+- **Vector Embeddings**: Cosine similarity matching for high-precision visual search results.
 
-### 🏗️ Backend Architecture
-- **Unified API**: A robust Express.js backend serving all three platforms with Role-Based Access Control (RBAC).
-- **Socket Synchronization**: Real-time inventory and order status updates using Socket.io.
-- **Financial Split Engine**: Master orders are intelligently split into vendor-specific sub-orders with automated commission deduction.
-- **Cron Automation**: Automated system maintenance, daily reports, and scheduled payout triggers.
-
-### 🔒 Security & Reliability
-- **JWT Auth**: Secure, state-of-the-art authentication across all platforms.
-- **Data Integrity**: Persistent snapshots of product data at checkout to ensure historical accuracy (e.g., price and images).
-- **Cloud Storage**: Seamless media management via Cloudinary and Multer.
+### 🏗️ Backend Architecture (`Backend`) - [Deployed on Render]
+- **Order Splitting Engine**: Master orders are automatically split into vendor-specific Sub-Orders during checkout.
+- **Real-Time Sync**: Instant notifications and inventory updates via **Socket.io**.
+- **Cron Automation**: Scheduled tasks for system maintenance and daily financial reports.
+- **Robust Security**: JWT-based Role-Based Access Control (RBAC) and data sanitization.
 
 ---
 
@@ -61,12 +62,12 @@ The platform is divided into three distinct, high-fidelity React applications:
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Frontend** | React 19, Vite 8, Tailwind CSS 4, DaisyUI 5, Framer Motion, TanStack Query |
+| **Frontend** | React, Vite, Tailwind CSS, DaisyUI, Framer Motion, TanStack Query |
 | **Backend** | Node.js, Express.js, MongoDB (Mongoose) |
 | **AI / ML** | Google Gemini, TensorFlow.js, Transformers.js |
 | **Real-time** | Socket.io |
 | **Payments** | Razorpay (Standard & Route Split) |
-| **DevOps** | Vercel (Frontend), Cron Jobs |
+| **Deployment** | Netlify (Frontend), Render (Backend) |
 
 ---
 
@@ -74,10 +75,10 @@ The platform is divided into three distinct, high-fidelity React applications:
 
 ```text
 WonderCart/
-├── Admin_app/        # Platform Control Frontend (React)
-├── Backend/          # Node.js/Express API & AI Services
-├── Seller_app/       # Vendor Management Frontend (React)
-└── User_app/         # Customer Shopping Frontend (React)
+├── Admin_app/        # Platform Control Frontend
+├── Seller_app/       # Vendor Management Frontend
+├── User_app/         # Customer Shopping Frontend
+└── Backend/          # Node.js/Express API & AI Services
 ```
 
 ---
@@ -85,25 +86,30 @@ WonderCart/
 ## ⚙️ Setup & Installation
 
 ### 1. Prerequisites
-- Node.js (v20+)
+- Node.js
 - MongoDB Atlas account
-- Razorpay API keys
+- Razorpay API keys (Standard + Route)
 - Google Gemini API key
 - Cloudinary account
 
-### 2. Backend Setup
-```bash
-cd Backend
-npm install
-# Create .env file with your credentials
-npm start
+### 2. Environment Configuration
+Create a `.env` in the `Backend/` directory:
+```env
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_secret
+GEMINI_API_KEY=your_key
+RAZORPAY_KEY_ID=your_id
+RAZORPAY_KEY_SECRET=your_secret
+CLOUDINARY_URL=your_url
 ```
 
-### 3. Frontend Setup (Repeat for User, Seller, and Admin)
+### 3. Running Locally
 ```bash
-cd [App_Name]
-npm install
-npm run dev
+# Start Backend
+cd Backend && npm install && npm start
+
+# Start Frontends (Admin/Seller/User)
+cd [App_Name] && npm install && npm run dev
 ```
 
 ---
