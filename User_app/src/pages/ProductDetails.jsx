@@ -567,12 +567,24 @@ const ProductDetail = () => {
           {product.seller && (
             <div className="mb-10 p-5 bg-[#f8fafc] rounded-2xl border border-[#edf2f7] flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-white border border-[#e2e8f0] p-1.5 overflow-hidden shadow-sm">
-                  <img
-                    src={product.seller.shopLogo || "/placeholder-shop.jpg"}
-                    alt={product.seller.shopName}
-                    className="w-full h-full object-contain"
-                  />
+                <div className="w-14 h-14 rounded-xl bg-white border border-[#e2e8f0] p-1.5 overflow-hidden shadow-sm flex items-center justify-center">
+                  {product.seller.shopLogo ? (
+                    <img
+                      src={product.seller.shopLogo}
+                      alt={product.seller.shopName}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
+                    />
+                  ) : null}
+                  <span 
+                    className="text-2xl" 
+                    style={{ display: product.seller.shopLogo ? 'none' : 'block' }}
+                  >
+                    🏪
+                  </span>
                 </div>
                 <div>
                   <h4 className="text-[0.88rem] font-bold text-[#11182d]">{product.seller.shopName || "WonderCart Seller"}</h4>

@@ -42,7 +42,16 @@ const ProductCard = ({
           src={getProductImage(product.variants)}
           alt={product.name}
           className="w-full h-full object-contain p-6 mix-blend-multiply"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+          }}
         />
+        <div 
+          className="absolute inset-0 items-center justify-center bg-[#f8fafc] hidden"
+        >
+          <span className="text-4xl">📦</span>
+        </div>
 
         {stock === 0 && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">

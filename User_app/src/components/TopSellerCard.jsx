@@ -36,7 +36,14 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
             src={productImage} 
             alt={productName}
             className="w-full h-full object-contain mix-blend-normal"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+            }}
           />
+          <div className="absolute inset-0 items-center justify-center bg-[#0e1112] hidden">
+             <span className="text-6xl">✨</span>
+          </div>
         </div>
 
         <div className="md:w-[60%] p-8 flex flex-col justify-center">
@@ -98,7 +105,14 @@ const TopSellerCard = ({ seller, isFeatured = false }) => {
           src={productImage} 
           alt={productName}
           className="w-full h-full object-contain"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+          }}
         />
+        <div className="absolute inset-0 items-center justify-center bg-[#f8f9fc] hidden">
+           <span className="text-5xl">🛍️</span>
+        </div>
       </div>
       
       <div className="px-2 pb-2">

@@ -9,6 +9,7 @@ const Notification = require("../Models/Notification.Model");
 const Review = require("../Models/Review.Model");
 const cloudinary = require("../Utils/Cloudinary");
 const Coupon = require("../Models/Coupon.Model");
+const UsedReferral = require("../Models/UsedReferral.Model");
 const { addPoints } = require("../Services/GamificationService");
 const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
@@ -41,7 +42,10 @@ const assignCouponsToNewUser = async (user) => {
     await Coupon.updateMany(
       {
         status: "active",
-        targetType: { $in: ["all", "new_users"] },
+        $or: [
+          { targetType: { $in: ["all", "new_users"] } },
+          { couponType: "welcome" }
+        ],
         $or: [
           { neverExpires: true },
           { endDate: { $gt: now } }
@@ -106,12 +110,26 @@ const signup = async (req, res) => {
 
     // Handle Referral logic
     let referrerId = null;
+    let isAlreadyReferred = false;
+
     if (referredByCode) {
+        // Check if this email was already referred in the past
+        const previouslyReferred = await UsedReferral.findOne({ email: email.toLowerCase() });
+        if (previouslyReferred) {
+            isAlreadyReferred = true;
+        }
+
         const referrer = await User.findOne({ referralCode: referredByCode.toUpperCase() });
-        if (referrer) {
+        if (referrer && !isAlreadyReferred) {
             referrerId = referrer._id;
             referrer.referralCount = (referrer.referralCount || 0) + 1;
             await referrer.save();
+
+            // Record this email as referred
+            await UsedReferral.create({ 
+                email: email.toLowerCase(), 
+                referrer: referrerId 
+            });
         }
     }
 
@@ -317,12 +335,25 @@ const googleAuth = async (req, res) => {
 
       // Handle Referral logic for Google Auth
       let referrerId = null;
+      let isAlreadyReferred = false;
+
       if (req.body.referredByCode) {
+          const previouslyReferred = await UsedReferral.findOne({ email: email.toLowerCase() });
+          if (previouslyReferred) {
+              isAlreadyReferred = true;
+          }
+
           const referrer = await User.findOne({ referralCode: req.body.referredByCode.toUpperCase() });
-          if (referrer) {
+          if (referrer && !isAlreadyReferred) {
               referrerId = referrer._id;
               referrer.referralCount = (referrer.referralCount || 0) + 1;
               await referrer.save();
+
+              // Record this email as referred
+              await UsedReferral.create({ 
+                  email: email.toLowerCase(), 
+                  referrer: referrerId 
+              });
           }
       }
 

@@ -29,6 +29,14 @@ const addPoints = async (userId, points, reason) => {
       { new: true }
     );
 
+    // 📩 Notification for User
+    await sendNotification({
+      userId: user._id,
+      role: "user",
+      type: "POINTS_EARNED",
+      message: `🎉 You've earned ${points} reward points: ${reason}`,
+    });
+
     return user;
   } catch (error) {
     console.error("Error in addPoints:", error);
