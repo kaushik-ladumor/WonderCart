@@ -7,6 +7,7 @@ const Notification = require("../Models/Notification.Model");
 const transporter = require("../Middlewares/EmailConfig");
 const cloudinary = require("../Utils/Cloudinary");
 const Razorpay = require("razorpay");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -373,19 +374,13 @@ const submitForReview = async (req, res) => {
     const user = await User.findById(userId);
 
     for (const admin of admins) {
-      await Notification.create({
-        user: admin._id,
+      // 📩 Notification for Admin
+      sendNotification({
+        userId: admin._id,
         role: "admin",
         type: "seller-application",
         message: `📋 New seller application from ${user.username} — Shop: ${profile.shopName}`,
       });
-
-      if (global.io) {
-        global.io.to(`admin-${admin._id}`).emit("notification", {
-          type: "seller-application",
-          message: `📋 New seller application from ${user.username} — Shop: ${profile.shopName}`,
-        });
-      }
     }
 
     // Send admin notification email
@@ -442,16 +437,11 @@ const requestNewCategory = async (req, res) => {
     profile.categoryRequests.push({ category, reason });
     await profile.save();
 
-    // Notify admins
-    const admins = await User.find({ role: "admin" });
-    for (const admin of admins) {
-      await Notification.create({
-        user: admin._id,
-        role: "admin",
+    // 📩 Notification for Admin
+    notifyAdmins({
         type: "category-request",
         message: `🏷️ Category request: "${category}" from ${profile.shopName}`,
-      });
-    }
+    });
 
     res.json({ success: true, message: "Category request submitted" });
   } catch (error) {
@@ -607,19 +597,19 @@ const approveSeller = async (req, res) => {
       console.error("Approval email failed:", emailErr);
     }
 
-    // Notify seller
-    await Notification.create({
-      user: profile.user,
+    // 📩 Notification for Seller
+    sendNotification({
+      userId: profile.user,
       role: "seller",
       type: "seller-approved",
       message: "🎉 Your seller account has been approved! Start listing products.",
     });
-    if (global.io) {
-      global.io.to(`seller-${profile.user}`).emit("notification", {
+
+    // 📩 Notification for Admin
+    notifyAdmins({
         type: "seller-approved",
-        message: "🎉 Your seller account has been approved!",
-      });
-    }
+        message: `Seller approved: ${profile.shopName}`,
+    });
 
     res.json({ success: true, message: "Seller approved" });
   } catch (error) {
@@ -673,11 +663,18 @@ const rejectSeller = async (req, res) => {
       console.error("Rejection email failed:", emailErr);
     }
 
-    await Notification.create({
-      user: profile.user,
+    // 📩 Notification for Seller
+    sendNotification({
+      userId: profile.user,
       role: "seller",
       type: "seller-rejected",
       message: `❌ Your seller application was not approved. Reason: ${reason}`,
+    });
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+        type: "seller-rejected",
+        message: `Seller application rejected: ${profile.shopName}`,
     });
 
     res.json({ success: true, message: "Seller rejected" });
@@ -730,11 +727,18 @@ const requestSellerInfo = async (req, res) => {
       console.error("Request info email failed:", emailErr);
     }
 
-    await Notification.create({
-      user: profile.user,
+    // 📩 Notification for Seller
+    sendNotification({
+      userId: profile.user,
       role: "seller",
       type: "seller-info-request",
       message: `📝 Admin requested more info: ${message}`,
+    });
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+        type: "seller-info-request",
+        message: `Info requested from seller: ${profile.shopName}`,
     });
 
     res.json({ success: true, message: "Info requested from seller" });

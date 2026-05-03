@@ -14,7 +14,7 @@ userRouter.post("/login", userController.login);
 userRouter.post("/refresh-token", userController.refreshToken);
 userRouter.post("/logout", Authenticate, userController.logout);
 userRouter.post("/verify", userController.verify);
-userRouter.post("/resendCode", userController.resendCode);
+userRouter.post("/resend-code", userController.resendCode);
 userRouter.post("/forget-password", userController.forgatPassword);
 userRouter.post("/reset-password", userController.resetPassword);
 userRouter.put("/update-password", Authenticate, userController.updatePassword);

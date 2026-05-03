@@ -69,7 +69,7 @@ const MyCoupons = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -80,17 +80,11 @@ const MyCoupons = () => {
 
     const fetchData = async () => {
       try {
-        const [couponsRes, profileRes] = await Promise.all([
-          axios.get(`${API_URL}/coupon/available`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${API_URL}/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-        ]);
+        const couponsRes = await axios.get(`${API_URL}/coupon/available`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         
         setCoupons(couponsRes.data.coupons || []);
-        setUser(profileRes.data.user || null);
       } catch (error) {
         toast.error("Failed to load your rewards");
       } finally {
@@ -269,85 +263,7 @@ const MyCoupons = () => {
           </div>
         )}
 
-        {/* Ambassador Program Section */}
-        {user && (
-          <div className="mt-8 rounded-[24px] bg-[#11182d] p-6 sm:p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-              <Gift className="w-32 h-32" />
-            </div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f49d7] text-white">
-                  <Zap className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-[1.2rem] font-bold">Ambassador Program</h2>
-                  <p className="text-[0.78rem] text-white/60">Invite friends and earn ₹100 for each successful referral</p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-center">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="w-full sm:w-auto flex flex-col gap-1.5">
-                    <span className="text-[0.65rem] font-bold uppercase tracking-widest text-white/40 ml-1">Your Referral Code</span>
-                    <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-4 py-3 min-w-[200px] justify-between">
-                      <span className="text-[1.1rem] font-mono font-bold tracking-wider">{user.referralCode || "N/A"}</span>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(user.referralCode || "");
-                          toast.success("Code copied!");
-                        }}
-                        className="text-[0.7rem] font-bold text-[#0f49d7] hover:text-white transition-colors"
-                      >
-                        COPY
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="hidden sm:block w-px h-12 bg-white/10"></div>
-
-                  <div className="w-full sm:w-auto flex flex-col gap-1.5">
-                    <span className="text-[0.65rem] font-bold uppercase tracking-widest text-white/40 ml-1">Friends Referred</span>
-                    <div className="text-[1.5rem] font-bold px-1">{user.referralCount || 0}</div>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={async () => {
-                    if (!user.referralCode) {
-                      toast.error("Referral code is still being generated. Please try again in a moment.");
-                      return;
-                    }
-                    
-                    const shareData = {
-                      title: 'Shop & Save at WonderCart',
-                      text: `Join WonderCart using my referral code ${user.referralCode} and we both get exclusive rewards!`,
-                      url: `https://wondercart-customer.netlify.app/signup?ref=${user.referralCode}`
-                    };
-
-                    try {
-                      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                        await navigator.share(shareData);
-                        toast.success("Shared successfully!");
-                      } else {
-                        throw new Error("Share not supported");
-                      }
-                    } catch (err) {
-                      // Fallback to clipboard
-                      const fullText = `${shareData.text} Shop here: ${shareData.url}`;
-                      await navigator.clipboard.writeText(fullText);
-                      toast.success("Invite message copied to clipboard!");
-                    }
-                  }}
-                  className="w-full md:w-auto bg-[#0f49d7] hover:bg-[#0042cc] text-white rounded-xl px-8 py-4 text-[0.85rem] font-bold transition-all shadow-lg shadow-[#0f49d7]/20"
-                >
-                  Share Invite Link
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Info Section */}
         <div className="mt-8">

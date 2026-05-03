@@ -10,6 +10,7 @@ const Review = require("../Models/Review.Model");
 const cloudinary = require("../Utils/Cloudinary");
 const Coupon = require("../Models/Coupon.Model");
 const { addPoints } = require("../Services/GamificationService");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 
 
@@ -91,6 +92,12 @@ const signup = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      if (!existingUser.isVerified) {
+        return res.status(409).json({
+          success: false,
+          message: "Email not verified, please login to verify your email.",
+        });
+      }
       return res.status(409).json({
         success: false,
         message: "User already exists",
@@ -127,9 +134,24 @@ const signup = async (req, res) => {
     // Assign eligible coupons to new user and generate referral code
     await assignCouponsToNewUser(newUser);
 
-    // --- Gamification: Signup Points ---
-    await addPoints(newUser._id, 50, "Signup Reward");
+    // --- Gamification: Points Allocation ---
+    if (referrerId) {
+      // Award 50 points to the Referrer
+      await addPoints(referrerId, 50, `Referral Reward: ${newUser.username} joined`);
+      
+      // Award 20 points to the New User (Referral Bonus)
+      await addPoints(newUser._id, 20, "Referral Signup Bonus");
+    } else {
+      // Standard Signup Reward for non-referred users
+      await addPoints(newUser._id, 50, "Signup Reward");
+    }
     // ------------------------------------
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+        type: 'NEW_USER',
+        message: `New ${newUser.role} joined: ${newUser.username} (${newUser.email})`,
+    });
 
     // await sendVerificationCode(newUser.email, verificationCode);
 
@@ -317,9 +339,24 @@ const googleAuth = async (req, res) => {
       // Assign eligible coupons to new user and generate referral code
       await assignCouponsToNewUser(user);
 
-      // --- Gamification: Signup Points ---
-      await addPoints(user._id, 50, "Signup Reward (Google)");
+      // --- Gamification: Points Allocation ---
+      if (referrerId) {
+        // Award 50 points to the Referrer
+        await addPoints(referrerId, 50, `Referral Reward: ${user.username} joined (Google)`);
+        
+        // Award 20 points to the New User (Referral Bonus)
+        await addPoints(user._id, 20, "Referral Signup Bonus");
+      } else {
+        // Standard Signup Reward for non-referred users
+        await addPoints(user._id, 50, "Signup Reward (Google)");
+      }
       // ------------------------------------
+
+      // 📩 Notification for Admin
+      notifyAdmins({
+          type: 'NEW_USER',
+          message: `New ${user.role} joined via Google: ${user.username} (${user.email})`,
+      });
     }
 
     const { accessToken, refreshToken } = await generateTokens(user);

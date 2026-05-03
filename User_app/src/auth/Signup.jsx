@@ -184,9 +184,7 @@ function Signup() {
         reset();
 
         // SHOW VERIFY MODAL IMMEDIATELY
-        setTimeout(() => {
-           document.getElementById("verify_email_modal")?.showModal();
-        }, 500);
+        setShowVerifyModal(true);
       } else {
         // Handle other errors
         toast.error(
@@ -453,7 +451,7 @@ function Signup() {
         </div>
       </div>
 
-      <VerifyEmail modalId="verify_email_modal" email={tempEmail} />
+      <VerifyEmail isOpen={showVerifyModal} onClose={() => setShowVerifyModal(false)} email={tempEmail} />
     </div>
   );
 }

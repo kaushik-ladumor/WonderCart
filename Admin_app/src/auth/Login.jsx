@@ -131,12 +131,12 @@ function Login() {
                 <label className="text-[0.84rem] font-semibold text-[#25324d] mb-1.5 block">
                   Password
                 </label>
-                <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
-                  <Lock className="w-4.5 h-4.5 text-[#6d7892]" />
+                <div className="relative flex items-center bg-white rounded-xl border border-[#d9deeb] focus-within:border-[#0f49d7] focus-within:ring-1 focus-within:ring-[#0f49d7] transition-all">
+                  <Lock className="w-4.5 h-4.5 text-[#6d7892] ml-3 flex-shrink-0" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8]"
+                    className="bg-transparent flex-1 text-[0.88rem] text-[#11182d] outline-none placeholder:text-[#94a3b8] py-2.5 pl-2 pr-10 min-w-0"
                     disabled={disabled}
                     {...register("password", {
                       required: "Password is required",
@@ -145,7 +145,7 @@ function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-[#6d7892] hover:text-[#11182d] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6d7892] hover:text-[#11182d] transition-colors"
                     disabled={disabled}
                   >
                     {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}

@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { getProductEmbedding } = require("../Services/Embedding");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 // Helper function to calculate discount percentage
 const calculateDiscount = (originalPrice, sellingPrice) => {
@@ -206,6 +207,12 @@ const deleteProduct = async (req, res) => {
 
     await product.deleteOne();
 
+    // 📩 Notification for Admin
+    notifyAdmins({
+        type: 'PRODUCT_DELETED',
+        message: `Product "${product.name}" was deleted by the seller.`,
+    });
+
     return res.status(200).json({
       success: true,
       message: "Product and images deleted successfully",
@@ -335,6 +342,12 @@ const createProduct = async (req, res) => {
       console.error("Mood auto-assign failed:", moodErr);
     }
     // ------------------------------------------------------
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+        type: 'NEW_PRODUCT',
+        message: `New product listed: "${product.name}" in ${product.category}. Review required.`,
+    });
 
     return res.status(201).json({ success: true, data: product });
   } catch (err) {

@@ -8,6 +8,8 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
+
 /**
  * Create a Razorpay order to top up the wallet balance
  */
@@ -62,6 +64,20 @@ const verifyWalletTopUp = async (req, res) => {
         message: `₹${amount} added successfully to your wallet.`
       });
     }
+
+    // 📩 Notification for User
+    sendNotification({
+        userId: userId,
+        role: 'buyer',
+        type: 'WALLET_TOPUP',
+        message: `₹${amount} has been added to your wallet. Current balance: ₹${user.walletBalance}`,
+    });
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+        type: 'WALLET_TOPUP',
+        message: `User ${user.username} recharged wallet with ₹${amount}.`,
+    });
 
     await WalletTransaction.create({
       user: userId,

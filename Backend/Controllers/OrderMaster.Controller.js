@@ -178,6 +178,15 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
     await subOrder.save({ session });
     subOrderIds.push(subOrder._id);
 
+    // 📩 Notification for Seller
+    sendNotification({
+        userId: data.seller,
+        role: 'seller',
+        type: 'NEW_ORDER',
+        message: `New order received: ${subOrder.subOrderId}. Check your dashboard.`,
+        orderId: masterOrder._id
+    });
+
     // Stock Management
     for (const item of data.items) {
       await Product.updateOne(
@@ -198,6 +207,22 @@ const createFinalOrders = async (session, masterData, subOrdersData) => {
 
   await masterOrder.save({ session });
   await Cart.updateOne({ user: masterData.user }, { $set: { items: [] } }, { session });
+
+  // 📩 Notification for Buyer
+  sendNotification({
+      userId: masterOrder.user,
+      role: 'buyer',
+      type: 'ORDER_PLACED',
+      message: `Your order ${masterOrder.orderId} has been placed successfully!`,
+      orderId: masterOrder._id
+  });
+
+  // 📩 Notification for Admin
+  notifyAdmins({
+      type: 'NEW_ORDER',
+      message: `New platform order: ${masterOrder.orderId} (₹${masterOrder.totalAmount})`,
+      orderId: masterOrder._id
+  });
 
   return masterOrder;
 };
@@ -408,6 +433,13 @@ const cancelSubOrder = async (req, res) => {
         orderId: masterOrder._id
     });
 
+    // 📩 Notification for Admin
+    notifyAdmins({
+        type: 'ORDER_CANCELLED',
+        message: `Sub-order ${subOrder.subOrderId} has been cancelled.`,
+        orderId: masterOrder._id
+    });
+
     res.status(200).json({ success: true, message: "Sub-order cancelled and refund initiated", subOrder });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -587,6 +619,13 @@ const updateSubOrderStatus = async (req, res) => {
           role: 'buyer',
           type: 'ORDER_UPDATE',
           message: msgs[status],
+          orderId: masterOrder._id
+      });
+
+      // 📩 Notification for Admin
+      notifyAdmins({
+          type: 'ORDER_UPDATE',
+          message: `Order ${subOrder.subOrderId} status updated to ${status}.`,
           orderId: masterOrder._id
       });
     }

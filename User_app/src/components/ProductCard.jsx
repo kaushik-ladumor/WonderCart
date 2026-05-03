@@ -53,7 +53,7 @@ const ProductCard = ({
         )}
 
         {/* Ranking Badges */}
-        <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+        <div className="absolute top-3 left-3 z-20 flex flex-row flex-wrap gap-1.5">
           {product.tags?.isTrending && (
             <span className="bg-[#ef4444] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
               Trending

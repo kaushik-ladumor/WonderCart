@@ -9,6 +9,7 @@ const Cart = require("../Models/Cart.Model");
 const Wishlist = require("../Models/WishList.Model");
 const Notification = require("../Models/Notification.Model");
 const Coupon = require("../Models/Coupon.Model");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 const getPublicId = (url) => {
     if (!url) return null;
@@ -109,10 +110,12 @@ const productApproval = async (req, res) => {
         global.io.emit("admin-dashboard-update");
         global.io.emit("seller-dashboard-update");
 
-        global.io.to(`seller-${product.owner}`).emit("notification", {
-            type: "product-approved",
-            message: `✅ Your product "${product.name}" approved`,
-            productId: product._id,
+        // 📩 Notification for Seller
+        sendNotification({
+            userId: product.owner,
+            role: "seller",
+            type: "PRODUCT_APPROVED",
+            message: `✅ Your product "${product.name}" has been approved.`,
         });
 
         res.status(200).json({
@@ -152,9 +155,12 @@ const rejectProduct = async (req, res) => {
         global.io.emit("admin-dashboard-update");
         global.io.emit("seller-dashboard-update");
 
-        global.io.to(`seller-${product.owner}`).emit("notification", {
-            type: "product-rejected",
-            message: `❌ Your product "${product.name}" was rejected`,
+        // 📩 Notification for Seller
+        sendNotification({
+            userId: product.owner,
+            role: "seller",
+            type: "PRODUCT_REJECTED",
+            message: `❌ Your product "${product.name}" was rejected and removed.`,
         });
 
         res.status(200).json({
@@ -392,6 +398,18 @@ const createCoupon = async (req, res) => {
         });
 
         await coupon.save();
+
+        // 📩 Notification for Targeted Users
+        if (targetType === "specific_users" && finalAllowedUsers.length > 0) {
+            for (const targetUserId of finalAllowedUsers) {
+                sendNotification({
+                    userId: targetUserId,
+                    role: targetRole || "user",
+                    type: "NEW_COUPON",
+                    message: `🎁 You've received an exclusive coupon: ${code}! Use it now.`,
+                });
+            }
+        }
 
         res.status(201).json({
             message: "Coupon created successfully",
