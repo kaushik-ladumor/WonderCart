@@ -219,7 +219,7 @@ const Checkout = () => {
     0,
   );
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const gst = Math.round(subtotal * 0.18);
+  const gst = 0; // Taxes are already included in product prices
   const codFee = paymentOption === "cod" ? 50 : 0;
 
   let couponDiscountAmount = appliedCoupon ? appliedCoupon.discount || 0 : 0;
@@ -319,7 +319,7 @@ const Checkout = () => {
     try {
       const orderData = {
         items: orderItems.map((item) => ({
-          product: item.productId,
+          product: item.product || item.productId,
           quantity: item.quantity,
           price: item.price,
           name: item.productName,
@@ -876,12 +876,7 @@ const Checkout = () => {
                     </span>
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className="text-[#42506d]">GST (18%)</span>
-                  <span className="font-medium text-[#11182d]">
-                    {formatPrice(gst)}
-                  </span>
-                </div>
+
               </div>
 
               <div className="mt-4 border-t border-[#e7ebf4] pt-4">

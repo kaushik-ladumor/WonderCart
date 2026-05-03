@@ -424,10 +424,7 @@ const OrderConfirmationPage = () => {
                  <span className="text-gray-500 font-medium uppercase tracking-wider text-[10px]">Shipping Charges</span>
                  <span className="text-emerald-600 font-bold uppercase text-[10px]">FREE</span>
               </div>
-              <div className="flex justify-between items-center text-sm pb-4 border-b border-gray-100">
-                 <span className="text-gray-500 font-medium uppercase tracking-wider text-[10px]">Tax Included (0%)</span>
-                 <span className="font-bold text-[#11182d]">₹0</span>
-              </div>
+
               <div className="flex justify-between items-center pt-2">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#0f49d7]">Grand Total</span>
                 <span className="text-2xl font-bold text-[#0f49d7]">₹{order.totalAmount?.toLocaleString()}</span>
@@ -686,10 +683,10 @@ const OrderConfirmationPage = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-row gap-3">
                      <button 
                        onClick={() => navigate("/shop")}
-                       className="w-full h-11 bg-[#0f49d7] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#11182d] shadow-md shadow-[#0f49d7]/10 active:scale-95"
+                       className="flex-1 h-11 bg-[#0f49d7] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#11182d] shadow-md shadow-[#0f49d7]/10 active:scale-95"
                      >
                        Shop Again
                      </button>
@@ -700,7 +697,7 @@ const OrderConfirmationPage = () => {
                             setModalType("cancel");
                             setIsModalOpen(true);
                           }}
-                          className="w-full h-11 bg-white text-red-600 border border-red-100 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-red-50 active:scale-95"
+                          className="flex-1 h-11 bg-white text-red-600 border border-red-100 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-red-50 active:scale-95"
                         >
                           Cancel Order
                         </button>
@@ -712,23 +709,23 @@ const OrderConfirmationPage = () => {
                             setModalType("return");
                             setIsModalOpen(true);
                           }}
-                          className="w-full h-11 bg-white text-[#0f49d7] border border-[#0f49d7]/10 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#f6f8fd] active:scale-95"
+                          className="flex-1 h-11 bg-white text-[#0f49d7] border border-[#0f49d7]/10 rounded-xl text-[10px] font-semibold uppercase tracking-[0.14em] transition-all hover:bg-[#f6f8fd] active:scale-95"
                         >
                           Return Order
                         </button>
                      )}
 
-                     {['shipped', 'out_for_delivery'].includes(order.status) && (
-                        <p className="text-[10px] text-center text-[#6d7892] italic font-medium">
-                          Order already shipped, cannot cancel.
-                        </p>
-                     )}
-                     
-                     {['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery'].includes(order.status) && (
-                        <p className="text-[10px] text-center text-[#6d7892] italic font-medium">
+                      {['shipped', 'out_for_delivery'].includes(order.status) && (
+                        <div className="flex-1 h-11 flex items-center justify-center bg-white border border-[#e1e5f1] rounded-xl px-4 text-[9px] font-bold text-[#6d7892] uppercase tracking-[0.14em] text-center">
+                           Order Shipped
+                        </div>
+                      )}
+                      
+                      {['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery'].includes(order.status) && (
+                        <div className="flex-1 h-11 flex items-center justify-center bg-white border border-[#e1e5f1] rounded-xl px-4 text-[9px] font-bold text-[#6d7892] uppercase tracking-[0.14em] text-center">
                           Return available after delivery
-                        </p>
-                     )}
+                        </div>
+                      )}
                   </div>
                </div>
             </div>

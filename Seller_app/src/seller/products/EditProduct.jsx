@@ -11,6 +11,7 @@ import {
   Save,
   AlertCircle,
   ImageIcon,
+  ChevronDown,
 } from "lucide-react";
 import Loader from "../../components/Loader";
 import axios from "axios";
@@ -26,8 +27,11 @@ const EditProduct = () => {
     name: "",
     description: "",
     category: "",
+    mood: "",
     variants: [],
   });
+  const [moods, setMoods] = useState([]);
+  const [fetchingMoods, setFetchingMoods] = useState(true);
   const [newImages, setNewImages] = useState({});
 
   const calculateDiscount = (originalPrice, sellingPrice) => {
@@ -40,6 +44,7 @@ const EditProduct = () => {
 
   useEffect(() => {
     fetchProduct();
+    fetchMoods();
   }, [id]);
 
   const fetchProduct = async () => {
@@ -87,12 +92,25 @@ const EditProduct = () => {
         })),
       }));
 
-      setFormData({ ...data.data, variants: updatedVariants });
+      setFormData({ ...data.data, variants: updatedVariants, mood: data.data.moods?.[0] || "" });
     } catch (err) {
       console.error("Fetch error:", err);
       setError(err.response?.data?.message || "Failed to load product data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMoods = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/mood`);
+      if (res.data.success) {
+        setMoods(res.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch moods:", err);
+    } finally {
+      setFetchingMoods(false);
     }
   };
 
@@ -281,6 +299,7 @@ const EditProduct = () => {
       formDataToSend.append("name", formData.name);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("category", formData.category);
+      formDataToSend.append("moods", JSON.stringify([formData.mood]));
 
       const variantsData = formData.variants.map((variant) => ({
         color: variant.color,
@@ -408,6 +427,32 @@ const EditProduct = () => {
                   placeholder="e.g., T-Shirts, Shoes"
                   className="w-full rounded-[14px] border border-[#d7dcea] bg-[#f8f9fd] px-4 py-2.5 text-[0.82rem] text-[#11182d] outline-none placeholder:text-[#98a4bd] focus:border-[#0f49d7] focus:bg-white transition-all"
                 />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#6d7892] ml-1">
+                Product Mood *
+              </label>
+              <div className="relative">
+                <select
+                  name="mood"
+                  required
+                  value={formData.mood}
+                  onChange={handleChange}
+                  disabled={fetchingMoods || moods.length === 0}
+                  className="w-full appearance-none rounded-[14px] border border-[#d7dcea] bg-[#f8f9fd] px-4 py-2.5 text-[0.82rem] text-[#11182d] outline-none focus:border-[#0f49d7] focus:bg-white transition-all"
+                >
+                  <option value="">Select Mood</option>
+                  {moods.map((mood) => (
+                    <option key={mood._id} value={mood.name}>
+                      {mood.emoji} {mood.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#98a4bd]">
+                  <ChevronDown className="h-4 w-4" />
+                </div>
               </div>
             </div>
 
@@ -619,7 +664,7 @@ const EditProduct = () => {
                                 />
                               </div>
                             </div>
-                            <div className="flex items-center justify-between pb-1 gap-2">
+                            <div className="flex flex-col pb-1 gap-1">
                               <div className="flex-1">
                                 {disc > 0 ? (
                                   <span className="inline-flex h-8 w-full items-center justify-center rounded-[10px] bg-emerald-50 text-[0.68rem] font-black text-emerald-600 border border-emerald-100 shadow-inner">
@@ -631,11 +676,23 @@ const EditProduct = () => {
                                   </span>
                                 )}
                               </div>
+                              {size.sellingPrice && (
+                                <div className="text-[10px] font-medium text-[#6d7892] space-y-0.5 px-1">
+                                  <div className="flex justify-between">
+                                    <span>SGST (2.5%)</span>
+                                    <span className="font-bold">₹{(size.sellingPrice * 0.025).toFixed(2)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>CGST (2.5%)</span>
+                                    <span className="font-bold">₹{(size.sellingPrice * 0.025).toFixed(2)}</span>
+                                  </div>
+                                </div>
+                              )}
                               {formData.variants[vIdx].sizes.length > 1 && (
                                 <button
                                   type="button"
                                   onClick={() => removeSize(vIdx, sIdx)}
-                                  className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                                  className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors self-end mt-1"
                                 >
                                   <Minus className="h-3.5 w-3.5" />
                                 </button>

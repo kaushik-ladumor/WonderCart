@@ -10,7 +10,7 @@ const notificationSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ["seller", "buyer", "admin"],
+            enum: ["seller", "buyer", "admin", "user"],
             required: true,
         },
         type: String,

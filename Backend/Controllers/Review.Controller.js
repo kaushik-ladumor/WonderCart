@@ -3,6 +3,7 @@ const Product = require("../Models/Product.Model");
 const SubOrder = require("../Models/SubOrder.Model");
 const Notification = require("../Models/Notification.Model");
 const mongoose = require("mongoose");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 const updateProductStats = async (productId) => {
   try {
@@ -126,13 +127,20 @@ const addReview = async (req, res) => {
 
     // Notify Seller
     if (product && product.owner) {
-      await Notification.create({
-        user: product.owner,
-        title: "New Product Review",
+      await sendNotification({
+        userId: product.owner,
+        role: "seller",
+        type: "REVIEW",
         message: `Your product "${product.name}" received a ${rating}-star review.`,
-        type: "REVIEW"
       });
     }
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+      type: "NEW_REVIEW",
+      message: `Product "${product.name}" received a ${rating}-star review.`,
+      orderId: orderItemId,
+    });
 
     await updateProductStats(productId);
 

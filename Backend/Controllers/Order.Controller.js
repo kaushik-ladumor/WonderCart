@@ -11,6 +11,7 @@ const crypto = require("crypto");
 const Notification = require("../Models/Notification.Model");
 const Coupon = require("../Models/Coupon.Model");
 const WalletTransaction = require("../Models/WalletTransaction.Model");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 const checkLoyalUserCoupons = async (userId) => {
   try {
@@ -166,9 +167,9 @@ const createOrder = async (req, res) => {
           applicableSubTotal = categoryItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         }
 
-        const tempTax = Math.round(subTotal * 0.18);
+        const tempTax = 0;
         const tempShipping = subTotal < 999 ? 50 : 0;
-        let baseForDiscount = applicableSubTotal + Math.round(applicableSubTotal * 0.18);
+        let baseForDiscount = applicableSubTotal;
 
         if (!coupon.targetCategory) {
           baseForDiscount += tempShipping;
@@ -190,7 +191,7 @@ const createOrder = async (req, res) => {
       }
     }
 
-    const tax = Math.round(subTotal * 0.18);
+    const tax = 0;
     const shipping = subTotal < 999 ? 50 : 0;
     const finalTotalAmount = Math.round(Math.max(0, (subTotal + tax + shipping) - couponDiscount));
     const payableTotal = Math.max(0, finalTotalAmount - (walletUsed || 0));
@@ -367,7 +368,7 @@ const handleOrderCreation = async (req, res, data) => {
     Object.keys(vendorGroups).forEach((vid, index) => {
       const vendorItems = vendorGroups[vid];
       const subTotal = vendorItems.reduce((sum, it) => sum + (it.price * it.quantity), 0);
-      const tax = Math.round(subTotal * 0.18);
+      const tax = 0;
       const shipping = subTotal < 999 ? 50 : 0;
       const commission = Math.round(subTotal * COMM_RATE);
       const payout = subTotal - commission;
@@ -416,9 +417,9 @@ const handleOrderCreation = async (req, res, data) => {
           }, 0);
         }
 
-        const tax = Math.round(applicableBase * 0.18);
+        const tax = 0;
         const shipping = totalSubTotal < 999 ? 50 : 0;
-        let baseForDiscount = applicableBase + tax;
+        let baseForDiscount = applicableBase;
         if (!coupon.targetCategory) baseForDiscount += shipping;
 
         if (coupon.dealType === 'percentage') {
@@ -509,23 +510,21 @@ const handleOrderCreation = async (req, res, data) => {
         ? `Your sub-order ${sub.subOrderId} is CONFIRMED. Payment ₹${sub.subTotal} received.`
         : `New sub-order ${sub.subOrderId} placed (COD). Please confirm.`;
 
-      await Notification.create({
-        user: sellerId,
+      await sendNotification({
+        userId: sellerId,
         role: "seller",
         type: paymentMethod === "Razorpay" ? "new-order-paid" : "new-order",
         message: msg,
         orderId: order._id,
       });
-
-      if (global.io) {
-        global.io.to(`seller-${sellerId}`).emit("notification", {
-          type: "sub-order-update",
-          message: msg,
-          orderId: order._id,
-          subOrderId: sub.subOrderId
-        });
-      }
     }
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+      type: "NEW_ORDER",
+      message: `New Master Order ${masterId} placed. Total: ₹${finalOrderTotal}`,
+      orderId: order._id,
+    });
 
     if (global.io) global.io.emit("seller-dashboard-update");
 
@@ -846,28 +845,21 @@ const updateSubOrderStatus = async (req, res) => {
 
     const msg = notificationMessages[status] || `Your sub-order status is now ${status}`;
 
+    // 📩 Notification for Admin
+    notifyAdmins({
+      type: "SUBORDER_UPDATE",
+      message: `Sub-order ${subOrder.subOrderId} updated to ${status} by seller.`,
+      orderId: order._id,
+    });
+
     // Notify Customer
-    await Notification.create({
-      user: order.user,
-      role: "customer",
+    await sendNotification({
+      userId: order.user,
+      role: "buyer",
       type: "order-update",
       message: msg,
       orderId: order._id
     });
-
-    if (global.io) {
-      const socketPayload = {
-        type: "order-update",
-        message: msg,
-        orderId: order._id,
-        subOrderId: subOrder.subOrderId,
-        status: status,
-        order: order // Send the updated order object
-      };
-
-      global.io.to(`user-${order.user}`).emit("notification", socketPayload);
-      global.io.to(order._id.toString()).emit("order-status-updated", socketPayload);
-    }
 
     res.status(200).json({
       success: true,

@@ -188,9 +188,16 @@ export default function Navbar() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    // Standardize to local update for UI snappiness
-    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
-    toast.success("Read all");
+    try {
+      await fetch(`${API_URL}/notifications/read-all`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+      toast.success("Read all");
+    } catch (error) {
+      console.error("Error marking all read:", error);
+    }
   };
 
   const clearAll = async () => {
@@ -226,8 +233,20 @@ export default function Navbar() {
     }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications((prev) => prev.filter((item) => item._id !== id));
+  const deleteNotification = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch(`${API_URL}/notifications/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((prev) => prev.filter((item) => item._id !== id));
+      toast.success("Removed");
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const unreadCount = notifications.filter((item) => !item.read).length;
@@ -411,7 +430,10 @@ export default function Navbar() {
             >
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0f49d7] px-1 text-[10px] font-semibold text-white">
+                <span 
+                  key={cartCount}
+                  className="absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0f49d7] px-1 text-[10px] font-semibold text-white animate-pop shadow-sm"
+                >
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}

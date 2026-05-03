@@ -113,23 +113,25 @@ const signup = async (req, res) => {
     let isAlreadyReferred = false;
 
     if (referredByCode) {
-        // Check if this email was already referred in the past
+        // Check if this email was already referred in the past (Safety against deletion/re-signup abuse)
         const previouslyReferred = await UsedReferral.findOne({ email: email.toLowerCase() });
+        
         if (previouslyReferred) {
             isAlreadyReferred = true;
-        }
+            console.log(`[AUTH] Blocked referral bonus for ${email} (Already referred in past)`);
+        } else {
+            const referrer = await User.findOne({ referralCode: referredByCode.toUpperCase() });
+            if (referrer) {
+                referrerId = referrer._id;
+                referrer.referralCount = (referrer.referralCount || 0) + 1;
+                await referrer.save();
 
-        const referrer = await User.findOne({ referralCode: referredByCode.toUpperCase() });
-        if (referrer && !isAlreadyReferred) {
-            referrerId = referrer._id;
-            referrer.referralCount = (referrer.referralCount || 0) + 1;
-            await referrer.save();
-
-            // Record this email as referred
-            await UsedReferral.create({ 
-                email: email.toLowerCase(), 
-                referrer: referrerId 
-            });
+                // Record this email as referred permanently
+                await UsedReferral.create({ 
+                    email: email.toLowerCase(), 
+                    referrer: referrerId 
+                });
+            }
         }
     }
 
@@ -341,19 +343,20 @@ const googleAuth = async (req, res) => {
           const previouslyReferred = await UsedReferral.findOne({ email: email.toLowerCase() });
           if (previouslyReferred) {
               isAlreadyReferred = true;
-          }
+              console.log(`[AUTH-GOOGLE] Blocked referral bonus for ${email} (Already referred in past)`);
+          } else {
+              const referrer = await User.findOne({ referralCode: req.body.referredByCode.toUpperCase() });
+              if (referrer) {
+                  referrerId = referrer._id;
+                  referrer.referralCount = (referrer.referralCount || 0) + 1;
+                  await referrer.save();
 
-          const referrer = await User.findOne({ referralCode: req.body.referredByCode.toUpperCase() });
-          if (referrer && !isAlreadyReferred) {
-              referrerId = referrer._id;
-              referrer.referralCount = (referrer.referralCount || 0) + 1;
-              await referrer.save();
-
-              // Record this email as referred
-              await UsedReferral.create({ 
-                  email: email.toLowerCase(), 
-                  referrer: referrerId 
-              });
+                  // Record this email as referred permanently
+                  await UsedReferral.create({ 
+                      email: email.toLowerCase(), 
+                      referrer: referrerId 
+                  });
+              }
           }
       }
 

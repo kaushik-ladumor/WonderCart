@@ -1,9 +1,9 @@
 const SellerReview = require("../Models/SellerReview.Model");
 const SellerProfile = require("../Models/SellerProfile.Model");
 const SubOrder = require("../Models/SubOrder.Model");
-const Notification = require("../Models/Notification.Model");
 const User = require("../Models/User.Model");
 const mongoose = require("mongoose");
+const { sendNotification, notifyAdmins } = require("../Utils/notificationHelper");
 
 /**
  * Update Seller average_rating and total_reviews
@@ -100,6 +100,13 @@ const createSellerReview = async (req, res) => {
         message: `⭐ New ${rating}-star review received`,
       });
     }
+
+    // 📩 Notification for Admin
+    notifyAdmins({
+      type: "SELLER_REVIEW",
+      message: `Seller received a new ${rating}-star review from ${buyer?.name || "a customer"}`,
+      orderId: subOrderId,
+    });
 
     res.status(201).json({ success: true, message: "Thanks for your feedback!", review });
   } catch (error) {

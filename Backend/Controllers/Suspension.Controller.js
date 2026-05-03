@@ -5,6 +5,7 @@ const MasterOrder = require("../Models/MasterOrder.Model");
 const Product = require("../Models/Product.Model");
 const Notification = require("../Models/Notification.Model");
 const mongoose = require("mongoose");
+const { sendNotification } = require("../Utils/notificationHelper");
 
 const generateCaseId = async () => {
     const year = new Date().getFullYear();
@@ -18,11 +19,12 @@ const sendTemplateEmail = async (templateId, recipient, data) => {
     console.log(`[DATA]:`, data);
     
     // Also create a system notification
-    await Notification.create({
-        user: data.userId,
+    await sendNotification({
+        userId: data.userId,
+        role: data.role || 'buyer', // Default to buyer if not specified
         message: `System Alert: ${templateId} - ${data.subject || 'Action required on your account'}`,
         type: 'system',
-        meta: { caseId: data.caseId, orderId: data.orderId }
+        orderId: data.orderId
     });
 };
 
@@ -48,6 +50,7 @@ const issueWarning = async (req, res) => {
         // Template 2 — SELLER FORMAL WARNING
         await sendTemplateEmail("T2_SELLER_WARNING", seller.email, {
             userId: seller._id,
+            role: "seller",
             caseId,
             complaintId,
             orderId,
@@ -133,6 +136,7 @@ const suspendSeller = async (req, res) => {
                 // Template 4 — BUYER: ORDER ON HOLD
                 await sendTemplateEmail("T4_BUYER_ORDER_HOLD", sub.masterOrder.user.email, {
                     userId: sub.masterOrder.user._id,
+                    role: "buyer",
                     orderId: sub.masterOrder.orderId,
                     caseId
                 });
@@ -140,6 +144,7 @@ const suspendSeller = async (req, res) => {
                 // STATUS B: In Transit -> Notify
                 await sendTemplateEmail("T6_BUYER_IN_TRANSIT_NOTICE", sub.masterOrder.user.email, {
                     userId: sub.masterOrder.user._id,
+                    role: "buyer",
                     orderId: sub.masterOrder.orderId,
                     caseId
                 });
@@ -149,6 +154,7 @@ const suspendSeller = async (req, res) => {
         // Template 3 — SELLER SUSPENSION NOTICE
         await sendTemplateEmail("T3_SELLER_SUSPENSION_NOTICE", seller.email, {
             userId: seller._id,
+            role: "seller",
             caseId,
             frozenAmount: frozenBalance
         });
@@ -186,12 +192,14 @@ const resolveSuspension = async (req, res) => {
             // Template 9A — SELLER: APPEAL APPROVED
             await sendTemplateEmail("T9A_SELLER_REINSTATED", seller.email, {
                 userId: seller._id,
+                role: "seller",
                 caseId
             });
 
             // Template 10 — PAYOUT RELEASE
             await sendTemplateEmail("T10_SELLER_PAYOUT_RELEASED", seller.email, {
                 userId: seller._id,
+                role: "seller",
                 caseId,
                 finalAmount: suspensionCase.frozenBalance - suspensionCase.deductionLedger.reduce((a, b) => a + b.amount, 0)
             });
@@ -207,6 +215,7 @@ const resolveSuspension = async (req, res) => {
             // Template 9B — SELLER: PERMANENT BAN
             await sendTemplateEmail("T9B_SELLER_BANNED", seller.email, {
                 userId: seller._id,
+                role: "seller",
                 caseId
             });
         }

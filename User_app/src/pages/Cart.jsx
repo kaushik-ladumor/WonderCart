@@ -289,7 +289,7 @@ const Cart = () => {
     (sum, item) => sum + getItemPrice(item) * item.quantity,
     0,
   );
-  const tax = Math.round(subtotal * 0.18);
+  const tax = 0; // Taxes are already included in product prices
   const shipping = subtotal > 0 ? (subtotal >= 999 ? 0 : 50) : 0;
   const total = subtotal + tax + shipping;
   const points = Math.round(total * 0.01);
@@ -517,12 +517,7 @@ const Cart = () => {
                       : `Rs ${shipping.toLocaleString("en-IN")}`}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#42506d]">Tax (18% GST)</span>
-                  <span className="font-medium text-[#11182d]">
-                    Rs {tax.toLocaleString("en-IN")}
-                  </span>
-                </div>
+
                 {totalSavings > 0 && (
                   <div className="flex items-center justify-between">
                     <span className="text-[#42506d]">Savings</span>

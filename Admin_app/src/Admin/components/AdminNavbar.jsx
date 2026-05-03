@@ -108,8 +108,18 @@ const AdminNavbar = () => {
   };
 
   const markAllRead = async () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    toast.success("Marked all as read");
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await axios.patch(`${API_URL}/notifications/read-all`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      toast.success("Marked all as read");
+    } catch (error) {
+      console.error("Error marking all read:", error);
+    }
   };
 
   const handleMarkAsRead = async (id) => {
@@ -138,7 +148,18 @@ const AdminNavbar = () => {
   };
 
   const deleteNotification = async (id) => {
-    setNotifications((prev) => prev.filter((n) => n._id !== id));
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await axios.delete(`${API_URL}/notifications/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+      toast.success("Removed");
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const navItems = [

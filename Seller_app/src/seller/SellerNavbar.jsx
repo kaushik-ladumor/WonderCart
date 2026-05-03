@@ -174,14 +174,19 @@ const SellerNavbar = () => {
   };
 
   const markAllRead = async () => {
-    // We'll just mark them locally for speed or handle bulk on backend if needed
-    // Our backend doesn't have a bulk read yet, so we'll do individual or add it
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    // For now, let's just mark locally and then mark each in background or add bulk route
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    toast.success("Marked all as read");
+    try {
+      await fetch(`${API_URL}/notifications/read-all`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      toast.success("Marked all as read");
+    } catch (error) {
+      console.error("Error marking all read:", error);
+    }
   };
 
   const markOneRead = async (id) => {
@@ -224,8 +229,19 @@ const SellerNavbar = () => {
   };
 
   const deleteNotification = async (id) => {
-    // Fallback to mark as read or just filter out if we don't have a specific delete
-    setNotifications((prev) => prev.filter((n) => n._id !== id));
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch(`${API_URL}/notifications/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+      toast.success("Removed");
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const handleNavClick = (event, isLocked, onSuccess) => {

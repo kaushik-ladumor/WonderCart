@@ -29,6 +29,39 @@ const dealTypeOptions = [
   { value: 'coupon', label: 'Coupon Code', Icon: Ticket, desc: 'Shareable code with usage limits' }
 ];
 
+const getInitialTimeState = () => {
+  const d = new Date(Date.now() + 15 * 60 * 1000); // 15 mins from now for admin review buffer
+  const m = d.getMinutes();
+  const remainder = m % 15;
+  if (remainder !== 0) {
+      d.setMinutes(m + (15 - remainder));
+  }
+  
+  const startDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  
+  let startHour = d.getHours();
+  const startAmPm = startHour >= 12 ? 'PM' : 'AM';
+  startHour = startHour % 12 || 12;
+  const startHourStr = String(startHour).padStart(2, '0');
+  
+  const startMinuteStr = String(d.getMinutes()).padStart(2, '0');
+
+  const endD = new Date(d.getTime() + 24 * 60 * 60 * 1000); // 1 day later
+  const endDate = new Date(endD.getTime() - endD.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  
+  let endHour = endD.getHours();
+  const endAmPm = endHour >= 12 ? 'PM' : 'AM';
+  endHour = endHour % 12 || 12;
+  const endHourStr = String(endHour).padStart(2, '0');
+  
+  const endMinuteStr = String(endD.getMinutes()).padStart(2, '0');
+
+  return {
+      startDate, startHour: startHourStr, startMinute: startMinuteStr, startAmPm,
+      endDate, endHour: endHourStr, endMinute: endMinuteStr, endAmPm
+  };
+};
+
 const SellerCreateDeal = () => {
   const { token } = useAuth();
   const [products, setProducts] = useState([]);
@@ -46,10 +79,9 @@ const SellerCreateDeal = () => {
     getQuantity: 1,
     title: '',
     description: '',
-    startDateTime: '',
-    endDateTime: '',
     category: '',
-    couponCode: ''
+    couponCode: '',
+    ...getInitialTimeState()
   });
 
   useEffect(() => {
@@ -94,39 +126,62 @@ const SellerCreateDeal = () => {
     // Clear previous errors
     setError(null);
 
-    // Business Logic Validations
-    if (formData.dealType === 'category' && !formData.category) {
-      return setError("Please specify a category.");
-    }
-    if (formData.productIds.length === 0 && formData.dealType !== 'category') {
-      return setError("Please select at least one product.");
-    }
-    if (formData.discountValue > 70 && formData.discountType === 'percent') {
-      return setError("Maximum allowed discount is 70%.");
-    }
+      // Business Logic Validations
+      if (formData.dealType === 'category' && !formData.category) {
+        return setError("Please specify a category.");
+      }
+      if (formData.productIds.length === 0 && formData.dealType !== 'category') {
+        return setError("Please select at least one product.");
+      }
+      if (formData.discountValue > 70 && formData.discountType === 'percent') {
+        return setError("Maximum allowed discount is 70%.");
+      }
 
-    try {
-      setSubmitting(true);
-      await axios.post(`${API_URL}/api/deals`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSuccess(true);
+      // Time parsing
+      const convertToDate = (dateStr, h, m, ampm) => {
+          if (!dateStr) return null;
+          let hours = parseInt(h, 10);
+          if (ampm === 'PM' && hours < 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+          
+          const [year, month, day] = dateStr.split('-');
+          return new Date(year, month - 1, day, hours, parseInt(m, 10), 0, 0);
+      };
 
-      // Reset Form State
-      setFormData({
-        productIds: [],
-        dealType: 'single',
-        discountType: 'percent',
-        discountValue: 25,
-        buyQuantity: 1,
-        getQuantity: 1,
-        title: '',
-        description: '',
-        startDateTime: '',
-        endDateTime: '',
-        category: '',
-        couponCode: ''
-      });
+      const startD = convertToDate(formData.startDate, formData.startHour, formData.startMinute, formData.startAmPm);
+      const endD = convertToDate(formData.endDate, formData.endHour, formData.endMinute, formData.endAmPm);
+
+      if (!startD || !endD) {
+        return setError("Please complete both start and end date/time.");
+      }
+
+      const payload = {
+          ...formData,
+          startDateTime: startD.toISOString(),
+          endDateTime: endD.toISOString()
+      };
+
+      try {
+        setSubmitting(true);
+        await axios.post(`${API_URL}/api/deals`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess(true);
+  
+        // Reset Form State
+        setFormData({
+          productIds: [],
+          dealType: 'single',
+          discountType: 'percent',
+          discountValue: 25,
+          buyQuantity: 1,
+          getQuantity: 1,
+          title: '',
+          description: '',
+          category: '',
+          couponCode: '',
+          ...getInitialTimeState()
+        });
 
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
@@ -167,7 +222,7 @@ const SellerCreateDeal = () => {
               {dealTypeOptions.map(opt => (
                 <button
                   key={opt.value}
-                  onClick={() => setFormData({ ...formData, dealType: opt.value })}
+                  onClick={() => setFormData({ ...formData, dealType: opt.value, productIds: [], category: '' })}
                   className={`p-4 rounded-3xl border text-left transition-all ${formData.dealType === opt.value
                       ? 'bg-[#f0f5ff] border-[#2156d8] ring-1 ring-[#2156d8]'
                       : 'bg-white border-[#e2e8f0] hover:border-[#bfdbfe]'
@@ -233,7 +288,10 @@ const SellerCreateDeal = () => {
                       return (
                         <button
                           key={cat}
-                          onClick={() => setFormData({ ...formData, category: cat })}
+                          onClick={() => {
+                              const catProductIds = products.filter(p => p.category === cat).map(p => p._id);
+                              setFormData({ ...formData, category: cat, productIds: catProductIds });
+                          }}
                           className={`p-4 rounded-2xl border text-left transition-all ${isSelected
                               ? 'bg-[#eff4ff] border-[#2156d8] ring-1 ring-[#2156d8]'
                               : 'bg-white border-[#e2e8f0] hover:border-[#cbd5e1]'
@@ -331,25 +389,89 @@ const SellerCreateDeal = () => {
               )}
 
               {/* Timing */}
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-2 block">Start Date/Time</label>
-                  <input
-                    type="datetime-local"
-                    min={getMinStartTime()}
-                    value={formData.startDateTime}
-                    onChange={(e) => setFormData({ ...formData, startDateTime: e.target.value })}
-                    className="w-full h-12 bg-[#f8faff] border border-[#e2e8f0] rounded-2xl px-4 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
-                  />
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-[#f8faff] p-4 rounded-3xl border border-[#e2e8f0]">
+                  <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-3 block">Start Date & Time</label>
+                  <div className="space-y-3">
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-4 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.startHour}
+                        onChange={(e) => setFormData({ ...formData, startHour: e.target.value })}
+                        className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-3 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <span className="flex items-center text-gray-400 font-bold">:</span>
+                      <select
+                        value={formData.startMinute}
+                        onChange={(e) => setFormData({ ...formData, startMinute: e.target.value })}
+                        className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-3 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                      >
+                        {['00', '15', '30', '45'].map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={formData.startAmPm}
+                        onChange={(e) => setFormData({ ...formData, startAmPm: e.target.value })}
+                        className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-3 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-2 block">End Date/Time</label>
-                  <input
-                    type="datetime-local"
-                    value={formData.endDateTime}
-                    onChange={(e) => setFormData({ ...formData, endDateTime: e.target.value })}
-                    className="w-full h-12 bg-[#f8faff] border border-[#e2e8f0] rounded-2xl px-4 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
-                  />
+
+                <div className="bg-[#f8faff] p-4 rounded-3xl border border-[#e2e8f0]">
+                  <label className="text-[11px] font-black text-[#7c87a2] uppercase tracking-[0.12em] mb-3 block">End Date & Time</label>
+                  <div className="space-y-3">
+                    <input
+                      type="date"
+                      min={formData.startDate || new Date().toISOString().split('T')[0]}
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-4 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.endHour}
+                        onChange={(e) => setFormData({ ...formData, endHour: e.target.value })}
+                        className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-3 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <span className="flex items-center text-gray-400 font-bold">:</span>
+                      <select
+                        value={formData.endMinute}
+                        onChange={(e) => setFormData({ ...formData, endMinute: e.target.value })}
+                        className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-3 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                      >
+                        {['00', '15', '30', '45', '59'].map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={formData.endAmPm}
+                        onChange={(e) => setFormData({ ...formData, endAmPm: e.target.value })}
+                        className="w-full h-12 bg-white border border-[#e2e8f0] rounded-2xl px-3 text-[14px] font-bold text-[#141b2d] outline-none focus:border-[#2156d8] transition-all"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

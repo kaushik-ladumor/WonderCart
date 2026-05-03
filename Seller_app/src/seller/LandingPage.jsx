@@ -26,74 +26,31 @@ import {
 // --- Components ---
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   return (
     <nav className="sticky top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#e1e5f1] font-poppins">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-28">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
+          <Link to="/" className="flex items-center gap-4 group shrink-0">
             <img 
               src="/WonderCart Logo.png" 
               alt="WonderCart" 
-              className="h-9 sm:h-11 w-auto object-contain"
+              className="h-16 sm:h-20 w-auto object-contain"
             />
-            <div className="h-8 w-px bg-[#e1e5f1] mx-1 hidden sm:block"></div>
-            <span className="text-[0.85rem] font-bold text-[#11182d] uppercase tracking-[0.15em] hidden sm:block">
+            <div className="h-12 w-px bg-[#e1e5f1] mx-1 hidden sm:block"></div>
+            <span className="text-[1.1rem] font-bold text-[#11182d] uppercase tracking-[0.18em] hidden sm:block">
               Seller <span className="text-[#0f49d7]">Portal</span>
             </span>
           </Link>
 
-          {/* Desktop Nav Links removed per request */}
-
-          {/* Buttons & Mobile Toggle */}
+          {/* Buttons */}
           <div className="flex items-center gap-4 sm:gap-8 shrink-0">
             <button
               onClick={() => document.getElementById("login_modal")?.showModal()}
-              className="hidden sm:block text-[0.88rem] font-semibold text-[#11182d] hover:text-[#0f49d7] transition-colors"
+              className="text-[1rem] font-bold text-[#11182d] hover:text-[#0f49d7] transition-colors uppercase tracking-wider"
             >
               Login
             </button>
-            <Link
-              to="/signup"
-              className="hidden sm:block px-6 py-2.5 bg-[#0f49d7] text-white text-[0.88rem] font-semibold rounded-[14px] hover:bg-[#003da3] transition-colors shadow-sm"
-            >
-              Start Selling
-            </Link>
-            
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-[#6d7892] hover:bg-[#f6f7fb] rounded-[14px] transition-colors"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <div className={`lg:hidden absolute top-full left-0 right-0 bg-white border-b border-[#e1e5f1] transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-[500px] opacity-100 visible' : 'max-h-0 opacity-0 invisible'}`}>
-        <div className="px-4 py-6 space-y-4">
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                document.getElementById("login_modal")?.showModal();
-              }}
-              className="w-full py-3.5 text-[0.88rem] font-semibold text-[#11182d] bg-[#f6f7fb] rounded-[14px]"
-            >
-              Login
-            </button>
-            <Link
-              to="/signup"
-              onClick={() => setIsMenuOpen(false)}
-              className="w-full py-3.5 bg-[#0f49d7] text-white text-center text-[0.88rem] font-semibold rounded-[14px] shadow-sm hover:bg-[#003da3]"
-            >
-              Start Selling
-            </Link>
           </div>
         </div>
       </div>

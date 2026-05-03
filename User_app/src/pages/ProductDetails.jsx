@@ -22,6 +22,8 @@ import {
   X,
   Zap,
   ChevronRight,
+  ShoppingBag,
+  Loader2,
 } from "lucide-react";
 import Loader from "../components/Loader";
 import { API_URL } from "../utils/constants";
@@ -56,6 +58,8 @@ const ProductDetail = () => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isEligible, setIsEligible] = useState(false);
   const [eligibleOrderId, setEligibleOrderId] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
   // Decode user ID from JWT
   useEffect(() => {
@@ -269,7 +273,7 @@ const ProductDetail = () => {
       try {
         // We need an orderItemId to review, but on product page we check if user BOUGHT it ever.
         // For simplicity, we'll look for any delivered sub-order item for this product that isn't reviewed.
-        const res = await axios.get(`${API_URL}/orders/my-orders`, {
+        const res = await axios.get(`${API_URL}/order/my-orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -393,6 +397,7 @@ const ProductDetail = () => {
       return;
     }
 
+    setAddingToCart(true);
     try {
       const response = await axios.post(
         `${API_URL}/cart/add`,
@@ -417,6 +422,8 @@ const ProductDetail = () => {
           setCartCount((c) => c + quantity);
         }
         toast.success("Added to cart!");
+        setIsAdded(true);
+        setTimeout(() => setIsAdded(false), 2000);
       } else {
         throw new Error(response.data.message || "Failed to add to cart");
       }
@@ -432,6 +439,8 @@ const ProductDetail = () => {
       } else {
         toast.error("Failed to add to cart. Please try again.");
       }
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -444,7 +453,7 @@ const ProductDetail = () => {
       return toast.error("Please select a valid size");
 
     const orderItem = {
-      productId: product._id,
+      product: product._id,
       productName: product.name,
       productImg: images[0],
       color: selectedColor,
@@ -501,7 +510,16 @@ const ProductDetail = () => {
                 className={`w-20 md:w-full aspect-square bg-[#f8fafc] rounded-xl overflow-hidden border-2 shrink-0 ${activeImage === i ? "border-primary" : "border-[#d7dcea]"
                   }`}
               >
-                <img src={img} alt="" className="w-full h-full object-contain p-2" />
+                <img 
+                  src={img} 
+                  alt="" 
+                  className="w-full h-full object-contain p-2" 
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="hidden w-full h-full items-center justify-center bg-gray-50 text-xl">📦</div>
               </button>
             ))}
           </div>
@@ -511,8 +529,16 @@ const ProductDetail = () => {
             <img
               src={images[activeImage] || "/placeholder.jpg"}
               alt={product.name}
-              className="w-full h-full object-contain mix-blend-multiply p-4"
+              className="w-full h-full object-contain mix-blend-multiply p-4 image-with-fallback"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
             />
+            <div className="hidden absolute inset-0 flex-col items-center justify-center bg-gray-50 text-6xl">
+              📦
+              <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest">Image Unavailable</p>
+            </div>
           </div>
         </div>
 
@@ -695,18 +721,36 @@ const ProductDetail = () => {
           <div className="flex flex-row gap-4 mb-4">
             <button
               onClick={addToCart}
-              disabled={!selectedSize || stock <= 0}
-              className="flex-1 bg-[#1e293b] text-white font-semibold rounded-2xl py-5 flex items-center justify-center gap-3 disabled:opacity-50 tracking-wider text-[0.82rem]"
+              disabled={!selectedSize || stock <= 0 || addingToCart}
+              className={`flex-1 h-12 rounded-[14px] font-semibold text-[0.82rem] uppercase tracking-[0.14em] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 ${
+                isAdded 
+                ? "bg-emerald-500 text-white" 
+                : "bg-[#11182d] text-white hover:bg-[#0f49d7] shadow-[#11182d]/10"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <ShoppingCart className="w-5 h-5" />
-              ADD TO CART
+              {addingToCart ? (
+                <div className="flex items-center gap-2">
+                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                   <span className="text-[10px]">ADDING...</span>
+                </div>
+              ) : isAdded ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-4 h-4" />
+                  Add to Cart
+                </>
+              )}
             </button>
             <button
               onClick={buyNow}
               disabled={!selectedSize || stock <= 0}
-              className="flex-1 bg-primary text-white font-semibold rounded-2xl py-5 disabled:opacity-50 tracking-wider text-[0.82rem]"
+              className="flex-1 h-12 bg-[#0f49d7] text-white rounded-[14px] font-semibold text-[0.82rem] uppercase tracking-[0.14em] transition-all hover:bg-[#11182d] shadow-lg shadow-[#0f49d7]/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              BUY NOW
+              Buy Now
             </button>
           </div>
 

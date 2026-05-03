@@ -97,16 +97,8 @@ const MoodProducts = () => {
     return (
         <div className="min-h-screen bg-[#f6f7fb] py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
+                {/* Header Card */}
                 <div className="mb-8">
-                    <button 
-                        onClick={() => navigate("/")}
-                        className="flex items-center gap-2 text-[0.8rem] font-bold text-[#62708d] uppercase tracking-widest hover:text-[#0f49d7] transition-colors mb-4"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Home
-                    </button>
-                    
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[32px] border border-[#e2e6f3] shadow-sm overflow-hidden relative">
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-2">

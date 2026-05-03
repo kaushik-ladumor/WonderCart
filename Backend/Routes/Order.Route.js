@@ -16,10 +16,11 @@ const {
   getAdminDashboardStats,
   razorpayWebhook,
   applyRewardCoupon,
+  cancelOrder,
+  requestReturn,
 } = require("../Controllers/OrderMaster.Controller");
 
 const {
-  cancelOrder,
 } = require("../Controllers/Order.Controller");
 
 const authenticate = require("../Middlewares/Auth");
@@ -32,6 +33,8 @@ router.post("/apply-reward", authenticate, applyRewardCoupon);
 router.get("/", authenticate, getMyOrders);
 router.get("/id/:orderId", authenticate, getMasterOrderById);
 router.patch("/sub-id/:subOrderId/cancel", authenticate, cancelSubOrder);
+router.post("/cancel", authenticate, cancelOrder);
+router.post("/return", authenticate, requestReturn);
 router.get("/track/:id", authenticate, trackOrder);
 router.get("/my-orders", authenticate, getMyOrders);
 

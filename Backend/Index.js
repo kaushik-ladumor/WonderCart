@@ -9,9 +9,11 @@ const { Server } = require("socket.io");
 const DbConnection = require("./Inits/DbConnection");
 const mainRoutes = require("./Routes/Main.Routes");
 const initSocket = require("./Inits/SocketIo");
+const initMoods = require("./Inits/MoodInit");
 
 const startServer = async () => {
   await DbConnection();
+  await initMoods();
 
   const initTopSellerCron = require("./cron/topSellerCron");
   initTopSellerCron();

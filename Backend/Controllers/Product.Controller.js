@@ -19,7 +19,7 @@ const calculateDiscount = (originalPrice, sellingPrice) => {
 
 const getProduct = async (req, res) => {
   try {
-    const { page, limit: qLimit, category } = req.query;
+    const { page, limit: qLimit, category, mood } = req.query;
     const p = parseInt(page) || 1;
     const l = parseInt(qLimit) || 8;
     const skip = (p - 1) * l;
@@ -27,6 +27,9 @@ const getProduct = async (req, res) => {
     const filter = { status: "approved" };
     if (category && category !== "all") {
       filter.category = { $regex: new RegExp(`^${category.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}$`, "i") };
+    }
+    if (mood && mood !== "all") {
+      filter.moods = { $in: [mood] };
     }
 
     const total = await Product.countDocuments(filter);
@@ -228,7 +231,7 @@ const deleteProduct = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const { name, description, category, variants } = req.body;
+    const { name, description, category, variants, moods } = req.body;
 
     if (!name || !description || !category || !variants) {
       return res.status(400).json({ success: false, message: "Missing fields" });
@@ -332,6 +335,8 @@ const createProduct = async (req, res) => {
       vector,
       owner: req.user.userId,
       status: "approved",
+      moods: moods ? JSON.parse(moods) : [],
+      moodAssignedBy: moods ? "admin" : "none", // Assuming seller selection is 'admin' level or similar for this logic
     });
 
     // --- Mood Hook: Auto-assign moods based on category ---
@@ -397,7 +402,7 @@ const getSellerProducts = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, category, variants } = req.body;
+    const { name, description, category, variants, moods } = req.body;
 
     const product = await Product.findById(id);
     if (!product) {
@@ -470,6 +475,11 @@ const updateProduct = async (req, res) => {
       } catch (vectorError) {
         console.error("Vector update failed:", vectorError.message);
       }
+    }
+    
+    if (moods) {
+      product.moods = JSON.parse(moods);
+      product.moodAssignedBy = "admin";
     }
 
     await product.save();

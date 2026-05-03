@@ -139,12 +139,25 @@ router.post('/', authMiddleware, authorizeRoles('seller'), async (req, res) => {
         }
 
         // 4. Validate Products & Stock Snapshot
-        if (!productIds || productIds.length === 0) {
+        let finalProductIds = productIds || [];
+
+        if (dealType === 'category') {
+            if (!category) {
+                return res.status(400).json({ success: false, message: 'Category is required for category deals.' });
+            }
+            const categoryProducts = await Product.find({ owner: req.user.userId, category: category });
+            if (categoryProducts.length === 0) {
+                return res.status(400).json({ success: false, message: `No active products found in category "${category}".` });
+            }
+            finalProductIds = categoryProducts.map(p => p._id);
+        }
+
+        if (!finalProductIds || finalProductIds.length === 0) {
             return res.status(400).json({ success: false, message: 'At least one product is required.' });
         }
 
-        const products = await Product.find({ _id: { $in: productIds } });
-        if (products.length !== productIds.length) {
+        const products = await Product.find({ _id: { $in: finalProductIds } });
+        if (products.length !== finalProductIds.length) {
             return res.status(404).json({ success: false, message: 'One or more products not found.' });
         }
 
@@ -160,7 +173,7 @@ router.post('/', authMiddleware, authorizeRoles('seller'), async (req, res) => {
 
         // 5. Check for Duplicate Active/Pending deals
         const existingDeal = await Deal.findOne({
-            productIds: { $in: productIds },
+            productIds: { $in: finalProductIds },
             status: { $in: ['pending', 'approved', 'live', 'paused'] },
             $or: [
                 { startDateTime: { $lt: new Date(endDateTime) }, endDateTime: { $gt: new Date(startDateTime) } }
@@ -173,7 +186,7 @@ router.post('/', authMiddleware, authorizeRoles('seller'), async (req, res) => {
 
         const deal = await Deal.create({
             sellerId: req.user.userId,
-            productIds,
+            productIds: finalProductIds,
             dealType,
             discountType,
             discountValue,

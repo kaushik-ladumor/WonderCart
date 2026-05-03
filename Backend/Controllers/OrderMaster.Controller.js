@@ -39,8 +39,15 @@ const prepareOrderSplitting = async (items, customerPin) => {
   const sellerGroups = {};
 
   for (const item of items) {
+    console.log(`[DEBUG] Finding product for item:`, item.product);
     const product = await Product.findById(item.product).populate("owner");
-    if (!product) throw new Error(`Product ${item.name || item.product} not found.`);
+    
+    if (!product) {
+      console.error(`[DEBUG] CRITICAL: Product not found for ID: ${item.product}. Payload:`, item);
+      throw new Error(`Product "${item.name || "ID: " + item.product}" not found in our records.`);
+    }
+    
+    console.log(`[DEBUG] Found product: ${product.name} (Seller: ${product.owner?.shopName})`);
 
     const sellerId = product.owner._id.toString();
     if (!sellerGroups[sellerId]) {
@@ -78,7 +85,7 @@ const prepareOrderSplitting = async (items, customerPin) => {
     const zone = getZone(group.sellerPin, customerPin);
     const edd = calculateEDD(new Date(), group.handlingDays, zone);
     const commission = 50; // Fixed ₹50 per seller
-    const tax = Math.round(group.subTotal * 0.18);
+    const tax = 0; // GST is already included in the selling price
     
     const mustShipBy = new Date();
     mustShipBy.setDate(mustShipBy.getDate() + group.handlingDays);
@@ -332,6 +339,188 @@ const placeOrder = async (req, res) => {
 };
 
 
+const cancelOrder = async (req, res) => {
+  const { subOrderId, reason } = req.body;
+  const userId = req.user.userId;
+  const role = req.user.role;
+
+  try {
+    // Find sub-order by human-readable subOrderId or Mongo ID
+    let subOrder = await SubOrder.findOne({ subOrderId: subOrderId });
+    if (!subOrder && mongoose.Types.ObjectId.isValid(subOrderId)) {
+      subOrder = await SubOrder.findById(subOrderId);
+    }
+
+    if (!subOrder) return res.status(404).json({ success: false, message: "Sub-order not found" });
+
+    // Validate ownership (if user)
+    const masterOrder = await MasterOrder.findById(subOrder.masterOrder);
+    if (!masterOrder) return res.status(404).json({ success: false, message: "Master order not found" });
+
+    if (role === 'user' && masterOrder.user.toString() !== userId) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    const statusWeights = {
+      "placed": 1,
+      "confirmed": 2,
+      "processing": 3,
+      "shipped": 4,
+      "out_for_delivery": 5,
+      "delivered": 6
+    };
+
+    const isCustomer = role === 'user';
+    const isAdmin = role === 'admin';
+
+    if (!isAdmin && isCustomer && statusWeights[subOrder.status] >= statusWeights["shipped"]) {
+      return res.status(400).json({ success: false, message: "Order already shipped, cannot cancel. Please refuse delivery at doorstep." });
+    }
+
+    if (subOrder.status === "cancelled") return res.status(400).json({ success: false, message: "Already cancelled" });
+
+    const prevStatus = subOrder.status;
+    subOrder.status = "cancelled";
+    subOrder.cancelledAt = new Date();
+    subOrder.statusHistory.push({ from: prevStatus, to: "cancelled", reason: reason || "User request", changed_by: `${role}:${userId}` });
+
+    // 1. RESTORE STOCK
+    for (const item of subOrder.items) {
+      await Product.updateOne(
+        { _id: item.product, "variants.color": item.color, "variants.sizes.size": item.size },
+        { $inc: { "variants.$[v].sizes.$[s].stock": item.quantity } },
+        { arrayFilters: [{ "v.color": item.color }, { "s.size": item.size }] }
+      );
+    }
+
+    // 2. RAZORPAY REFUND / REVERSAL
+    if (masterOrder.razorpayPaymentId) {
+      try {
+        // If payout was already released, we must reverse it first
+        if (subOrder.payoutStatus === "released" && subOrder.razorpayTransferId) {
+           await razorpay.transfers.reverse(subOrder.razorpayTransferId, {
+             amount: Math.round(subOrder.sellerPayout * 100)
+           });
+        }
+
+        // Trigger Refund to Customer (Sub-order total + Tax + Shipping - Proportionate discount)
+        const refundAmountPaise = Math.round(subOrder.customerPaid * 100);
+        if (refundAmountPaise > 0) {
+          await razorpay.payments.refund(masterOrder.razorpayPaymentId, {
+            amount: refundAmountPaise,
+            notes: {
+              reason: reason || "Order Cancelled",
+              sub_order_id: subOrder.subOrderId
+            }
+          });
+        }
+      } catch (rzpErr) {
+        console.error(`❌ Razorpay Refund Error:`, rzpErr.message);
+      }
+    }
+
+    await subOrder.save();
+    
+    // 3. RELEASE COUPON if applicable
+    if (masterOrder.coupon) {
+      const activeSubs = await SubOrder.countDocuments({ masterOrder: masterOrder._id, status: { $ne: 'cancelled' } });
+      if (activeSubs === 0 || masterOrder.paymentMethod === "COD") {
+        await CouponService.releaseCoupon(masterOrder._id);
+      }
+    }
+
+    // Update Master Order Status
+    masterOrder.status = await masterOrder.computeStatus();
+    await masterOrder.save();
+
+    // NOTIFICATIONS
+    sendNotification({
+        userId: masterOrder.user,
+        role: 'buyer',
+        type: 'ORDER_CANCELLED',
+        message: `Your order part ${subOrder.subOrderId} has been cancelled.`,
+        orderId: masterOrder._id
+    });
+
+    sendNotification({
+        userId: subOrder.seller,
+        role: 'seller',
+        type: 'ORDER_CANCELLED',
+        message: `Order part ${subOrder.subOrderId} was cancelled by the user.`,
+        orderId: masterOrder._id
+    });
+
+    notifyAdmins({
+        type: 'ORDER_CANCELLED',
+        message: `Sub-order ${subOrder.subOrderId} has been cancelled by ${role}.`,
+        orderId: masterOrder._id
+    });
+
+    res.status(200).json({ success: true, message: "Order cancelled successfully", subOrder });
+  } catch (error) {
+    console.error("Cancel Order Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const requestReturn = async (req, res) => {
+  const { subOrderId, reason } = req.body;
+  const userId = req.user.userId;
+  const role = req.user.role;
+
+  try {
+    let subOrder = await SubOrder.findOne({ subOrderId: subOrderId });
+    if (!subOrder && mongoose.Types.ObjectId.isValid(subOrderId)) {
+      subOrder = await SubOrder.findById(subOrderId);
+    }
+
+    if (!subOrder) return res.status(404).json({ success: false, message: "Sub-order not found" });
+
+    const masterOrder = await MasterOrder.findById(subOrder.masterOrder);
+    if (role === 'buyer' && masterOrder.user.toString() !== userId) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (subOrder.status !== "delivered") {
+      return res.status(400).json({ success: false, message: "Only delivered items can be returned" });
+    }
+
+    const prevStatus = subOrder.status;
+    subOrder.status = "return_requested";
+    subOrder.statusHistory.push({ 
+      from: prevStatus, 
+      to: "return_requested", 
+      reason: reason || "User return request", 
+      changed_by: `${role}:${userId}` 
+    });
+
+    await subOrder.save();
+
+    masterOrder.status = await masterOrder.computeStatus();
+    await masterOrder.save();
+
+    // NOTIFICATIONS
+    sendNotification({
+        userId: subOrder.seller,
+        role: 'seller',
+        type: 'RETURN_REQUESTED',
+        message: `Return requested for sub-order ${subOrder.subOrderId}. Reason: ${reason}`,
+        orderId: masterOrder._id
+    });
+
+    notifyAdmins({
+        type: 'RETURN_REQUESTED',
+        message: `User requested return for ${subOrder.subOrderId}`,
+        orderId: masterOrder._id
+    });
+
+    res.status(200).json({ success: true, message: "Return request submitted successfully", subOrder });
+  } catch (error) {
+    console.error("Return Request Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const cancelSubOrder = async (req, res) => {
   const { subOrderId } = req.params;
   const { reason } = req.body;
@@ -350,6 +539,9 @@ const cancelSubOrder = async (req, res) => {
       "out_for_delivery": 5,
       "delivered": 6
     };
+
+    const isCustomer = role === 'user';
+    const isAdmin = role === 'admin';
 
     if (!isAdmin && isCustomer && statusWeights[subOrder.status] >= statusWeights["shipped"]) {
       return res.status(400).json({ success: false, message: "Order already shipped, cannot cancel. Please refuse delivery at doorstep." });
@@ -1047,4 +1239,6 @@ module.exports = {
   getAdminWalletStats,
   razorpayWebhook,
   applyRewardCoupon,
+  cancelOrder,
+  requestReturn
 };
