@@ -149,7 +149,8 @@ const AdminNavbar = () => {
     { path: "/admin/seller-applications", label: "Sellers", icon: Store },
     { path: "/admin/wallet", label: "Earnings", icon: TrendingUp },
     { path: "/admin/suspension", label: "Suspensions", icon: ShieldCheck },
-    { path: "/admin/deals", label: "Deals", icon: Ticket },
+    { path: "/admin/deals", label: "Deals", icon: Percent },
+    { path: "/admin/coupon", label: "Coupons", icon: Ticket },
     { path: "/admin/moods", label: "Moods", icon: Sparkles },
     { path: "/admin/profile", label: "Profile", icon: User },
   ];
